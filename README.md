@@ -38,7 +38,7 @@ Code:
 - [x] Test Driven Development
 - [x] Static documentation
 - [x] PHP Doc
-- [x] Setup Xdebug environment
+- [ ] Setup Xdebug environment
 - [ ] Report Code coverage
 - [ ] Report Performance tests
 - [ ] CS fixer
