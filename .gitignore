@@ -1,0 +1,10 @@
+# Composer
+/vendor/
+
+# Systems
+.DS_Store
+
+# App
+/var/
+.bouncer-key
+.phpdoc

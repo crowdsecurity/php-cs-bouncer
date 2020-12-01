@@ -1,0 +1,21 @@
+{
+    "name": "crowdsec/bouncer-php-library",
+    "description": "The official PHP client for the CrowdSec LAPI/CAPI",
+    "type": "library",
+    "license": "MIT License",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "CrowdSecBouncer\\": "src/"
+        }
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^5.1",
+        "phpunit/phpunit": "^8.5",
+        "predis/predis": "^1.1"
+    },
+    "require": {
+        "symfony/config": "^5.1",
+        "symfony/cache": "^5.1"
+    }
+}
