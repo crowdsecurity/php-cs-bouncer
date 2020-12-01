@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
-use Symfony\Component\Cache\Adapter\NullAdapter;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\CacheItem;
 
 /**
  * The cache mecanism to store every decisions from LAPI/CAPI. Symfony Cache component powered.
- * 
+ *
  * @author    CrowdSec team
- * @link      https://crowdsec.net CrowdSec Official Website
+ *
+ * @see      https://crowdsec.net CrowdSec Official Website
+ *
  * @copyright Copyright (c) 2020+ CrowdSec
  * @license   MIT License
  */
@@ -30,7 +31,7 @@ class ApiCache
     /** @var bool */
     private $warmedUp = false;
 
-    public function __construct(ApiClient $apiClient)
+    public function __construct(ApiClient $apiClient = null)
     {
         $this->apiClient = $apiClient ?: new ApiClient();
     }
@@ -38,49 +39,49 @@ class ApiCache
     /**
      * Configure this instance.
      */
-    public function configure(AbstractAdapter $adapter, bool $ruptureMode, array $apiClientConfiguration)
+    public function configure(AbstractAdapter $adapter, bool $ruptureMode, string $apiUrl, int $timeout, string $userAgent, string $token): void
     {
-        $this->adapter = $adapter ?: new NullAdapter();
+        $this->adapter = $adapter;
         $this->ruptureMode = $ruptureMode;
 
-        $this->apiClient->configure(
-            $apiClientConfiguration['api_url'],
-            $apiClientConfiguration['api_timeout'],
-            $apiClientConfiguration['api_user_agent'],
-            $apiClientConfiguration['api_token']
-        );
+        $this->apiClient->configure($apiUrl, $timeout, $userAgent, $token);
     }
 
     /**
-     * Build a Symfony Cache Item from a couple of IP and its computed remediation
+     * Build a Symfony Cache Item from a couple of IP and its computed remediation.
      */
-    private function buildRemediationCacheItem(int $ip, array $remediation): CacheItem
+    private function buildRemediationCacheItem(int $ip, string $type, int $expiration, int $decisionId): CacheItem
     {
-        $item = $this->adapter->getItem((string)$ip);
-        
+        $item = $this->adapter->getItem((string) $ip);
+
         // Merge with existing remediations (if any).
         $remediations = $item->get();
         $remediations = $remediations ?: [];
-        $remediations[$remediation[2]] = $remediation;// erase previous decision with the same id
-        
+        $remediations[$decisionId] = [
+            $type,
+            $expiration,
+            $decisionId,
+        ]; // erase previous decision with the same id
+
         // Build the item lifetime in cache and sort remediations by priority
         $maxLifetime = max(array_column($remediations, 1));
         $prioritizedRemediations = Remediation::sortRemediationByPriority($remediations);
 
         $item->set($prioritizedRemediations);
         $item->expiresAfter($maxLifetime);
+
         return $item;
     }
 
     /**
      * Save the cache without committing it to the cache system. Useful to improve performance when updating the cache.
      */
-    private function saveDeferred(CacheItem $item, int $ip, array $remediation): void
+    private function saveDeferred(CacheItem $item, int $ip, string $type, int $expiration, int $decisionId): void
     {
         $isQueued = $this->adapter->saveDeferred($item);
         if (!$isQueued) {
-            $ipStr = long2Ip($ip);
-            throw new BouncerException(`Unable to save this deferred item in cache: ${$ipStr} =>$remediation[0] (for $remediation[1]sec)`);
+            $ipStr = long2ip($ip);
+            throw new BouncerException("Unable to save this deferred item in cache: ${$ipStr} =>$type (for $expiration sec, #$decisionId)");
         }
     }
 
@@ -100,10 +101,11 @@ class ApiCache
             $ipRange = range($decision['start_ip'], $decision['end_ip']);
             foreach ($ipRange as $ip) {
                 $remediation = Remediation::formatFromDecision($decision);
-                $item = $this->buildRemediationCacheItem($ip, $remediation);
-                $this->saveDeferred($item, $ip, $remediation);
+                $item = $this->buildRemediationCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
+                $this->saveDeferred($item, $ip, $remediation[0], $remediation[1], $remediation[2]);
             }
         }
+
         return $this->adapter->commit();
     }
 
@@ -113,9 +115,9 @@ class ApiCache
     private function saveRemediationsForIp(array $decisions, int $ip): void
     {
         foreach ($decisions as $decision) {
-                $remediation = Remediation::formatFromDecision($decision);
-                $item = $this->buildRemediationCacheItem($ip, $remediation);
-                $this->saveDeferred($item, $ip, $remediation);
+            $remediation = Remediation::formatFromDecision($decision);
+            $item = $this->buildRemediationCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
+            $this->saveDeferred($item, $ip, $remediation[0], $remediation[1], $remediation[2]);
         }
         $this->adapter->commit();
     }
@@ -124,7 +126,7 @@ class ApiCache
      * Used in stream mode only.
      * Warm the cache up.
      * Used when the stream mode has just been activated.
-     * 
+     *
      * TODO P2 test for overlapping decisions strategy (max expires, remediation ordered by priorities)
      */
     public function warmUp(): void
@@ -138,7 +140,7 @@ class ApiCache
         if ($newDecisions) {
             $this->warmedUp = $this->saveRemediations($newDecisions);
             if (!$this->warmedUp) {
-                throw new BouncerException(`Unable to warm the cache up`);
+                throw new BouncerException("Unable to warm the cache up");
             }
         }
     }
@@ -153,7 +155,7 @@ class ApiCache
         // TODO P1 Finish stream mode with pull update + dont forget to delete old decisions!
     }
 
-    /** 
+    /**
      * Used in rupture mode only.
      * This method is called when nothing has been found in cache for the requested IP.
      * This call the API for decisions concerning the specified IP. Finally the result is stored.
@@ -163,8 +165,11 @@ class ApiCache
     {
         $decisions = $this->apiClient->getFilteredDecisions(['ip' => long2ip($ip)]);
 
-        if (!count($decisions)) {
+        if (!\count($decisions)) {
             // TODO P1 cache also the clean IP.
+            //$item = $this->buildRemediationCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
+            //$this->saveDeferred($item, $ip, $remediation[0], $remediation[1], $remediation[2]);
+
             return Remediation::formatFromDecision(null)[0];
         }
 
@@ -173,23 +178,28 @@ class ApiCache
         return $this->hit($ip);
     }
 
-
     /**
      * Used in both mode (stream and ruptue).
      * This method formats the cached item as a remediation.
      * It returns the highest remediation level found.
      */
-    private function hit(int $ip): ?string
+    private function hit(int $ip): string
     {
-        $remediations = $this->adapter->getItem((string)$ip)->get();
+        $remediations = $this->adapter->getItem((string) $ip)->get();
         // P2 TODO control before if date is not expired and if true, update cache item.
-        return $remediations[0][0]; // 0: first remediation level, 0: the "type" string
+
+        // We apply array values first because keys are ids.
+        $firstRemediation = array_values($remediations)[0];
+        /** @var string */
+        $firstRemediationString = $firstRemediation[0];
+
+        return $firstRemediationString;
     }
 
     /**
      * Request the cache for the specified IP.
-     * 
-     * @return string The computed remediation string, or null if no decision was found.
+     *
+     * @return string the computed remediation string, or null if no decision was found
      */
     public function get(int $ip): ?string
     {
@@ -197,11 +207,12 @@ class ApiCache
             throw new BouncerException('CrowdSec Bouncer configured in "stream" mode. Please warm the cache up before trying to access it.');
         }
 
-        if ($this->adapter->hasItem((string)$ip)) {
+        if ($this->adapter->hasItem((string) $ip)) {
             return $this->hit($ip);
-        } else if ($this->ruptureMode) {
+        } elseif ($this->ruptureMode) {
             return $this->miss($ip);
         }
+
         return Remediation::formatFromDecision(null)[0];
     }
 }

@@ -4,7 +4,7 @@ The official PHP client for the CrowdSec APIs (LAPI or CAPI).
 
 This client helps to create CrowdSec bouncers for PHP applications or frameworks (e-commerce, blog, other apps...).
 
-## Getting started!
+## Getting started
 
 View `docs/getting-started.md` to learn how to include this library in your project.
 
@@ -21,6 +21,7 @@ MIT License. Details in the `./LICENSE` file.
 # TODO
 
 Features:
+- [x] fast API client
 - [x] LAPI Support
 - [x] Most popular Cache system support (Redis, Memcached, FileSystem, PhpFiles)
 - [x] Rupture mode

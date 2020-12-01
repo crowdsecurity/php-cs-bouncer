@@ -22,6 +22,23 @@ Generate PHP Doc
 
    docker-compose run phpdoc -d . --setting="guides.enabled=true" --template="./.phpdoc-template"
 
+Lint code
+---------
+
+.. code-block:: sh
+
+   composer lintfix
+   composer phpstan
+
+Also, you can run "Super linter" locally:
+
+.. code-block:: sh
+
+   docker pull github/super-linter:latest
+   docker run -e "FILTER_REGEX_INCLUDE=/tmp/lint/src/.*" -e RUN_LOCAL=true -v ${PWD}:/tmp/lint github/super-linter
+
+Full details here: https://github.com/github/super-linter/blob/master/docs/run-linter-locally.md
+
 Git Flow
 --------
 

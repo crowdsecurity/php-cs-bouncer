@@ -8,11 +8,14 @@ We explain here how to run the tests.
 1) Build crowdesc docker image
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First we need to create the crowdsec docker image.
+At this day, there is no crowdsec images on docker hub, so you have to build it by yourself.
+
+TODO P3 when v1.0.0 will be release, get the latest stable version.
 
 .. code-block:: sh
-
-   git clone git@github.com:crowdsecurity/crowdsec.git && cd $_ && docker build -t crowdsec . && cd .. && rm -rf ./crowdsec
+   git clone --branch v1.0.0-rc4 git@github.com:crowdsecurity/crowdsec.git .tmp-crowdsec \
+      && docker build -t crowdsec:v1.0.0-rc4 ./.tmp-crowdsec \
+      && rm -rf ./.tmp-crowdsec
 
 .. _2-install-composer-dependencies:
 

@@ -39,6 +39,7 @@ final class IpVerificationTest extends TestCase
     }
 
     /**
+     * @group integration
      * @covers Bouncer
      */
     /*
@@ -58,6 +59,7 @@ final class IpVerificationTest extends TestCase
     }*/
 
     /**
+     * @group integration
      * @covers Bouncer
      * @dataProvider cacheAdapterProvider
      * @group ignore_
@@ -65,26 +67,19 @@ final class IpVerificationTest extends TestCase
     public function testCanVerifyIpInRuptureModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
     {
         // Init bouncer
-        /**
-         * @var ApiClient|MockObject
-         */
+        /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
             ->enableProxyingToOriginalMethods()
             ->getMock();
-        /**
-         * @var ApiCache|MockObject
-         */
-        $apiCacheMock = $this->getMockBuilder(ApiCache::class)
-            ->enableProxyingToOriginalMethods()
-            ->setConstructorArgs([$apiClientMock])
-            ->getMock();
+        $apiCache = new ApiCache($apiClientMock);
         $basicLapiContext = TestHelpers::setupBasicLapiInRuptureModeContext();
         $blockedIp = $basicLapiContext['blocked_ip'];
         $config = $basicLapiContext['config'];
-        $bouncer = new Bouncer($apiCacheMock);
+        $bouncer = new Bouncer($apiCache);
         $bouncer->configure($config, $cacheAdapter);
 
         // A the end of test, we shoud have exactly 2 "cache miss")
+        /** @var MockObject $apiClientMock */
         $apiClientMock->expects($this->exactly(2))->method('getFilteredDecisions');
 
         // Get decisions for a Blocked IP (for the first time, it should be a cache miss)
@@ -105,6 +100,7 @@ final class IpVerificationTest extends TestCase
     }
 
     /**
+     * @group integration
      * @covers Bouncer
      * @dataProvider cacheAdapterProvider
      * @group ignore_
@@ -114,27 +110,20 @@ final class IpVerificationTest extends TestCase
     {
         
         // Init bouncer
-        /**
-         * @var ApiClient|MockObject
-         */
+        /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
             ->enableProxyingToOriginalMethods()
             ->getMock();
-        /**
-         * @var ApiCache|MockObject
-         */
-        $apiCacheMock = $this->getMockBuilder(ApiCache::class)
-            ->enableProxyingToOriginalMethods()
-            ->setConstructorArgs([$apiClientMock])
-            ->getMock();
+        $apiCache = new ApiCache($apiClientMock);
         $basicLapiContext = TestHelpers::setupBasicLapiInRuptureModeContext();
         $blockedIp = $basicLapiContext['blocked_ip'];
         $config = $basicLapiContext['config'];
         $config['rupture_mode'] = false;
-        $bouncer = new Bouncer($apiCacheMock);
+        $bouncer = new Bouncer($apiCache);
         $bouncer->configure($config, $cacheAdapter);
 
         // A the end of test, we shoud have exactly 2 "cache miss")
+        /** @var MockObject $apiClientMock */
         $apiClientMock->expects($this->exactly(0))->method('getFilteredDecisions');
 
         // Warm BlockList cache up
@@ -157,6 +146,7 @@ final class IpVerificationTest extends TestCase
     }
 
     /**
+     * @group integration
      * @covers Bouncer
      * @dataProvider cacheAdapterProvider
      */

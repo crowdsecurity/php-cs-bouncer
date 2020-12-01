@@ -6,18 +6,25 @@ namespace CrowdSecBouncer;
 
 /**
  * The LAPI/CAPI REST Client. This is used to retrieve decisions.
- * 
+ *
  * @author    CrowdSec team
- * @link      https://crowdsec.net CrowdSec Official Website
+ *
+ * @see      https://crowdsec.net CrowdSec Official Website
+ *
  * @copyright Copyright (c) 2020+ CrowdSec
  * @license   MIT License
  */
 class ApiClient
 {
     /**
+     * @var RestClient
+     */
+    private $restClient;
+
+    /**
      * Configure this instance.
      */
-    public function configure(string $baseUri, int $timeout, string $userAgent, string $token)
+    public function configure(string $baseUri, int $timeout, string $userAgent, string $token): void
     {
         $this->restClient = new RestClient();
         $this->restClient->configure($baseUri, [
@@ -35,6 +42,7 @@ class ApiClient
         // TODO P2 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
         $decisions = $this->restClient->request('/v1/decisions', $filter);
         $decisions = $decisions ?: [];
+
         return $decisions;
     }
 
@@ -45,7 +53,9 @@ class ApiClient
     public function getStreamedDecisions(bool $startup = false): array
     {
         // TODO P2 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
+        /** @var array */
         $decisionsDiff = $this->restClient->request('/v1/decisions/stream', ['startup' => $startup]);
+
         return $decisionsDiff;
     }
 }

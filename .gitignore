@@ -9,3 +9,4 @@
 .bouncer-key
 .phpdoc
 TODO.md
+.php_cs.cache

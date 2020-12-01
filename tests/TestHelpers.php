@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
+use Predis\ClientInterface;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 
 class TestHelpers
@@ -15,15 +16,18 @@ class TestHelpers
     const WATCHER_LOGIN = 'PhpUnitTestMachine';
     const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
 
-    private static function delTree($dir)
+    private static function delTree(string $dir): bool
     {
         if (file_exists($dir)) {
-            $files = array_diff(scandir($dir), array('.', '..'));
+            /** @var array $items */
+            $items = scandir($dir);
+            $files = array_diff($items, ['.', '..']);
             foreach ($files as $file) {
                 (is_dir("$dir/$file")) ? self::delTree("$dir/$file") : unlink("$dir/$file");
             }
             return rmdir($dir);
         }
+        return true;
     }
 
     public static function cacheAdapterProvider(): array
@@ -36,12 +40,16 @@ class TestHelpers
         $phpFilesAdapter = new PhpFilesAdapter('php_array_adapter_backup_cache', 0, self::PHP_FILES_CACHE_ADAPTER_DIR);
         self::delTree(self::PHP_FILES_CACHE_ADAPTER_DIR);
         
+        /** @var string */
         $memcachedCacheAdapterDsn = getenv('MEMCACHED_DSN');
         $memcachedAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedCacheAdapterDsn));
         $memcachedAdapter->clear();
 
+        /** @var string */
         $redisCacheAdapterDsn = getenv('REDIS_DSN');
-        $redisAdapter = new RedisAdapter(RedisAdapter::createConnection($redisCacheAdapterDsn));
+        /** @var ClientInterface */
+        $redisClient = RedisAdapter::createConnection($redisCacheAdapterDsn);
+        $redisAdapter = new RedisAdapter($redisClient);
         $redisAdapter->clear();
 
         return [
@@ -56,7 +64,11 @@ class TestHelpers
     {
         $apiUrl = getenv('LAPI_URL');
 
-        $apiToken = file_get_contents(realpath(__DIR__ . '/../.bouncer-key'));
+        $path = realpath(__DIR__ . '/../.bouncer-key');
+        if ($path === false) {
+            throw new RuntimeException("'.bouncer-key' file was not found.");
+        }
+        $apiToken = file_get_contents($path);
         return [
             'config' => ['api_token' => $apiToken, 'api_url' => $apiUrl],
             'blocked_ip' => self::TEST_IP

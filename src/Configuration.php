@@ -7,9 +7,11 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 /**
  * The Library configuration. You'll find here all configuration possible. Used when instanciating the library.
- * 
+ *
  * @author    CrowdSec team
- * @link      https://crowdsec.net CrowdSec Official Website
+ *
+ * @see      https://crowdsec.net CrowdSec Official Website
+ *
  * @copyright Copyright (c) 2020+ CrowdSec
  * @license   MIT License
  */
@@ -22,6 +24,7 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder('config');
         $rootNode = $treeBuilder->getRootNode();
+        /* @phpstan-ignore-next-line */
         $rootNode
             ->children()
             ->scalarNode('api_token')->isRequired()->end()
@@ -31,6 +34,7 @@ class Configuration implements ConfigurationInterface
             ->booleanNode('rupture_mode')->defaultValue(true)->end()
             ->enumNode('max_remediation')->values(['bypass', 'captcha', 'ban'])->defaultValue('ban')->end()
             ->end();
+
         return $treeBuilder;
     }
 }
