@@ -8,6 +8,7 @@ use CrowdSecBouncer\Bouncer;
 final class Template403Test extends TestCase
 {
     /**
+     * @group integration
      * @covers \CrowdSecBouncer\Bouncer
      */
     public function testCanGetDefault403Template(): void

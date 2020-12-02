@@ -2,14 +2,16 @@
 
 namespace CrowdSecBouncer;
 
-use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
+use Symfony\Component\Config\Definition\Processor;
 
 /**
  * The main Class of this package. This is the first entry point of any PHP Bouncers using this library.
- * 
+ *
  * @author    CrowdSec team
- * @link      https://crowdsec.net CrowdSec Official Website
+ *
+ * @see      https://crowdsec.net CrowdSec Official Website
+ *
  * @copyright Copyright (c) 2020+ CrowdSec
  * @license   MIT License
  */
@@ -29,7 +31,7 @@ class Bouncer
     /**
      * Configure this instance.
      */
-    public function configure(array $config, AbstractAdapter $cacheAdapter)
+    public function configure(array $config, AbstractAdapter $cacheAdapter): void
     {
         // Process input configuration.
         $configuration = new Configuration();
@@ -37,24 +39,29 @@ class Bouncer
         $this->config = $processor->processConfiguration($configuration, [$config]);
 
         // Configure Api Cache.
-        $apiClientConfiguration = [
-            'api_url' => $this->config['api_url'],
-            'api_timeout' => $this->config['api_timeout'],
-            'api_user_agent' => $this->config['api_user_agent'],
-            'api_token' => $this->config['api_token']
-        ];
-        $this->apiCache->configure($cacheAdapter, $this->config['rupture_mode'], $apiClientConfiguration);
+        $this->apiCache->configure(
+            $cacheAdapter,
+            $this->config['rupture_mode'],
+            $this->config['api_url'],
+            $this->config['api_timeout'],
+            $this->config['api_user_agent'],
+            $this->config['api_token']
+        );
     }
 
     /**
      * Get the remediation for the specified IP. This method use the cache layer.
      * In rupture mode, when no remediation was found in cache, the cache system will call the API to check if there is a decision.
-     * 
-     * @return array the IP verification result
+     *
+     * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
      */
     public function getRemediationForIp(string $ip): ?string
     {
         $intIp = ip2long($ip);
+        if (false === $intIp) {
+            throw new BouncerException("IP $ip should looks like x.x.x.x, with x in 0-255. Ex: 1.2.3.4");
+        }
+
         return $this->apiCache->get($intIp);
     }
 
@@ -96,7 +103,7 @@ class Bouncer
 
     /**
      * Browse the bouncer technical logs.
-     * TODO P3 Code this
+     * TODO P3 Code this.
      */
     public function loadPaginatedLogs(int $page = 1, int $itemPerPage = 10): array
     {

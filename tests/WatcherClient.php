@@ -13,6 +13,7 @@ class WatcherClient
     public static function setCrowdSecContext(): void
     {
         // Create Watcher Client
+        /** @var string */
         $apiUrl = getenv('LAPI_URL');
         $baseHeaders = [
             'Accept' => 'application/json',
@@ -27,6 +28,7 @@ class WatcherClient
             'machine_id' => self::WATCHER_LOGIN,
             'password' => self::WATCHER_PASSWORD
         ];
+        /** @var array */
         $credentials = $watcherClient->request('/v1/watchers/login', null, $data, 'POST');
         $token = $credentials['token'];
 
@@ -36,7 +38,9 @@ class WatcherClient
         $watcherClient->request('/v1/decisions', null, null, 'DELETE', $baseHeaders);
 
         // Add fixtures decisions
-        $data = json_decode(file_get_contents(__DIR__.'/data/alert_sample.json'), true);
+        /** @var string */
+        $jsonString = file_get_contents(__DIR__.'/data/alert_sample.json');
+        $data = json_decode($jsonString, true);
 
         $now = new DateTime();
         $stopAt = (clone $now)->modify('+1 day')->format('Y-m-d\TH:i:s.000\Z');
