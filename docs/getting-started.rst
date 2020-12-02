@@ -17,13 +17,14 @@ Use the bouncer library (rupture mode)
 
 
    use CrowdSecBouncer\Bouncer;
-   use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+   use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 
    $apiToken = getenv(DEFINE_YOUR_TOKEN);// Good practice: define this secret data in environment variables.
 
-   // Select the best cache adapter for your needs (Memcached, Redis, Apcu, Filesystem, Doctrine, PhpFileSystem, Couchbase, Pdo...)
+   // Select the best cache adapter for your needs (Memcached, Redis, PhpFiles)
+   // Note: You can try more cache system but we did not test them for now (Apcu, Filesystem, Doctrine, Couchbase, Pdo).
    // The full list is here: https://symfony.com/doc/current/components/cache.html#available-cache-adapters
-   $cacheAdapter = new FilesystemAdapter(); 
+   $cacheAdapter = new PhpFilesAdapter(); 
 
    $bouncer = new Bouncer();
    $bouncer->configure(['api_token'=> $apiToken], $cacheAdapter);

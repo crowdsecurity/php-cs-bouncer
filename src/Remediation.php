@@ -64,26 +64,37 @@ class Remediation
      * Parse "duration" entries returned from API to a number of seconds.
      *
      * TODO TEST P3
-     *   $str = '9999h59m56.603445s
+     *   9999h59m56.603445s
      *   10m33.3465483s
-     *   33.3465483s';
+     *   33.3465483s
+     *   -285.876962ms
      *   33s'// should break!;
      */
     private static function parseDurationToSeconds(string $duration): int
     {
         dump($duration);
-        $re = '/(?:(?:(\d+)h)?(\d+)m)?(\d+).\d+s/m';
+        $re = '/(-?)(?:(?:(\d+)h)?(\d+)m)?(\d+).\d+(m?)s/m';
         preg_match($re, $duration, $matches);
+        if (!count($matches)) {
+            throw new BouncerException("Unable to parse the following duration: ${$duration}.");
+        };
         $seconds = 0;
-        if (null !== $matches[1]) {
-            $seconds += ((int) $matches[1]) * 3600;
-        }
         if (null !== $matches[2]) {
-            $seconds += ((int) $matches[2]) * 60;
+            $seconds += ((int) $matches[1]) * 3600;// hours
         }
         if (null !== $matches[3]) {
-            $seconds += ((int) $matches[1]);
+            $seconds += ((int) $matches[2]) * 60;// minutes
         }
+        if (null !== $matches[4]) {
+            $seconds += ((int) $matches[1]);// seconds
+        }
+        if (null !== $matches[5]) {// units in milliseconds
+            $seconds *= 0.001;
+        }
+        if (null !== $matches[1]) {// negative
+            $seconds *= -1;
+        }
+        $seconds = round($seconds);
 
         return $seconds;
     }

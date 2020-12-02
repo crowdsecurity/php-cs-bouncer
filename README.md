@@ -23,7 +23,7 @@ MIT License. Details in the `./LICENSE` file.
 Features:
 - [x] fast API client
 - [x] LAPI Support
-- [x] Most popular Cache system support (Redis, Memcached, FileSystem, PhpFiles)
+- [x] Built-in support for the most known cache systems: Redis, Memcached, PhpFiles
 - [x] Rupture mode
 - [x] Stream mode
 - [ ] Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)
