@@ -1,0 +1,99 @@
+name: Tests
+
+on:
+    push:
+    pull_request:
+
+jobs:
+
+    integration:
+        name: Integration
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                php: ['7.2'] # TODO P1 TRY MORE VERSION (5.6, 7.0, 7.1, 7.3, 7.4)
+
+        services:
+            redis:
+                image: redis:6.0.0
+                ports:
+                    - 6379:6379
+            memcached:
+                image: memcached:1.6.5
+                ports:
+                    - 11211:11211
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v2
+
+                # In this step, this action saves a list of existing images,
+                # the cache is created without them in the post run.
+                # It also restores the cache if it exists.
+            -   uses: satackey/action-docker-layer-caching@v0.0.8
+                # Ignore the failure of a step and avoid terminating the job.
+                continue-on-error: true
+
+            -   name: Checkout Crowdsec
+                uses: actions/checkout@v2
+                with:
+                    repository: crowdsecurity/crowdsec
+                    ref: v1.0.0-rc4
+                    path: ./var/.tmp-crowdsec
+
+            -   name: Build Crowdsec 1.0.0 (RC4) Docker image
+                run: docker build -t crowdsec:v1.0.0-rc4 ./var/.tmp-crowdsec
+
+            -   name: Run the crowdsec container
+                run: docker run -d --name crowdsec -p 8080:8080 -e "DISABLE_AGENT=true" crowdsec:v1.0.0-rc4
+
+            -   name: Add a bouncer to run phpunit tests
+                run: docker exec crowdsec cscli bouncers add bouncer-php-library -o raw > .bouncer-key
+            
+            # TODO P2 Move values to env vars
+            -   name: Add a machine to pilot crowdsec state
+                run: docker exec crowdsec cscli machines add PhpUnitTestMachine --password PhpUnitTestMachinePassword
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    coverage: "none"
+                    extensions: "json,memcached,redis,xsl,ldap"
+                    ini-values: "memory_limit=-1"
+                    php-version: "${{ matrix.php }}"
+                    tools: pecl
+
+            -   name: Display versions
+                run: |
+                    php -r 'foreach (get_loaded_extensions() as $extension) echo $extension . " " . phpversion($extension) . PHP_EOL;'
+                    php -i
+
+            -   name: Get Composer Cache Directory
+                id: composer-cache
+                run: |
+                    echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+            -   name: Cache Composer Downloads
+                uses: actions/cache@v2
+                with:
+                    path: vendor/
+                    key: ${{ runner.os }}-${{ matrix.php }}-composer-${{ hashFiles('**/composer.lock') }}
+                    restore-keys: |
+                        ${{ runner.os }}-${{ matrix.php }}-composer-${{ hashFiles('**/composer.lock') }}
+                
+            -   name: Cache PHP dependencies
+                uses: actions/cache@v2
+                with:
+                    path: vendor
+                    key: ${{ runner.os }}-${{ matrix.php }}-composer-${{ hashFiles('**/composer.lock') }}
+                    
+            -   name: Install PHP dependencies
+                uses: php-actions/composer@v4
+            
+            -   name: Run tests
+                run: ./vendor/bin/phpunit --testdox --colors --exclude-group ignore --group integration -v tests/IpVerificationTest.php
+                env:
+                    LAPI_URL: http://localhost:8080
+                    MEMCACHED_DSN: memcached://localhost:11211
+                    REDIS_DSN: redis://localhost:6379
