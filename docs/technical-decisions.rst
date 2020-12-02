@@ -33,3 +33,10 @@ We don't use Swagger Codegen
 We were not able to use this client with easen ex: impossible to get
 JSON data, it's seemd there is a bug with unserialization, we received
 an empty array.
+
+PHP 7.0+ compatibility
+----------------------
+
+Why not PHP 5.6? This PHP version is no more supported since december 2018 (not even security fix!).
+
+What about PHP 8? We are working on it. The current problem is that we have some troubles with PHP 8 + Memcached.

@@ -63,7 +63,7 @@ class Remediation
     /**
      * Parse "duration" entries returned from API to a number of seconds.
      *
-     * TODO TEST P3
+     * TODO P3 TEST
      *   9999h59m56.603445s
      *   10m33.3465483s
      *   33.3465483s
@@ -102,7 +102,7 @@ class Remediation
      * Format a remediation item of a cache item.
      * This format use a minimal amount of data allowing less cache data consumption.
      *
-     * TODO TESTS P3
+     * TODO P3 TESTS
      */
     public static function formatFromDecision(?array $decision): array
     {

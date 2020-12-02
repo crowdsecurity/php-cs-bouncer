@@ -89,7 +89,7 @@ class ApiCache
 
     Update the cached remediations from these new decisions.
 
-    TODO WRITE TESTS P2
+    TODO P2 WRITE TESTS
     0 decisions
     3 known remediation type
     3 decisions but 1 unknown remediation type
@@ -186,7 +186,7 @@ class ApiCache
     private function hit(int $ip): string
     {
         $remediations = $this->adapter->getItem((string) $ip)->get();
-        // P2 TODO control before if date is not expired and if true, update cache item.
+        // TODO P2 control before if date is not expired and if true, update cache item.
 
         // We apply array values first because keys are ids.
         $firstRemediation = array_values($remediations)[0];

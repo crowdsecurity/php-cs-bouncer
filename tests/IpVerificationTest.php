@@ -133,7 +133,7 @@ final class IpVerificationTest extends TestCase
         $remediation1stCall = $bouncer->getRemediationForIp($blockedIp);
         $this->assertEquals('ban', $remediation1stCall);
 
-        // TODO P1 Add and remove decision and try updating cache
+        // TODO P1 Add and remove decision and try updating cache with refreshBlocklistCache()
 
         // Clear cache
         //$cacheAdapter->clear();
@@ -141,8 +141,6 @@ final class IpVerificationTest extends TestCase
         // Call the same thing for the second time (now it should be a cache miss)
         //$remediation2ndCall = $bouncer->getRemediationForIp($blockedIp);
         //$this->assertEquals('ban', $remediation2ndCall);
-
-        // TODO ADD new decisions to LAPI and test refreshBlocklistCache()
     }
 
     /**

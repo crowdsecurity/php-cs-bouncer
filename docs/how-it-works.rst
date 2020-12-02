@@ -1,4 +1,4 @@
-TODO reword this text.
+TODO P2 reword this text.
 
 Sync Strategy
 -------------
