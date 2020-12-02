@@ -71,6 +71,7 @@ class Remediation
      */
     private static function parseDurationToSeconds(string $duration): int
     {
+        dump($duration);
         $re = '/(?:(?:(\d+)h)?(\d+)m)?(\d+).\d+s/m';
         preg_match($re, $duration, $matches);
         $seconds = 0;

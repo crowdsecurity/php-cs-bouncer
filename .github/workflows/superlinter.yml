@@ -1,6 +1,8 @@
 name: Super-Linter
 
-on: push
+on:
+    push:
+    pull_request:
 
 jobs:
   super-lint:
