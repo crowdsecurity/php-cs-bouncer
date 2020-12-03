@@ -1,0 +1,62 @@
+[
+    {
+        "capacity": 0,
+        "decisions": [
+            {
+                "duration": "12h",
+                "end_ip": 16909060,
+                "origin": "cscli",
+                "scenario": "setup captcha on single IP for 12h for PHPUnit tests",
+                "scope": "Ip",
+                "start_ip": 16909060,
+                "type": "captcha",
+                "value": "1.2.3.4"
+            }
+        ],
+        "events": [],
+        "events_count": 1,
+        "labels": null,
+        "leakspeed": "0",
+        "message": "setup for PHPUnit tests",
+        "scenario": "setup for PHPUnit tests",
+        "scenario_hash": "",
+        "scenario_version": "",
+        "simulated": false,
+        "source": {
+            "scope": "Ip",
+            "value": "1.2.3.4"
+        },
+        "start_at": "REPLACE_ME",
+        "stop_at": "REPLACE_ME"
+    },
+    {
+        "capacity": 0,
+        "decisions": [
+            {
+                "duration": "24h",
+                "start_ip": 16909060,
+                "origin": "cscli",
+                "scenario": "setup ban on range 1.2.3.4 to 1.2.3.7 for 24h for PHPUnit tests",
+                "scope": "Range",
+                "end_ip": 16909063,
+                "type": "ban",
+                "value": "1.2.3.4/30"
+            }
+        ],
+        "events": [],
+        "events_count": 1,
+        "labels": null,
+        "leakspeed": "0",
+        "message": "setup for PHPUnit tests",
+        "scenario": "setup for PHPUnit tests",
+        "scenario_hash": "",
+        "scenario_version": "",
+        "simulated": false,
+        "source": {
+            "scope": "Range",
+            "value": "1.2.3.4/30"
+        },
+        "start_at": "REPLACE_ME",
+        "stop_at": "REPLACE_ME"
+    }
+]
