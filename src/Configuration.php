@@ -33,6 +33,7 @@ class Configuration implements ConfigurationInterface
             ->integerNode('api_timeout')->defaultValue(Constants::API_TIMEOUT)->end()
             ->booleanNode('rupture_mode')->defaultValue(true)->end()
             ->enumNode('max_remediation')->values(['bypass', 'captcha', 'ban'])->defaultValue('ban')->end()
+            ->integerNode('cache_expiration_for_clean_ip')->defaultValue(Constants::CACHE_EXPIRATION_FOR_CLEAN_IP)->end()
             ->end();
 
         return $treeBuilder;

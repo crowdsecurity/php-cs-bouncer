@@ -23,6 +23,9 @@ class Constants
     /** @var int The timeout when calling LAPI or CAPI */
     const API_TIMEOUT = 1; // TODO P2 get the correct one
 
+    /** @var int The duration we keep a clean IP in cache 600s = 10m */
+    const CACHE_EXPIRATION_FOR_CLEAN_IP = 600; // TODO P2 get the correct one
+
     /** @var array The list of each known remediation, sorted by priority */
     const ORDERED_REMEDIATIONS = ['ban', 'captcha']; // TODO P2 get the correct one
 }

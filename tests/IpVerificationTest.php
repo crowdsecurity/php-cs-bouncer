@@ -19,8 +19,6 @@ TODO P2 Instanciate all the configuration
 TODO P2 testThrowErrorWhenMissAndApiIsNotReachable()
 TODO P2 testThrowErrorWhenMissAndApiTimeout()
 TODO P2 testCanVerifyCaptchableIp()
-TODO P1 testCanVerifyCleanIp()
-TODO P1 testCanCacheTheCleanIp()
 TODO P2 testCanHandleCacheSaturation()
 TODO P2 testCanNotUseCapiInRuptureMode()
 TODO P2 testCanVerifyIpInStreamModeWithCacheSystemBeforeWarmingTheCacheUp() https://stackoverflow.com/questions/5683592/phpunit-assert-that-an-exception-was-thrown
@@ -48,16 +46,15 @@ final class IpVerificationTest extends TestCase
     {
         // Init bouncer
         $basicLapiContext = TestHelpers::setupBasicLapiInRuptureModeContext();
-        $blockedIp = $basicLapiContext['blocked_ip'];
+        $badIp = $basicLapiContext['bad_ip'];
         $config = $basicLapiContext['config'];
         $bouncer = new Bouncer();
         $bouncer->configure($config);
 
-        // Get decisions for a blocked IP
-        $remediation = $bouncer->getRemediationForIp($blockedIp);
+        // Get decisions for a bad IP
+        $remediation = $bouncer->getRemediationForIp($badIp);
         $this->assertEquals($remediation, 'ban');
     }*/
-
     /**
      * @group integration
      * @covers Bouncer
@@ -66,6 +63,7 @@ final class IpVerificationTest extends TestCase
      */
     public function testCanVerifyIpInRuptureModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
     {
+        $cacheAdapter->clear();
         // Init bouncer
         /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
@@ -73,29 +71,45 @@ final class IpVerificationTest extends TestCase
             ->getMock();
         $apiCache = new ApiCache($apiClientMock);
         $basicLapiContext = TestHelpers::setupBasicLapiInRuptureModeContext();
-        $blockedIp = $basicLapiContext['blocked_ip'];
+        $badIp = $basicLapiContext['bad_ip'];
+        $cleanIp = $basicLapiContext['clean_ip'];
         $config = $basicLapiContext['config'];
         $bouncer = new Bouncer($apiCache);
         $bouncer->configure($config, $cacheAdapter);
 
-        // A the end of test, we shoud have exactly 2 "cache miss")
+        // A the end of test, we shoud have exactly 3 "cache miss")
         /** @var MockObject $apiClientMock */
-        $apiClientMock->expects($this->exactly(2))->method('getFilteredDecisions');
+        $apiClientMock->expects($this->exactly(3))->method('getFilteredDecisions');
 
-        // Get decisions for a Blocked IP (for the first time, it should be a cache miss)
-        $remediation1stCall = $bouncer->getRemediationForIp($blockedIp);
-        $this->assertEquals('ban', $remediation1stCall);
+        $this->assertEquals(
+            'ban',
+            $bouncer->getRemediationForIp($badIp),
+            'Get decisions for a bad IP (for the first time, it should be a cache miss)'
+        );
 
-        // Call the same thing for the second time (now it should be a cache miss)
-        $remediation2ndCall = $bouncer->getRemediationForIp($blockedIp);
-        $this->assertEquals('ban', $remediation2ndCall);
+        $this->assertEquals(
+            'ban',
+            $bouncer->getRemediationForIp($badIp),
+            'Call the same thing for the second time (now it should be a cache hit)'
+        );
+
+        $cleanRemediation1stCall = $bouncer->getRemediationForIp($cleanIp);
+        $this->assertEquals(
+            'clean',
+            $cleanRemediation1stCall,
+            'Get decisions for a clean IP for the first time (it should be a cache miss)'
+        );
+
+        // Call the same thing for the second time (now it should be a cache hit)
+        $cleanRemediation2ndCall = $bouncer->getRemediationForIp($cleanIp);
+        $this->assertEquals('clean', $cleanRemediation2ndCall);
 
         // Clear cache
         $cacheAdapter->clear();
 
         // Call one more time (should miss as the cache has been cleared)
 
-        $remediation3rdCall = $bouncer->getRemediationForIp($blockedIp);
+        $remediation3rdCall = $bouncer->getRemediationForIp($badIp);
         $this->assertEquals('ban', $remediation3rdCall);
     }
 
@@ -108,7 +122,7 @@ final class IpVerificationTest extends TestCase
      */
     public function testCanVerifyIpInStreamModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
     {
-        
+        $cacheAdapter->clear();
         // Init bouncer
         /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
@@ -116,22 +130,31 @@ final class IpVerificationTest extends TestCase
             ->getMock();
         $apiCache = new ApiCache($apiClientMock);
         $basicLapiContext = TestHelpers::setupBasicLapiInRuptureModeContext();
-        $blockedIp = $basicLapiContext['blocked_ip'];
+        $badIp = $basicLapiContext['bad_ip'];
+        $cleanIp = $basicLapiContext['clean_ip'];
         $config = $basicLapiContext['config'];
         $config['rupture_mode'] = false;
         $bouncer = new Bouncer($apiCache);
         $bouncer->configure($config, $cacheAdapter);
 
-        // A the end of test, we shoud have exactly 2 "cache miss")
+        // A the end of test, we shoud have exactly 0 "cache miss")
         /** @var MockObject $apiClientMock */
         $apiClientMock->expects($this->exactly(0))->method('getFilteredDecisions');
 
         // Warm BlockList cache up
         $bouncer->warmBlocklistCacheUp();
 
-        // Get decisions for a Blocked IP (for the first time, but as the cache has been warmed up should be a cache hit!)
-        $remediation1stCall = $bouncer->getRemediationForIp($blockedIp);
-        $this->assertEquals('ban', $remediation1stCall);
+        $this->assertEquals(
+            'ban',
+            $bouncer->getRemediationForIp($badIp),
+            'Get decisions for a bad IP for the first time (as the cache has been warmed up should be a cache hit)'
+        );
+
+        $this->assertEquals(
+            'clean',
+            $bouncer->getRemediationForIp($cleanIp),
+            'Get decisions for a clean IP for the first time (as the cache has been warmed up should be a cache hit)'
+        );
 
         // TODO P1 Add and remove decision and try updating cache with refreshBlocklistCache()
 
@@ -139,7 +162,7 @@ final class IpVerificationTest extends TestCase
         //$cacheAdapter->clear();
 
         // Call the same thing for the second time (now it should be a cache miss)
-        //$remediation2ndCall = $bouncer->getRemediationForIp($blockedIp);
+        //$remediation2ndCall = $bouncer->getRemediationForIp($badIp);
         //$this->assertEquals('ban', $remediation2ndCall);
     }
 

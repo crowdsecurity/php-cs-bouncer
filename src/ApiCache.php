@@ -25,6 +25,9 @@ class ApiCache
     /** @var bool */
     private $ruptureMode;
 
+    /** @var int */
+    private $cacheExpirationForCleanIp;
+
     /** @var ApiClient */
     private $apiClient;
 
@@ -39,10 +42,11 @@ class ApiCache
     /**
      * Configure this instance.
      */
-    public function configure(AbstractAdapter $adapter, bool $ruptureMode, string $apiUrl, int $timeout, string $userAgent, string $token): void
+    public function configure(AbstractAdapter $adapter, bool $ruptureMode, string $apiUrl, int $timeout, string $userAgent, string $token, int $cacheExpirationForCleanIp): void
     {
         $this->adapter = $adapter;
         $this->ruptureMode = $ruptureMode;
+        $this->cacheExpirationForCleanIp = $cacheExpirationForCleanIp;
 
         $this->apiClient->configure($apiUrl, $timeout, $userAgent, $token);
     }
@@ -85,22 +89,89 @@ class ApiCache
         }
     }
 
-    /*
+    /**
+     * Parse "duration" entries returned from API to a number of seconds.
+     *
+     * TODO P3 TEST
+     *   9999h59m56.603445s
+     *   10m33.3465483s
+     *   33.3465483s
+     *   -285.876962ms
+     *   33s'// should break!;
+     */
+    private static function parseDurationToSeconds(string $duration): int
+    {
+        $re = '/(-?)(?:(?:(\d+)h)?(\d+)m)?(\d+).\d+(m?)s/m';
+        preg_match($re, $duration, $matches);
+        if (!count($matches)) {
+            throw new BouncerException("Unable to parse the following duration: ${$duration}.");
+        };
+        $seconds = 0;
+        if (null !== $matches[2]) {
+            $seconds += ((int) $matches[1]) * 3600; // hours
+        }
+        if (null !== $matches[3]) {
+            $seconds += ((int) $matches[2]) * 60; // minutes
+        }
+        if (null !== $matches[4]) {
+            $seconds += ((int) $matches[1]); // seconds
+        }
+        if (null !== $matches[5]) { // units in milliseconds
+            $seconds *= 0.001;
+        }
+        if (null !== $matches[1]) { // negative
+            $seconds *= -1;
+        }
+        $seconds = round($seconds);
 
-    Update the cached remediations from these new decisions.
+        return (int)$seconds;
+    }
 
-    TODO P2 WRITE TESTS
-    0 decisions
-    3 known remediation type
-    3 decisions but 1 unknown remediation type
-    3 unknown remediation type
+
+
+    /**
+     * Format a remediation item of a cache item.
+     * This format use a minimal amount of data allowing less cache data consumption.
+     *
+     * TODO P3 TESTS
+     */
+    private function formatRemediationFromDecision(?array $decision): array
+    {
+        if (!$decision) {
+            return ['clean', time() + $this->cacheExpirationForCleanIp, 0];
+        }
+
+        return [
+            $decision['type'], // ex: captcha
+            time() + self::parseDurationToSeconds($decision['duration']), // expiration timestamp
+            $decision['id'],
+
+            /*
+            TODO P3 useful to keep in cache?
+            [
+                $decision['origin'],// ex cscli
+                $decision['scenario'],//ex: "manual 'captcha' from '25b9f1216f9344b780963bd281ae5573UIxCiwc74i2mFqK4'"
+                $decision['scope'],// ex: IP
+            ]
+            */
+        ];
+    }
+
+    /**
+     * Update the cached remediations from these new decisions.
+
+     * TODO P2 WRITE TESTS
+     * 0 decisions
+     * 3 known remediation type
+     * 3 decisions but 1 unknown remediation type
+     * 3 unknown remediation type
      */
     private function saveRemediations(array $decisions): bool
     {
         foreach ($decisions as $decision) {
             $ipRange = range($decision['start_ip'], $decision['end_ip']);
             foreach ($ipRange as $ip) {
-                $remediation = Remediation::formatFromDecision($decision);
+                $remediation = $this->formatRemediationFromDecision($decision);
                 $item = $this->buildRemediationCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
                 $this->saveDeferred($item, $ip, $remediation[0], $remediation[1], $remediation[2]);
             }
@@ -114,8 +185,14 @@ class ApiCache
      */
     private function saveRemediationsForIp(array $decisions, int $ip): void
     {
-        foreach ($decisions as $decision) {
-            $remediation = Remediation::formatFromDecision($decision);
+        if (\count($decisions)) {
+            foreach ($decisions as $decision) {
+                $remediation = $this->formatRemediationFromDecision($decision);
+                $item = $this->buildRemediationCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
+                $this->saveDeferred($item, $ip, $remediation[0], $remediation[1], $remediation[2]);
+            }
+        } else {
+            $remediation = $this->formatRemediationFromDecision(null);
             $item = $this->buildRemediationCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
             $this->saveDeferred($item, $ip, $remediation[0], $remediation[1], $remediation[2]);
         }
@@ -164,17 +241,7 @@ class ApiCache
     private function miss(int $ip): string
     {
         $decisions = $this->apiClient->getFilteredDecisions(['ip' => long2ip($ip)]);
-
-        if (!\count($decisions)) {
-            // TODO P1 cache also the clean IP.
-            //$item = $this->buildRemediationCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
-            //$this->saveDeferred($item, $ip, $remediation[0], $remediation[1], $remediation[2]);
-
-            return Remediation::formatFromDecision(null)[0];
-        }
-
         $this->saveRemediationsForIp($decisions, $ip);
-
         return $this->hit($ip);
     }
 
@@ -213,6 +280,6 @@ class ApiCache
             return $this->miss($ip);
         }
 
-        return Remediation::formatFromDecision(null)[0];
+        return $this->formatRemediationFromDecision(null)[0];
     }
 }

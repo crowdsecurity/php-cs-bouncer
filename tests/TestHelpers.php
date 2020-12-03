@@ -10,51 +10,32 @@ use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 
 class TestHelpers
 {
-    const TEST_IP = '1.2.3.4';
+    const BAD_IP = '1.2.3.4';
+    const CLEAN_IP = '2.3.4.5';
     const FS_CACHE_ADAPTER_DIR = __DIR__ . '/../var/fs.cache';
     const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__ . '/../var/phpFiles.cache';
     const WATCHER_LOGIN = 'PhpUnitTestMachine';
     const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
 
-    private static function delTree(string $dir): bool
-    {
-        if (file_exists($dir)) {
-            /** @var array $items */
-            $items = scandir($dir);
-            $files = array_diff($items, ['.', '..']);
-            foreach ($files as $file) {
-                (is_dir("$dir/$file")) ? self::delTree("$dir/$file") : unlink("$dir/$file");
-            }
-            return rmdir($dir);
-        }
-        return true;
-    }
-
     public static function cacheAdapterProvider(): array
     {
-        // Init and clear all adapters
-
-        
+        // Init all adapters
         /*
-        TODO P3 Fail on CI. Investigates.
+        TODO P3 Failed on CI but some fixes may fix this bug. Just retry it could work! Else investigates.
         $fileSystemAdapter = new FilesystemAdapter('fs_adapter_cache', 0, self::FS_CACHE_ADAPTER_DIR);
-        self::delTree(self::FS_CACHE_ADAPTER_DIR);
         */
 
         $phpFilesAdapter = new PhpFilesAdapter('php_array_adapter_backup_cache', 0, self::PHP_FILES_CACHE_ADAPTER_DIR);
-        self::delTree(self::PHP_FILES_CACHE_ADAPTER_DIR);
         
         /** @var string */
         $memcachedCacheAdapterDsn = getenv('MEMCACHED_DSN');
         $memcachedAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedCacheAdapterDsn));
-        $memcachedAdapter->clear();
 
         /** @var string */
         $redisCacheAdapterDsn = getenv('REDIS_DSN');
         /** @var ClientInterface */
         $redisClient = RedisAdapter::createConnection($redisCacheAdapterDsn);
         $redisAdapter = new RedisAdapter($redisClient);
-        $redisAdapter->clear();
 
         return [
             /*'FilesystemAdapter'  => [$fileSystemAdapter],*/
@@ -75,7 +56,8 @@ class TestHelpers
         $apiToken = file_get_contents($path);
         return [
             'config' => ['api_token' => $apiToken, 'api_url' => $apiUrl],
-            'blocked_ip' => self::TEST_IP
+            'bad_ip' => self::BAD_IP,
+            'clean_ip' => self::CLEAN_IP
         ];
     }
 
