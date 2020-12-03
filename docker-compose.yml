@@ -1,0 +1,36 @@
+version: '3'
+services:
+  crowdsec:
+    image: crowdsec
+    environment:
+      - DISABLE_AGENT=true
+    volumes:
+      - ./var/docker-data:/var/lib/crowdsec/data
+  composer:
+    image: composer:latest
+    environment:
+      - COMPOSER_CACHE_DIR=/app/var/cache/composer
+    volumes:
+      - .:/app
+  redis:
+    image: redis:6-alpine
+  memcached:
+    image: memcached:1-alpine
+  app:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    env_file: ./docker/.env
+    volumes:
+      - .:/app
+    links:
+      - crowdsec
+      - redis
+      - memcached
+  curl:
+    image: curlimages/curl
+  phpdoc:
+    image: phpdoc/phpdoc:3
+    volumes:
+      - .:/data
+    
