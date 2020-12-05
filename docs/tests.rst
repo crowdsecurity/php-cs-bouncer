@@ -33,7 +33,7 @@ The install composer dependencies:
 3) Run tests
 ~~~~~~~~~~~~
 
-Finally, run the tests.sh file:
+Finally, run the tests-local.sh file:
 
 .. code-block:: sh
 
