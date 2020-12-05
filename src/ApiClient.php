@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
+use Psr\Log\LoggerInterface;
+
 /**
  * The LAPI/CAPI REST Client. This is used to retrieve decisions.
  *
@@ -16,22 +18,32 @@ namespace CrowdSecBouncer;
  */
 class ApiClient
 {
+    /** @var LoggerInterface */
+    private $logger;
+
     /**
      * @var RestClient
      */
     private $restClient;
+
+    public function __construct(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
 
     /**
      * Configure this instance.
      */
     public function configure(string $baseUri, int $timeout, string $userAgent, string $token): void
     {
-        $this->restClient = new RestClient();
+        $this->restClient = new RestClient($this->logger);
         $this->restClient->configure($baseUri, [
             'User-Agent' => $userAgent,
             'X-Api-Key' => $token,
             'Accept' => 'application/json',
         ], $timeout);
+        $this->logger->debug("Api Client User Agent = $userAgent");
+        $this->logger->debug("Api Client Token = ***************************");
     }
 
     /**
@@ -54,7 +66,7 @@ class ApiClient
     {
         // TODO P2 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
         /** @var array */
-        $decisionsDiff = $this->restClient->request('/v1/decisions/stream', ['startup' => $startup]);
+        $decisionsDiff = $this->restClient->request('/v1/decisions/stream', $startup ? ['startup' => 'true'] : null);
 
         return $decisionsDiff;
     }

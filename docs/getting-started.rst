@@ -10,7 +10,7 @@ In your existing project, install the library:
 
    $ composer install crowdsec/bouncer-library
 
-Use the bouncer library (rupture mode)
+Use the bouncer library (live mode)
 --------------------------------------
 
 .. code-block:: php
@@ -31,7 +31,7 @@ Use the bouncer library (rupture mode)
 
    $remediation = $bouncer->getRemediationForIp($blockedIp);// Return "ban", "catpcha" or "bypass"
 
-Use the bouncer library (steam mode)
+Use the bouncer library (stream mode)
 ------------------------------------
 
 TODO P2

@@ -7,15 +7,30 @@ use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Predis\ClientInterface;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
+use \Monolog\Logger;
+use \Monolog\Handler\StreamHandler;
+use \Bramus\Monolog\Formatter\ColoredLineFormatter;
 
 class TestHelpers
 {
     const BAD_IP = '1.2.3.4';
     const CLEAN_IP = '2.3.4.5';
+    const NEWLY_BAD_IP = '3.4.5.6';
     const FS_CACHE_ADAPTER_DIR = __DIR__ . '/../var/fs.cache';
     const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__ . '/../var/phpFiles.cache';
     const WATCHER_LOGIN = 'PhpUnitTestMachine';
     const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
+
+    const LOG_LEVEL = Logger::WARNING; // set to Logger::DEBUG to get high verbosity
+
+    public static function createLogger(): Logger
+    {
+        $log = new Logger('TESTS');
+        $handler = new StreamHandler('php://stdout', self::LOG_LEVEL);
+        $handler->setFormatter(new ColoredLineFormatter(null, "[%datetime%] %message%\n", 'H:i:s'));
+        $log->pushHandler($handler);
+        return $log;
+    }
 
     public static function cacheAdapterProvider(): array
     {
@@ -45,7 +60,7 @@ class TestHelpers
         ];
     }
 
-    public static function setupBasicLapiInRuptureModeContext(): array
+    public static function setupBasicLapiInLiveModeContext(): array
     {
         $apiUrl = getenv('LAPI_URL');
 
@@ -57,14 +72,15 @@ class TestHelpers
         return [
             'config' => ['api_token' => $apiToken, 'api_url' => $apiUrl],
             'bad_ip' => self::BAD_IP,
-            'clean_ip' => self::CLEAN_IP
+            'clean_ip' => self::CLEAN_IP,
+            'newly_bad_ip' => self::NEWLY_BAD_IP,
         ];
     }
 
     public static function setupBasicLapiInStreamModeContext(): array
     {
-        $config = self::setupBasicLapiInRuptureModeContext();
-        $config['config']['rupture_mode'] = false;
+        $config = self::setupBasicLapiInLiveModeContext();
+        $config['config']['live_mode'] = false;
         return $config;
     }
 }

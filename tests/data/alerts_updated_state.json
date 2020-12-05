@@ -3,28 +3,28 @@
         "capacity": 0,
         "decisions": [
             {
-                "duration": "12h",
-                "end_ip": 16909060,
+                "duration": "36h",
+                "end_ip": 50595078,
                 "origin": "cscli",
-                "scenario": "setup captcha on single IP for 12h for PHPUnit tests",
+                "scenario": "ban single IP 3.4.5.6 for 36h for PHPUnit tests",
                 "scope": "Ip",
-                "start_ip": 16909060,
-                "type": "captcha",
-                "value": "1.2.3.4"
+                "start_ip": 50595078,
+                "type": "ban",
+                "value": "3.4.5.6"
             }
         ],
         "events": [],
         "events_count": 1,
         "labels": null,
         "leakspeed": "0",
-        "message": "setup for PHPUnit tests",
-        "scenario": "setup for PHPUnit tests",
+        "message": "updated state for PHPUnit tests",
+        "scenario": "updated state for PHPUnit tests",
         "scenario_hash": "",
         "scenario_version": "",
         "simulated": false,
         "source": {
             "scope": "Ip",
-            "value": "1.2.3.4"
+            "value": "3.4.5.6"
         },
         "start_at": "REPLACE_ME",
         "stop_at": "REPLACE_ME"
@@ -34,13 +34,13 @@
         "decisions": [
             {
                 "duration": "24h",
-                "start_ip": 16909060,
+                "start_ip": 50595076,
                 "origin": "cscli",
-                "scenario": "setup ban on range 1.2.3.4 to 1.2.3.7 for 24h for PHPUnit tests",
+                "scenario": "captcha range 3.4.5.4 to 3.4.5.7 for 48h for PHPUnit tests",
                 "scope": "Range",
-                "end_ip": 16909063,
-                "type": "ban",
-                "value": "1.2.3.4/30"
+                "end_ip": 50595079,
+                "type": "captcha",
+                "value": "3.4.5.6/30"
             }
         ],
         "events": [],
@@ -54,7 +54,7 @@
         "simulated": false,
         "source": {
             "scope": "Range",
-            "value": "1.2.3.4/30"
+            "value": "3.4.5.6/30"
         },
         "start_at": "REPLACE_ME",
         "stop_at": "REPLACE_ME"
