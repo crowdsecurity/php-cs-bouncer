@@ -21,7 +21,7 @@ TODO P2 testThrowErrorWhenMissAndApiIsNotReachable()
 TODO P2 testThrowErrorWhenMissAndApiTimeout()
 TODO P2 testCanVerifyCaptchableIp()
 TODO P2 testCanHandleCacheSaturation()
-TODO P2 testCanNotUseCapiInRuptureMode()
+TODO P2 testCanNotUseCapiInLiveMode()
 TODO P2 testCanVerifyIpInStreamModeWithCacheSystemBeforeWarmingTheCacheUp() https://stackoverflow.com/questions/5683592/phpunit-assert-that-an-exception-was-thrown
 */
 
@@ -52,10 +52,10 @@ final class IpVerificationTest extends TestCase
      */
     /*
     TODO P2
-    public function testCanVerifyIpInRuptureModeWithoutCacheSystem(): void
+    public function testCanVerifyIpInLiveModeWithoutCacheSystem(): void
     {
         // Init bouncer
-        $basicLapiContext = TestHelpers::setupBasicLapiInRuptureModeContext();
+        $basicLapiContext = TestHelpers::setupBasicLapiInLiveModeContext();
         $badIp = $basicLapiContext['bad_ip'];
         $config = $basicLapiContext['config'];
         $bouncer = new Bouncer();
@@ -71,7 +71,7 @@ final class IpVerificationTest extends TestCase
      * @dataProvider cacheAdapterProvider
      * @group ignore_
      */
-    public function testCanVerifyIpInRuptureModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
+    public function testCanVerifyIpInLiveModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
     {
         $this->watcherClient->setInitialState();
         $cacheAdapter->clear();
@@ -82,7 +82,7 @@ final class IpVerificationTest extends TestCase
             ->enableProxyingToOriginalMethods()
             ->getMock();
         $apiCache = new ApiCache($apiClientMock, $this->logger);
-        $basicLapiContext = TestHelpers::setupBasicLapiInRuptureModeContext();
+        $basicLapiContext = TestHelpers::setupBasicLapiInLiveModeContext();
         $badIp = $basicLapiContext['bad_ip'];
         $cleanIp = $basicLapiContext['clean_ip'];
         $config = $basicLapiContext['config'];
@@ -143,17 +143,17 @@ final class IpVerificationTest extends TestCase
             ->enableProxyingToOriginalMethods()
             ->getMock();
         $apiCache = new ApiCache($apiClientMock, $this->logger);
-        $basicLapiContext = TestHelpers::setupBasicLapiInRuptureModeContext();
+        $basicLapiContext = TestHelpers::setupBasicLapiInLiveModeContext();
         $badIp = $basicLapiContext['bad_ip'];
         $cleanIp = $basicLapiContext['clean_ip'];
         $newlyBadIp = $basicLapiContext['newly_bad_ip'];
         $badIp = $basicLapiContext['bad_ip'];
         $config = $basicLapiContext['config'];
-        $config['rupture_mode'] = false;
+        $config['live_mode'] = false;
         $bouncer = new Bouncer($apiCache, $this->logger);
         $bouncer->configure($config, $cacheAdapter);
 
-        // As we are in stream mode, no rupture call should be done to the API.
+        // As we are in stream mode, no live call should be done to the API.
         /** @var MockObject $apiClientMock */
         $apiClientMock->expects($this->exactly(0))->method('getFilteredDecisions');
 
@@ -226,7 +226,7 @@ final class IpVerificationTest extends TestCase
      */
     /*
     TODO P3
-     public function testCanNotVerifyIpViaCapiInRuptureMode(): void
+     public function testCanNotVerifyIpViaCapiInLiveMode(): void
     {
         $this->markTestIncomplete('This test has not been implemented yet.');
     }*/

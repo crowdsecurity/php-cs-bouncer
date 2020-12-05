@@ -10,8 +10,7 @@ In your existing project, install the library:
 
    $ composer install crowdsec/bouncer-library
 
-TODO P3 rename "rupture" to "live" everywhere
-Use the bouncer library (rupture mode)
+Use the bouncer library (live mode)
 --------------------------------------
 
 .. code-block:: php

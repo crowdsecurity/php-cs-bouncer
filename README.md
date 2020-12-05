@@ -24,7 +24,7 @@ Features:
 - [x] Fast API client
 - [x] LAPI Support
 - [x] Built-in support for the most known cache systems: Redis, Memcached, PhpFiles
-- [x] Rupture mode
+- [x] Live mode
 - [x] Stream mode
 - [x] Log events using monolog
 - [ ] Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)

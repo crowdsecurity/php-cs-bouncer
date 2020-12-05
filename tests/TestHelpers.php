@@ -60,7 +60,7 @@ class TestHelpers
         ];
     }
 
-    public static function setupBasicLapiInRuptureModeContext(): array
+    public static function setupBasicLapiInLiveModeContext(): array
     {
         $apiUrl = getenv('LAPI_URL');
 
@@ -79,8 +79,8 @@ class TestHelpers
 
     public static function setupBasicLapiInStreamModeContext(): array
     {
-        $config = self::setupBasicLapiInRuptureModeContext();
-        $config['config']['rupture_mode'] = false;
+        $config = self::setupBasicLapiInLiveModeContext();
+        $config['config']['live_mode'] = false;
         return $config;
     }
 }

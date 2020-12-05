@@ -26,7 +26,7 @@ class ApiCache
     private $adapter;
 
     /** @var bool */
-    private $ruptureMode;
+    private $liveMode;
 
     /** @var int */
     private $cacheExpirationForCleanIp;
@@ -46,13 +46,13 @@ class ApiCache
     /**
      * Configure this instance.
      */
-    public function configure(AbstractAdapter $adapter, bool $ruptureMode, string $apiUrl, int $timeout, string $userAgent, string $token, int $cacheExpirationForCleanIp): void
+    public function configure(AbstractAdapter $adapter, bool $liveMode, string $apiUrl, int $timeout, string $userAgent, string $token, int $cacheExpirationForCleanIp): void
     {
         $this->adapter = $adapter;
-        $this->ruptureMode = $ruptureMode;
+        $this->liveMode = $liveMode;
         $this->cacheExpirationForCleanIp = $cacheExpirationForCleanIp;
         $this->logger->debug('Api Cache adapter: '.get_class($adapter));
-        $this->logger->debug('Api Cache mode: '.($ruptureMode ? 'rupture' : 'stream'));
+        $this->logger->debug('Api Cache mode: '.($liveMode ? 'live' : 'stream'));
         $this->logger->debug("Api Cache expiration for clean ips: $cacheExpirationForCleanIp sec");
 
         $this->apiClient->configure($apiUrl, $timeout, $userAgent, $token);
@@ -307,7 +307,7 @@ class ApiCache
 
     /**
      * This method is called when nothing has been found in cache for the requested IP.
-     * In rupture mode is enabled, calls the API for decisions concerning the specified IP
+     * In live mode is enabled, calls the API for decisions concerning the specified IP
      * In stream mode, as we considere cache is the single source of truth, the IP is considered clean.
      * Finally the result is stored in caches for further calls.
      */
@@ -315,7 +315,7 @@ class ApiCache
     {
         $decisions = [];
 
-        if ($this->ruptureMode) {
+        if ($this->liveMode) {
             $this->logger->debug("Direct call to API for $ip");
             $decisions = $this->apiClient->getFilteredDecisions(['ip' => $ip]);
         }
@@ -350,7 +350,7 @@ class ApiCache
     public function get(string $ip): ?string
     {
         $this->logger->debug('IP to check: '.$ip);
-        if (!$this->ruptureMode && !$this->warmedUp) {
+        if (!$this->liveMode && !$this->warmedUp) {
             throw new BouncerException('CrowdSec Bouncer configured in "stream" mode. Please warm the cache up before trying to access it.');
         }
 

@@ -52,7 +52,7 @@ class Bouncer
         // Configure Api Cache.
         $this->apiCache->configure(
             $cacheAdapter,
-            $this->config['rupture_mode'],
+            $this->config['live_mode'],
             $this->config['api_url'],
             $this->config['api_timeout'],
             $this->config['api_user_agent'],
@@ -63,7 +63,7 @@ class Bouncer
 
     /**
      * Get the remediation for the specified IP. This method use the cache layer.
-     * In rupture mode, when no remediation was found in cache, the cache system will call the API to check if there is a decision.
+     * In live mode, when no remediation was found in cache, the cache system will call the API to check if there is a decision.
      *
      * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
      */
