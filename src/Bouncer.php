@@ -2,8 +2,11 @@
 
 namespace CrowdSecBouncer;
 
+use Monolog\Handler\NullHandler;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Config\Definition\Processor;
+use Psr\Log\LoggerInterface;
+use \Monolog\Logger;
 
 /**
  * The main Class of this package. This is the first entry point of any PHP Bouncers using this library.
@@ -17,15 +20,23 @@ use Symfony\Component\Config\Definition\Processor;
  */
 class Bouncer
 {
+    /** @var LoggerInterface */
+    private $logger;
+
     /** @var array */
-    protected $config;
+    private $config;
 
     /** @var ApiCache */
-    protected $apiCache;
+    private $apiCache;
 
-    public function __construct(ApiCache $apiCache = null)
+    public function __construct(ApiCache $apiCache = null, LoggerInterface $logger = null)
     {
-        $this->apiCache = $apiCache ?: new ApiCache(new ApiClient());
+        if (!$logger) {
+            $loggger = new Logger('null');
+            $loggger->pushHandler(new NullHandler());
+        }
+        $this->logger = $logger;
+        $this->apiCache = $apiCache ?: new ApiCache(new ApiClient($logger), $logger);
     }
 
     /**
@@ -41,7 +52,7 @@ class Bouncer
         // Configure Api Cache.
         $this->apiCache->configure(
             $cacheAdapter,
-            $this->config['rupture_mode'],
+            $this->config['live_mode'],
             $this->config['api_url'],
             $this->config['api_timeout'],
             $this->config['api_user_agent'],
@@ -52,7 +63,7 @@ class Bouncer
 
     /**
      * Get the remediation for the specified IP. This method use the cache layer.
-     * In rupture mode, when no remediation was found in cache, the cache system will call the API to check if there is a decision.
+     * In live mode, when no remediation was found in cache, the cache system will call the API to check if there is a decision.
      *
      * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
      */
@@ -62,8 +73,7 @@ class Bouncer
         if (false === $intIp) {
             throw new BouncerException("IP $ip should looks like x.x.x.x, with x in 0-255. Ex: 1.2.3.4");
         }
-
-        return $this->apiCache->get($intIp);
+        return $this->apiCache->get(long2ip($intIp));
     }
 
     /**

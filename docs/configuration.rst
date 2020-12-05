@@ -16,8 +16,8 @@ Full configuration reference
        // Optional. In seconds. The timeout when calling CAPI/LAPI. Defaults to 2 sec.
        'api_timeout'=> 2,
 
-       // Optional. true to enable rupture mode, false to enable the stream mode. Default to true.
-       'rupture_mode'=> true,
+       // Optional. true to enable live mode, false to enable the stream mode. Default to true.
+       'live_mode'=> true,
        
        // Optional. Cap the remediation to the selected one. Select from 'bypass' (minimum remediation), 'captcha' or 'ban' (maximum remediation). Defaults to 'ban'.
        'max_remediation'=> 'ban',
