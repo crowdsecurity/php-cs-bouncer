@@ -26,9 +26,14 @@ TODO P2 testCanVerifyIpInStreamModeWithCacheSystemBeforeWarmingTheCacheUp() http
 
 final class IpVerificationTest extends TestCase
 {
+    /** @var WatcherClient */
+    private $watcherClient;
+
     protected function setUp(): void
     {
-        WatcherClient::setCrowdSecContext();
+
+        $this->watcherClient = new WatcherClient($this->logger);
+        $this->watcherClient->configure();
     }
 
     public function cacheAdapterProvider(): array
@@ -63,6 +68,7 @@ final class IpVerificationTest extends TestCase
      */
     public function testCanVerifyIpInRuptureModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
     {
+        $this->watcherClient->setInitialState();
         $cacheAdapter->clear();
         // Init bouncer
         /** @var ApiClient */
@@ -122,6 +128,7 @@ final class IpVerificationTest extends TestCase
      */
     public function testCanVerifyIpInStreamModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
     {
+        $this->watcherClient->setInitialState();
         $cacheAdapter->clear();
         // Init bouncer
         /** @var ApiClient */
@@ -156,7 +163,10 @@ final class IpVerificationTest extends TestCase
             'Get decisions for a clean IP for the first time (as the cache has been warmed up should be a cache hit)'
         );
 
-        // TODO P1 Add and remove decision and try updating cache with refreshBlocklistCache()
+        
+        // Add and remove decision
+        $this->watcherClient->setSecondState();
+        
 
         // Clear cache
         //$cacheAdapter->clear();
