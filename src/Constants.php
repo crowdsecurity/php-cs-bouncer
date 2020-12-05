@@ -27,5 +27,5 @@ class Constants
     const CACHE_EXPIRATION_FOR_CLEAN_IP = 600; // TODO P2 get the correct one
 
     /** @var array The list of each known remediation, sorted by priority */
-    const ORDERED_REMEDIATIONS = ['ban', 'captcha']; // TODO P2 get the correct one
+    const ORDERED_REMEDIATIONS = ['ban', 'captcha', 'clean']; // TODO P2 get the correct one
 }

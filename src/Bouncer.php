@@ -73,8 +73,7 @@ class Bouncer
         if (false === $intIp) {
             throw new BouncerException("IP $ip should looks like x.x.x.x, with x in 0-255. Ex: 1.2.3.4");
         }
-
-        return $this->apiCache->get($intIp);
+        return $this->apiCache->get(long2ip($intIp));
     }
 
     /**

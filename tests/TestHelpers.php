@@ -15,6 +15,7 @@ class TestHelpers
 {
     const BAD_IP = '1.2.3.4';
     const CLEAN_IP = '2.3.4.5';
+    const NEWLY_BAD_IP = '3.4.5.6';
     const FS_CACHE_ADAPTER_DIR = __DIR__ . '/../var/fs.cache';
     const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__ . '/../var/phpFiles.cache';
     const WATCHER_LOGIN = 'PhpUnitTestMachine';
@@ -71,7 +72,8 @@ class TestHelpers
         return [
             'config' => ['api_token' => $apiToken, 'api_url' => $apiUrl],
             'bad_ip' => self::BAD_IP,
-            'clean_ip' => self::CLEAN_IP
+            'clean_ip' => self::CLEAN_IP,
+            'newly_bad_ip' => self::NEWLY_BAD_IP,
         ];
     }
 

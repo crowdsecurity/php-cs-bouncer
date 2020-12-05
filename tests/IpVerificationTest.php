@@ -147,17 +147,22 @@ final class IpVerificationTest extends TestCase
         $badIp = $basicLapiContext['bad_ip'];
         $cleanIp = $basicLapiContext['clean_ip'];
         $newlyBadIp = $basicLapiContext['newly_bad_ip'];
+        $badIp = $basicLapiContext['bad_ip'];
         $config = $basicLapiContext['config'];
         $config['rupture_mode'] = false;
-        $bouncer = new Bouncer($apiCache);
+        $bouncer = new Bouncer($apiCache, $this->logger);
         $bouncer->configure($config, $cacheAdapter);
 
-        // A the end of test, we shoud have exactly 0 "cache miss")
+        // As we are in stream mode, no rupture call should be done to the API.
         /** @var MockObject $apiClientMock */
         $apiClientMock->expects($this->exactly(0))->method('getFilteredDecisions');
 
         // Warm BlockList cache up
         $bouncer->warmBlocklistCacheUp();
+
+        $this->logger->debug('Refresh the cache just after the warm up. Nothing should append.');
+        // TODO P3 test this assertion
+        $bouncer->refreshBlocklistCache();
 
         $this->assertEquals(
             'ban',
@@ -171,17 +176,47 @@ final class IpVerificationTest extends TestCase
             'Get decisions for a clean IP for the first time (as the cache has been warmed up should be a cache hit)'
         );
 
+        // Preload the remediation to prepare the next tests.
+        $this->assertEquals(
+            'clean',
+            $bouncer->getRemediationForIp($newlyBadIp),
+            'Preload the clean remediation to prepare the next tests'
+        );
         
         // Add and remove decision
         $this->watcherClient->setSecondState();
         
+        // Pull updates
+        $bouncer->refreshBlocklistCache();
 
-        // Clear cache
-        //$cacheAdapter->clear();
+        //sleep(5);
 
-        // Call the same thing for the second time (now it should be a cache miss)
-        //$remediation2ndCall = $bouncer->getRemediationForIp($badIp);
-        //$this->assertEquals('ban', $remediation2ndCall);
+        $this->logger->debug('Refresh 2nd time the cache. Nothing should append.');
+        // TODO P3 test this assertion
+        $bouncer->refreshBlocklistCache();
+
+        //sleep(5);
+
+        $this->logger->debug('Refresh 3rd time the cache. Nothing should append.');
+        // TODO P3 test this assertion
+        $bouncer->refreshBlocklistCache();
+
+        //sleep(5);
+
+        //$this->logger->debug('Refresh 4th time the cache. Nothing should append.');
+        //$bouncer->refreshBlocklistCache();
+
+        $this->assertEquals(
+            'ban',
+            $bouncer->getRemediationForIp($newlyBadIp),
+            'The new decision should now be added, so the previously clean IP should now be bad'
+        );
+
+        $this->assertEquals(
+            'clean',
+            $bouncer->getRemediationForIp($badIp),
+            'The old decisions should now be removed, so the previously bad IP should now be clean'
+        );
     }
 
     /**
