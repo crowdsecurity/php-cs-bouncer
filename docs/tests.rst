@@ -26,7 +26,7 @@ The install composer dependencies:
 
 .. code-block:: sh
 
-   docker-compose run --rm composer install
+   docker-composer run app composer install
 
 .. _3-run-tests:
 

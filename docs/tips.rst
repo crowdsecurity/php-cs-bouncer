@@ -69,7 +69,7 @@ Use httpie inside crowdsec container to play with LAPI
 
 .. code-block:: sh
 
-    docker-composer crowdsec sh
+    docker-compose crowdsec sh
 
 Install httpie
 ^^^^^^^^^^^^^^
