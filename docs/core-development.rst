@@ -27,8 +27,8 @@ Lint code
 
 .. code-block:: sh
 
-   composer lintfix
-   composer phpstan
+   docker-composer run app composer lintfix
+   docker-composer run app composer phpstan
 
 Also, you can run "Super linter" locally:
 

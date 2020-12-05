@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
+use Psr\Log\LoggerInterface;
+
 /**
  * The low level REST Client.
  *
@@ -25,6 +27,14 @@ class RestClient
     /** @var string */
     private $baseUri;
 
+    /** @var LoggerInterface */
+    private $logger;
+
+    public function __construct(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
     /**
      * Configure this instance.
      */
@@ -33,6 +43,10 @@ class RestClient
         $this->baseUri = $baseUri;
         $this->headerString = $this->convertHeadersToString($headers);
         $this->timeout = $timeout;
+
+        $this->logger->debug("Rest client base URI: ".$this->baseUri);
+        $this->logger->debug("Rest client headers: ***************************");
+        $this->logger->debug("Rest client timeout: ".$this->timeout);
     }
 
     /**
@@ -60,10 +74,11 @@ class RestClient
         if ($queryParams) {
             $endpoint .= '?'.http_build_query($queryParams);
         }
+        $header = $headers ? $this->convertHeadersToString($headers) : $this->headerString;
         $config = [
             'http' => [
-                'method' => $method ?: 'GET',
-                'header' => $headers ? $this->convertHeadersToString($headers) : $this->headerString,
+                'method' => $method,
+                'header' => $header,
                 'timeout' => $timeout ?: $this->timeout,
             ],
         ];
@@ -71,6 +86,8 @@ class RestClient
             $config['http']['content'] = json_encode($bodyParams);
         }
         $context = stream_context_create($config);
+
+        $this->logger->debug("$method ".$this->baseUri.$endpoint);
 
         $response = file_get_contents($this->baseUri.$endpoint, false, $context);
         if (false === $response) {

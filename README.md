@@ -24,18 +24,18 @@ Features:
 - [x] Fast API client
 - [x] LAPI Support
 - [x] Built-in support for the most known cache systems: Redis, Memcached, PhpFiles
-- [x] Rupture mode
-- [ ] Stream mode (alpha version)
+- [x] Live mode
+- [x] Stream mode
+- [x] Log events using monolog
 - [ ] Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)
-- [ ] Direct CAPI support
-- [ ] Log events using monolog
-- [ ] PHP 5.6 retro compatibility (currenly PHP 7.2+)
+- [ ] PHP 7.x+8.x compatibility (currenly only PHP 7.2+)
 - [ ] Retrieve cache items with pagination
+- [ ] Direct CAPI support
 - [ ] Release 1.0.0 version
 - [ ] Support more cache systems (Apcu, Couchbase, Doctrine, Pdo)
 
 Code:
-- [x] Docker dev environment (Dockerized Crowdsec, Redis, Memcached, Composer, PHPUnit)
+- [x] Docker dev environment (Dockerized Crowdsec, Redis, Memcached, PHP)
 - [x] Continuous Integration (CI, includes Integration Tests and Super Linter)
 - [x] Integration tests (with TDD)
 - [x] Documented (Static documentation, PHP Doc)
