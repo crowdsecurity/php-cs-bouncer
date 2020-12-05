@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace CrowdSecBouncer;
 
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
-use Symfony\Component\Cache\CacheItem;
+use Psr\Log\LoggerInterface;
 
 /**
  * The cache mecanism to store every decisions from LAPI/CAPI. Symfony Cache component powered.
@@ -19,6 +19,9 @@ use Symfony\Component\Cache\CacheItem;
  */
 class ApiCache
 {
+    /** @var LoggerInterface */
+    private $logger;
+
     /** @var AbstractAdapter */
     private $adapter;
 
@@ -34,9 +37,10 @@ class ApiCache
     /** @var bool */
     private $warmedUp = false;
 
-    public function __construct(ApiClient $apiClient = null)
+    public function __construct(ApiClient $apiClient = null, LoggerInterface $logger)
     {
-        $this->apiClient = $apiClient ?: new ApiClient();
+        $this->logger = $logger;
+        $this->apiClient = $apiClient ?: new ApiClient($logger);
     }
 
     /**
@@ -47,6 +51,9 @@ class ApiCache
         $this->adapter = $adapter;
         $this->ruptureMode = $ruptureMode;
         $this->cacheExpirationForCleanIp = $cacheExpirationForCleanIp;
+        $this->logger->debug('Api Cache adapter: '.get_class($adapter));
+        $this->logger->debug('Api Cache mode: '.($ruptureMode ? 'rupture' : 'stream'));
+        $this->logger->debug("Api Cache expiration for clean ips: $cacheExpirationForCleanIp sec");
 
         $this->apiClient->configure($apiUrl, $timeout, $userAgent, $token);
     }
@@ -145,15 +152,6 @@ class ApiCache
             $decision['type'], // ex: captcha
             time() + self::parseDurationToSeconds($decision['duration']), // expiration timestamp
             $decision['id'],
-
-            /*
-            TODO P3 useful to keep in cache?
-            [
-                $decision['origin'],// ex cscli
-                $decision['scenario'],//ex: "manual 'captcha' from '25b9f1216f9344b780963bd281ae5573UIxCiwc74i2mFqK4'"
-                $decision['scope'],// ex: IP
-            ]
-            */
         ];
     }
 
@@ -208,6 +206,7 @@ class ApiCache
      */
     public function warmUp(): void
     {
+        $this->logger->info('Warming the cache up');
         $startup = true;
         $decisionsDiff = $this->apiClient->getStreamedDecisions($startup);
         $newDecisions = $decisionsDiff['new'];
@@ -220,6 +219,7 @@ class ApiCache
                 throw new BouncerException("Unable to warm the cache up");
             }
         }
+        $this->logger->debug('Cache warmed up');
     }
 
     /**
@@ -270,6 +270,7 @@ class ApiCache
      */
     public function get(int $ip): ?string
     {
+        $this->logger->debug('IP to check: '.$ip);
         if (!$this->ruptureMode && !$this->warmedUp) {
             throw new BouncerException('CrowdSec Bouncer configured in "stream" mode. Please warm the cache up before trying to access it.');
         }

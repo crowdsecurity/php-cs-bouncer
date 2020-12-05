@@ -10,6 +10,7 @@ use CrowdSecBouncer\Bouncer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Log\LoggerInterface;
 
 define("HOST_IS_UP", true);
 define("HOST_IS_DOWN", false);
@@ -29,8 +30,12 @@ final class IpVerificationTest extends TestCase
     /** @var WatcherClient */
     private $watcherClient;
 
+    /** @var LoggerInterface */
+    private $logger;
+
     protected function setUp(): void
     {
+        $this->logger = TestHelpers::createLogger();
 
         $this->watcherClient = new WatcherClient($this->logger);
         $this->watcherClient->configure();
@@ -73,14 +78,15 @@ final class IpVerificationTest extends TestCase
         // Init bouncer
         /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
+            ->setConstructorArgs([$this->logger])
             ->enableProxyingToOriginalMethods()
             ->getMock();
-        $apiCache = new ApiCache($apiClientMock);
+        $apiCache = new ApiCache($apiClientMock, $this->logger);
         $basicLapiContext = TestHelpers::setupBasicLapiInRuptureModeContext();
         $badIp = $basicLapiContext['bad_ip'];
         $cleanIp = $basicLapiContext['clean_ip'];
         $config = $basicLapiContext['config'];
-        $bouncer = new Bouncer($apiCache);
+        $bouncer = new Bouncer($apiCache, $this->logger);
         $bouncer->configure($config, $cacheAdapter);
 
         // A the end of test, we shoud have exactly 3 "cache miss")
@@ -133,12 +139,14 @@ final class IpVerificationTest extends TestCase
         // Init bouncer
         /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
+            ->setConstructorArgs([$this->logger])
             ->enableProxyingToOriginalMethods()
             ->getMock();
-        $apiCache = new ApiCache($apiClientMock);
+        $apiCache = new ApiCache($apiClientMock, $this->logger);
         $basicLapiContext = TestHelpers::setupBasicLapiInRuptureModeContext();
         $badIp = $basicLapiContext['bad_ip'];
         $cleanIp = $basicLapiContext['clean_ip'];
+        $newlyBadIp = $basicLapiContext['newly_bad_ip'];
         $config = $basicLapiContext['config'];
         $config['rupture_mode'] = false;
         $bouncer = new Bouncer($apiCache);

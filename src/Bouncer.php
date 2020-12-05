@@ -2,8 +2,11 @@
 
 namespace CrowdSecBouncer;
 
+use Monolog\Handler\NullHandler;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Config\Definition\Processor;
+use Psr\Log\LoggerInterface;
+use \Monolog\Logger;
 
 /**
  * The main Class of this package. This is the first entry point of any PHP Bouncers using this library.
@@ -17,15 +20,23 @@ use Symfony\Component\Config\Definition\Processor;
  */
 class Bouncer
 {
+    /** @var LoggerInterface */
+    private $logger;
+
     /** @var array */
-    protected $config;
+    private $config;
 
     /** @var ApiCache */
-    protected $apiCache;
+    private $apiCache;
 
-    public function __construct(ApiCache $apiCache = null)
+    public function __construct(ApiCache $apiCache = null, LoggerInterface $logger = null)
     {
-        $this->apiCache = $apiCache ?: new ApiCache(new ApiClient());
+        if (!$logger) {
+            $loggger = new Logger('null');
+            $loggger->pushHandler(new NullHandler());
+        }
+        $this->logger = $logger;
+        $this->apiCache = $apiCache ?: new ApiCache(new ApiClient($logger), $logger);
     }
 
     /**

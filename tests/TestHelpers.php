@@ -7,6 +7,9 @@ use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Predis\ClientInterface;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
+use \Monolog\Logger;
+use \Monolog\Handler\StreamHandler;
+use \Bramus\Monolog\Formatter\ColoredLineFormatter;
 
 class TestHelpers
 {
@@ -16,6 +19,17 @@ class TestHelpers
     const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__ . '/../var/phpFiles.cache';
     const WATCHER_LOGIN = 'PhpUnitTestMachine';
     const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
+
+    const LOG_LEVEL = Logger::WARNING; // set to Logger::DEBUG to get high verbosity
+
+    public static function createLogger(): Logger
+    {
+        $log = new Logger('TESTS');
+        $handler = new StreamHandler('php://stdout', self::LOG_LEVEL);
+        $handler->setFormatter(new ColoredLineFormatter(null, "[%datetime%] %message%\n", 'H:i:s'));
+        $log->pushHandler($handler);
+        return $log;
+    }
 
     public static function cacheAdapterProvider(): array
     {
