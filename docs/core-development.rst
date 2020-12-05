@@ -42,6 +42,8 @@ Full details here: https://github.com/github/super-linter/blob/master/docs/run-l
 Git Flow
 --------
 
+More info here: https://danielkummer.github.io/git-flow-cheatsheet/
+
 To start a new feature:
 
 .. code-block:: sh
@@ -61,7 +63,12 @@ To pull the feature:
 
 Important: As we use pull requests, we just don't use `git flow feature finish <name>` and we just remove the local branch when the PR is merged.
 
+To create a release:
 
+.. code-block:: sh
+   git flow release start vx.x.x
+   git flow release publish vx.x.x
+   git flow release finish vx.x.x
 
 https://stackoverflow.com/questions/55706856/proper-way-to-use-gitflow-with-pull-requests
 
