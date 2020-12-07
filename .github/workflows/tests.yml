@@ -29,6 +29,8 @@ jobs:
                     - 8080:8080
                 env:
                     DISABLE_AGENT: true
+                options: >-
+                    --name crowdsec
 
         steps:
             -   name: Checkout
