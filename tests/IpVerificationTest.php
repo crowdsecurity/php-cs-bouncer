@@ -107,14 +107,14 @@ final class IpVerificationTest extends TestCase
 
         $cleanRemediation1stCall = $bouncer->getRemediationForIp($cleanIp);
         $this->assertEquals(
-            'clean',
+            'bypass',
             $cleanRemediation1stCall,
             'Get decisions for a clean IP for the first time (it should be a cache miss)'
         );
 
         // Call the same thing for the second time (now it should be a cache hit)
         $cleanRemediation2ndCall = $bouncer->getRemediationForIp($cleanIp);
-        $this->assertEquals('clean', $cleanRemediation2ndCall);
+        $this->assertEquals('bypass', $cleanRemediation2ndCall);
 
         // Clear cache
         $cacheAdapter->clear();
@@ -123,6 +123,14 @@ final class IpVerificationTest extends TestCase
 
         $remediation3rdCall = $bouncer->getRemediationForIp($badIp);
         $this->assertEquals('ban', $remediation3rdCall);
+
+        // Reconfigure the bouncer to set maximum remediation level to "captcha"
+        $config['max_remediation_level'] = 'captcha';
+        $bouncer->configure($config, $cacheAdapter);
+        $cappedRemediation = $bouncer->getRemediationForIp($badIp);
+        $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
+        $config['max_remediation_level'] = 'ban';
+        $bouncer->configure($config, $cacheAdapter);
     }
 
     /**
@@ -170,22 +178,30 @@ final class IpVerificationTest extends TestCase
             'Get decisions for a bad IP for the first time (as the cache has been warmed up should be a cache hit)'
         );
 
+        // Reconfigure the bouncer to set maximum remediation level to "captcha"
+        $config['max_remediation_level'] = 'captcha';
+        $bouncer->configure($config, $cacheAdapter);
+        $cappedRemediation = $bouncer->getRemediationForIp($badIp);
+        $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
+        $config['max_remediation_level'] = 'ban';
+        $bouncer->configure($config, $cacheAdapter);
+
         $this->assertEquals(
-            'clean',
+            'bypass',
             $bouncer->getRemediationForIp($cleanIp),
             'Get decisions for a clean IP for the first time (as the cache has been warmed up should be a cache hit)'
         );
 
         // Preload the remediation to prepare the next tests.
         $this->assertEquals(
-            'clean',
+            'bypass',
             $bouncer->getRemediationForIp($newlyBadIp),
-            'Preload the clean remediation to prepare the next tests'
+            'Preload the bypass remediation to prepare the next tests'
         );
-        
+
         // Add and remove decision
         $this->watcherClient->setSecondState();
-        
+
         // Pull updates
         $bouncer->refreshBlocklistCache();
 
@@ -213,7 +229,7 @@ final class IpVerificationTest extends TestCase
         );
 
         $this->assertEquals(
-            'clean',
+            'bypass',
             $bouncer->getRemediationForIp($badIp),
             'The old decisions should now be removed, so the previously bad IP should now be clean'
         );

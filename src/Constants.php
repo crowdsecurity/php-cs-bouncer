@@ -26,6 +26,16 @@ class Constants
     /** @var int The duration we keep a clean IP in cache 600s = 10m */
     const CACHE_EXPIRATION_FOR_CLEAN_IP = 600; // TODO P2 get the correct one
 
-    /** @var array The list of each known remediation, sorted by priority */
-    const ORDERED_REMEDIATIONS = ['ban', 'captcha', 'clean']; // TODO P2 get the correct one
+    /** @var string The ban remediation */
+    const REMEDIATION_BAN = 'ban';
+
+    /** @var string The captcha remediation */
+    const REMEDIATION_CAPTCHA = 'captcha';
+
+    /** @var string The bypass remediation */
+    const REMEDIATION_BYPASS = 'bypass';
+
+    // TODO P2 get the correct list
+    /** @var array<string> The list of each known remediation, sorted by priority */
+    const ORDERED_REMEDIATIONS = [self::REMEDIATION_BAN, self::REMEDIATION_CAPTCHA, self::REMEDIATION_BYPASS];
 }
