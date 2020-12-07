@@ -73,21 +73,27 @@ final class IpVerificationTest extends TestCase
      */
     public function testCanVerifyIpInLiveModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
     {
+        // Init context
+
         $this->watcherClient->setInitialState();
         $cacheAdapter->clear();
+        $badIp = TestHelpers::BAD_IP;
+        $cleanIp = TestHelpers::CLEAN_IP;
+
         // Init bouncer
+
         /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
             ->setConstructorArgs([$this->logger])
             ->enableProxyingToOriginalMethods()
             ->getMock();
         $apiCache = new ApiCache($apiClientMock, $this->logger);
-        $basicLapiContext = TestHelpers::setupBasicLapiInLiveModeContext();
-        $badIp = $basicLapiContext['bad_ip'];
-        $cleanIp = $basicLapiContext['clean_ip'];
-        $config = $basicLapiContext['config'];
+        $bouncerConfig = [
+            'api_token' => TestHelpers::getBouncerKey(),
+            'api_url' => TestHelpers::getLapiUrl()
+        ];
         $bouncer = new Bouncer($apiCache, $this->logger);
-        $bouncer->configure($config, $cacheAdapter);
+        $bouncer->configure($bouncerConfig, $cacheAdapter);
 
         // A the end of test, we shoud have exactly 3 "cache miss")
         /** @var MockObject $apiClientMock */
@@ -125,12 +131,12 @@ final class IpVerificationTest extends TestCase
         $this->assertEquals('ban', $remediation3rdCall);
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
-        $config['max_remediation_level'] = 'captcha';
-        $bouncer->configure($config, $cacheAdapter);
+        $bouncerConfig['max_remediation_level'] = 'captcha';
+        $bouncer->configure($bouncerConfig, $cacheAdapter);
         $cappedRemediation = $bouncer->getRemediationForIp($badIp);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
-        $config['max_remediation_level'] = 'ban';
-        $bouncer->configure($config, $cacheAdapter);
+        unset($bouncerConfig['max_remediation_level']);
+        $bouncer->configure($bouncerConfig, $cacheAdapter);
     }
 
     /**
@@ -142,34 +148,42 @@ final class IpVerificationTest extends TestCase
      */
     public function testCanVerifyIpInStreamModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
     {
+        // Init context
+
         $this->watcherClient->setInitialState();
         $cacheAdapter->clear();
+        $badIp = TestHelpers::BAD_IP;
+        $cleanIp = TestHelpers::CLEAN_IP;
+        $newlyBadIp = TestHelpers::NEWLY_BAD_IP;
+        
         // Init bouncer
+
         /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
             ->setConstructorArgs([$this->logger])
             ->enableProxyingToOriginalMethods()
             ->getMock();
         $apiCache = new ApiCache($apiClientMock, $this->logger);
-        $basicLapiContext = TestHelpers::setupBasicLapiInLiveModeContext();
-        $badIp = $basicLapiContext['bad_ip'];
-        $cleanIp = $basicLapiContext['clean_ip'];
-        $newlyBadIp = $basicLapiContext['newly_bad_ip'];
-        $badIp = $basicLapiContext['bad_ip'];
-        $config = $basicLapiContext['config'];
-        $config['live_mode'] = false;
+
+        $bouncerConfig = [
+            'api_token' => TestHelpers::getBouncerKey(),
+            'api_url' => TestHelpers::getLapiUrl(),
+            'live_mode' => false
+        ];
         $bouncer = new Bouncer($apiCache, $this->logger);
-        $bouncer->configure($config, $cacheAdapter);
+        $bouncer->configure($bouncerConfig, $cacheAdapter);
 
         // As we are in stream mode, no live call should be done to the API.
+
         /** @var MockObject $apiClientMock */
         $apiClientMock->expects($this->exactly(0))->method('getFilteredDecisions');
 
         // Warm BlockList cache up
+
         $bouncer->warmBlocklistCacheUp();
 
-        $this->logger->debug('Refresh the cache just after the warm up. Nothing should append.');
         // TODO P3 test this assertion
+        $this->logger->debug('Refresh the cache just after the warm up. Nothing should append.');
         $bouncer->refreshBlocklistCache();
 
         $this->assertEquals(
@@ -179,12 +193,12 @@ final class IpVerificationTest extends TestCase
         );
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
-        $config['max_remediation_level'] = 'captcha';
-        $bouncer->configure($config, $cacheAdapter);
+        $bouncerConfig['max_remediation_level'] = 'captcha';
+        $bouncer->configure($bouncerConfig, $cacheAdapter);
         $cappedRemediation = $bouncer->getRemediationForIp($badIp);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
-        $config['max_remediation_level'] = 'ban';
-        $bouncer->configure($config, $cacheAdapter);
+        unset($bouncerConfig['max_remediation_level']);
+        $bouncer->configure($bouncerConfig, $cacheAdapter);
 
         $this->assertEquals(
             'bypass',
@@ -205,22 +219,13 @@ final class IpVerificationTest extends TestCase
         // Pull updates
         $bouncer->refreshBlocklistCache();
 
-        //sleep(5);
-
+        // TODO P3 test this assertion
         $this->logger->debug('Refresh 2nd time the cache. Nothing should append.');
-        // TODO P3 test this assertion
         $bouncer->refreshBlocklistCache();
 
-        //sleep(5);
-
+        // TODO P3 test this assertion
         $this->logger->debug('Refresh 3rd time the cache. Nothing should append.');
-        // TODO P3 test this assertion
         $bouncer->refreshBlocklistCache();
-
-        //sleep(5);
-
-        //$this->logger->debug('Refresh 4th time the cache. Nothing should append.');
-        //$bouncer->refreshBlocklistCache();
 
         $this->assertEquals(
             'ban',
@@ -232,6 +237,34 @@ final class IpVerificationTest extends TestCase
             'bypass',
             $bouncer->getRemediationForIp($badIp),
             'The old decisions should now be removed, so the previously bad IP should now be clean'
+        );
+
+        // Setup an new instance.
+
+        /** @var ApiClient */
+        $apiClientMock2 = $this->getMockBuilder(ApiClient::class)
+            ->setConstructorArgs([$this->logger])
+            ->enableProxyingToOriginalMethods()
+            ->getMock();
+        $apiCache2 = new ApiCache($apiClientMock2, $this->logger);
+
+        $bouncerConfig = [
+            'api_token' => TestHelpers::getBouncerKey(),
+            'api_url' => TestHelpers::getLapiUrl(),
+            'live_mode' => false
+        ];
+        $bouncer = new Bouncer($apiCache2, $this->logger);
+        $bouncer->configure($bouncerConfig, $cacheAdapter);
+
+        // The cache should still be warmed up, even for a new instance
+
+        /** @var MockObject $apiClientMock2 */
+        $apiClientMock2->expects($this->exactly(0))->method('getFilteredDecisions');
+
+        $this->assertEquals(
+            'ban',
+            $bouncer->getRemediationForIp($newlyBadIp),
+            'The cache warm up should be stored across each instanciation'
         );
     }
 
