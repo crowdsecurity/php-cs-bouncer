@@ -2,7 +2,7 @@ name: Tests
 
 on:
     pull_request:
-#    push: TODO P3 No tests on push because it causes an unresolved bug (no space left on device). This Smell a race condition.
+    push: #TODO P3 No tests on push because it causes an unresolved bug (no space left on device). This Smell a race condition.
 
 jobs:
 
