@@ -1,4 +1,4 @@
-FROM php:7.2-fpm-alpine
+FROM php:8-cli-alpine
 
 RUN apk update \
     && apk add --no-cache git=2.26.2-r0 mysql-client=10.4.15-r0 curl=7.69.1-r1 libmcrypt=2.5.8-r8 libmcrypt-dev=2.5.8-r8 openssh-client=8.3_p1-r0 icu-dev=67.1-r0 \

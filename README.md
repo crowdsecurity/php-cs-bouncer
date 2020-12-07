@@ -27,8 +27,8 @@ Features:
 - [x] Live mode
 - [x] Stream mode
 - [x] Log events using monolog
+- [x] PHP compatibility with 7.2.x, 7.3.x, 7.4.x and 8.0.x
 - [ ] Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)
-- [ ] PHP 7.x+8.x compatibility (currenly only PHP 7.2+)
 - [ ] Retrieve cache items with pagination
 - [ ] Direct CAPI support
 - [ ] Release 1.0.0 version
