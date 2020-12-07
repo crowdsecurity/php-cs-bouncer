@@ -29,6 +29,7 @@ class ApiClient
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
+        $this->restClient = new RestClient($this->logger);
     }
 
     /**
@@ -36,7 +37,6 @@ class ApiClient
      */
     public function configure(string $baseUri, int $timeout, string $userAgent, string $token): void
     {
-        $this->restClient = new RestClient($this->logger);
         $this->restClient->configure($baseUri, [
             'User-Agent' => $userAgent,
             'X-Api-Key' => $token,

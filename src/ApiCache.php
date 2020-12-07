@@ -35,7 +35,7 @@ class ApiCache
     private $apiClient;
 
     /** @var bool */
-    private $warmedUp = false;
+    private $warmedUp;
 
     public function __construct(ApiClient $apiClient = null, LoggerInterface $logger)
     {
@@ -46,8 +46,15 @@ class ApiCache
     /**
      * Configure this instance.
      */
-    public function configure(AbstractAdapter $adapter, bool $liveMode, string $apiUrl, int $timeout, string $userAgent, string $token, int $cacheExpirationForCleanIp): void
-    {
+    public function configure(
+        AbstractAdapter $adapter,
+        bool $liveMode,
+        string $apiUrl,
+        int $timeout,
+        string $userAgent,
+        string $token,
+        int $cacheExpirationForCleanIp
+    ): void {
         $this->adapter = $adapter;
         $this->liveMode = $liveMode;
         $this->cacheExpirationForCleanIp = $cacheExpirationForCleanIp;
@@ -58,7 +65,7 @@ class ApiCache
         $cacheConfig = $cacheConfigItem->get();
         $warmedUp = (is_array($cacheConfig) && isset($cacheConfig['warmed_up']) && $cacheConfig['warmed_up'] === true);
         $this->warmedUp = $warmedUp;
-        $this->logger->debug("Api Cache already warmed up: ". ($this->warmedUp ? 'true' : 'false'));
+        $this->logger->debug("Api Cache already warmed up: " . ($this->warmedUp ? 'true' : 'false'));
 
         $this->apiClient->configure($apiUrl, $timeout, $userAgent, $token);
     }
@@ -71,12 +78,14 @@ class ApiCache
         $item = $this->adapter->getItem($ip);
 
         // Merge with existing remediations (if any).
-        $remediations = $item->get();
-        $remediations = $remediations ?: [];
+        $remediations = $item->isHit() ? $item->get() : [];
 
         $index = array_search(Constants::REMEDIATION_BYPASS, array_column($remediations, 0));
         if (false !== $index) {
-            $this->logger->debug("cache#$ip: Previously clean IP but now bad, remove the " . Constants::REMEDIATION_BYPASS . " remediation immediately");
+            $this->logger->debug(
+                "cache#$ip: Previously clean IP but now bad, remove the " .
+                    Constants::REMEDIATION_BYPASS . " remediation immediately"
+            );
             unset($remediations[$index]);
         }
 
@@ -89,15 +98,17 @@ class ApiCache
         // Build the item lifetime in cache and sort remediations by priority
         $maxLifetime = max(array_column($remediations, 1));
         $prioritizedRemediations = Remediation::sortRemediationByPriority($remediations);
-
-        //$this->logger->debug("Decision $decisionId added to cache item $ip with lifetime $maxLifetime. Now it looks like:");
+        
         $item->set($prioritizedRemediations);
         $item->expiresAfter($maxLifetime);
 
         // Save the cache without committing it to the cache system.
         // Useful to improve performance when updating the cache.
         if (!$this->adapter->saveDeferred($item)) {
-            throw new BouncerException("cache#$ip: Unable to save this deferred item in cache: $type for $expiration sec, (decision $decisionId)");
+            throw new BouncerException(
+                "cache#$ip: Unable to save this deferred item in cache: " .
+                    "$type for $expiration sec, (decision $decisionId)"
+            );
         }
     }
 
@@ -159,19 +170,19 @@ class ApiCache
             throw new BouncerException("Unable to parse the following duration: ${$duration}.");
         };
         $seconds = 0;
-        if (null !== $matches[2]) {
+        if (isset($matches[2])) {
             $seconds += ((int) $matches[1]) * 3600; // hours
         }
-        if (null !== $matches[3]) {
+        if (isset($matches[3])) {
             $seconds += ((int) $matches[2]) * 60; // minutes
         }
-        if (null !== $matches[4]) {
+        if (isset($matches[4])) {
             $seconds += ((int) $matches[1]); // seconds
         }
-        if (null !== $matches[5]) { // units in milliseconds
+        if (isset($matches[5])) { // units in milliseconds
             $seconds *= 0.001;
         }
-        if (null !== $matches[1]) { // negative
+        if (isset($matches[1])) { // negative
             $seconds *= -1;
         }
         $seconds = round($seconds);
@@ -203,8 +214,8 @@ class ApiCache
     private function defferUpdateCacheConfig(array $config): void
     {
         $cacheConfigItem = $this->adapter->getItem('cacheConfig');
-        $cacheConfig = $cacheConfigItem->get();
-        $cacheConfig = array_replace_recursive($cacheConfig === false ? $cacheConfig : [], $config);
+        $cacheConfig = $cacheConfigItem->isHit() ? $cacheConfigItem->get() : [];
+        $cacheConfig = array_replace_recursive($cacheConfig, $config);
         $cacheConfigItem->set($cacheConfig);
         $this->adapter->saveDeferred($cacheConfigItem);
     }
@@ -221,10 +232,12 @@ class ApiCache
     private function saveRemediations(array $decisions): bool
     {
         foreach ($decisions as $decision) {
-            $ipRange = array_map('long2ip', range($decision['start_ip'], $decision['end_ip']));
-            $remediation = $this->formatRemediationFromDecision($decision);
-            foreach ($ipRange as $ip) {
-                $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
+            if (is_int($decision['start_ip']) && is_int($decision['end_ip'])) {
+                $ipRange = array_map('long2ip', range($decision['start_ip'], $decision['end_ip']));
+                $remediation = $this->formatRemediationFromDecision($decision);
+                foreach ($ipRange as $ip) {
+                    $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
+                }
             }
         }
 
@@ -239,18 +252,20 @@ class ApiCache
     private function removeRemediations(array $decisions): bool
     {
         foreach ($decisions as $decision) {
-            $ipRange = array_map('long2ip', range($decision['start_ip'], $decision['end_ip']));
-            $this->logger->debug('decision#' . $decision['id'] . ': remove for IPs ' . join(', ', $ipRange));
-            $success = true;
-            foreach ($ipRange as $ip) {
-                if (!$this->removeDecisionFromRemediationItem($ip, $decision['id'])) {
-                    $success = false;
+            if (is_int($decision['start_ip']) && is_int($decision['end_ip'])) {
+                $ipRange = array_map('long2ip', range($decision['start_ip'], $decision['end_ip']));
+                $this->logger->debug('decision#' . $decision['id'] . ': remove for IPs ' . join(', ', $ipRange));
+                $success = true;
+                foreach ($ipRange as $ip) {
+                    if (!$this->removeDecisionFromRemediationItem($ip, $decision['id'])) {
+                        $success = false;
+                    }
                 }
-            }
-            if (!$success) {
-                // The API may return stale deletion events due to API design.
-                // Ignoring them is therefore not a problem.
-                $this->logger->debug("cache#$ip: decision " . $decision['id'] . " not found in cache.");
+                if (!$success) {
+                    // The API may return stale deletion events due to API design.
+                    // Ignoring them is therefore not a problem.
+                    $this->logger->debug("Decision " . $decision['id'] . " not found in cache for one or more items.");
+                }
             }
         }
         return $this->adapter->commit();
@@ -370,7 +385,9 @@ class ApiCache
     {
         $this->logger->debug('IP to check: ' . $ip);
         if (!$this->liveMode && !$this->warmedUp) {
-            throw new BouncerException('CrowdSec Bouncer configured in "stream" mode. Please warm the cache up before trying to access it.');
+            throw new BouncerException(
+                'CrowdSec Bouncer configured in "stream" mode. Please warm the cache up before trying to access it.'
+            );
         }
 
         if ($this->adapter->hasItem($ip)) {
@@ -380,7 +397,5 @@ class ApiCache
             $this->logger->debug("Cache miss for IP: $ip");
             return $this->miss($ip);
         }
-
-        return $this->formatRemediationFromDecision(null)[0];
     }
 }
