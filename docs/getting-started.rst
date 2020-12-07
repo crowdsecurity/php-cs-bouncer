@@ -29,7 +29,7 @@ Use the bouncer library (live mode)
    $bouncer = new Bouncer();
    $bouncer->configure(['api_token'=> $apiToken], $cacheAdapter);
 
-   $remediation = $bouncer->getRemediationForIp($blockedIp);// Return "ban", "catpcha" or "bypass"
+   $remediation = $bouncer->getRemediationForIp($blockedIp);// Return "ban", "captcha" or "bypass"
 
 Use the bouncer library (stream mode)
 ------------------------------------

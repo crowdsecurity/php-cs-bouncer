@@ -69,12 +69,9 @@ class ApiCache
         $remediations = $item->get();
         $remediations = $remediations ?: [];
 
-
-        // TODO P3 use constant for clean, ban or captcha single word
-        // TODO P3 wording replace "clean" by "bypass"
-        $index = array_search('clean', array_column($remediations, 0));
+        $index = array_search(Constants::REMEDIATION_BYPASS, array_column($remediations, 0));
         if (false !== $index) {
-            $this->logger->debug("cache#$ip: Previously clean IP but now bad, remove the \"clean\" remediation immediately");
+            $this->logger->debug("cache#$ip: Previously clean IP but now bad, remove the ".Constants::REMEDIATION_BYPASS." remediation immediately");
             unset($remediations[$index]);   
         }
 
@@ -190,7 +187,7 @@ class ApiCache
     private function formatRemediationFromDecision(?array $decision): array
     {
         if (!$decision) {
-            return ['clean', time() + $this->cacheExpirationForCleanIp, 0];
+            return [Constants::REMEDIATION_BYPASS, time() + $this->cacheExpirationForCleanIp, 0];
         }
 
         return [
@@ -347,7 +344,7 @@ class ApiCache
      *
      * @return string the computed remediation string, or null if no decision was found
      */
-    public function get(string $ip): ?string
+    public function get(string $ip): string
     {
         $this->logger->debug('IP to check: '.$ip);
         if (!$this->liveMode && !$this->warmedUp) {
