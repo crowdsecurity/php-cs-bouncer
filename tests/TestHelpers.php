@@ -16,8 +16,10 @@ class TestHelpers
     const BAD_IP = '1.2.3.4';
     const CLEAN_IP = '2.3.4.5';
     const NEWLY_BAD_IP = '3.4.5.6';
+
     const FS_CACHE_ADAPTER_DIR = __DIR__ . '/../var/fs.cache';
     const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__ . '/../var/phpFiles.cache';
+    
     const WATCHER_LOGIN = 'PhpUnitTestMachine';
     const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
 
@@ -60,27 +62,18 @@ class TestHelpers
         ];
     }
 
-    public static function setupBasicLapiInLiveModeContext(): array
+    public static function getLapiUrl(): string
     {
-        $apiUrl = getenv('LAPI_URL');
+        return getenv('LAPI_URL');
+    }
 
+    public static function getBouncerKey(): string
+    {
         $path = realpath(__DIR__ . '/../.bouncer-key');
         if ($path === false) {
             throw new RuntimeException("'.bouncer-key' file was not found.");
         }
         $apiToken = file_get_contents($path);
-        return [
-            'config' => ['api_token' => $apiToken, 'api_url' => $apiUrl],
-            'bad_ip' => self::BAD_IP,
-            'clean_ip' => self::CLEAN_IP,
-            'newly_bad_ip' => self::NEWLY_BAD_IP,
-        ];
-    }
-
-    public static function setupBasicLapiInStreamModeContext(): array
-    {
-        $config = self::setupBasicLapiInLiveModeContext();
-        $config['config']['live_mode'] = false;
-        return $config;
+        return $apiToken;
     }
 }

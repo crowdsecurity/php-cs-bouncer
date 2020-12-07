@@ -15,27 +15,27 @@ namespace CrowdSecBouncer;
 class Constants
 {
     /** @var string The URL of the CrowdSec Central API */
-    const CAPI_URL = 'https://api.crowdsec.net/v2/'; // TODO P2 get the correct one
+    public const CAPI_URL = 'https://api.crowdsec.net/v2/'; // TODO P2 get the correct one
 
     /** @var string The user agent used to send request to LAPI or CAPI */
-    const BASE_USER_AGENT = 'CrowdSec PHP Library/1.0.0'; // TODO P3 get the correct version
+    public const BASE_USER_AGENT = 'CrowdSec PHP Library/1.0.0'; // TODO P3 get the correct version
 
     /** @var int The timeout when calling LAPI or CAPI */
-    const API_TIMEOUT = 1; // TODO P2 get the correct one
+    public const API_TIMEOUT = 1; // TODO P2 get the correct one
 
     /** @var int The duration we keep a clean IP in cache 600s = 10m */
-    const CACHE_EXPIRATION_FOR_CLEAN_IP = 600; // TODO P2 get the correct one
+    public const CACHE_EXPIRATION_FOR_CLEAN_IP = 600; // TODO P2 get the correct one
 
     /** @var string The ban remediation */
-    const REMEDIATION_BAN = 'ban';
+    public const REMEDIATION_BAN = 'ban';
 
     /** @var string The captcha remediation */
-    const REMEDIATION_CAPTCHA = 'captcha';
+    public const REMEDIATION_CAPTCHA = 'captcha';
 
     /** @var string The bypass remediation */
-    const REMEDIATION_BYPASS = 'bypass';
+    public const REMEDIATION_BYPASS = 'bypass';
 
     // TODO P2 get the correct list
     /** @var array<string> The list of each known remediation, sorted by priority */
-    const ORDERED_REMEDIATIONS = [self::REMEDIATION_BAN, self::REMEDIATION_CAPTCHA, self::REMEDIATION_BYPASS];
+    public const ORDERED_REMEDIATIONS = [self::REMEDIATION_BAN, self::REMEDIATION_CAPTCHA, self::REMEDIATION_BYPASS];
 }

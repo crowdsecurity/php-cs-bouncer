@@ -4,6 +4,7 @@ namespace CrowdSecBouncer;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 
 /**
  * The Library configuration. You'll find here all configuration possible. Used when instanciating the library.
@@ -23,8 +24,8 @@ class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder('config');
+        /** @var $rootNode ArrayNodeDefinition */
         $rootNode = $treeBuilder->getRootNode();
-        /* @phpstan-ignore-next-line */
         $rootNode
             ->children()
             ->scalarNode('api_token')->isRequired()->end()
@@ -32,8 +33,13 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('api_user_agent')->defaultValue(Constants::BASE_USER_AGENT)->end()
             ->integerNode('api_timeout')->defaultValue(Constants::API_TIMEOUT)->end()
             ->booleanNode('live_mode')->defaultValue(true)->end()
-            ->enumNode('max_remediation_level')->values(Constants::ORDERED_REMEDIATIONS)->defaultValue(Constants::REMEDIATION_BAN)->end()
-            ->integerNode('cache_expiration_for_clean_ip')->defaultValue(Constants::CACHE_EXPIRATION_FOR_CLEAN_IP)->end()
+            ->enumNode('max_remediation_level')
+            ->values(Constants::ORDERED_REMEDIATIONS)
+            ->defaultValue(Constants::REMEDIATION_BAN)
+            ->end()
+            ->integerNode('cache_expiration_for_clean_ip')
+            ->defaultValue(Constants::CACHE_EXPIRATION_FOR_CLEAN_IP)
+            ->end()
             ->end();
 
         return $treeBuilder;
