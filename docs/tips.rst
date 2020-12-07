@@ -37,7 +37,7 @@ As a watcher:
 
 .. code-block:: sh
 
-    docker-compose run curl \
+    docker-compose run --rm curl \
     -X POST "http://crowdsec:8080/v1/alerts" \
     -H  "accept: application/json" -H  "Content-Type: application/json" -H  "Autorization: Bearer " \
     -d "[{\"capacity\":0,\"decisions\":[{\"duration\":\"12h\",\"end_ip\":16909060,\"origin\":\"cscli\",\"scenario\":\"setup captcha on single IP for 12h for PHPUnit tests\",\"scope\":\"Ip\",\"start_ip\":16909060,\"type\":\"captcha\",\"value\":\"1.2.3.4\"},{\"duration\":\"24h\",\"end_ip\":16909060,\"origin\":\"cscli\",\"scenario\":\"setup ban on range 1.2.3.4 to 1.2.3.7 for 24h for PHPUnit tests\",\"scope\":\"Range\",\"start_ip\":16909063,\"type\":\"ban\",\"value\":\"1.2.3.4/30\"}],\"events\":[],\"events_count\":1,\"labels\":null,\"leakspeed\":\"0\",\"message\":\"setup for PHPUnit tests\",\"scenario\":\"setup for PHPUnit tests\",\"scenario_hash\":\"\",\"scenario_version\":\"\",\"simulated\":false,\"source\":{\"scope\":\"Range\",\"value\":\"1.2.3.4/30\"},\"start_at\":\"2020-11-29T14:55:10Z\",\"stop_at\":\"2021-11-29T14:55:10Z\"}]"

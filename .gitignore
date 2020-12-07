@@ -4,9 +4,11 @@
 # Systems
 .DS_Store
 
+#Tools
+super-linter.log
+.phpdoc
+.php_cs.cache
+
 # App
 /var/
 .bouncer-key
-.phpdoc
-TODO.md
-.php_cs.cache

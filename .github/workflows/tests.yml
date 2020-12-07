@@ -12,8 +12,7 @@ jobs:
 
         strategy:
             matrix:
-                php: ['7.2', '7.3', '7.4']
-                # TODO P2 PHP 8 Compatibility: Fix: Error: Class "Memcached" not found (https://github.com/crowdsecurity/php-cs-bouncer/runs/1491476055?check_suite_focus=true)
+                php: ['7.2', '7.3', '7.4', '8.0']
 
         services:
             redis:
@@ -24,6 +23,12 @@ jobs:
                 image: memcached:1.6.5
                 ports:
                     - 11211:11211
+            crowdsec:
+                image: crowdsecurity/crowdsec:v1.0.0
+                ports:
+                    - 8080:8080
+                env:
+                    DISABLE_AGENT: true
 
         steps:
             -   name: Checkout
@@ -36,25 +41,16 @@ jobs:
                 # Ignore the failure of a step and avoid terminating the job.
                 continue-on-error: true
 
-            -   name: Checkout Crowdsec
-                uses: actions/checkout@v2
-                with:
-                    repository: crowdsecurity/crowdsec
-                    ref: v1.0.0-rc4
-                    path: ./var/.tmp-crowdsec
-
-            -   name: Build Crowdsec 1.0.0 (RC4) Docker image
-                run: docker build -t crowdsec:v1.0.0-rc4 ./var/.tmp-crowdsec
-
-            -   name: Run the crowdsec container
-                run: docker run -d --name crowdsec -p 8080:8080 -e "DISABLE_AGENT=true" crowdsec:v1.0.0-rc4
-
             -   name: Add a bouncer to run phpunit tests
                 run: docker exec crowdsec cscli bouncers add bouncer-php-library -o raw > .bouncer-key
             
             # TODO P2 Move values to env vars
             -   name: Add a machine to pilot crowdsec state
                 run: docker exec crowdsec cscli machines add PhpUnitTestMachine --password PhpUnitTestMachinePassword
+
+            -   name: Install libmemcached
+                if: matrix.php == '8.0' # required only for php 8 as mentioned here: https://github.com/shivammathur/setup-php/issues/354
+                run: sudo apt-get install libmemcached-dev -y
 
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
