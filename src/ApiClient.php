@@ -35,15 +35,15 @@ class ApiClient
     /**
      * Configure this instance.
      */
-    public function configure(string $baseUri, int $timeout, string $userAgent, string $token): void
+    public function configure(string $baseUri, int $timeout, string $userAgent, string $apiKey): void
     {
         $this->restClient->configure($baseUri, [
             'User-Agent' => $userAgent,
-            'X-Api-Key' => $token,
+            'X-Api-Key' => $apiKey,
             'Accept' => 'application/json',
         ], $timeout);
         $this->logger->debug("Api Client User Agent = $userAgent");
-        $this->logger->debug("Api Client Token = ***************************");
+        $this->logger->debug("Api Client Key = ***************************");
     }
 
     /**

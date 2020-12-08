@@ -28,7 +28,7 @@ class Configuration implements ConfigurationInterface
         $rootNode = $treeBuilder->getRootNode();
         $rootNode
             ->children()
-            ->scalarNode('api_token')->isRequired()->end()
+            ->scalarNode('api_key')->isRequired()->end()
             ->scalarNode('api_url')->defaultValue(Constants::CAPI_URL)->end()
             ->scalarNode('api_user_agent')->defaultValue(Constants::BASE_USER_AGENT)->end()
             ->integerNode('api_timeout')->defaultValue(Constants::API_TIMEOUT)->end()

@@ -32,7 +32,7 @@ class Bouncer
     /** @var int */
     private $maxRemediationLevelIndex;
 
-    public function __construct(ApiCache $apiCache = null, LoggerInterface $logger = null)
+    public function __construct(LoggerInterface $logger = null, ApiCache $apiCache = null)
     {
         if (!$logger) {
             $loggger = new Logger('null');
@@ -67,7 +67,7 @@ class Bouncer
             $this->config['api_url'],
             $this->config['api_timeout'],
             $this->config['api_user_agent'],
-            $this->config['api_token'],
+            $this->config['api_key'],
             $this->config['cache_expiration_for_clean_ip']
         );
     }

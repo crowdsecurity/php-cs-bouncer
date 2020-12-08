@@ -53,7 +53,7 @@ class ApiCache
         string $apiUrl,
         int $timeout,
         string $userAgent,
-        string $token,
+        string $apiKey,
         int $cacheExpirationForCleanIp
     ): void {
         $this->adapter = $adapter;
@@ -68,7 +68,7 @@ class ApiCache
         $this->warmedUp = $warmedUp;
         $this->logger->debug("Api Cache already warmed up: " . ($this->warmedUp ? 'true' : 'false'));
 
-        $this->apiClient->configure($apiUrl, $timeout, $userAgent, $token);
+        $this->apiClient->configure($apiUrl, $timeout, $userAgent, $apiKey);
     }
 
     /**

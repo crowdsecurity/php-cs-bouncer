@@ -31,7 +31,7 @@ If you don't have enough permissions to run a cron-like task, you can
 try another technique: write a dedicated webpage callable by a tierce
 service (you can find many free services on the web). In this case,
 don't forget to limit the url access to the service only, by exemple
-using a token or checking the IP range).
+using a secret key or checking the IP range).
 
 Remember to prune the cache by yourself!
 ----------------------------------------

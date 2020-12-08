@@ -90,10 +90,10 @@ final class IpVerificationTest extends TestCase
             ->getMock();
         $apiCache = new ApiCache($apiClientMock, $this->logger);
         $bouncerConfig = [
-            'api_token' => TestHelpers::getBouncerKey(),
+            'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl()
         ];
-        $bouncer = new Bouncer($apiCache, $this->logger);
+        $bouncer = new Bouncer($this->logger, $apiCache);
         $bouncer->configure($bouncerConfig, $cacheAdapter);
 
         // A the end of test, we shoud have exactly 3 "cache miss")
@@ -172,11 +172,11 @@ final class IpVerificationTest extends TestCase
         $apiCache = new ApiCache($apiClientMock, $this->logger);
 
         $bouncerConfig = [
-            'api_token' => TestHelpers::getBouncerKey(),
+            'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'live_mode' => false
         ];
-        $bouncer = new Bouncer($apiCache, $this->logger);
+        $bouncer = new Bouncer($this->logger, $apiCache);
         $bouncer->configure($bouncerConfig, $cacheAdapter);
 
         // As we are in stream mode, no live call should be done to the API.
@@ -255,11 +255,11 @@ final class IpVerificationTest extends TestCase
         $apiCache2 = new ApiCache($apiClientMock2, $this->logger);
 
         $bouncerConfig = [
-            'api_token' => TestHelpers::getBouncerKey(),
+            'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'live_mode' => false
         ];
-        $bouncer = new Bouncer($apiCache2, $this->logger);
+        $bouncer = new Bouncer($this->logger, $apiCache2);
         $bouncer->configure($bouncerConfig, $cacheAdapter);
 
         // The cache should still be warmed up, even for a new instance

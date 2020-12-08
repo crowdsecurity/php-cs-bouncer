@@ -4,8 +4,8 @@ Full configuration reference
 .. code-block:: sh
 
    $config = [
-       // Required. The token to access LAPI or CAPI.
-       'api_token'=> 'YOUR_TOKEN',
+       // Required. The bouncer api key to access LAPI or CAPI.
+       'api_key'=> 'YOUR_BOUNCER_API_KEY',
 
        // Optional. Define the url to your LAPI server, defaults to CAPI URL.
        'api_url'=> 'https://api.crowdsec.net/v2/',

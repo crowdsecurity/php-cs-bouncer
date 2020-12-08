@@ -44,14 +44,14 @@ composer require crowdsec/bouncer
 
 ```php
 
-/* To get a token: "cscli bouncers add <name-of-your-php-bouncer> */
-$apiToken = 'YOUR_TOKEN';
+/* To get a bouncer api key: "cscli bouncers add <name-of-your-php-bouncer> */
+$bouncerApiKey = 'YOUR_BOUNCER_API_KEY';
 
 /* Select the best cache adapter for your needs (Memcached, Redis, PhpFiles, ...) */
 $cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter();
 
 $bouncer = new CrowdSecBouncer\Bouncer();
-$bouncer->configure(['api_token'=> $apiToken], $cacheAdapter);
+$bouncer->configure(['api_key'=> $bouncerApiKey], $cacheAdapter);
 
 $remediation = $bouncer->getRemediationForIp($blockedIp);// Return "ban", "captcha" or "bypass"
 ```
