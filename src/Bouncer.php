@@ -130,6 +130,24 @@ class Bouncer
     }
 
     /**
+     * This method clear the full data in cache.
+     */
+    public function clearCache(): bool
+    {
+        return $this->apiCache->clear();
+    }
+
+    /**
+     * This method prune the cache: it removes all the expired cache items.
+     */
+    public function pruneCache(): bool
+    {
+        return $this->apiCache->clear();
+    }
+
+    
+
+    /**
      * Browse the remediations cache.
      */
     public function loadPaginatedBlocklistFromCache(int $page = 1, int $itemPerPage = 10): array
