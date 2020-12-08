@@ -45,7 +45,6 @@ jobs:
             -   name: Add a bouncer to run phpunit tests
                 run: docker exec crowdsec cscli bouncers add bouncer-php-library -o raw > .bouncer-key
             
-            # TODO P2 Move values to env vars
             -   name: Add a machine to pilot crowdsec state
                 run: docker exec crowdsec cscli machines add PhpUnitTestMachine --password PhpUnitTestMachinePassword
 

@@ -51,7 +51,7 @@ class ApiClient
      */
     public function getFilteredDecisions(array $filter): array
     {
-        // TODO P2 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
+        // TODO P1 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
         $decisions = $this->restClient->request('/v1/decisions', $filter);
         $decisions = $decisions ?: [];
 
@@ -64,7 +64,7 @@ class ApiClient
      */
     public function getStreamedDecisions(bool $startup = false): array
     {
-        // TODO P2 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
+        // TODO P1 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
         /** @var array */
         $decisionsDiff = $this->restClient->request('/v1/decisions/stream', $startup ? ['startup' => 'true'] : null);
 

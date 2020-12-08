@@ -15,16 +15,16 @@ namespace CrowdSecBouncer;
 class Constants
 {
     /** @var string The URL of the CrowdSec Central API */
-    public const CAPI_URL = 'https://api.crowdsec.net/v2/'; // TODO P2 get the correct one
+    public const CAPI_URL = 'https://api.crowdsec.net/v2/';
 
     /** @var string The user agent used to send request to LAPI or CAPI */
-    public const BASE_USER_AGENT = 'CrowdSec PHP Library/1.0.0'; // TODO P3 get the correct version
+    public const BASE_USER_AGENT = 'PHP CrowdSec Bouncer/1.0.0'; // TODO P3 get the correct version
 
     /** @var int The timeout when calling LAPI or CAPI */
-    public const API_TIMEOUT = 1; // TODO P2 get the correct one
+    public const API_TIMEOUT = 1;
 
     /** @var int The duration we keep a clean IP in cache 600s = 10m */
-    public const CACHE_EXPIRATION_FOR_CLEAN_IP = 600; // TODO P2 get the correct one
+    public const CACHE_EXPIRATION_FOR_CLEAN_IP = 600; // TODO P1 get the correct one
 
     /** @var string The ban remediation */
     public const REMEDIATION_BAN = 'ban';

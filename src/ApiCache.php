@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace CrowdSecBouncer;
 
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
+use Symfony\Component\Cache\PruneableInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -98,7 +99,7 @@ class ApiCache
         // Build the item lifetime in cache and sort remediations by priority
         $maxLifetime = max(array_column($remediations, 1));
         $prioritizedRemediations = Remediation::sortRemediationByPriority($remediations);
-        
+
         $item->set($prioritizedRemediations);
         $item->expiresAfter($maxLifetime);
 
@@ -205,7 +206,7 @@ class ApiCache
         }
 
         return [
-            $decision['type'], // ex: captcha
+            $decision['type'], // ex: ban, captcha
             time() + self::parseDurationToSeconds($decision['duration']), // expiration timestamp
             $decision['id'],
         ];
@@ -222,12 +223,6 @@ class ApiCache
 
     /**
      * Update the cached remediations from these new decisions.
-
-     * TODO P2 WRITE TESTS
-     * 0 decisions
-     * 3 known remediation type
-     * 3 decisions but 1 unknown remediation type
-     * 3 unknown remediation type
      */
     private function saveRemediations(array $decisions): bool
     {
@@ -278,6 +273,12 @@ class ApiCache
     {
         if (\count($decisions)) {
             foreach ($decisions as $decision) {
+                if (!in_array($decision['type'], Constants::ORDERED_REMEDIATIONS)) {
+                    $highestRemediationLevel = Constants::ORDERED_REMEDIATIONS[0];
+                    // TODO P1 test the case of unknown remediation type
+                    $this->logger->warning("The remediation type " . $decision['type'] . " is unknown by this CrowdSec Bouncer version. Fallback to highest remedition level: " . $highestRemediationLevel);
+                    $decision['type'] = $highestRemediationLevel;
+                }
                 $remediation = $this->formatRemediationFromDecision($decision);
                 $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
             }
@@ -288,12 +289,17 @@ class ApiCache
         $this->adapter->commit();
     }
 
+    public function clear(): bool
+    {
+        return $this->adapter->clear();
+    }
+
     /**
      * Used in stream mode only.
      * Warm the cache up.
      * Used when the stream mode has just been activated.
      *
-     * TODO P2 test for overlapping decisions strategy (max expires, remediation ordered by priorities)
+     * TODO P2 test for overlapping decisions strategy (ex: max expires)
      */
     public function warmUp(): void
     {
@@ -302,7 +308,7 @@ class ApiCache
         $decisionsDiff = $this->apiClient->getStreamedDecisions($startup);
         $newDecisions = $decisionsDiff['new'];
 
-        $this->adapter->clear();
+        $this->clear();
 
         if ($newDecisions) {
             $this->warmedUp = $this->saveRemediations($newDecisions);
@@ -366,7 +372,8 @@ class ApiCache
     private function hit(string $ip): string
     {
         $remediations = $this->adapter->getItem($ip)->get();
-        // TODO P2 control before if date is not expired and if true, update cache item.
+        // TODO P1 foreach $remediations, control if exp date is not expired.
+        // If true, update cache item by removing this expired remediation.
 
         // We apply array values first because keys are ids.
         $firstRemediation = array_values($remediations)[0];
@@ -397,5 +404,20 @@ class ApiCache
             $this->logger->debug("Cache miss for IP: $ip");
             return $this->miss($ip);
         }
+    }
+
+    public function prune(): bool
+    {
+        $isPrunable = ($this->adapter instanceof PruneableInterface);
+        if (!$isPrunable) {
+            throw new BouncerException("Cache Adapter" . get_class($this->adapter) . " is not prunable.");
+        }
+        /** @var PruneableInterface */
+        $adapter = $this->adapter;
+        $pruned = $adapter->prune();
+        $this->logger->info('Cached adapter pruned');
+
+        // TODO P3 Prune remediation inside cache items.
+        return $pruned;
     }
 }

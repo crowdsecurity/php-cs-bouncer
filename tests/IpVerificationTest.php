@@ -11,18 +11,18 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Cache\PruneableInterface;
 
 define("HOST_IS_UP", true);
 define("HOST_IS_DOWN", false);
 
 /*
 TODO P2 Instanciate all the configuration
-TODO P2 testThrowErrorWhenMissAndApiIsNotReachable()
+TODO P2 testThrowErrorWhenMissAndApiIsNotReachable() https://stackoverflow.com/questions/5683592/phpunit-assert-that-an-exception-was-thrown
 TODO P2 testThrowErrorWhenMissAndApiTimeout()
-TODO P2 testCanVerifyCaptchableIp()
 TODO P2 testCanHandleCacheSaturation()
-TODO P2 testCanNotUseCapiInLiveMode()
-TODO P2 testCanVerifyIpInStreamModeWithCacheSystemBeforeWarmingTheCacheUp() https://stackoverflow.com/questions/5683592/phpunit-assert-that-an-exception-was-thrown
+TODO P3 testCanNotUseCapiInLiveMode()
+TODO P2 testCanVerifyIpInStreamModeWithCacheSystemBeforeWarmingTheCacheUp()
 */
 
 final class IpVerificationTest extends TestCase
@@ -65,6 +65,7 @@ final class IpVerificationTest extends TestCase
         $remediation = $bouncer->getRemediationForIp($badIp);
         $this->assertEquals($remediation, 'ban');
     }*/
+
     /**
      * @group integration
      * @covers Bouncer
@@ -122,8 +123,13 @@ final class IpVerificationTest extends TestCase
         $cleanRemediation2ndCall = $bouncer->getRemediationForIp($cleanIp);
         $this->assertEquals('bypass', $cleanRemediation2ndCall);
 
+        // Prune cache
+        if ($cacheAdapter instanceof PruneableInterface) {
+            $this->assertTrue($bouncer->pruneCache(), 'The cache should be prunable');
+        }
+
         // Clear cache
-        $cacheAdapter->clear();
+        $this->assertTrue($bouncer->clearCache(), 'The cache should be clearable');
 
         // Call one more time (should miss as the cache has been cleared)
 
