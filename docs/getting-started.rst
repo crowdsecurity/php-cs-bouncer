@@ -15,21 +15,19 @@ Use the bouncer library (live mode)
 
 .. code-block:: php
 
+   /* To get a token: "cscli bouncers add <name-of-your-php-bouncer> */
+   $apiToken = 'YOUR_TOKEN';
 
-   use CrowdSecBouncer\Bouncer;
-   use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
+   /* Select the best cache adapter for your needs (Memcached, Redis, PhpFiles, ...) */
+   $cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter();
 
-   $apiToken = getenv(DEFINE_YOUR_TOKEN);// Good practice: define this secret data in environment variables.
-
-   // Select the best cache adapter for your needs (Memcached, Redis, PhpFiles)
-   // Note: You can try more cache system but we did not test them for now (Apcu, Filesystem, Doctrine, Couchbase, Pdo).
-   // The full list is here: https://symfony.com/doc/current/components/cache.html#available-cache-adapters
-   $cacheAdapter = new PhpFilesAdapter(); 
-
-   $bouncer = new Bouncer();
+   $bouncer = new CrowdSecBouncer\Bouncer();
    $bouncer->configure(['api_token'=> $apiToken], $cacheAdapter);
 
-   $remediation = $bouncer->getRemediationForIp($blockedIp);// Return "ban", "catpcha" or "bypass"
+   $remediation = $bouncer->getRemediationForIp($blockedIp);// Return "ban", "captcha" or "bypass".
+
+Note: You can try more cache system but we did not test them for now (Apcu, Filesystem, Doctrine, Couchbase, Pdo).
+The full list is here: https://symfony.com/doc/current/components/cache.html#available-cache-adapters
 
 Use the bouncer library (stream mode)
 ------------------------------------

@@ -1,29 +1,43 @@
 {
-    "name": "crowdsec/bouncer-php-library",
-    "description": "The official PHP client for the CrowdSec LAPI/CAPI",
+    "name": "crowdsec/bouncer",
+    "description": "The official PHP bouncer library for the CrowdSec LAPI/CAPI",
     "type": "library",
-    "license": "MIT License",
+    "license": "MIT",
     "minimum-stability": "stable",
+    "keywords": [
+        "security",
+        "crowdsec",
+        "waf",
+        "middleware",
+        "http",
+        "blocker",
+        "bouncer",
+        "captcha",
+        "geoip",
+        "ip",
+        "ip range"
+    ],
     "autoload": {
         "psr-4": {
             "CrowdSecBouncer\\": "src/"
         }
     },
-    "require-dev": {
-        "symfony/var-dumper": "^5.1",
-        "predis/predis": "^1.1",
-        "phpstan/phpstan": "^0.12.58",
-        "bramus/monolog-colored-line-formatter": "^3.0",
-        "friendsofphp/php-cs-fixer": "^2.16",
-        "phpunit/phpunit": "^8.5"
-    },
+    "authors": [
+        {
+            "name": "Lucas Cherifi",
+            "email": "lucas@crowdsec.net"
+        }
+    ],
     "require": {
-        "symfony/config": "^5.1",
-        "symfony/cache": "^5.1",
+        "php": "^7.2 || ^8.0",
+        "symfony/config": "^5.2",
+        "symfony/cache": "^5.2",
         "monolog/monolog": "^2.1"
     },
-    "scripts": {
-        "lintfix":"vendor/bin/php-cs-fixer fix --verbose --show-progress=estimating --config=.php_cs ./src",
-        "phpstan":"vendor/bin/phpstan analyse"
+    "require-dev": {
+        "predis/predis": "^1.1",
+        "bramus/monolog-colored-line-formatter": "^3.0",
+        "symfony/var-dumper": "^5.2",
+        "phpunit/phpunit": "8.5.13"
     }
 }

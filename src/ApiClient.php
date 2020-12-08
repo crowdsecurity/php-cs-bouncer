@@ -29,6 +29,7 @@ class ApiClient
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
+        $this->restClient = new RestClient($this->logger);
     }
 
     /**
@@ -36,7 +37,6 @@ class ApiClient
      */
     public function configure(string $baseUri, int $timeout, string $userAgent, string $token): void
     {
-        $this->restClient = new RestClient($this->logger);
         $this->restClient->configure($baseUri, [
             'User-Agent' => $userAgent,
             'X-Api-Key' => $token,
@@ -51,7 +51,7 @@ class ApiClient
      */
     public function getFilteredDecisions(array $filter): array
     {
-        // TODO P2 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
+        // TODO P1 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
         $decisions = $this->restClient->request('/v1/decisions', $filter);
         $decisions = $decisions ?: [];
 
@@ -64,7 +64,7 @@ class ApiClient
      */
     public function getStreamedDecisions(bool $startup = false): array
     {
-        // TODO P2 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
+        // TODO P1 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
         /** @var array */
         $decisionsDiff = $this->restClient->request('/v1/decisions/stream', $startup ? ['startup' => 'true'] : null);
 

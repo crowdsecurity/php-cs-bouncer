@@ -1,45 +1,76 @@
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/crowdsecurity/crowdsec/master/docs/assets/images/crowdsec_logo.png" alt="CrowdSec" title="CrowdSec" width="200" height="120"/>
+</p>
+
 # PHP Bouncer Library
 
-The official PHP client for the CrowdSec APIs (LAPI or CAPI).
+> The official PHP bouncer library for the CrowdSec LAPI/CAPI
 
-This client helps to create CrowdSec bouncers for PHP applications or frameworks (e-commerce, blog, other apps...).
+<p align="center">
+<img src="https://img.shields.io/github/workflow/status/crowdsecurity/php-cs-bouncer/tests/main">
+<img src="https://img.shields.io/github/license/crowdsecurity/php-cs-bouncer">
+<img src="https://img.shields.io/github/v/release/crowdsecurity/php-cs-bouncer?include_prereleases">
+</p>
 
+<p align="center">
+:books: <a href="https://doc.crowdsec.net">Documentation</a>
+:diamond_shape_with_a_dot_inside: <a href="https://hub.crowdsec.net">Hub</a>
+:speech_balloon: <a href="https://discourse.crowdsec.net">Discourse Forum</a>
+:speech_balloon: <a href="https://gitter.im/crowdsec-project/community?utm_source=share-link&utm_medium=link&utm_campaign=share-link">Gitter Chat</a>
+</p>
+
+> This library allows you to create CrowdSec bouncers for PHP applications or frameworks like e-commerce, blog or other exposed applications.
+
+## Features
+
+- ✅ Fast API client
+- ✅ LAPI Support (CAPI not supported yet)
+- ✅ Built-in support for the most known cache systems like Redis, Memcached, PhpFiles
+- ✅ **Live mode** or **Stream mode**
+- ✅ Events logged using monolog
+- ✅ Large PHP matrix compatibility: 7.2.x, 7.3.x, 7.4.x and 8.0.x
+- ✅ Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)
+- ✅ Clear and prune the cache
 ## Getting started
 
-View `docs/getting-started.md` to learn how to include this library in your project.
+### Installing CrowdSec Bouncer library
 
-You will find the full documenation here: (...) TODO P2
+The recommended way to install CrowdSec Bouncer library is through [Composer](https://getcomposer.org/).
 
-# Sources
+```bash
+composer require crowdsec/bouncer
+```
 
-- https://thephp.website/en/issue/php-docker-quick-setup/
+```php
 
-# Licence
+/* To get a token: "cscli bouncers add <name-of-your-php-bouncer> */
+$apiToken = 'YOUR_TOKEN';
 
-MIT License. Details in the `./LICENSE` file.
+/* Select the best cache adapter for your needs (Memcached, Redis, PhpFiles, ...) */
+$cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter();
 
-# TODO
+$bouncer = new CrowdSecBouncer\Bouncer();
+$bouncer->configure(['api_token'=> $apiToken], $cacheAdapter);
 
-Features:
-- [x] Fast API client
-- [x] LAPI Support
-- [x] Built-in support for the most known cache systems: Redis, Memcached, PhpFiles
-- [x] Live mode
-- [x] Stream mode
-- [x] Log events using monolog
-- [ ] Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)
-- [ ] PHP 7.x+8.x compatibility (currenly only PHP 7.2+)
-- [ ] Retrieve cache items with pagination
-- [ ] Direct CAPI support
-- [ ] Release 1.0.0 version
-- [ ] Support more cache systems (Apcu, Couchbase, Doctrine, Pdo)
+$remediation = $bouncer->getRemediationForIp($blockedIp);// Return "ban", "captcha" or "bypass"
+```
 
-Code:
-- [x] Docker dev environment (Dockerized Crowdsec, Redis, Memcached, PHP)
-- [x] Continuous Integration (CI, includes Integration Tests and Super Linter)
-- [x] Integration tests (with TDD)
-- [x] Documented (Static documentation, PHP Doc)
-- [ ] Continuous Delivery (CD)
-- [ ] Load tests (compare performances)
-- [ ] Report Code coverage
-- [ ] Setup Xdebug environment
+View [`docs/getting-started.md`](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/docs/getting-started.rst) to learn how to include this library in your project in minutes.
+
+## Future
+- Retrieve cache items with pagination
+- Release 1.0.0 version
+- Direct CAPI support
+- Support more cache systems (Apcu, Couchbase, Doctrine, Pdo)
+- Publish load tests (compare performances)
+- Report Code coverage
+- Setup Xdebug environment with Docker
+
+## Licence
+
+[MIT License](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/LICENSE)
+
+## Licence
+
+[MIT License](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/LICENSE)

@@ -1,6 +1,14 @@
 Contribute to this library
 ==========================
 
+### Dev environment
+
+- ✅ Docker dev environment (Dockerized Crowdsec, Redis, Memcached, PHP)
+- ✅ Continuous Integration (CI, includes Integration Tests and Super Linter)
+- ✅ Integration tests (with TDD)
+- ✅ Documented (Static documentation, PHP Doc)
+- ✅ Continuous Delivery (CD)
+
 Guidelines
 ~~~~~~~~~~
 
@@ -20,17 +28,12 @@ Generate PHP Doc
 
 .. code-block:: sh
 
-   docker-compose run phpdoc -d . --setting="guides.enabled=true" --template="./.phpdoc-template"
+   docker-compose run --rm phpdoc -d . --setting="guides.enabled=true" --template="./.phpdoc-template"
 
 Lint code
 ---------
 
-.. code-block:: sh
-
-   docker-composer run app composer lintfix
-   docker-composer run app composer phpstan
-
-Also, you can run "Super linter" locally:
+You can run "Super linter" locally:
 
 .. code-block:: sh
 
@@ -100,5 +103,14 @@ To create a new release:
 
    gh release create (...)
 
+Tests with various php versions
+-------------------------------
+
+.. code-block:: bash
+
+   ./tests-local.sh # This use PHP 7.2.
+   ./tests-local-php7.3.sh
+   ./tests-local-php7.4.sh
+   ./tests-local-php8.0.sh # These tests are ready but currenly the lib is not compatible.
 
 TODO P2 Improve this doc.

@@ -44,9 +44,9 @@ class RestClient
         $this->headerString = $this->convertHeadersToString($headers);
         $this->timeout = $timeout;
 
-        $this->logger->debug("Rest client base URI: ".$this->baseUri);
+        $this->logger->debug("Rest client base URI: " . $this->baseUri);
         $this->logger->debug("Rest client headers: ***************************");
-        $this->logger->debug("Rest client timeout: ".$this->timeout);
+        $this->logger->debug("Rest client timeout: " . $this->timeout);
     }
 
     /**
@@ -69,10 +69,16 @@ class RestClient
      *
      * TODO P3 test
      */
-    public function request(string $endpoint, array $queryParams = null, array $bodyParams = null, string $method = 'GET', array $headers = null, int $timeout = null): ?array
-    {
+    public function request(
+        string $endpoint,
+        array $queryParams = null,
+        array $bodyParams = null,
+        string $method = 'GET',
+        array $headers = null,
+        int $timeout = null
+    ): ?array {
         if ($queryParams) {
-            $endpoint .= '?'.http_build_query($queryParams);
+            $endpoint .= '?' . http_build_query($queryParams);
         }
         $header = $headers ? $this->convertHeadersToString($headers) : $this->headerString;
         $config = [
@@ -80,6 +86,7 @@ class RestClient
                 'method' => $method,
                 'header' => $header,
                 'timeout' => $timeout ?: $this->timeout,
+                'ignore_errors' => true
             ],
         ];
         if ($bodyParams) {
@@ -87,17 +94,21 @@ class RestClient
         }
         $context = stream_context_create($config);
 
-        $this->logger->debug("$method ".$this->baseUri.$endpoint);
+        $this->logger->debug("$method " . $this->baseUri . $endpoint);
 
-        $response = file_get_contents($this->baseUri.$endpoint, false, $context);
+        $response = file_get_contents($this->baseUri . $endpoint, false, $context);
         if (false === $response) {
-            throw new BouncerException('Unexpected HTTP call failure.');
+            throw
+                new BouncerException('Unexpected HTTP call failure.');
         }
-        $statusLine = $http_response_header[0];
-        preg_match('{HTTP\/\S*\s(\d{3})}', $statusLine, $match);
-        $status = (int) $match[1];
+        $parts = explode(' ', $http_response_header[0]);
+        $status = 0;
+        if (count($parts) > 1) {
+            $status = intval($parts[1]);
+        }
+
         if ($status < 200 || $status >= 300) {
-            throw new BouncerException("unexpected response status: {$statusLine}\n".$response);
+            throw new BouncerException("unexpected response status: {$status}\n" . $response);
         }
         $data = json_decode($response, true);
 

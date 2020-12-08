@@ -4,12 +4,12 @@
    getting-started
    how-it-works
    env
-   configuration
+   configuration-reference
    tips
    tests
    contribute
    core-development
-   technical-decisions
+   faq
    
    
    
