@@ -1,20 +1,38 @@
 {
-    "name": "crowdsec/bouncer-php-library",
-    "description": "The official PHP client for the CrowdSec LAPI/CAPI",
+    "name": "crowdsec/bouncer",
+    "description": "The official PHP bouncer library for the CrowdSec LAPI/CAPI",
     "type": "library",
-    "license": "MIT License",
+    "license": "MIT",
     "minimum-stability": "stable",
+    "keywords": [
+        "security",
+        "crowdsec",
+        "waf",
+        "middleware",
+        "http",
+        "blocker",
+        "bouncer",
+        "captcha",
+        "geoip",
+        "ip",
+        "ip range"
+    ],
     "autoload": {
         "psr-4": {
             "CrowdSecBouncer\\": "src/"
         }
     },
+    "authors": [
+        {
+            "name": "Lucas Cherifi",
+            "email": "lucas@crowdsec.net"
+        }
+    ],
     "require": {
-        "php": ">=7.1",
+        "php": "^7.2 || ^8.0",
         "symfony/config": "^5.2",
         "symfony/cache": "^5.2",
         "monolog/monolog": "^2.1"
-        
     },
     "require-dev": {
         "predis/predis": "^1.1",
