@@ -1,6 +1,14 @@
 Contribute to this library
 ==========================
 
+### Dev environment
+
+- ✅ Docker dev environment (Dockerized Crowdsec, Redis, Memcached, PHP)
+- ✅ Continuous Integration (CI, includes Integration Tests and Super Linter)
+- ✅ Integration tests (with TDD)
+- ✅ Documented (Static documentation, PHP Doc)
+- ✅ Continuous Delivery (CD)
+
 Guidelines
 ~~~~~~~~~~
 

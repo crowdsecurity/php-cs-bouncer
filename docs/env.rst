@@ -1,9 +1,9 @@
 Environment
 -----------
 
-PHP compatibility matrix: ^5.5.9|>=7.0.8 (same as Symfony 3.4)
+PHP compatibility matrix: >=7.2 (same as Symfony 4.4)
 
-View the usage stats published by packagist (composer) here:
+PHP usage stats published by Packagist (composer) here:
 https://blog.packagist.com/php-versions-stats-2020-1-edition/
 
 Dependencies:
