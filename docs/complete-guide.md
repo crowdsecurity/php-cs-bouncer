@@ -2,7 +2,7 @@
 
 Discover the CrowdSec Bouncer Library for PHP.
 
-Here is the complete guide to learning how to use the [Bouncer CrowdSec library developed in PHP](https://github.com/crowdsecurity/php-cs-bouncer).
+Here is the complete guide to learn how to use the [Bouncer CrowdSec library developed in PHP](https://github.com/crowdsecurity/php-cs-bouncer).
 
 
 > Goal: At the end of this guide, you will master:
