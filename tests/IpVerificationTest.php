@@ -186,7 +186,7 @@ final class IpVerificationTest extends TestCase
 
         // Warm BlockList cache up
 
-        $bouncer->warmBlocklistCacheUp();
+        $bouncer->refreshBlocklistCache();
 
         // TODO P3 test this assertion
         $this->logger->debug('Refresh the cache just after the warm up. Nothing should append.');

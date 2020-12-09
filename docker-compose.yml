@@ -8,10 +8,6 @@ services:
       - ./var/docker-data:/var/lib/crowdsec/data
     ports: 
       - 8085:8080
-  redis:
-    image: redis:6-alpine
-  memcached:
-    image: memcached:1-alpine
   app-php8.0:
     build:
       context: .
@@ -56,6 +52,10 @@ services:
       - crowdsec
       - redis
       - memcached
+  redis:
+    image: redis:6-alpine
+  memcached:
+    image: memcached:1-alpine
   curl:
     image: curlimages/curl
   phpdoc:

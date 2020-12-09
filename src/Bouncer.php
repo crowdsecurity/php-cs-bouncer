@@ -35,10 +35,9 @@ class Bouncer
     public function __construct(LoggerInterface $logger = null, ApiCache $apiCache = null)
     {
         if (!$logger) {
-            $loggger = new Logger('null');
-            $loggger->pushHandler(new NullHandler());
+            $logger = new Logger('null');
+            $logger->pushHandler(new NullHandler());
         }
-        /** @var LoggerInterface */
         $this->logger = $logger;
         $this->apiCache = $apiCache ?: new ApiCache(new ApiClient($logger), $logger);
     }
@@ -109,15 +108,6 @@ class Bouncer
     {
         return '<html><body><h1>Access forbidden.</h1><p>You have been blocked by CrowdSec.' .
             'Please contact our technical support if you think it is an error.</p></body></html>';
-    }
-
-    /**
-     * Used in stream mode only.
-     * This method should be called once when installing the PHP Bouncer.
-     */
-    public function warmBlocklistCacheUp(): void
-    {
-        $this->apiCache->warmUp();
     }
 
     /**
