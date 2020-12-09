@@ -7,6 +7,7 @@ namespace CrowdSecBouncer;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\PruneableInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
 /**
  * The cache mecanism to store every decisions from LAPI/CAPI. Symfony Cache component powered.
@@ -48,14 +49,15 @@ class ApiCache
      * Configure this instance.
      */
     public function configure(
-        AbstractAdapter $adapter,
+        ?AbstractAdapter $adapter,
         bool $liveMode,
         string $apiUrl,
         int $timeout,
         string $userAgent,
-        string $token,
+        string $apiKey,
         int $cacheExpirationForCleanIp
     ): void {
+        $adapter = $adapter ?: new FilesystemAdapter();
         $this->adapter = $adapter;
         $this->liveMode = $liveMode;
         $this->cacheExpirationForCleanIp = $cacheExpirationForCleanIp;
@@ -68,7 +70,7 @@ class ApiCache
         $this->warmedUp = $warmedUp;
         $this->logger->debug("Api Cache already warmed up: " . ($this->warmedUp ? 'true' : 'false'));
 
-        $this->apiClient->configure($apiUrl, $timeout, $userAgent, $token);
+        $this->apiClient->configure($apiUrl, $timeout, $userAgent, $apiKey);
     }
 
     /**
@@ -299,16 +301,13 @@ class ApiCache
      * Warm the cache up.
      * Used when the stream mode has just been activated.
      *
-     * TODO P2 test for overlapping decisions strategy (ex: max expires)
      */
-    public function warmUp(): void
+    private function warmUp(): void
     {
         $this->logger->info('Warming the cache up');
         $startup = true;
         $decisionsDiff = $this->apiClient->getStreamedDecisions($startup);
         $newDecisions = $decisionsDiff['new'];
-
-        $this->clear();
 
         if ($newDecisions) {
             $this->warmedUp = $this->saveRemediations($newDecisions);
@@ -323,12 +322,14 @@ class ApiCache
      * Used in stream mode only.
      * Pull decisions updates from the API and update the cached remediations.
      * Used for the stream mode when we have to update the remediations list.
+     * 
+     * TODO P2 test for overlapping decisions strategy (ex: max expires)
      */
     public function pullUpdates(): void
     {
         $this->logger->info('Pulling updates from API');
         if (!$this->warmedUp) {
-            throw new BouncerException("You have to warm the cache up before trying to pull updates.");
+            $this->warmUp();
         }
 
         $decisionsDiff = $this->apiClient->getStreamedDecisions();
@@ -341,6 +342,9 @@ class ApiCache
 
         if ($newDecisions) {
             $this->saveRemediations($newDecisions);
+            if (!$this->warmedUp) {
+                throw new BouncerException("Unable to warm the cache up");
+            }
         }
         $this->logger->debug('Updates pulled from API');
     }

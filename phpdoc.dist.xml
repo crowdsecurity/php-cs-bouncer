@@ -9,7 +9,7 @@
     <paths>
         <output>var/phpdoc</output>
     </paths>
-    <version number="0.7.9">
+    <version number="1.0.0">
         <folder>latest</folder>
         <api>
             <source dsn=".">
@@ -33,11 +33,5 @@
             </ignore-tags>
             <default-package-name>CrowdSecBouncer</default-package-name>
         </api>
-        <guide>
-            <source dsn=".">
-                <path>docs</path>
-            </source>
-            <output>guide</output>
-        </guide>
     </version>
 </phpdocumentor>

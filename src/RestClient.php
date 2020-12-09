@@ -67,7 +67,7 @@ class RestClient
      *
      * @throws BouncerException when the reponse status is not 2xx.
      *
-     * TODO P3 test
+     * TODO P3 test the request method
      */
     public function request(
         string $endpoint,

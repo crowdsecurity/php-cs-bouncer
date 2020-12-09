@@ -32,13 +32,12 @@ class Bouncer
     /** @var int */
     private $maxRemediationLevelIndex;
 
-    public function __construct(ApiCache $apiCache = null, LoggerInterface $logger = null)
+    public function __construct(LoggerInterface $logger = null, ApiCache $apiCache = null)
     {
         if (!$logger) {
-            $loggger = new Logger('null');
-            $loggger->pushHandler(new NullHandler());
+            $logger = new Logger('null');
+            $logger->pushHandler(new NullHandler());
         }
-        /** @var LoggerInterface */
         $this->logger = $logger;
         $this->apiCache = $apiCache ?: new ApiCache(new ApiClient($logger), $logger);
     }
@@ -46,7 +45,7 @@ class Bouncer
     /**
      * Configure this instance.
      */
-    public function configure(array $config, AbstractAdapter $cacheAdapter): void
+    public function configure(array $config, AbstractAdapter $cacheAdapter = null): void
     {
         // Process input configuration.
         $configuration = new Configuration();
@@ -67,7 +66,7 @@ class Bouncer
             $this->config['api_url'],
             $this->config['api_timeout'],
             $this->config['api_user_agent'],
-            $this->config['api_token'],
+            $this->config['api_key'],
             $this->config['cache_expiration_for_clean_ip']
         );
     }
@@ -113,15 +112,6 @@ class Bouncer
 
     /**
      * Used in stream mode only.
-     * This method should be called once when installing the PHP Bouncer.
-     */
-    public function warmBlocklistCacheUp(): void
-    {
-        $this->apiCache->warmUp();
-    }
-
-    /**
-     * Used in stream mode only.
      * This method should be called periodically (ex: crontab) in a asynchronous way to update the bouncer cache.
      */
     public function refreshBlocklistCache(): void
@@ -160,11 +150,10 @@ class Bouncer
 
     /**
      * Browse the bouncer technical logs.
-     * TODO P3 Code this.
      */
     public function loadPaginatedLogs(int $page = 1, int $itemPerPage = 10): array
     {
-        // TODO P3 Implement this.
+        // TODO P3 Implement log pagination
         return [];
     }
 }
