@@ -1,4 +1,6 @@
-# CrowdSec PHP Bouncer
+# The complete guide
+
+Discover the CrowdSec Bouncer Library for PHP.
 
 Here is the complete guide to learning how to use the [Bouncer CrowdSec library developed in PHP](https://github.com/crowdsecurity/php-cs-bouncer).
 
@@ -46,7 +48,7 @@ Also create a `docker-compose.yml` file containing two instances, the **PHP CLI*
 ```yml
 version: "3"
 services:
-  php:
+  app:
     build:
       context: .
       dockerfile: ./Dockerfile
@@ -75,15 +77,15 @@ echo "BOUNCER_KEY=`docker-compose exec crowdsec /usr/local/bin/cscli bouncers ad
 Init the `composer.json` and download the `crowdsec/bouncer` library (just wait a short moment for the first docker image build)
 
 ```bash
-docker-compose run php composer init --no-interaction --require crowdsec/bouncer:^0
-docker-compose run php composer install
+docker-compose run app composer init --no-interaction --require crowdsec/bouncer:^0
+docker-compose run app composer install
 ```
 
-## Now let's try your first IP verification!
+## Now let's verify your first IP!
 
 Now that the setup is done, you'll enjoy making your first IP verification!
 
-For that, create a short `check-ip.php` script:
+For that, create this short `check-ip.php` script:
 
 ```php
 <?php
@@ -124,7 +126,7 @@ echo "\nResult: $remediation\n\n"; // "ban", "captcha" or "bypass"
 Now run the php script:
 
 ```bash
-docker-compose run php php check-ip.php 1.2.3.4
+docker-compose run app php check-ip.php 1.2.3.4
 ```
 
 Congrats! You successfully obtain remediation about the requested IP from LAPI.
@@ -137,30 +139,30 @@ Let's now add a new decision in CrowdSec, for example we will ban the 2.3.4.5/30
 docker-compose exec crowdsec /usr/local/bin/cscli decisions add --range 2.3.4.5/30 --duration 4h --type ban
 ```
 
-If now, you run the php script against the `2.3.4.5` IP:
+Now, if you run the php script against the `2.3.4.5` IP:
 
 ```bash
-docker-compose run php php check-ip.php 2.3.4.5
+docker-compose run app php check-ip.php 2.3.4.5
 ```
 
 LAPI will advise you to ban this IP as it's within the 2.3.4.5/30 range.
 
 ## The cache system
 
-If you script this script twice, LAPI will not be called, the cache system will relay the information.
+If you run this script twice, LAPI will not be called, the cache system will relay the information.
 
 Let's try to stop the `crowdsec` container and re-run the script with the "bad" IP:
 
 ```bash
 docker-compose stop crowdsec
-docker-compose run php php check-ip.php 2.3.4.5
+docker-compose run app php check-ip.php 2.3.4.5
 ```
 
 For this IP, the cache system will never ask LAPI anymore for the duration of the decision.
 
 Note: By default, a "bypass" decision is stored in the cache for 10 min. You can change this duration while instantiating the library.
 
-Don't forget to start the crowdsec before continuing :-)
+Don't forget to restart the crowdsec container before continuing :-)
 
 ```bash
 docker-compose start crowdsec
@@ -224,7 +226,7 @@ $cacheAdapter = new RedisAdapter(RedisAdapter::createConnection('redis://redis:6
 ...
 ```
 
-Or, if `Memcached` is more adapter to your needs than `Redis`:
+Or, if `Memcached` is more adapted than `Redis` to your needs:
 
 ```php
 <?php
@@ -244,7 +246,7 @@ $cacheAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection('memcach
 You will still be able to verify IPs, but the cache system will be extremely efficient!
 
 ```bash
-docker-compose run php php check-ip.php 2.3.4.5
+docker-compose run app php check-ip.php 2.3.4.5
 ```
 
 Congrats! Now you use a very efficient cache layer!
@@ -253,7 +255,7 @@ Congrats! Now you use a very efficient cache layer!
 
 ## Cap remediation level
 
-For some websites, it's a critical action to ban access to users (ex: e-commerce). In some case, we prefer to let user access to the website, even if CrowdSec says "ban it!".
+In some cases, it's a critical action to ban access to users (ex: e-commerce). We prefer to let user access to the website, even if CrowdSec says "ban it!".
 
 Fortunately, this library allows you to cap the remediation to a certain level.
 
@@ -271,7 +273,7 @@ $bouncer->configure([
 Now if you call one more time:
 
 ```bash
-docker-compose run php php check-ip.php 2.3.4.5
+docker-compose run app php check-ip.php 2.3.4.5
 ```
 
 The library will cap the value to `captcha` level.
@@ -394,7 +396,7 @@ echo "Cache successfully refreshed.\n";
 > Don't forget to use the same cache system as the one you used in the **check-ip.php** script.
 
 ```bash
-docker-compose run php php refresh-cache.php
+docker-compose run app php refresh-cache.php
 ```
 
 Now you can request as much remediation as you need without never overloading LAPI! Pretty nice!
@@ -403,7 +405,7 @@ Let's try to stop the `crowdsec` container and re-run the script with the "bad" 
 
 ```bash
 docker-compose stop crowdsec
-docker-compose run php php check-ip.php 2.3.4.5
+docker-compose run app php check-ip.php 2.3.4.5
 ```
 
 > Even if CrowdSec LAPI is down, your bouncer can get the correct information.

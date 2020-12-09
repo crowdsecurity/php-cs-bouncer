@@ -19,12 +19,12 @@
 :speech_balloon: <a href="https://gitter.im/crowdsec-project/community?utm_source=share-link&utm_medium=link&utm_campaign=share-link">Gitter Chat</a>
 </p>
 
-> This library allows you to create CrowdSec bouncers for PHP applications or frameworks like e-commerce, blog or other exposed applications.
+This library allows you to create CrowdSec bouncers for PHP applications or frameworks like e-commerce, blog or other exposed applications.
 
 ## Features
 
 - ✅ Fast API client
-- ✅ LAPI Support (CAPI not supported yet)
+- ✅ LAPI Support ([CAPI not supported yet](https://github.com/crowdsecurity/php-cs-bouncer#future))
 - ✅ Built-in support for the most known cache systems like Redis, Memcached, PhpFiles
 - ✅ **Live mode** or **Stream mode**
 - ✅ Events logged using monolog
@@ -33,13 +33,13 @@
 - ✅ Clear and prune the cache
 ## Getting started
 
-### Installing CrowdSec Bouncer library
-
 The recommended way to install CrowdSec Bouncer library is through [Composer](https://getcomposer.org/).
 
 ```bash
 composer require crowdsec/bouncer
 ```
+
+In your PHP project, just add these lines to verify an IP:
 
 ```php
 
@@ -55,20 +55,15 @@ $bouncer->configure(['api_key'=> $bouncerApiKey], $cacheAdapter);
 $remediation = $bouncer->getRemediationForIp($blockedIp);// Return "ban", "captcha" or "bypass"
 ```
 
-View [`docs/getting-started.md`](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/docs/complete-guide.md) to learn how to include this library in your project in minutes.
+View [`docs/complete-guide.md`](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/docs/complete-guide.md) to learn how to include this library in your project in minutes.
 
 ## Future
-- Retrieve cache items with pagination
-- Release 1.0.0 version
-- Direct CAPI support
-- Support more cache systems (Apcu, Couchbase, Doctrine, Pdo)
+- Retrieve decisions stored in cache using pagination
+- Direct CAPI support (no LAPI required)
+- Support more cache systems (Apcu, Couchbase, Doctrine -SQL or MongoDB-, Pdo...)
 - Publish load tests (compare performances)
 - Report Code coverage
 - Setup Xdebug environment with Docker
-
-## Licence
-
-[MIT License](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/LICENSE)
 
 ## Licence
 
