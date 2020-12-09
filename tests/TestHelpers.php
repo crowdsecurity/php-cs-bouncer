@@ -73,7 +73,7 @@ class TestHelpers
         if ($path === false) {
             throw new RuntimeException("'.bouncer-key' file was not found.");
         }
-        $apiToken = file_get_contents($path);
-        return $apiToken;
+        $apiKey = file_get_contents($path);
+        return $apiKey;
     }
 }
