@@ -35,15 +35,15 @@ class ApiClient
     /**
      * Configure this instance.
      */
-    public function configure(string $baseUri, int $timeout, string $userAgent, string $token): void
+    public function configure(string $baseUri, int $timeout, string $userAgent, string $apiKey): void
     {
         $this->restClient->configure($baseUri, [
             'User-Agent' => $userAgent,
-            'X-Api-Key' => $token,
+            'X-Api-Key' => $apiKey,
             'Accept' => 'application/json',
         ], $timeout);
         $this->logger->debug("Api Client User Agent = $userAgent");
-        $this->logger->debug("Api Client Token = ***************************");
+        $this->logger->debug("Api Client Key = ***************************");
     }
 
     /**
@@ -51,7 +51,7 @@ class ApiClient
      */
     public function getFilteredDecisions(array $filter): array
     {
-        // TODO P1 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
+        // TODO P1 filter results for scope=ip or scope=range (we can't do anything with other scopes)
         $decisions = $this->restClient->request('/v1/decisions', $filter);
         $decisions = $decisions ?: [];
 
@@ -64,7 +64,7 @@ class ApiClient
      */
     public function getStreamedDecisions(bool $startup = false): array
     {
-        // TODO P1 keep results filtered for scope=ip or scope=range (we can't do anything with other scopes)
+        // TODO P1 filter results for scope=ip or scope=range (we can't do anything with other scopes)
         /** @var array */
         $decisionsDiff = $this->restClient->request('/v1/decisions/stream', $startup ? ['startup' => 'true'] : null);
 

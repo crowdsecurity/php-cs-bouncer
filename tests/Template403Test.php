@@ -13,7 +13,7 @@ final class Template403Test extends TestCase
      */
     public function testCanGetDefault403Template(): void
     {
-        // TODO P1 update these tests
+        // TODO P2 update the 403 tests
         //$bouncer = new Bouncer();
         //$bouncer->configure($config, $cacheAdapter);
         //$this->assertIsString($bouncer->getdefault403Template());

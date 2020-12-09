@@ -1,4 +1,3 @@
-
 <p align="center">
 <img src="https://raw.githubusercontent.com/crowdsecurity/crowdsec/master/docs/assets/images/crowdsec_logo.png" alt="CrowdSec" title="CrowdSec" width="200" height="120"/>
 </p>
@@ -44,19 +43,19 @@ composer require crowdsec/bouncer
 
 ```php
 
-/* To get a token: "cscli bouncers add <name-of-your-php-bouncer> */
-$apiToken = 'YOUR_TOKEN';
+/* To get a bouncer api key: "cscli bouncers add <name-of-your-php-bouncer> */
+$bouncerApiKey = 'YOUR_BOUNCER_API_KEY';
 
 /* Select the best cache adapter for your needs (Memcached, Redis, PhpFiles, ...) */
 $cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter();
 
 $bouncer = new CrowdSecBouncer\Bouncer();
-$bouncer->configure(['api_token'=> $apiToken], $cacheAdapter);
+$bouncer->configure(['api_key'=> $bouncerApiKey], $cacheAdapter);
 
 $remediation = $bouncer->getRemediationForIp($blockedIp);// Return "ban", "captcha" or "bypass"
 ```
 
-View [`docs/getting-started.md`](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/docs/getting-started.rst) to learn how to include this library in your project in minutes.
+View [`docs/getting-started.md`](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/docs/complete-guide.md) to learn how to include this library in your project in minutes.
 
 ## Future
 - Retrieve cache items with pagination
