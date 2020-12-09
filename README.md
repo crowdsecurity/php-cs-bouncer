@@ -69,7 +69,3 @@ View [`docs/getting-started.md`](https://github.com/crowdsecurity/php-cs-bouncer
 ## Licence
 
 [MIT License](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/LICENSE)
-
-## Licence
-
-[MIT License](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/LICENSE)
