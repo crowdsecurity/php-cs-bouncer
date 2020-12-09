@@ -18,7 +18,8 @@ class Constants
     public const CAPI_URL = 'https://api.crowdsec.net/v2/';
 
     /** @var string The user agent used to send request to LAPI or CAPI */
-    public const BASE_USER_AGENT = 'PHP CrowdSec Bouncer/1.0.0'; // TODO P1 dynamically set the correct bouncer version at each release
+    // TODO P1 dynamically set the correct bouncer version at each release, same for phpdocumentor.xml
+    public const BASE_USER_AGENT = 'PHP CrowdSec Bouncer/1.0.0';
 
     /** @var int The timeout when calling LAPI or CAPI */
     public const API_TIMEOUT = 1;

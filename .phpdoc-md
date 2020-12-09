@@ -1,0 +1,6 @@
+<?php
+return (object)[
+    'rootNamespace' => 'CrowdSecBouncer', 
+    'destDirectory' => 'docs/api',
+    'format' => 'github',
+];

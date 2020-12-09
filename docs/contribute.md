@@ -50,7 +50,10 @@ Full details here: https://github.com/github/super-linter/blob/master/docs/run-l
 ## How to generate PHP Doc
 
 ```bash
-docker-compose run --rm phpdoc -d . --setting="guides.enabled=true" --template="./.phpdoc-template"
+docker-compose run --rm phpdoc -d ./src -t ./var --template="xml"
+rm -rf ./docs/api
+mkdir ./docs/api
+docker-compose run --rm app ./vendor/bin/phpdocmd ./var/structure.xml ./docs/api
 ```
 
 ## The git workflow we use

@@ -38,6 +38,7 @@
         "predis/predis": "^1.1",
         "bramus/monolog-colored-line-formatter": "^3.0",
         "symfony/var-dumper": "^5.2",
-        "phpunit/phpunit": "8.5.13"
+        "phpunit/phpunit": "8.5.13",
+        "evert/phpdoc-md": "^0.2.0"
     }
 }
