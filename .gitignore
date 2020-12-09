@@ -12,3 +12,4 @@ super-linter.log
 # App
 /var/
 .bouncer-key
+.cache

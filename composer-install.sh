@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker-compose run php composer install
+docker-compose run app composer install
