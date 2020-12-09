@@ -1,4 +1,3 @@
-
 <p align="center">
 <img src="https://raw.githubusercontent.com/crowdsecurity/crowdsec/master/docs/assets/images/crowdsec_logo.png" alt="CrowdSec" title="CrowdSec" width="200" height="120"/>
 </p>
@@ -56,7 +55,7 @@ $bouncer->configure(['api_key'=> $bouncerApiKey], $cacheAdapter);
 $remediation = $bouncer->getRemediationForIp($blockedIp);// Return "ban", "captcha" or "bypass"
 ```
 
-View [`docs/getting-started.md`](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/docs/getting-started.rst) to learn how to include this library in your project in minutes.
+View [`docs/getting-started.md`](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/docs/complete-guide.md) to learn how to include this library in your project in minutes.
 
 ## Future
 - Retrieve cache items with pagination

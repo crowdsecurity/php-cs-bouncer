@@ -1,16 +1,14 @@
-Full configuration reference
-----------------------------
+# Full configuration reference
 
-.. code-block:: sh
-
+```bash
    $config = [
        // Required. The bouncer api key to access LAPI or CAPI.
        'api_key'=> 'YOUR_BOUNCER_API_KEY',
 
-       // Optional. Define the url to your LAPI server, defaults to CAPI URL.
+       // Optional. Define the URL to your LAPI server, default to CAPI URL.
        'api_url'=> 'https://api.crowdsec.net/v2/',
 
-       // Optional. HTTP user agent used to call CAPI or LAPI. Defaults to this library name/current version.
+       // Optional. HTTP user agent used to call CAPI or LAPI. Default to this library name/current version.
        'api_user_agent'=> 'CrowdSec PHP Library/x.x.x',
 
        // Optional. In seconds. The timeout when calling CAPI/LAPI. Defaults to 2 sec.
@@ -28,3 +26,4 @@ Full configuration reference
    $cacheAdapter = (...)
    $bouncer = new Bouncer();
    $bouncer->configure($config, $cacheAdapter);
+```
