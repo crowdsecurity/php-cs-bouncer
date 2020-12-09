@@ -57,9 +57,4 @@ services:
   memcached:
     image: memcached:1-alpine
   curl:
-    image: curlimages/curl
-  phpdoc:
-    image: phpdoc/phpdoc:3
-    volumes:
-      - .:/data
-    
+    image: curlimages/curl  
