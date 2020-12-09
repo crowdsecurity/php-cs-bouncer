@@ -45,7 +45,7 @@ class Bouncer
     /**
      * Configure this instance.
      */
-    public function configure(array $config, AbstractAdapter $cacheAdapter): void
+    public function configure(array $config, AbstractAdapter $cacheAdapter = null): void
     {
         // Process input configuration.
         $configuration = new Configuration();

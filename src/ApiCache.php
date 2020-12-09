@@ -7,6 +7,7 @@ namespace CrowdSecBouncer;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\PruneableInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
 /**
  * The cache mecanism to store every decisions from LAPI/CAPI. Symfony Cache component powered.
@@ -48,7 +49,7 @@ class ApiCache
      * Configure this instance.
      */
     public function configure(
-        AbstractAdapter $adapter,
+        ?AbstractAdapter $adapter,
         bool $liveMode,
         string $apiUrl,
         int $timeout,
@@ -56,6 +57,7 @@ class ApiCache
         string $apiKey,
         int $cacheExpirationForCleanIp
     ): void {
+        $adapter = $adapter ?: new FilesystemAdapter();
         $this->adapter = $adapter;
         $this->liveMode = $liveMode;
         $this->cacheExpirationForCleanIp = $cacheExpirationForCleanIp;
