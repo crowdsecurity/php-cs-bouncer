@@ -12,4 +12,3 @@ docker-compose exec crowdsec /usr/local/bin/cscli bouncers add bouncer-php-libra
 
 # Create a watcher with cscli.
 docker-compose exec crowdsec cscli machines add PhpUnitTestMachine --password PhpUnitTestMachinePassword > /dev/null 2>&1
-# TODO P3 try to use https://crowdsecurity.github.io/api_doc/?urls.primaryName=LAPI#/watchers/RegisterWatcher in PhpUnit instead.

@@ -150,11 +150,10 @@ class Bouncer
 
     /**
      * Browse the bouncer technical logs.
-     * TODO P3 Code this.
      */
     public function loadPaginatedLogs(int $page = 1, int $itemPerPage = 10): array
     {
-        // TODO P3 Implement this.
+        // TODO P3 Implement log pagination
         return [];
     }
 }

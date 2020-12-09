@@ -22,7 +22,6 @@ TODO P2 testThrowErrorWhenMissAndApiIsNotReachable() https://stackoverflow.com/q
 TODO P2 testThrowErrorWhenMissAndApiTimeout()
 TODO P2 testCanHandleCacheSaturation()
 TODO P3 testCanNotUseCapiInLiveMode()
-TODO P2 testCanVerifyIpInStreamModeWithCacheSystemBeforeWarmingTheCacheUp()
 */
 
 final class IpVerificationTest extends TestCase
@@ -51,7 +50,7 @@ final class IpVerificationTest extends TestCase
      * @covers Bouncer
      */
     /*
-    TODO P2
+    TODO P2 testCanVerifyIpInLiveModeWithoutCacheSystem
     public function testCanVerifyIpInLiveModeWithoutCacheSystem(): void
     {
         // Init bouncer
@@ -188,7 +187,6 @@ final class IpVerificationTest extends TestCase
 
         $bouncer->refreshBlocklistCache();
 
-        // TODO P3 test this assertion
         $this->logger->debug('Refresh the cache just after the warm up. Nothing should append.');
         $bouncer->refreshBlocklistCache();
 
@@ -225,11 +223,11 @@ final class IpVerificationTest extends TestCase
         // Pull updates
         $bouncer->refreshBlocklistCache();
 
-        // TODO P3 test this assertion
+        // TODO P3 test nothing append after 2nd refresh
         $this->logger->debug('Refresh 2nd time the cache. Nothing should append.');
         $bouncer->refreshBlocklistCache();
 
-        // TODO P3 test this assertion
+        // TODO P3 test nothing append after 3rd refresh
         $this->logger->debug('Refresh 3rd time the cache. Nothing should append.');
         $bouncer->refreshBlocklistCache();
 
@@ -280,9 +278,9 @@ final class IpVerificationTest extends TestCase
      * @dataProvider cacheAdapterProvider
      */
     /*
-    TODO P3
      public function testCanNotVerifyIpViaCapiInLiveMode(): void
     {
+        TODO P3 testCanNotVerifyIpViaCapiInLiveMode
         $this->markTestIncomplete('This test has not been implemented yet.');
     }*/
 }
