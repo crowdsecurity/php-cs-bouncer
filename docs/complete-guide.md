@@ -77,7 +77,8 @@ echo "BOUNCER_KEY=`docker-compose exec crowdsec /usr/local/bin/cscli bouncers ad
 Init the `composer.json` and download the `crowdsec/bouncer` library (just wait a short moment for the first docker image build)
 
 ```bash
-docker-compose run app composer init --no-interaction --require crowdsec/bouncer:^0
+docker-compose run app composer init --no-interaction
+docker-compose run app composer require crowdsec/bouncer
 docker-compose run app composer install
 ```
 
@@ -160,7 +161,7 @@ docker-compose run app php check-ip.php 2.3.4.5
 
 For this IP, the cache system will never ask LAPI anymore for the duration of the decision.
 
-Note: By default, a "bypass" decision is stored in the cache for 10 min. You can change this duration while instantiating the library.
+Note: By default, a "bypass" decision is stored in the cache for 1 min. You can change this duration while instantiating the library.
 
 Don't forget to restart the crowdsec container before continuing :-)
 
@@ -410,7 +411,7 @@ docker-compose run app php check-ip.php 2.3.4.5
 
 > Even if CrowdSec LAPI is down, your bouncer can get the correct information.
 
-To stay protected, you have to call the **refresh-cache.php** script periodically (ie each 15minutes). To do so you can use `crontab` like systems but we will not see that in this guide.
+To stay protected, you have to call the **refresh-cache.php** script periodically (ie each 30seconds). To do so you can use `crontab` like systems but we will not see that in this guide.
 
 ## Enjoy implementing nice PHP bouncers!
 
