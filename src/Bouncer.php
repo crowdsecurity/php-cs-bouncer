@@ -84,6 +84,19 @@ class Bouncer
     }
 
     /**
+     * If the CrowdSec remediation is not handled by this library,
+     * replace it with the value of the configuration "fallback_remediation".
+     */
+    private function handleUnknownRemediation(string $remediation): string
+    {
+        // TODO P3 test this
+        if (!in_array($remediation, Constants::ORDERED_REMEDIATIONS)) {
+            return $this->config['fallback_remediation'];
+        }
+        return $remediation;
+    }
+
+    /**
      * Get the remediation for the specified IP. This method use the cache layer.
      * In live mode, when no remediation was found in cache,
      * the cache system will call the API to check if there is a decision.
@@ -97,6 +110,7 @@ class Bouncer
             throw new BouncerException("IP $ip should looks like x.x.x.x, with x in 0-255. Ex: 1.2.3.4");
         }
         $remediation = $this->apiCache->get(long2ip($intIp));
+        $remediation = $this->handleUnknownRemediation($remediation);
         $remediation = $this->capRemediationLevel($remediation);
         return $remediation;
     }
@@ -134,8 +148,6 @@ class Bouncer
     {
         return $this->apiCache->clear();
     }
-
-    
 
     /**
      * Browse the remediations cache.
