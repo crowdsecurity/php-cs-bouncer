@@ -135,8 +135,6 @@ class Bouncer
         return $this->apiCache->clear();
     }
 
-    
-
     /**
      * Browse the remediations cache.
      */
