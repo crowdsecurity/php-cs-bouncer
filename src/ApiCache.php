@@ -402,9 +402,8 @@ class ApiCache
         }
 
         if ($this->adapter->hasItem($ip)) {
-            $remediation = $this->hit($ip);
-            $this->logger->debug("Cache hit for IP: $ip: $remediation");
-            return $remediation;
+            $this->logger->debug("Cache hit for IP: $ip");
+            return $this->hit($ip);
         } else {
             $this->logger->debug("Cache miss for IP: $ip");
             return $this->miss($ip);

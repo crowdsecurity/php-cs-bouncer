@@ -20,11 +20,8 @@
        // Optional. Cap the remediation to the selected one. Select from 'bypass' (minimum remediation), 'captcha' or 'ban' (maximum remediation). Defaults to 'ban'.
        'max_remediation_level'=> 'ban',
 
-       // Optional. Handle unknown remediations as. Select from 'bypass' (minimum remediation), 'captcha' or 'ban' (maximum remediation). Defaults to 'captcha'.
-       'fallback_remediation'=> 'captcha',
-
-       // Optional. Set the duration we keep in cache the fact that an IP is clean. In seconds. Defaults to 60 (1 minute).
-       'cache_expiration_for_clean_ip'=> '60',
+       // Optional. Set the duration we keep in cache the fact that an IP is clean. In seconds. Defaults to 600 (10 minutes).
+       'cache_expiration_for_clean_ip'=> '600',
    ]
    $cacheAdapter = (...)
    $bouncer = new Bouncer();
