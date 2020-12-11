@@ -11,7 +11,7 @@ Here is the development environment for this library:
 
 -  We use TDD to code the library, with PHP Unit
 -  CI via Github actions: run all tests over each PHP versions
--  Git workflow: Git Flow [as it's a software](https://github.com/nvie/gitflow#creating-featurereleasehotfixsupport-branches)
+-  Git workflow: [Github Flow](https://guides.github.com/introduction/flow/)
 -  PHP Source fully documented
 -  Versioning system: Semver
 -  Code coverage (not now)
@@ -55,48 +55,21 @@ docker-compose run --rm app vendor/bin/phpdoc-md
 
 ## The git workflow we use
 
-More info here: https://danielkummer.github.io/git-flow-cheatsheet/
+We use the git workflow [Github Flow](https://guides.github.com/introduction/flow/).
 
-To start a new feature:
+### Cheatsheet
+
+#### New feature
 
 ```bash
-git flow feature start <name>
+git checkout -b feature/<the-feature>
+git commit # as mush as necessary
+git push origin feature/<the-feature>
+gh pr create --fill
 ```
 
-To push the feature to Github:
+#### New release
 
 ```bash
-git flow feature publish <name>
-```
-
-To pull the feature from Github:
-
-```bash
-git flow feature pull <name>
-```
-
-Important: As we use pull requests, we just don't use `git flow feature finish <name>` and we just remove the local branch when the PR is merged. More info [here](https://stackoverflow.com/questions/55706856/proper-way-to-use-gitflow-with-pull-requests).
-
-To create a release:
-
-```bash
-git flow release start vx.x.x
-git flow release publish vx.x.x
-git flow release finish vx.x.x
-```
-
-Then create a new release manually in Github or use `gh release create (...)` if you use **gh** cli.
-
-And more...
-
-```bash
-usage: git flow feature [list] [-v]
-   git flow feature start [-F] <name> [<base>]
-   git flow feature finish [-rFk] <name|nameprefix>
-   git flow feature publish <name>
-   git flow feature track <name>
-   git flow feature diff [<name|nameprefix>]
-   git flow feature rebase [-i] [<name|nameprefix>]
-   git flow feature checkout [<name|nameprefix>]
-   git flow feature pull <remote> [<name>]
+gh release create vx.x.x
 ```
