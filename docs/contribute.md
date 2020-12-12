@@ -71,5 +71,5 @@ gh pr create --fill
 #### New release
 
 ```bash
-gh release create vx.x.x
+gh release create --draft vx.x.x
 ```
