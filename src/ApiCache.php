@@ -8,6 +8,7 @@ use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\PruneableInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use \DateTime;
 
 /**
  * The cache mecanism to store every decisions from LAPI/CAPI. Symfony Cache component powered.
@@ -76,7 +77,7 @@ class ApiCache
     /**
      * Add remediation to a Symfony Cache Item identified by IP
      */
-    private function addRemediationToCacheItem(string $ip, string $type, int $expiration, int $decisionId): void
+    private function addRemediationToCacheItem(string $ip, string $type, int $expiration, int $decisionId): string
     {
         $item = $this->adapter->getItem($ip);
 
@@ -103,7 +104,7 @@ class ApiCache
         $prioritizedRemediations = Remediation::sortRemediationByPriority($remediations);
 
         $item->set($prioritizedRemediations);
-        $item->expiresAfter($maxLifetime);
+        $item->expiresAt(new DateTime('@' . $maxLifetime));
 
         // Save the cache without committing it to the cache system.
         // Useful to improve performance when updating the cache.
@@ -113,6 +114,7 @@ class ApiCache
                     "$type for $expiration sec, (decision $decisionId)"
             );
         }
+        return $prioritizedRemediations[0][0];
     }
 
     /**
@@ -143,7 +145,7 @@ class ApiCache
         // Build the item lifetime in cache and sort remediations by priority
         $maxLifetime = max(array_column($remediations, 1));
         $cacheContent = Remediation::sortRemediationByPriority($remediations);
-        $item->expiresAfter($maxLifetime);
+        $item->expiresAt(new DateTime('@' . $maxLifetime));
         $item->set($cacheContent);
 
         // Save the cache without commiting it to the cache system.
@@ -174,23 +176,23 @@ class ApiCache
         };
         $seconds = 0;
         if (isset($matches[2])) {
-            $seconds += ((int) $matches[1]) * 3600; // hours
+            $seconds += ((int) $matches[2]) * 3600; // hours
         }
         if (isset($matches[3])) {
-            $seconds += ((int) $matches[2]) * 60; // minutes
+            $seconds += ((int) $matches[3]) * 60; // minutes
         }
         if (isset($matches[4])) {
-            $seconds += ((int) $matches[1]); // seconds
+            $seconds += ((int) $matches[4]); // seconds
         }
-        if (isset($matches[5])) { // units in milliseconds
+        if ('m' === ($matches[5])) { // units in milliseconds
             $seconds *= 0.001;
         }
-        if (isset($matches[1])) { // negative
+        if ("-" === ($matches[1])) { // negative
             $seconds *= -1;
         }
-        $seconds = round($seconds);
 
-        return (int)$seconds;
+        $seconds = (int)round($seconds);
+        return $seconds;
     }
 
 
@@ -271,8 +273,9 @@ class ApiCache
     /**
      * Update the cached remediation of the specified IP from these new decisions.
      */
-    private function saveRemediationsForIp(array $decisions, string $ip): void
+    private function saveRemediationsForIp(array $decisions, string $ip): string
     {
+        $remediationResult = Constants::REMEDIATION_BYPASS;
         if (\count($decisions)) {
             foreach ($decisions as $decision) {
                 if (!in_array($decision['type'], Constants::ORDERED_REMEDIATIONS)) {
@@ -282,13 +285,14 @@ class ApiCache
                     $decision['type'] = $highestRemediationLevel;
                 }
                 $remediation = $this->formatRemediationFromDecision($decision);
-                $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
+                $remediationResult = $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
             }
         } else {
             $remediation = $this->formatRemediationFromDecision(null);
-            $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
+            $remediationResult = $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
         }
         $this->adapter->commit();
+        return $remediationResult;
     }
 
     public function clear(): bool
@@ -364,8 +368,7 @@ class ApiCache
             $decisions = $this->apiClient->getFilteredDecisions(['ip' => $ip]);
         }
 
-        $this->saveRemediationsForIp($decisions, $ip);
-        return $this->hit($ip);
+        return $this->saveRemediationsForIp($decisions, $ip);
     }
 
     /**
