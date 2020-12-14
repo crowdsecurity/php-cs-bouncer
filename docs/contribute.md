@@ -62,14 +62,16 @@ We use the git workflow [Github Flow](https://guides.github.com/introduction/flo
 #### New feature
 
 ```bash
-git checkout -b feature/<the-feature>
-git commit # as mush as necessary
-git push origin feature/<the-feature>
+git checkout -b new-feature # the name is not important now.
+git commit # as mush as necessary.
+git branch -m <name-of-the-branch> # to rename the branch to what has really be done
+git push -u origin <name-of-the-branch>
 gh pr create --fill
 ```
 
 #### New release
 
 ```bash
-gh release create --draft vx.x.x
+git describe --tags # to verify what is the current tag
+gh release create --draft vx.x.x --title vx.x.x
 ```

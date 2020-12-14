@@ -239,13 +239,7 @@ class ApiCache
                 }
             }
         }
-
-        $warmedUp = $this->adapter->commit();
-
-        // Store the fact that the cache has been warmed up.
-        $this->defferUpdateCacheConfig(['warmed_up' => $warmedUp]);
-
-        return $warmedUp;
+        return $this->adapter->commit();
     }
 
     private function removeRemediations(array $decisions): bool
@@ -263,7 +257,7 @@ class ApiCache
                 if (!$success) {
                     // The API may return stale deletion events due to API design.
                     // Ignoring them is therefore not a problem.
-                    $this->logger->debug("Decision " . $decision['id'] . " not found in cache for one or more items.");
+                    $this->logger->debug("Decision " . $decision['id'] . " not found in cache for one or more items");
                 }
             }
         }
@@ -297,7 +291,10 @@ class ApiCache
 
     public function clear(): bool
     {
-        return $this->adapter->clear();
+        $cleared = $this->adapter->clear();
+        $this->warmedUp = false;
+        $this->logger->info("Cache cleared");
+        return $cleared;
     }
 
     /**
@@ -306,20 +303,27 @@ class ApiCache
      * Used when the stream mode has just been activated.
      *
      */
-    private function warmUp(): void
+    public function warmUp(): void
     {
-        $this->logger->info('Warming the cache up');
+        $this->logger->debug('Warming the cache up');
         $startup = true;
         $decisionsDiff = $this->apiClient->getStreamedDecisions($startup);
         $newDecisions = $decisionsDiff['new'];
 
+        $nbNew = 0;
         if ($newDecisions) {
             $this->warmedUp = $this->saveRemediations($newDecisions);
             if (!$this->warmedUp) {
                 throw new BouncerException("Unable to warm the cache up");
             }
+            $nbNew = count($newDecisions);
         }
-        $this->logger->debug('Cache warmed up');
+        
+        // Store the fact that the cache has been warmed up.
+        $this->logger->info("Cache warmed up with $nbNew decision(s)");
+        $this->defferUpdateCacheConfig(['warmed_up' => true]);
+        $this->adapter->commit();
+
     }
 
     /**
@@ -331,26 +335,30 @@ class ApiCache
      */
     public function pullUpdates(): void
     {
-        $this->logger->info('Pulling updates from API');
         if (!$this->warmedUp) {
             $this->warmUp();
+            return;
         }
 
+        $this->logger->debug('Pulling updates from API');
         $decisionsDiff = $this->apiClient->getStreamedDecisions();
         $newDecisions = $decisionsDiff['new'];
         $deletedDecisions = $decisionsDiff['deleted'];
 
+        $nbDeleted = 0;
         if ($deletedDecisions) {
             $this->removeRemediations($deletedDecisions);
+            $nbDeleted = count($deletedDecisions);
         }
-
+        
+        $nbNew = 0;
         if ($newDecisions) {
             $this->saveRemediations($newDecisions);
-            if (!$this->warmedUp) {
-                throw new BouncerException("Unable to warm the cache up");
-            }
+            $nbNew = count($newDecisions);
         }
-        $this->logger->debug('Updates pulled from API');
+        
+        
+        $this->logger->info("Updates pulled from API (-$nbDeleted+$nbNew)");
     }
 
     /**

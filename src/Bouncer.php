@@ -126,6 +126,15 @@ class Bouncer
 
     /**
      * Used in stream mode only.
+     * This method should be called only to force a cache warm up.
+     */
+    public function warmBlocklistCacheUp(): void
+    {
+        $this->apiCache->warmUp();
+    }
+
+    /**
+     * Used in stream mode only.
      * This method should be called periodically (ex: crontab) in a asynchronous way to update the bouncer cache.
      */
     public function refreshBlocklistCache(): void
@@ -147,6 +156,14 @@ class Bouncer
     public function pruneCache(): bool
     {
         return $this->apiCache->clear();
+    }
+
+    /**
+     * Returns the logger instance.
+     */
+    public function getLogger(): LoggerInterface
+    {
+        return $this->logger;
     }
 
     /**
