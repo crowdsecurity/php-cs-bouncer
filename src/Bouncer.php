@@ -7,6 +7,8 @@ use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Config\Definition\Processor;
 use Psr\Log\LoggerInterface;
 use Monolog\Logger;
+use Gregwar\Captcha\CaptchaBuilder;
+use Gregwar\Captcha\PhraseBuilder;
 
 /**
  * The main Class of this package. This is the first entry point of any PHP Bouncers using this library.
@@ -176,6 +178,20 @@ class Bouncer
     public function getLogger(): LoggerInterface
     {
         return $this->logger;
+    }
+
+    public static function buildCaptchaCouple()
+    {
+        $captchaBuilder = new CaptchaBuilder();
+        return [
+            'phrase' => $captchaBuilder->getPhrase(),
+            'inlineImage' => $captchaBuilder->build()->inline()
+        ];
+    }
+
+    public static function checkCaptcha(string $expected, string $try)
+    {
+        return PhraseBuilder::comparePhrases($expected, $try);
     }
 
     /**
