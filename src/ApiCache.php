@@ -276,6 +276,7 @@ class ApiCache
                     $highestRemediationLevel = Constants::ORDERED_REMEDIATIONS[0];
                     // TODO P1 test the case of unknown remediation type
                     $this->logger->warning("The remediation type " . $decision['type'] . " is unknown by this CrowdSec Bouncer version. Fallback to highest remedition level: " . $highestRemediationLevel);
+                    // TODO P2 use the fallback parameter instead.
                     $decision['type'] = $highestRemediationLevel;
                 }
                 $remediation = $this->formatRemediationFromDecision($decision);
@@ -357,7 +358,6 @@ class ApiCache
             $nbNew = count($newDecisions);
         }
         
-        
         $this->logger->info("Updates pulled from API (-$nbDeleted+$nbNew)");
     }
 
@@ -405,7 +405,7 @@ class ApiCache
      */
     public function get(string $ip): string
     {
-        $this->logger->debug('IP to check: ' . $ip);
+        $this->logger->debug("Starting IP check for $ip...");
         if (!$this->liveMode && !$this->warmedUp) {
             throw new BouncerException(
                 'CrowdSec Bouncer configured in "stream" mode. Please warm the cache up before trying to access it.'
@@ -414,11 +414,12 @@ class ApiCache
 
         if ($this->adapter->hasItem($ip)) {
             $remediation = $this->hit($ip);
-            $this->logger->debug("Cache hit for IP: $ip: $remediation");
+            $this->logger->info("Cache hit for IP: $ip: $remediation (hit)");
             return $remediation;
         } else {
-            $this->logger->debug("Cache miss for IP: $ip");
-            return $this->miss($ip);
+            $remediation = $this->miss($ip);
+            $this->logger->info("Cache miss for IP: $ip: $remediation (miss)");
+            return $remediation;
         }
     }
 

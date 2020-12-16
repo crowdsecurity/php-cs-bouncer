@@ -118,10 +118,24 @@ class Bouncer
     /**
      * Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.
      */
-    public function getDefault403Template(): string
+    public function get403Template(): string
     {
-        return '<html><body><h1>Access forbidden.</h1><p>You have been blocked by CrowdSec.' .
-            'Please contact our technical support if you think it is an error.</p></body></html>';
+        return
+            <<<'DELIMITER'
+<html><body><h1>Access forbidden.</h1><p>You have been blocked by CrowdSec
+'Please contact our technical support if you think it is an error.</p></body></html>
+DELIMITER;
+    }
+
+    /**
+     * Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.
+     */
+    public function getCaptchaTemplate(): string
+    {
+        // TODO P2 move captcha template here
+        return
+            <<<'DELIMITER'
+DELIMITER;
     }
 
     /**

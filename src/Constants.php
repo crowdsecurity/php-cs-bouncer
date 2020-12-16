@@ -24,8 +24,8 @@ class Constants
     /** @var int The timeout when calling LAPI or CAPI */
     public const API_TIMEOUT = 1;
 
-    /** @var int The duration we keep a clean IP in cache 60s = 1m */
-    public const CACHE_EXPIRATION_FOR_CLEAN_IP = 60;
+    /** @var int The duration we keep a clean IP in cache 5s */
+    public const CACHE_EXPIRATION_FOR_CLEAN_IP = 5;
 
     /** @var string The ban remediation */
     public const REMEDIATION_BAN = 'ban';
