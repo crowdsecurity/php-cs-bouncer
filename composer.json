@@ -35,7 +35,6 @@
         "monolog/monolog": "^2.1"
     },
     "require-dev": {
-        "predis/predis": "^1.1",
         "bramus/monolog-colored-line-formatter": "^3.0",
         "symfony/var-dumper": "^5.2",
         "phpunit/phpunit": "8.5.13",
