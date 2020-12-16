@@ -44,9 +44,10 @@ class RestClient
         $this->headerString = $this->convertHeadersToString($headers);
         $this->timeout = $timeout;
 
-        $this->logger->debug("Rest client base URI: " . $this->baseUri);
-        $this->logger->debug("Rest client headers: ***************************");
-        $this->logger->debug("Rest client timeout: " . $this->timeout);
+        $this->logger->debug('Rest client init', [
+            'base_uri' => $this->baseUri,
+            'timeout' => $this->timeout,
+        ]);
     }
 
     /**
@@ -94,7 +95,10 @@ class RestClient
         }
         $context = stream_context_create($config);
 
-        $this->logger->debug("$method " . $this->baseUri . $endpoint);
+        $this->logger->debug('HTTP call', [
+            'method' => $this->baseUri,
+            'uri' => $this->baseUri . $endpoint,
+        ]);
 
         $response = file_get_contents($this->baseUri . $endpoint, false, $context);
         if (false === $response) {

@@ -29,7 +29,7 @@ class TestHelpers
     {
         $log = new Logger('TESTS');
         $handler = new StreamHandler('php://stdout', self::LOG_LEVEL);
-        $handler->setFormatter(new ColoredLineFormatter(null, "[%datetime%] %message%\n", 'H:i:s'));
+        $handler->setFormatter(new ColoredLineFormatter(null, "[%datetime%] %message% %context%\n", 'H:i:s'));
         $log->pushHandler($handler);
         return $log;
     }

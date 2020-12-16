@@ -33,7 +33,7 @@ $logger = new Logger('example');
 
 // Display logs with INFO verbosity
 $streamHandler = new StreamHandler('php://stdout', Logger::DEBUG);
-$streamHandler->setFormatter(new LineFormatter("[%datetime%] %message%\n"));
+$streamHandler->setFormatter(new LineFormatter("[%datetime%] %message% %context%\n"));
 $logger->pushHandler($streamHandler);
 
 // Store logs with WARNING verbosity
