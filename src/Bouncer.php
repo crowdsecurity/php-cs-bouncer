@@ -118,24 +118,22 @@ class Bouncer
     /**
      * Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.
      */
-    public function get403Template(): string
+    public static function getAccessForbiddenHtmlTemplate(): string
     {
-        return
-            <<<'DELIMITER'
-<html><body><h1>Access forbidden.</h1><p>You have been blocked by CrowdSec
-'Please contact our technical support if you think it is an error.</p></body></html>
-DELIMITER;
+        ob_start();
+        require_once(__DIR__ . '/templates/access-forbidden.php');
+        return ob_get_clean();
     }
 
     /**
-     * Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.
+     * Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.
      */
-    public function getCaptchaTemplate(): string
+    public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, $captchaResolutionFormUrl): string
     {
-        // TODO P2 move captcha template here
-        return
-            <<<'DELIMITER'
-DELIMITER;
+        // TODO P2 CI auto generate phpdoc (to add this one)
+        ob_start();
+        require_once(__DIR__ . '/templates/captcha.php');
+        return ob_get_clean();
     }
 
     /**

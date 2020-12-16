@@ -13,7 +13,7 @@ The main Class of this package. This is the first entry point of any PHP Bouncer
 |[__construct](#bouncer__construct)||
 |[clearCache](#bouncerclearcache)|This method clear the full data in cache.|
 |[configure](#bouncerconfigure)|Configure this instance.|
-|[get403Template](#bouncerget403Template)|Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.|
+|[getAccessForbiddenHtmlTemplate](#getAccessForbiddenHtmlTemplate)|Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.|
 |[getRemediationForIp](#bouncergetremediationforip)|Get the remediation for the specified IP. This method use the cache layer.|
 |[loadPaginatedBlocklistFromCache](#bouncerloadpaginatedblocklistfromcache)|Browse the remediations cache.|
 |[loadPaginatedLogs](#bouncerloadpaginatedlogs)|Browse the bouncer technical logs.|
@@ -100,7 +100,7 @@ Configure this instance.
 **Description**
 
 ```php
-public get403Template (void)
+public getAccessForbiddenHtmlTemplate (void)
 ```
 
 Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP. 
