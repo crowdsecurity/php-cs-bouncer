@@ -43,6 +43,7 @@ class ApiClient
             'Accept' => 'application/json',
         ], $timeout);
         $this->logger->debug('API client init', [
+            'type' => 'API_CLIENT_INIT',
             'user_agent' => $userAgent,
         ]);
     }
