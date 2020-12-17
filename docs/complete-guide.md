@@ -56,7 +56,7 @@ services:
     env_file: [.app.env]
 
   crowdsec:
-    image: crowdsecurity/crowdsec:v1.0.0
+    image: crowdsecurity/crowdsec:latest
     environment: [DISABLE_AGENT=true]
 ```
 

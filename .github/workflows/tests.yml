@@ -23,7 +23,7 @@ jobs:
                 ports:
                     - 11211:11211
             crowdsec:
-                image: crowdsecurity/crowdsec:v1.0.0
+                image: crowdsecurity/crowdsec:latest
                 ports:
                     - 8080:8080
                 env:
