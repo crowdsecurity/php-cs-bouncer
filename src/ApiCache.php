@@ -34,6 +34,9 @@ class ApiCache
     /** @var int */
     private $cacheExpirationForCleanIp;
 
+    /** @var int */
+    private $cacheExpirationForBadIp;
+
     /** @var ApiClient */
     private $apiClient;
 
@@ -56,12 +59,14 @@ class ApiCache
         int $timeout,
         string $userAgent,
         string $apiKey,
-        int $cacheExpirationForCleanIp
+        int $cacheExpirationForCleanIp,
+        int $cacheExpirationForBadIp
     ): void {
         $adapter = $adapter ?: new FilesystemAdapter();
         $this->adapter = $adapter;
         $this->liveMode = $liveMode;
         $this->cacheExpirationForCleanIp = $cacheExpirationForCleanIp;
+        $this->cacheExpirationForBadIp = $cacheExpirationForBadIp;
         $cacheConfigItem = $this->adapter->getItem('cacheConfig');
         $cacheConfig = $cacheConfigItem->get();
         $warmedUp = (is_array($cacheConfig) && isset($cacheConfig['warmed_up']) && $cacheConfig['warmed_up'] === true);
@@ -71,6 +76,7 @@ class ApiCache
             'adapter' => get_class($adapter),
             'mode' => ($liveMode ? 'live' : 'stream'),
             'exp_clean_ips' => $cacheExpirationForCleanIp,
+            'exp_bad_ips' => $cacheExpirationForBadIp,
             'warmed_up' => ($this->warmedUp ? 'true' : 'false'),
         ]);
         $this->apiClient->configure($apiUrl, $timeout, $userAgent, $apiKey);
@@ -218,9 +224,11 @@ class ApiCache
             return [Constants::REMEDIATION_BYPASS, time() + $this->cacheExpirationForCleanIp, 0];
         }
 
+        $duration = min($this->cacheExpirationForBadIp, self::parseDurationToSeconds($decision['duration']));
+
         return [
             $decision['type'], // ex: ban, captcha
-            time() + self::parseDurationToSeconds($decision['duration']), // expiration timestamp
+            time() + $duration, // expiration timestamp
             $decision['id'],
         ];
     }
