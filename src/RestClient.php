@@ -44,7 +44,7 @@ class RestClient
         $this->headerString = $this->convertHeadersToString($headers);
         $this->timeout = $timeout;
 
-        $this->logger->debug('Rest client init', [
+        $this->logger->debug(null, [
             'type' => 'REST_CLIENT_INIT',
             'base_uri' => $this->baseUri,
             'timeout' => $this->timeout,
@@ -96,7 +96,7 @@ class RestClient
         }
         $context = stream_context_create($config);
 
-        $this->logger->debug('HTTP call', [
+        $this->logger->debug(null, [
             'type' => 'HTTP CALL',
             'method' => $this->baseUri,
             'uri' => $this->baseUri . $endpoint,

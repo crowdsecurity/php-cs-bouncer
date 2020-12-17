@@ -42,7 +42,7 @@ class ApiClient
             'X-Api-Key' => $apiKey,
             'Accept' => 'application/json',
         ], $timeout);
-        $this->logger->debug('API client init', [
+        $this->logger->debug(null, [
             'type' => 'API_CLIENT_INIT',
             'user_agent' => $userAgent,
         ]);
