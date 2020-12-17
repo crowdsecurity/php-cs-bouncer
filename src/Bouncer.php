@@ -189,9 +189,16 @@ class Bouncer
         ];
     }
 
-    public static function checkCaptcha(string $expected, string $try)
+    public function checkCaptcha(string $expected, string $try, string $ip)
     {
-        return PhraseBuilder::comparePhrases($expected, $try);
+        $solved = PhraseBuilder::comparePhrases($expected, $try);
+        $this->logger->warning(null, [
+            'type' => 'CAPTCHA_SOLVED',
+            'ip' => $ip,
+            'resolution' => $solved,
+        ]);
+        
+        return $solved;
     }
 
     /**
