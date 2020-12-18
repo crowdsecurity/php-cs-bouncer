@@ -53,11 +53,9 @@ Full details here: https://github.com/github/super-linter/blob/master/docs/run-l
 docker-compose run --rm app vendor/bin/phpdoc-md
 ```
 
-## The git workflow we use
+### Git workflow cheat sheet
 
 We use the git workflow [Github Flow](https://guides.github.com/introduction/flow/).
-
-### Cheatsheet
 
 #### New feature
 
