@@ -142,19 +142,23 @@ class Bouncer
     /**
      * Used in stream mode only.
      * This method should be called only to force a cache warm up.
+     * 
+     * @return int number of decisions added.
      */
-    public function warmBlocklistCacheUp(): void
+    public function warmBlocklistCacheUp(): int
     {
-        $this->apiCache->warmUp();
+        return $this->apiCache->warmUp();
     }
 
     /**
      * Used in stream mode only.
      * This method should be called periodically (ex: crontab) in a asynchronous way to update the bouncer cache.
+     * 
+     * @return array number of deleted and new decisions.
      */
-    public function refreshBlocklistCache(): void
+    public function refreshBlocklistCache(): array
     {
-        $this->apiCache->pullUpdates();
+        return $this->apiCache->pullUpdates();
     }
 
     /**
@@ -170,7 +174,7 @@ class Bouncer
      */
     public function pruneCache(): bool
     {
-        return $this->apiCache->clear();
+        return $this->apiCache->prune();
     }
 
     /**

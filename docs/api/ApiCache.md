@@ -16,6 +16,7 @@ The cache mecanism to store every decisions from LAPI/CAPI. Symfony Cache compon
 |[get](#apicacheget)|Request the cache for the specified IP.|
 |[prune](#apicacheprune)||
 |[pullUpdates](#apicachepullupdates)|Used in stream mode only.|
+|[warmUp](#apicachewarmup)|Used in stream mode only.|
 
 
 
@@ -163,7 +164,36 @@ TODO P2 test for overlapping decisions strategy (ex: max expires)
 
 **Return Values**
 
-`void`
+`array`
+
+> number of deleted and new decisions.
+
+
+<hr />
+
+
+### ApiCache::warmUp  
+
+**Description**
+
+```php
+public warmUp (void)
+```
+
+Used in stream mode only. 
+
+Warm the cache up.  
+Used when the stream mode has just been activated. 
+
+**Parameters**
+
+`This function has no parameters.`
+
+**Return Values**
+
+`int`
+
+> number of decisions added.
 
 
 <hr />

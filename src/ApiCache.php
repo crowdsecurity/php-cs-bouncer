@@ -313,6 +313,8 @@ class ApiCache
     {
         $cleared = $this->adapter->clear();
         $this->warmedUp = false;
+        $this->defferUpdateCacheConfig(['warmed_up' => $this->warmedUp]);
+        $this->adapter->commit();
         $this->logger->info(null, ['type' => 'CACHE_CLEARED']);
         return $cleared;
     }
@@ -321,10 +323,15 @@ class ApiCache
      * Used in stream mode only.
      * Warm the cache up.
      * Used when the stream mode has just been activated.
+     * 
+     * @return int number of decisions added.
      *
      */
-    public function warmUp(): void
+    public function warmUp(): int
     {
+        if ($this->warmedUp) {
+            $this->clear();
+        }
         $this->logger->debug(null, ['type' => 'START_CACHE_WARMUP']);
         $startup = true;
         $decisionsDiff = $this->apiClient->getStreamedDecisions($startup);
@@ -333,6 +340,8 @@ class ApiCache
         $nbNew = 0;
         if ($newDecisions) {
             $this->warmedUp = $this->saveRemediations($newDecisions);
+            $this->defferUpdateCacheConfig(['warmed_up' => $this->warmedUp]);
+            $this->adapter->commit();
             if (!$this->warmedUp) {
                 throw new BouncerException("Unable to warm the cache up");
             }
@@ -340,9 +349,11 @@ class ApiCache
         }
 
         // Store the fact that the cache has been warmed up.
-        $this->logger->info(null, ['type' => 'CACHE_WARMED_UP', 'added_decisions' => $nbNew]);
         $this->defferUpdateCacheConfig(['warmed_up' => true]);
+
         $this->adapter->commit();
+        $this->logger->info(null, ['type' => 'CACHE_WARMED_UP', 'added_decisions' => $nbNew]);
+        return $nbNew;
     }
 
     /**
@@ -351,12 +362,14 @@ class ApiCache
      * Used for the stream mode when we have to update the remediations list.
      * 
      * TODO P2 test for overlapping decisions strategy (ex: max expires)
+     * 
+     * @return array number of deleted and new decisions.
+     * 
      */
-    public function pullUpdates(): void
+    public function pullUpdates(): array
     {
         if (!$this->warmedUp) {
-            $this->warmUp();
-            return;
+            return ['deleted' => 0, 'new' => $this->warmUp()];
         }
 
         $this->logger->debug(null, ['type' => 'START_CACHE_UPDATE']);
@@ -376,7 +389,8 @@ class ApiCache
             $nbNew = count($newDecisions);
         }
 
-        $this->logger->debug(null, ['type' => 'CACHE_UPDATED', 'old' => $nbDeleted, 'new' => $nbNew]);
+        $this->logger->debug(null, ['type' => 'CACHE_UPDATED', 'deleted' => $nbDeleted, 'new' => $nbNew]);
+        return ['deleted' => $nbDeleted, 'new' => $nbNew];
     }
 
     /**
