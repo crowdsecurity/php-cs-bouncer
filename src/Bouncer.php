@@ -2,6 +2,9 @@
 
 namespace CrowdSecBouncer;
 
+require_once(__DIR__ . '/templates/captcha.php');
+require_once(__DIR__ . '/templates/access-forbidden.php');
+
 use Monolog\Handler\NullHandler;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Config\Definition\Processor;
@@ -34,20 +37,20 @@ class Bouncer
     /** @var int */
     private $maxRemediationLevelIndex;
 
-    public function __construct(LoggerInterface $logger = null, ApiCache $apiCache = null)
+    public function __construct(AbstractAdapter $cacheAdapter = null, LoggerInterface $logger = null, ApiCache $apiCache = null)
     {
         if (!$logger) {
             $logger = new Logger('null');
             $logger->pushHandler(new NullHandler());
         }
         $this->logger = $logger;
-        $this->apiCache = $apiCache ?: new ApiCache(new ApiClient($logger), $logger);
+        $this->apiCache = $apiCache ?: new ApiCache($logger, new ApiClient($logger), $cacheAdapter);
     }
 
     /**
      * Configure this instance.
      */
-    public function configure(array $config, AbstractAdapter $cacheAdapter = null): void
+    public function configure(array $config): void
     {
         // Process input configuration.
         $configuration = new Configuration();
@@ -63,7 +66,6 @@ class Bouncer
 
         // Configure Api Cache.
         $this->apiCache->configure(
-            $cacheAdapter,
             $this->config['live_mode'],
             $this->config['api_url'],
             $this->config['api_timeout'],
@@ -92,7 +94,6 @@ class Bouncer
      */
     private function handleUnknownRemediation(string $remediation): string
     {
-        // TODO P3 test this
         if (!in_array($remediation, Constants::ORDERED_REMEDIATIONS)) {
             return $this->config['fallback_remediation'];
         }
@@ -114,8 +115,7 @@ class Bouncer
         }
         $remediation = $this->apiCache->get(long2ip($intIp));
         $remediation = $this->handleUnknownRemediation($remediation);
-        $remediation = $this->capRemediationLevel($remediation);
-        return $remediation;
+        return $this->capRemediationLevel($remediation);
     }
 
     /**
@@ -124,7 +124,7 @@ class Bouncer
     public static function getAccessForbiddenHtmlTemplate(): string
     {
         ob_start();
-        require_once(__DIR__ . '/templates/access-forbidden.php');
+        displayAccessForbiddenTemplate();
         return ob_get_clean();
     }
 
@@ -133,9 +133,8 @@ class Bouncer
      */
     public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, $captchaResolutionFormUrl): string
     {
-        // TODO P2 CI auto generate phpdoc (to add this one)
         ob_start();
-        require_once(__DIR__ . '/templates/captcha.php');
+        displayCaptchaTemplate($error, $captchaImageSrc, $captchaResolutionFormUrl);
         return ob_get_clean();
     }
 
@@ -202,27 +201,7 @@ class Bouncer
             'ip' => $ip,
             'resolution' => $solved,
         ]);
-        
+
         return $solved;
-    }
-
-    /**
-     * Browse the remediations cache.
-     */
-    public function loadPaginatedBlocklistFromCache(int $page = 1, int $itemPerPage = 10): array
-    {
-        // TODO P3 Implement this.
-        // TODO P3 Implement advanced filters, ex:
-        // sort_by=[], filters[type[], origin[], scope[], value[], ip_range[], duration_range[], scenario[], simulated]
-        return [];
-    }
-
-    /**
-     * Browse the bouncer technical logs.
-     */
-    public function loadPaginatedLogs(int $page = 1, int $itemPerPage = 10): array
-    {
-        // TODO P3 Implement log pagination
-        return [];
     }
 }

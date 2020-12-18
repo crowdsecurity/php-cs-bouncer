@@ -49,8 +49,8 @@ $bouncerApiKey = 'YOUR_BOUNCER_API_KEY';
 /* Select the best cache adapter for your needs (Memcached, Redis, PhpFiles, ...) */
 $cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter();
 
-$bouncer = new CrowdSecBouncer\Bouncer();
-$bouncer->configure(['api_key'=> $bouncerApiKey], $cacheAdapter);
+$bouncer = new CrowdSecBouncer\Bouncer($cacheAdapter);
+$bouncer->configure(['api_key'=> $bouncerApiKey]);
 
 $remediation = $bouncer->getRemediationForIp($blockedIp);// Return "ban", "captcha" or "bypass"
 ```

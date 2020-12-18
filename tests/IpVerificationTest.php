@@ -13,17 +13,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\PruneableInterface;
 
-define("HOST_IS_UP", true);
-define("HOST_IS_DOWN", false);
-
-/*
-TODO P2 Instanciate all the configuration
-TODO P2 testThrowErrorWhenMissAndApiIsNotReachable() https://stackoverflow.com/questions/5683592/phpunit-assert-that-an-exception-was-thrown
-TODO P2 testThrowErrorWhenMissAndApiTimeout()
-TODO P2 testCanHandleCacheSaturation()
-TODO P3 testCanNotUseCapiInLiveMode()
-*/
-
 final class IpVerificationTest extends TestCase
 {
     /** @var WatcherClient */
@@ -48,26 +37,6 @@ final class IpVerificationTest extends TestCase
     /**
      * @group integration
      * @covers Bouncer
-     */
-    /*
-    TODO P2 testCanVerifyIpInLiveModeWithoutCacheSystem
-    public function testCanVerifyIpInLiveModeWithoutCacheSystem(): void
-    {
-        // Init bouncer
-        $basicLapiContext = TestHelpers::setupBasicLapiInLiveModeContext();
-        $badIp = $basicLapiContext['bad_ip'];
-        $config = $basicLapiContext['config'];
-        $bouncer = new Bouncer();
-        $bouncer->configure($config);
-
-        // Get decisions for a bad IP
-        $remediation = $bouncer->getRemediationForIp($badIp);
-        $this->assertEquals($remediation, 'ban');
-    }*/
-
-    /**
-     * @group integration
-     * @covers Bouncer
      * @dataProvider cacheAdapterProvider
      * @group ignore_
      */
@@ -87,13 +56,13 @@ final class IpVerificationTest extends TestCase
             ->setConstructorArgs([$this->logger])
             ->enableProxyingToOriginalMethods()
             ->getMock();
-        $apiCache = new ApiCache($apiClientMock, $this->logger);
+        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter);
         $bouncerConfig = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl()
         ];
-        $bouncer = new Bouncer($this->logger, $apiCache);
-        $bouncer->configure($bouncerConfig, $cacheAdapter);
+        $bouncer = new Bouncer(null, $this->logger, $apiCache);
+        $bouncer->configure($bouncerConfig);
 
         // A the end of test, we shoud have exactly 3 "cache miss")
         /** @var MockObject $apiClientMock */
@@ -149,7 +118,6 @@ final class IpVerificationTest extends TestCase
      * @covers Bouncer
      * @dataProvider cacheAdapterProvider
      * @group ignore_
-     * TODO P2 check exception when calling but cache was not warmed up
      */
     public function testCanVerifyIpInStreamModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
     {
@@ -168,15 +136,15 @@ final class IpVerificationTest extends TestCase
             ->setConstructorArgs([$this->logger])
             ->enableProxyingToOriginalMethods()
             ->getMock();
-        $apiCache = new ApiCache($apiClientMock, $this->logger);
+        $apiCache = new ApiCache($this->logger, $apiClientMock);
 
         $bouncerConfig = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'live_mode' => false
         ];
-        $bouncer = new Bouncer($this->logger, $apiCache);
-        $bouncer->configure($bouncerConfig, $cacheAdapter);
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $apiCache);
+        $bouncer->configure($bouncerConfig);
 
         // As we are in stream mode, no live call should be done to the API.
 
@@ -223,11 +191,9 @@ final class IpVerificationTest extends TestCase
         // Pull updates
         $bouncer->refreshBlocklistCache();
 
-        // TODO P3 test nothing append after 2nd refresh
         $this->logger->debug('Refresh 2nd time the cache. Nothing should append.');
         $bouncer->refreshBlocklistCache();
 
-        // TODO P3 test nothing append after 3rd refresh
         $this->logger->debug('Refresh 3rd time the cache. Nothing should append.');
         $bouncer->refreshBlocklistCache();
 
@@ -250,15 +216,15 @@ final class IpVerificationTest extends TestCase
             ->setConstructorArgs([$this->logger])
             ->enableProxyingToOriginalMethods()
             ->getMock();
-        $apiCache2 = new ApiCache($apiClientMock2, $this->logger);
+        $apiCache2 = new ApiCache($this->logger, $apiClientMock2);
 
         $bouncerConfig = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'live_mode' => false
         ];
-        $bouncer = new Bouncer($this->logger, $apiCache2);
-        $bouncer->configure($bouncerConfig, $cacheAdapter);
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $apiCache2);
+        $bouncer->configure($bouncerConfig);
 
         // The cache should still be warmed up, even for a new instance
 
@@ -271,16 +237,4 @@ final class IpVerificationTest extends TestCase
             'The cache warm up should be stored across each instanciation'
         );
     }
-
-    /**
-     * @group integration
-     * @covers Bouncer
-     * @dataProvider cacheAdapterProvider
-     */
-    /*
-     public function testCanNotVerifyIpViaCapiInLiveMode(): void
-    {
-        TODO P3 testCanNotVerifyIpViaCapiInLiveMode
-        $this->markTestIncomplete('This test has not been implemented yet.');
-    }*/
 }

@@ -43,17 +43,17 @@ class ApiCache
     /** @var bool */
     private $warmedUp;
 
-    public function __construct(ApiClient $apiClient = null, LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, ApiClient $apiClient = null, AbstractAdapter $adapter = null)
     {
         $this->logger = $logger;
         $this->apiClient = $apiClient ?: new ApiClient($logger);
+        $this->adapter = $adapter ?: new FilesystemAdapter();
     }
 
     /**
      * Configure this instance.
      */
     public function configure(
-        ?AbstractAdapter $adapter,
         bool $liveMode,
         string $apiUrl,
         int $timeout,
@@ -62,18 +62,16 @@ class ApiCache
         int $cacheExpirationForCleanIp,
         int $cacheExpirationForBadIp
     ): void {
-        $adapter = $adapter ?: new FilesystemAdapter();
-        $this->adapter = $adapter;
         $this->liveMode = $liveMode;
         $this->cacheExpirationForCleanIp = $cacheExpirationForCleanIp;
         $this->cacheExpirationForBadIp = $cacheExpirationForBadIp;
         $cacheConfigItem = $this->adapter->getItem('cacheConfig');
         $cacheConfig = $cacheConfigItem->get();
-        $warmedUp = (is_array($cacheConfig) && isset($cacheConfig['warmed_up']) && $cacheConfig['warmed_up'] === true);
-        $this->warmedUp = $warmedUp;
+        $this->warmedUp = (is_array($cacheConfig) && isset($cacheConfig['warmed_up'])
+            && $cacheConfig['warmed_up'] === true);
         $this->logger->debug(null, [
             'type' => 'API_CACHE_INIT',
-            'adapter' => get_class($adapter),
+            'adapter' => get_class($this->adapter),
             'mode' => ($liveMode ? 'live' : 'stream'),
             'exp_clean_ips' => $cacheExpirationForCleanIp,
             'exp_bad_ips' => $cacheExpirationForBadIp,
@@ -174,13 +172,6 @@ class ApiCache
 
     /**
      * Parse "duration" entries returned from API to a number of seconds.
-     *
-     * TODO P3 Test parseDurationToSeconds 
-     *   9999h59m56.603445s
-     *   10m33.3465483s
-     *   33.3465483s
-     *   -285.876962ms
-     *   33s'// should break!;
      */
     private static function parseDurationToSeconds(string $duration): int
     {
@@ -188,7 +179,7 @@ class ApiCache
         preg_match($re, $duration, $matches);
         if (!count($matches)) {
             throw new BouncerException("Unable to parse the following duration: ${$duration}.");
-        };
+        }
         $seconds = 0;
         if (isset($matches[2])) {
             $seconds += ((int) $matches[2]) * 3600; // hours
@@ -206,8 +197,7 @@ class ApiCache
             $seconds *= -1;
         }
 
-        $seconds = (int)round($seconds);
-        return $seconds;
+        return (int)round($seconds);
     }
 
 
@@ -215,8 +205,6 @@ class ApiCache
     /**
      * Format a remediation item of a cache item.
      * This format use a minimal amount of data allowing less cache data consumption.
-     *
-     * TODO P3 test formatRemediationFromDecision
      */
     private function formatRemediationFromDecision(?array $decision): array
     {
@@ -361,8 +349,6 @@ class ApiCache
      * Pull decisions updates from the API and update the cached remediations.
      * Used for the stream mode when we have to update the remediations list.
      * 
-     * TODO P2 test for overlapping decisions strategy (ex: max expires)
-     * 
      * @return array number of deleted and new decisions.
      * 
      */
@@ -419,15 +405,12 @@ class ApiCache
     private function hit(string $ip): string
     {
         $remediations = $this->adapter->getItem($ip)->get();
-        // TODO P1 foreach $remediations, control if exp date is not expired.
-        // If true, update cache item by removing this expired remediation.
 
         // We apply array values first because keys are ids.
         $firstRemediation = array_values($remediations)[0];
-        /** @var string */
-        $firstRemediationString = $firstRemediation[0];
 
-        return $firstRemediationString;
+        /** @var string */
+        return $firstRemediation[0];
     }
 
     /**
@@ -463,16 +446,12 @@ class ApiCache
 
     public function prune(): bool
     {
-        $isPrunable = ($this->adapter instanceof PruneableInterface);
-        if (!$isPrunable) {
-            throw new BouncerException("Cache Adapter" . get_class($this->adapter) . " is not prunable.");
+        if ($this->adapter instanceof PruneableInterface) {
+            $pruned = $this->adapter->prune();
+            $this->logger->debug(null, ['type' => 'CACHE_PRUNED']);
+            return $pruned;
         }
-        /** @var PruneableInterface */
-        $adapter = $this->adapter;
-        $pruned = $adapter->prune();
-        $this->logger->debug(null, ['type' => 'CACHE_PRUNED']);
-
-        // TODO P3 Prune remediation inside cache items.
-        return $pruned;
+        
+        throw new BouncerException("Cache Adapter" . get_class($this->adapter) . " is not prunable.");
     }
 }

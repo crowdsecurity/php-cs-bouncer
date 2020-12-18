@@ -56,12 +56,12 @@ class RestClient
      */
     private function convertHeadersToString(array $headers): string
     {
-        $headerString = '';
+        $builtHeaderString = '';
         foreach ($headers as $key => $value) {
-            $headerString .= "$key: $value\r\n";
+            $builtHeaderString .= "$key: $value\r\n";
         }
 
-        return $headerString;
+        return $builtHeaderString;
     }
 
     /**

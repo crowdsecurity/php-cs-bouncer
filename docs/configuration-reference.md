@@ -30,6 +30,6 @@
        'cache_expiration_for_bad_ip'=> '20',
    ]
    $cacheAdapter = (...)
-   $bouncer = new Bouncer();
-   $bouncer->configure($config, $cacheAdapter);
+   $bouncer = new Bouncer($cacheAdapter);
+   $bouncer->configure($config);
 ```

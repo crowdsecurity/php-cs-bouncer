@@ -49,10 +49,6 @@ class Configuration implements ConfigurationInterface
             ->end()
             ->end();
 
-            // TODO P2 add "live_mode_max_cache_duration" to avoid manually cache clear in this use case:
-            // A ban is set for a long period, the decision is manually deleted in the meantime:
-            // With this "live_mode_max_cache_duration" the user has not to wait for the first erroned excessive delay.
-
         return $treeBuilder;
     }
 }
