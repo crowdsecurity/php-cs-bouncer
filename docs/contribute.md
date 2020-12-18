@@ -64,6 +64,7 @@ We use the git workflow [Github Flow](https://guides.github.com/introduction/flo
 ```bash
 git checkout -b new-feature # the name is not important now.
 git commit # as mush as necessary.
+docker-compose run --rm app vendor/bin/phpdoc-md # regenerate php doc
 git branch -m <name-of-the-branch> # to rename the branch to what has really be done
 git push -u origin <name-of-the-branch>
 gh pr create --fill
