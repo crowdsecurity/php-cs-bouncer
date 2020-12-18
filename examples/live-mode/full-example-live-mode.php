@@ -33,7 +33,7 @@ $logger = new Logger('example');
 
 // Display logs with INFO verbosity
 $streamHandler = new StreamHandler('php://stdout', Logger::DEBUG);
-$streamHandler->setFormatter(new LineFormatter("[%datetime%] %message%\n"));
+$streamHandler->setFormatter(new LineFormatter("[%datetime%] %message% %context%\n"));
 $logger->pushHandler($streamHandler);
 
 // Store logs with WARNING verbosity
@@ -49,7 +49,8 @@ $bouncer->configure([
     'api_timeout' => 1,
     'live_mode' => true,
     'max_remediation_level' => 'ban',
-    'cache_expiration_for_clean_ip' => 1200
+    'cache_expiration_for_clean_ip' => 2,
+    'cache_expiration_for_bad_ip' => 30
 ], $cacheAdapter,);
 
 // Ask remediation to LAPI

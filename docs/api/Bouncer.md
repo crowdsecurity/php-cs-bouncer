@@ -11,14 +11,19 @@ The main Class of this package. This is the first entry point of any PHP Bouncer
 | Name | Description |
 |------|-------------|
 |[__construct](#bouncer__construct)||
+|[buildCaptchaCouple](#bouncerbuildcaptchacouple)||
+|[checkCaptcha](#bouncercheckcaptcha)||
 |[clearCache](#bouncerclearcache)|This method clear the full data in cache.|
 |[configure](#bouncerconfigure)|Configure this instance.|
-|[getDefault403Template](#bouncergetdefault403template)|Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.|
+|[getAccessForbiddenHtmlTemplate](#bouncergetaccessforbiddenhtmltemplate)|Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.|
+|[getCaptchaHtmlTemplate](#bouncergetcaptchahtmltemplate)|Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.|
+|[getLogger](#bouncergetlogger)|Returns the logger instance.|
 |[getRemediationForIp](#bouncergetremediationforip)|Get the remediation for the specified IP. This method use the cache layer.|
 |[loadPaginatedBlocklistFromCache](#bouncerloadpaginatedblocklistfromcache)|Browse the remediations cache.|
 |[loadPaginatedLogs](#bouncerloadpaginatedlogs)|Browse the bouncer technical logs.|
 |[pruneCache](#bouncerprunecache)|This method prune the cache: it removes all the expired cache items.|
 |[refreshBlocklistCache](#bouncerrefreshblocklistcache)|Used in stream mode only.|
+|[warmBlocklistCacheUp](#bouncerwarmblocklistcacheup)|Used in stream mode only.|
 
 
 
@@ -29,6 +34,54 @@ The main Class of this package. This is the first entry point of any PHP Bouncer
 
 ```php
  __construct (void)
+```
+
+ 
+
+ 
+
+**Parameters**
+
+`This function has no parameters.`
+
+**Return Values**
+
+`void`
+
+
+<hr />
+
+
+### Bouncer::buildCaptchaCouple  
+
+**Description**
+
+```php
+ buildCaptchaCouple (void)
+```
+
+ 
+
+ 
+
+**Parameters**
+
+`This function has no parameters.`
+
+**Return Values**
+
+`void`
+
+
+<hr />
+
+
+### Bouncer::checkCaptcha  
+
+**Description**
+
+```php
+ checkCaptcha (void)
 ```
 
  
@@ -95,15 +148,63 @@ Configure this instance.
 <hr />
 
 
-### Bouncer::getDefault403Template  
+### Bouncer::getAccessForbiddenHtmlTemplate  
 
 **Description**
 
 ```php
-public getDefault403Template (void)
+public static getAccessForbiddenHtmlTemplate (void)
 ```
 
 Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP. 
+
+ 
+
+**Parameters**
+
+`This function has no parameters.`
+
+**Return Values**
+
+`void`
+
+
+<hr />
+
+
+### Bouncer::getCaptchaHtmlTemplate  
+
+**Description**
+
+```php
+public static getCaptchaHtmlTemplate (void)
+```
+
+Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP. 
+
+ 
+
+**Parameters**
+
+`This function has no parameters.`
+
+**Return Values**
+
+`void`
+
+
+<hr />
+
+
+### Bouncer::getLogger  
+
+**Description**
+
+```php
+public getLogger (void)
+```
+
+Returns the logger instance. 
 
  
 
@@ -236,7 +337,35 @@ This method should be called periodically (ex: crontab) in a asynchronous way to
 
 **Return Values**
 
-`void`
+`array`
+
+> number of deleted and new decisions.
+
+
+<hr />
+
+
+### Bouncer::warmBlocklistCacheUp  
+
+**Description**
+
+```php
+public warmBlocklistCacheUp (void)
+```
+
+Used in stream mode only. 
+
+This method should be called only to force a cache warm up. 
+
+**Parameters**
+
+`This function has no parameters.`
+
+**Return Values**
+
+`int`
+
+> number of decisions added.
 
 
 <hr />

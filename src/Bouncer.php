@@ -7,6 +7,8 @@ use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Config\Definition\Processor;
 use Psr\Log\LoggerInterface;
 use Monolog\Logger;
+use Gregwar\Captcha\CaptchaBuilder;
+use Gregwar\Captcha\PhraseBuilder;
 
 /**
  * The main Class of this package. This is the first entry point of any PHP Bouncers using this library.
@@ -67,7 +69,8 @@ class Bouncer
             $this->config['api_timeout'],
             $this->config['api_user_agent'],
             $this->config['api_key'],
-            $this->config['cache_expiration_for_clean_ip']
+            $this->config['cache_expiration_for_clean_ip'],
+            $this->config['cache_expiration_for_bad_ip']
         );
     }
 
@@ -118,28 +121,44 @@ class Bouncer
     /**
      * Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.
      */
-    public function getDefault403Template(): string
+    public static function getAccessForbiddenHtmlTemplate(): string
     {
-        return '<html><body><h1>Access forbidden.</h1><p>You have been blocked by CrowdSec.' .
-            'Please contact our technical support if you think it is an error.</p></body></html>';
+        ob_start();
+        require_once(__DIR__ . '/templates/access-forbidden.php');
+        return ob_get_clean();
+    }
+
+    /**
+     * Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.
+     */
+    public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, $captchaResolutionFormUrl): string
+    {
+        // TODO P2 CI auto generate phpdoc (to add this one)
+        ob_start();
+        require_once(__DIR__ . '/templates/captcha.php');
+        return ob_get_clean();
     }
 
     /**
      * Used in stream mode only.
      * This method should be called only to force a cache warm up.
+     * 
+     * @return int number of decisions added.
      */
-    public function warmBlocklistCacheUp(): void
+    public function warmBlocklistCacheUp(): int
     {
-        $this->apiCache->warmUp();
+        return $this->apiCache->warmUp();
     }
 
     /**
      * Used in stream mode only.
      * This method should be called periodically (ex: crontab) in a asynchronous way to update the bouncer cache.
+     * 
+     * @return array number of deleted and new decisions.
      */
-    public function refreshBlocklistCache(): void
+    public function refreshBlocklistCache(): array
     {
-        $this->apiCache->pullUpdates();
+        return $this->apiCache->pullUpdates();
     }
 
     /**
@@ -155,7 +174,7 @@ class Bouncer
      */
     public function pruneCache(): bool
     {
-        return $this->apiCache->clear();
+        return $this->apiCache->prune();
     }
 
     /**
@@ -164,6 +183,27 @@ class Bouncer
     public function getLogger(): LoggerInterface
     {
         return $this->logger;
+    }
+
+    public static function buildCaptchaCouple()
+    {
+        $captchaBuilder = new CaptchaBuilder();
+        return [
+            'phrase' => $captchaBuilder->getPhrase(),
+            'inlineImage' => $captchaBuilder->build()->inline()
+        ];
+    }
+
+    public function checkCaptcha(string $expected, string $try, string $ip)
+    {
+        $solved = PhraseBuilder::comparePhrases($expected, $try);
+        $this->logger->warning(null, [
+            'type' => 'CAPTCHA_SOLVED',
+            'ip' => $ip,
+            'resolution' => $solved,
+        ]);
+        
+        return $solved;
     }
 
     /**

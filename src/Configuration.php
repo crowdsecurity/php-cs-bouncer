@@ -44,6 +44,9 @@ class Configuration implements ConfigurationInterface
             ->integerNode('cache_expiration_for_clean_ip')
             ->defaultValue(Constants::CACHE_EXPIRATION_FOR_CLEAN_IP)
             ->end()
+            ->integerNode('cache_expiration_for_bad_ip')
+            ->defaultValue(Constants::CACHE_EXPIRATION_FOR_BAD_IP)
+            ->end()
             ->end();
 
             // TODO P2 add "live_mode_max_cache_duration" to avoid manually cache clear in this use case:
