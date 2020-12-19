@@ -154,9 +154,7 @@ public pullUpdates (void)
 Used in stream mode only. 
 
 Pull decisions updates from the API and update the cached remediations.  
-Used for the stream mode when we have to update the remediations list.  
-  
-TODO P2 test for overlapping decisions strategy (ex: max expires) 
+Used for the stream mode when we have to update the remediations list. 
 
 **Parameters**
 

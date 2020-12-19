@@ -53,21 +53,22 @@ Full details here: https://github.com/github/super-linter/blob/master/docs/run-l
 docker-compose run --rm app vendor/bin/phpdoc-md
 ```
 
-## The git workflow we use
+### Git workflow cheat sheet
 
 We use the git workflow [Github Flow](https://guides.github.com/introduction/flow/).
-
-### Cheatsheet
 
 #### New feature
 
 ```bash
-git checkout -b new-feature # the name is not important now.
+git checkout -b <basic-name> # the name is not important now, you can type "new-features"
 git commit # as mush as necessary.
-git branch -m <name-of-the-branch> # to rename the branch to what has really be done
-git push -u origin <name-of-the-branch>
+docker-compose run --rm app vendor/bin/phpdoc-md # regenerate php doc
+git branch -m <name-of-the-branch> # to rename the branch to what has really be done.
+git push origin :<basic-name> && git push origin <name-of-the-branch> # Only if already pushed
 gh pr create --fill
 ```
+
+After the merge, don't forget to delete to branch.
 
 #### New release
 

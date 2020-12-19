@@ -39,8 +39,8 @@ $fileHandler = new RotatingFileHandler($logPath, 0, Logger::WARNING);
 $logger->pushHandler($fileHandler);
 
 // Instanciate the bouncer
-$bouncer = new Bouncer($logger);
-$bouncer->configure(['api_key' => $bouncerApiKey, 'api_url' => $apiUrl], $cacheAdapter);
+$bouncer = new Bouncer($cacheAdapter, $logger);
+$bouncer->configure(['api_key' => $bouncerApiKey, 'api_url' => $apiUrl]);
 
 // Clear the cache.
 $bouncer->clearCache();

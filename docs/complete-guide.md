@@ -377,11 +377,11 @@ $fileHandler = new RotatingFileHandler(__DIR__.'/crowdsec.log', 0, Logger::WARNI
 $logger->pushHandler($fileHandler);
 
 // Instanciate the bouncer
-$bouncer = new Bouncer($logger);
+$bouncer = new Bouncer($cacheAdapter, $logger);
 $bouncer->configure([
     'api_key' => getenv('BOUNCER_KEY'),
     'api_url' => 'http://crowdsec:8080'
-    ], $cacheAdapter
+    ]
 );
 
 // Refresh the blocklist cache

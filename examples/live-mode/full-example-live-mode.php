@@ -41,7 +41,7 @@ $fileHandler = new RotatingFileHandler($logPath, 0, Logger::WARNING);
 $logger->pushHandler($fileHandler);
 
 // Instanciate the bouncer
-$bouncer = new Bouncer($logger);
+$bouncer = new Bouncer($cacheAdapter, $logger);
 $bouncer->configure([
     'api_key' => $bouncerApiKey,
     'api_url' => $apiUrl,
@@ -51,7 +51,7 @@ $bouncer->configure([
     'max_remediation_level' => 'ban',
     'cache_expiration_for_clean_ip' => 2,
     'cache_expiration_for_bad_ip' => 30
-], $cacheAdapter,);
+]);
 
 // Ask remediation to LAPI
 $remediation = $bouncer->getRemediationForIp($requestedIp);

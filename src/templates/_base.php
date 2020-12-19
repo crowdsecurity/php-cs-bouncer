@@ -1,68 +1,66 @@
 <?php
 function crowdSecBaseTemplatePart1()
-{ ?><html>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            background: #eee;
-            font-family: Arial, Helvetica, sans-serif;
-        }
+{ ?>
+    <!DOCTYPE html>
+    <html lang="en">
 
-        .container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .main {
-            background: white;
-            padding: 50px 50px 30px 50px;
-            box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 3px -2px, rgba(0, 0, 0, 0.14) 0px 3px 4px 0px, rgba(0, 0, 0, 0.12) 0px 1px 8px 0px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            z-index: 1;
-            position: relative;
-        }
-
-        h1 {
-            padding: 10px;
-            padding: 10px;
-        }
-
-        .desc {
-            font-size: 1.2em;
-            margin-bottom: 30px;
-        }
-
-        .powered {
-            margin-top: 30px;
-            font-size: small;
-            color: #AAA;
-        }
-
-        .warning {
-            width: 40px;
-            display: inline-block;
-            vertical-align: -4px;
-        }
-
-        .logo {
-            width: 17px;
-            display: inline-block;
-            vertical-align: -12px;
-            margin-left: 5px;
-        }
-
-        a {
-            color: #AAA;
-        }
-    </style>
+    <head>
+        <title>Oops..</title>
+        <meta content="text/html; charset=utf-8" />
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                background: #eee;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+            .container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .main {
+                background: white;
+                padding: 50px 50px 30px 50px;
+                box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 3px -2px, rgba(0, 0, 0, 0.14) 0px 3px 4px 0px, rgba(0, 0, 0, 0.12) 0px 1px 8px 0px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                z-index: 1;
+                position: relative;
+            }
+            h1 {
+                padding: 10px;
+            }
+            .desc {
+                font-size: 1.2em;
+                margin-bottom: 30px;
+            }
+            .powered {
+                margin-top: 30px;
+                font-size: small;
+                color: #AAA;
+            }
+            .warning {
+                width: 40px;
+                display: inline-block;
+                vertical-align: -4px;
+            }
+            .logo {
+                width: 17px;
+                display: inline-block;
+                vertical-align: -12px;
+                margin-left: 5px;
+            }
+            a {
+                color: #AAA;
+            }
+        </style>
+    </head>
 <?php }
 function crowdSecBaseTemplatePart2()
 { ?>
@@ -100,7 +98,7 @@ function crowdSecBaseTemplatePart2()
                         </g>
                         <path d="M180 249.6h.4a6946 6946 0 00-7.1-63.9l5.4 51.3 1.4 12.6M164.4 125c2.5 10.7 5.7 33.9 8.9 60.7a570.9 570.9 0 00-8.9-60.7M74.8 236.3l-1.4 13.4 1.4-13.4" fill="#AAA" />
                     </svg>
-                    <a href="https://crowdsec.net/" target="_blank">CrowdSec</a></p>
+                    <a href="https://crowdsec.net/" target="_blank" rel="noopener">CrowdSec</a></p>
             </div>
         </div>
     </body>

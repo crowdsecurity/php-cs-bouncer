@@ -19,8 +19,6 @@ The main Class of this package. This is the first entry point of any PHP Bouncer
 |[getCaptchaHtmlTemplate](#bouncergetcaptchahtmltemplate)|Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.|
 |[getLogger](#bouncergetlogger)|Returns the logger instance.|
 |[getRemediationForIp](#bouncergetremediationforip)|Get the remediation for the specified IP. This method use the cache layer.|
-|[loadPaginatedBlocklistFromCache](#bouncerloadpaginatedblocklistfromcache)|Browse the remediations cache.|
-|[loadPaginatedLogs](#bouncerloadpaginatedlogs)|Browse the bouncer technical logs.|
 |[pruneCache](#bouncerprunecache)|This method prune the cache: it removes all the expired cache items.|
 |[refreshBlocklistCache](#bouncerrefreshblocklistcache)|Used in stream mode only.|
 |[warmBlocklistCacheUp](#bouncerwarmblocklistcacheup)|Used in stream mode only.|
@@ -242,54 +240,6 @@ the cache system will call the API to check if there is a decision.
 `string`
 
 > the remediation to apply (ex: 'ban', 'captcha', 'bypass')
-
-
-<hr />
-
-
-### Bouncer::loadPaginatedBlocklistFromCache  
-
-**Description**
-
-```php
-public loadPaginatedBlocklistFromCache (void)
-```
-
-Browse the remediations cache. 
-
- 
-
-**Parameters**
-
-`This function has no parameters.`
-
-**Return Values**
-
-`void`
-
-
-<hr />
-
-
-### Bouncer::loadPaginatedLogs  
-
-**Description**
-
-```php
-public loadPaginatedLogs (void)
-```
-
-Browse the bouncer technical logs. 
-
- 
-
-**Parameters**
-
-`This function has no parameters.`
-
-**Return Values**
-
-`void`
 
 
 <hr />

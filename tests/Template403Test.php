@@ -14,8 +14,8 @@ final class Template403Test extends TestCase
     public function testCanGetAccessForbiddenHtmlTemplate(): void
     {
         // TODO P2 update the 403 tests
-        //$bouncer = new Bouncer();
-        //$bouncer->configure($config, $cacheAdapter);
+        //$bouncer = new Bouncer($cacheAdapter);
+        //$bouncer->configure($config);
         //$this->assertIsString($bouncer->getAccessForbiddenHtmlTemplate());
     }
 }
