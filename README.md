@@ -43,19 +43,21 @@ In your PHP project, just add these lines to verify an IP:
 
 ```php
 
-/* To get a bouncer api key: "cscli bouncers add <name-of-your-php-bouncer> */
-$bouncerApiKey = 'YOUR_BOUNCER_API_KEY';
+<?php
+use CrowdSecBouncer\Bouncer;
 
-/* Select the best cache adapter for your needs (Memcached, Redis, PhpFiles, ...) */
-$cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter();
+// Init bouncer
+$bouncer = new Bouncer();
+$bouncer->configure(['api_key' => 'YOUR_BOUNCER_API_KEY', 'api_url' => 'http://127.0.0.1:8080']);
 
-$bouncer = new CrowdSecBouncer\Bouncer($cacheAdapter);
-$bouncer->configure(['api_key'=> $bouncerApiKey]);
-
-$remediation = $bouncer->getRemediationForIp($blockedIp);// Return "ban", "captcha" or "bypass"
+// Ask remediation to API
+$remediation = $bouncer->getRemediationForIp($requestedIp);
+echo "\nResult: $remediation\n\n"; // "ban", "captcha" or "bypass"
 ```
 
-View [`docs/complete-guide.md`](https://github.com/crowdsecurity/php-cs-bouncer/blob/main/docs/complete-guide.md) to learn how to include this library in your project in minutes.
+View [`examples/live-mode/full-example-live-mode.php`](examples/live-mode/full-example-live-mode.php).
+
+> You can also follow the [`docs/complete-guide.md`](docs/complete-guide.md) to learn how to include this library in your project in minutes.
 
 ## Future
 - Retrieve decisions stored in cache using pagination
