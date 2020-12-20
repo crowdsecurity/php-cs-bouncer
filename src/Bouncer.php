@@ -2,16 +2,16 @@
 
 namespace CrowdSecBouncer;
 
-require_once(__DIR__ . '/templates/captcha.php');
-require_once(__DIR__ . '/templates/access-forbidden.php');
+require_once __DIR__.'/templates/captcha.php';
+require_once __DIR__.'/templates/access-forbidden.php';
 
-use Monolog\Handler\NullHandler;
-use Symfony\Component\Cache\Adapter\AbstractAdapter;
-use Symfony\Component\Config\Definition\Processor;
-use Psr\Log\LoggerInterface;
-use Monolog\Logger;
 use Gregwar\Captcha\CaptchaBuilder;
 use Gregwar\Captcha\PhraseBuilder;
+use Monolog\Handler\NullHandler;
+use Monolog\Logger;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Cache\Adapter\AbstractAdapter;
+use Symfony\Component\Config\Definition\Processor;
 
 /**
  * The main Class of this package. This is the first entry point of any PHP Bouncers using this library.
@@ -26,16 +26,16 @@ use Gregwar\Captcha\PhraseBuilder;
 class Bouncer
 {
     /** @var LoggerInterface */
-    private $logger;
+    private $logger = null;
 
     /** @var array */
-    private $config;
+    private $config = [];
 
     /** @var ApiCache */
-    private $apiCache;
+    private $apiCache = null;
 
     /** @var int */
-    private $maxRemediationLevelIndex;
+    private $maxRemediationLevelIndex = null;
 
     public function __construct(AbstractAdapter $cacheAdapter = null, LoggerInterface $logger = null, ApiCache $apiCache = null)
     {
@@ -77,7 +77,7 @@ class Bouncer
     }
 
     /**
-     * Cap the remediation to a fixed value given in configuration
+     * Cap the remediation to a fixed value given in configuration.
      */
     private function capRemediationLevel(string $remediation): string
     {
@@ -85,6 +85,7 @@ class Bouncer
         if ($currentIndex < $this->maxRemediationLevelIndex) {
             return Constants::ORDERED_REMEDIATIONS[$this->maxRemediationLevelIndex];
         }
+
         return $remediation;
     }
 
@@ -94,9 +95,10 @@ class Bouncer
      */
     private function handleUnknownRemediation(string $remediation): string
     {
-        if (!in_array($remediation, Constants::ORDERED_REMEDIATIONS)) {
+        if (!\in_array($remediation, Constants::ORDERED_REMEDIATIONS)) {
             return $this->config['fallback_remediation'];
         }
+
         return $remediation;
     }
 
@@ -115,34 +117,37 @@ class Bouncer
         }
         $remediation = $this->apiCache->get(long2ip($intIp));
         $remediation = $this->handleUnknownRemediation($remediation);
+
         return $this->capRemediationLevel($remediation);
     }
 
     /**
      * Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.
      */
-    public static function getAccessForbiddenHtmlTemplate(): string
+    public static function getAccessForbiddenHtmlTemplate(bool $hideCrowdSecMentions = false): string
     {
         ob_start();
-        displayAccessForbiddenTemplate();
+        displayAccessForbiddenTemplate($hideCrowdSecMentions);
+
         return ob_get_clean();
     }
 
     /**
      * Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.
      */
-    public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, $captchaResolutionFormUrl): string
+    public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, string $captchaResolutionFormUrl, bool $hideCrowdSecMentions = false): string
     {
         ob_start();
-        displayCaptchaTemplate($error, $captchaImageSrc, $captchaResolutionFormUrl);
+        displayCaptchaTemplate($error, $captchaImageSrc, $captchaResolutionFormUrl, $hideCrowdSecMentions);
+
         return ob_get_clean();
     }
 
     /**
      * Used in stream mode only.
      * This method should be called only to force a cache warm up.
-     * 
-     * @return int number of decisions added.
+     *
+     * @return int number of decisions added
      */
     public function warmBlocklistCacheUp(): int
     {
@@ -152,8 +157,8 @@ class Bouncer
     /**
      * Used in stream mode only.
      * This method should be called periodically (ex: crontab) in a asynchronous way to update the bouncer cache.
-     * 
-     * @return array number of deleted and new decisions.
+     *
+     * @return array number of deleted and new decisions
      */
     public function refreshBlocklistCache(): array
     {
@@ -187,16 +192,17 @@ class Bouncer
     public static function buildCaptchaCouple()
     {
         $captchaBuilder = new CaptchaBuilder();
+
         return [
             'phrase' => $captchaBuilder->getPhrase(),
-            'inlineImage' => $captchaBuilder->build()->inline()
+            'inlineImage' => $captchaBuilder->build()->inline(),
         ];
     }
 
     public function checkCaptcha(string $expected, string $try, string $ip)
     {
         $solved = PhraseBuilder::comparePhrases($expected, $try);
-        $this->logger->warning(null, [
+        $this->logger->warning('', [
             'type' => 'CAPTCHA_SOLVED',
             'ip' => $ip,
             'resolution' => $solved,

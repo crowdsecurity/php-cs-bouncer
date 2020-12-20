@@ -16,10 +16,12 @@ return PhpCsFixer\Config::create()
         'native_constant_invocation' => true,
         'combine_nested_dirname' => true,
         'list_syntax' => ['syntax' => 'short'],
+        'phpdoc_to_comment' => false,
     ])
     ->setRiskyAllowed(true)
     ->setFinder(
         PhpCsFixer\Finder::create()
             ->in(__DIR__.'/src')
+            ->in(__DIR__.'/tests')
     )
 ;

@@ -19,16 +19,16 @@ use Psr\Log\LoggerInterface;
 class RestClient
 {
     /** @var string */
-    private $headerString;
+    private $headerString = null;
 
     /** @var int */
-    private $timeout;
+    private $timeout = null;
 
     /** @var string */
-    private $baseUri;
+    private $baseUri = null;
 
     /** @var LoggerInterface */
-    private $logger;
+    private $logger = null;
 
     public function __construct(LoggerInterface $logger)
     {
@@ -44,7 +44,7 @@ class RestClient
         $this->headerString = $this->convertHeadersToString($headers);
         $this->timeout = $timeout;
 
-        $this->logger->debug(null, [
+        $this->logger->debug('', [
             'type' => 'REST_CLIENT_INIT',
             'base_uri' => $this->baseUri,
             'timeout' => $this->timeout,
@@ -80,7 +80,7 @@ class RestClient
         int $timeout = null
     ): ?array {
         if ($queryParams) {
-            $endpoint .= '?' . http_build_query($queryParams);
+            $endpoint .= '?'.http_build_query($queryParams);
         }
         $header = $headers ? $this->convertHeadersToString($headers) : $this->headerString;
         $config = [
@@ -88,7 +88,7 @@ class RestClient
                 'method' => $method,
                 'header' => $header,
                 'timeout' => $timeout ?: $this->timeout,
-                'ignore_errors' => true
+                'ignore_errors' => true,
             ],
         ];
         if ($bodyParams) {
@@ -96,25 +96,24 @@ class RestClient
         }
         $context = stream_context_create($config);
 
-        $this->logger->debug(null, [
+        $this->logger->debug('', [
             'type' => 'HTTP CALL',
             'method' => $this->baseUri,
-            'uri' => $this->baseUri . $endpoint,
+            'uri' => $this->baseUri.$endpoint,
         ]);
 
-        $response = file_get_contents($this->baseUri . $endpoint, false, $context);
+        $response = file_get_contents($this->baseUri.$endpoint, false, $context);
         if (false === $response) {
-            throw
-                new BouncerException('Unexpected HTTP call failure.');
+            throw new BouncerException('Unexpected HTTP call failure.');
         }
         $parts = explode(' ', $http_response_header[0]);
         $status = 0;
-        if (count($parts) > 1) {
-            $status = intval($parts[1]);
+        if (\count($parts) > 1) {
+            $status = (int) ($parts[1]);
         }
 
         if ($status < 200 || $status >= 300) {
-            throw new BouncerException("unexpected response status: {$status}\n" . $response);
+            throw new BouncerException("unexpected response status: {$status}\n".$response);
         }
         $data = json_decode($response, true);
 

@@ -164,7 +164,7 @@ Used for the stream mode when we have to update the remediations list.
 
 `array`
 
-> number of deleted and new decisions.
+> number of deleted and new decisions
 
 
 <hr />
@@ -191,7 +191,7 @@ Used when the stream mode has just been activated.
 
 `int`
 
-> number of decisions added.
+> number of decisions added
 
 
 <hr />

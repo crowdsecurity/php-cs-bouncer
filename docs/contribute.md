@@ -47,6 +47,13 @@ docker run -e "FILTER_REGEX_INCLUDE=/tmp/lint/src/.*" -e RUN_LOCAL=true -v ${PWD
 
 Full details here: https://github.com/github/super-linter/blob/master/docs/run-linter-locally.md
 
+To autolint with phpcs-fixer:
+
+```bash
+composer install --working-dir=tools/php-cs-fixer
+PHP_CS_FIXER_IGNORE_ENV=1 tools/php-cs-fixer/vendor/bin/php-cs-fixer fix
+```
+
 ## How to generate PHP Doc
 
 ```bash
@@ -62,9 +69,15 @@ We use the git workflow [Github Flow](https://guides.github.com/introduction/flo
 ```bash
 git checkout -b <basic-name> # the name is not important now, you can type "new-features"
 git commit # as mush as necessary.
-docker-compose run --rm app vendor/bin/phpdoc-md # regenerate php doc
+
+PHP_CS_FIXER_IGNORE_ENV=1 tools/php-cs-fixer/vendor/bin/php-cs-fixer fix # fix coding standards
+docker run -e "FILTER_REGEX_INCLUDE=/tmp/lint/src/.*" -e RUN_LOCAL=true -v ${PWD}:/tmp/lint github/super-linter # super linter local pass
+./tests-local.sh # check tests are still OK
+docker-compose run --rm app vendor/bin/phpdoc-md # Regenerate php doc
+
 git branch -m <name-of-the-branch> # to rename the branch to what has really be done.
 git push origin :<basic-name> && git push origin <name-of-the-branch> # Only if already pushed
+
 gh pr create --fill
 ```
 

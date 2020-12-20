@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 use CrowdSecBouncer\Bouncer;
+use PHPUnit\Framework\TestCase;
 
 final class Template403Test extends TestCase
 {
     /**
      * @group integration
-     * @covers Bouncer
+     * @covers \Bouncer
      */
     public function testCanGetAccessForbiddenHtmlTemplate(): void
     {

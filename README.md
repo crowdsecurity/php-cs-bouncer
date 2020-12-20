@@ -6,11 +6,11 @@
 
 > The official PHP bouncer library for the CrowdSec LAPI/CAPI
 
-<p align="center">
-<img src="https://img.shields.io/github/workflow/status/crowdsecurity/php-cs-bouncer/tests/main">
-<img src="https://img.shields.io/github/license/crowdsecurity/php-cs-bouncer">
-<img src="https://img.shields.io/github/v/release/crowdsecurity/php-cs-bouncer?include_prereleases">
-</p>
+![Version](https://img.shields.io/github/v/release/crowdsecurity/php-cs-bouncer?include_prereleases)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=crowdsecurity_php-cs-bouncer&metric=alert_status)](https://sonarcloud.io/dashboard?id=crowdsecurity_php-cs-bouncer)
+![Build Status](https://img.shields.io/github/workflow/status/crowdsecurity/php-cs-bouncer/tests/main)
+![Licence](https://img.shields.io/github/license/crowdsecurity/php-cs-bouncer)
+
 
 <p align="center">
 :books: <a href="https://doc.crowdsec.net">Documentation</a>
