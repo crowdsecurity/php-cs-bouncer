@@ -121,20 +121,20 @@ class Bouncer
     /**
      * Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.
      */
-    public static function getAccessForbiddenHtmlTemplate(): string
+    public static function getAccessForbiddenHtmlTemplate(bool $hideCrowdSecMentions = false): string
     {
         ob_start();
-        displayAccessForbiddenTemplate();
+        displayAccessForbiddenTemplate($hideCrowdSecMentions);
         return ob_get_clean();
     }
 
     /**
      * Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.
      */
-    public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, $captchaResolutionFormUrl): string
+    public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, string $captchaResolutionFormUrl, bool $hideCrowdSecMentions = false): string
     {
         ob_start();
-        displayCaptchaTemplate($error, $captchaImageSrc, $captchaResolutionFormUrl);
+        displayCaptchaTemplate($error, $captchaImageSrc, $captchaResolutionFormUrl, $hideCrowdSecMentions);
         return ob_get_clean();
     }
 

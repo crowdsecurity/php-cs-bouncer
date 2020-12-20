@@ -1,6 +1,6 @@
 <?php
 require_once(__DIR__ . '/_base.php');
-function displayCaptchaTemplate(bool $error, string $captchaImageSrc, $captchaResolutionFormUrl)
+function displayCaptchaTemplate(bool $error, string $captchaImageSrc, string $captchaResolutionFormUrl, bool $hideCrowdSecMentions)
 {
     crowdSecBaseTemplatePart1() ?><style>
         input {
@@ -55,5 +55,5 @@ function displayCaptchaTemplate(bool $error, string $captchaImageSrc, $captchaRe
 
         <button type="submit" />CONTINUE</button>
     </form>
-<?php crowdSecBaseTemplatePart3();
+<?php crowdSecBaseTemplatePart3($hideCrowdSecMentions);
 } ?>
