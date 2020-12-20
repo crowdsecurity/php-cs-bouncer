@@ -3,11 +3,6 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 
-/*
-TODO P3 Implement decisions pagination tests
-cf https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
-*/
-
 final class LoadPaginatedDecisionsTest extends TestCase
 {
     /**

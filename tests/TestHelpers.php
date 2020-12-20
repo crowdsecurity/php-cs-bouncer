@@ -38,10 +38,6 @@ class TestHelpers
     public static function cacheAdapterProvider(): array
     {
         // Init all adapters
-        /*
-        TODO P3 Failed on CI but some fixes may fix this bug. Just retry it could work! Else investigates.
-        $fileSystemAdapter = new FilesystemAdapter('fs_adapter_cache', 0, self::FS_CACHE_ADAPTER_DIR);
-        */
 
         $phpFilesAdapter = new PhpFilesAdapter('php_array_adapter_backup_cache', 0, self::PHP_FILES_CACHE_ADAPTER_DIR);
 

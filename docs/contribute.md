@@ -86,6 +86,7 @@ After the merge, don't forget to delete to branch.
 #### New release
 
 ```bash
+git checkout main && git pull
 git describe --tags # to verify what is the current tag
 gh release create --draft vx.x.x --title vx.x.x
 ```

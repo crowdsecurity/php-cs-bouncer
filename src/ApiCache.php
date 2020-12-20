@@ -281,9 +281,7 @@ class ApiCache
             foreach ($decisions as $decision) {
                 if (!\in_array($decision['type'], Constants::ORDERED_REMEDIATIONS)) {
                     $highestRemediationLevel = Constants::ORDERED_REMEDIATIONS[0];
-                    // TODO P1 test the case of unknown remediation type
                     $this->logger->warning('', ['type' => 'UNKNOWN_REMEDIATION', 'remediation' => $decision['type']]);
-                    // TODO P2 use the fallback parameter instead.
                     $decision['type'] = $highestRemediationLevel;
                 }
                 $remediation = $this->formatRemediationFromDecision($decision);
