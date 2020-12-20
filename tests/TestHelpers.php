@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
+use Bramus\Monolog\Formatter\ColoredLineFormatter;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+use Predis\ClientInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
-use Predis\ClientInterface;
-use Symfony\Component\Cache\Adapter\MemcachedAdapter;
-use \Monolog\Logger;
-use \Monolog\Handler\StreamHandler;
-use \Bramus\Monolog\Formatter\ColoredLineFormatter;
 
 class TestHelpers
 {
@@ -17,9 +17,9 @@ class TestHelpers
     const CLEAN_IP = '2.3.4.5';
     const NEWLY_BAD_IP = '3.4.5.6';
 
-    const FS_CACHE_ADAPTER_DIR = __DIR__ . '/../var/fs.cache';
-    const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__ . '/../var/phpFiles.cache';
-    
+    const FS_CACHE_ADAPTER_DIR = __DIR__.'/../var/fs.cache';
+    const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__.'/../var/phpFiles.cache';
+
     const WATCHER_LOGIN = 'PhpUnitTestMachine';
     const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
 
@@ -31,6 +31,7 @@ class TestHelpers
         $handler = new StreamHandler('php://stdout', self::LOG_LEVEL);
         $handler->setFormatter(new ColoredLineFormatter(null, "[%datetime%] %message% %context%\n", 'H:i:s'));
         $log->pushHandler($handler);
+
         return $log;
     }
 
@@ -43,7 +44,7 @@ class TestHelpers
         */
 
         $phpFilesAdapter = new PhpFilesAdapter('php_array_adapter_backup_cache', 0, self::PHP_FILES_CACHE_ADAPTER_DIR);
-        
+
         /** @var string */
         $memcachedCacheAdapterDsn = getenv('MEMCACHED_DSN');
         $memcachedAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedCacheAdapterDsn));
@@ -56,9 +57,9 @@ class TestHelpers
 
         return [
             /*'FilesystemAdapter'  => [$fileSystemAdapter],*/
-            'PhpFilesAdapter'  => [$phpFilesAdapter],
-            'RedisAdapter'  => [$redisAdapter],
-            'MemcachedAdapter'  => [$memcachedAdapter]
+            'PhpFilesAdapter' => [$phpFilesAdapter],
+            'RedisAdapter' => [$redisAdapter],
+            'MemcachedAdapter' => [$memcachedAdapter],
         ];
     }
 
@@ -69,11 +70,12 @@ class TestHelpers
 
     public static function getBouncerKey(): string
     {
-        $path = realpath(__DIR__ . '/../.bouncer-key');
-        if ($path === false) {
+        $path = realpath(__DIR__.'/../.bouncer-key');
+        if (false === $path) {
             throw new RuntimeException("'.bouncer-key' file was not found.");
         }
         $apiKey = file_get_contents($path);
+
         return $apiKey;
     }
 }

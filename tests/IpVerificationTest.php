@@ -1,16 +1,16 @@
 <?php
 
 declare(strict_types=1);
-require(dirname(__FILE__) . "/TestHelpers.php");
-require(dirname(__FILE__) . "/WatcherClient.php");
+require __DIR__.'/TestHelpers.php';
+require __DIR__.'/WatcherClient.php';
 
 use CrowdSecBouncer\ApiCache;
 use CrowdSecBouncer\ApiClient;
 use CrowdSecBouncer\Bouncer;
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\PruneableInterface;
 
 final class IpVerificationTest extends TestCase
@@ -36,7 +36,7 @@ final class IpVerificationTest extends TestCase
 
     /**
      * @group integration
-     * @covers Bouncer
+     * @covers \Bouncer
      * @dataProvider cacheAdapterProvider
      * @group ignore_
      */
@@ -59,7 +59,7 @@ final class IpVerificationTest extends TestCase
         $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter);
         $bouncerConfig = [
             'api_key' => TestHelpers::getBouncerKey(),
-            'api_url' => TestHelpers::getLapiUrl()
+            'api_url' => TestHelpers::getLapiUrl(),
         ];
         $bouncer = new Bouncer(null, $this->logger, $apiCache);
         $bouncer->configure($bouncerConfig);
@@ -115,7 +115,7 @@ final class IpVerificationTest extends TestCase
 
     /**
      * @group integration
-     * @covers Bouncer
+     * @covers \Bouncer
      * @dataProvider cacheAdapterProvider
      * @group ignore_
      */
@@ -128,7 +128,7 @@ final class IpVerificationTest extends TestCase
         $badIp = TestHelpers::BAD_IP;
         $cleanIp = TestHelpers::CLEAN_IP;
         $newlyBadIp = TestHelpers::NEWLY_BAD_IP;
-        
+
         // Init bouncer
 
         /** @var ApiClient */
@@ -141,7 +141,7 @@ final class IpVerificationTest extends TestCase
         $bouncerConfig = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
-            'live_mode' => false
+            'live_mode' => false,
         ];
         $bouncer = new Bouncer($cacheAdapter, $this->logger, $apiCache);
         $bouncer->configure($bouncerConfig);
@@ -221,7 +221,7 @@ final class IpVerificationTest extends TestCase
         $bouncerConfig = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
-            'live_mode' => false
+            'live_mode' => false,
         ];
         $bouncer = new Bouncer($cacheAdapter, $this->logger, $apiCache2);
         $bouncer->configure($bouncerConfig);

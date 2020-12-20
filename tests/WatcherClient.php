@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use CrowdSecBouncer\RestClient;
 use CrowdSecBouncer\Constants;
+use CrowdSecBouncer\RestClient;
 use Psr\Log\LoggerInterface;
 
 class WatcherClient
@@ -39,7 +39,7 @@ class WatcherClient
         $this->baseHeaders = [
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-            'User-Agent' => Constants::BASE_USER_AGENT
+            'User-Agent' => Constants::BASE_USER_AGENT,
         ];
         $this->watcherClient = new RestClient($this->logger);
         $this->watcherClient->configure($apiUrl, $this->baseHeaders, 2);
@@ -70,12 +70,12 @@ class WatcherClient
         if (!$this->token) {
             $data = [
                 'machine_id' => self::WATCHER_LOGIN,
-                'password' => self::WATCHER_PASSWORD
+                'password' => self::WATCHER_PASSWORD,
             ];
             /** @var array */
             $credentials = $this->watcherClient->request('/v1/watchers/login', null, $data, 'POST');
             $this->token = $credentials['token'];
-            $this->baseHeaders['Authorization'] = 'Bearer ' . $this->token;
+            $this->baseHeaders['Authorization'] = 'Bearer '.$this->token;
         }
     }
 
@@ -85,6 +85,7 @@ class WatcherClient
     private function request(string $endpoint, array $queryParams = null, array $bodyParams = null, string $method = 'GET', array $headers = null, int $timeout = null): ?array
     {
         $this->ensureLogin();
+
         return $this->watcherClient->request($endpoint, $queryParams, $bodyParams, $method, $headers ?: $this->baseHeaders, $timeout);
     }
 
@@ -98,7 +99,7 @@ class WatcherClient
     private function addBaseDecisions(): void
     {
         /** @var string */
-        $jsonString = file_get_contents(__DIR__ . '/data/alerts_base_state.json');
+        $jsonString = file_get_contents(__DIR__.'/data/alerts_base_state.json');
         $data = json_decode($jsonString, true);
 
         $now = new DateTime();
@@ -109,22 +110,22 @@ class WatcherClient
         $ipCaptcha12h['start_at'] = $startAt;
         $ipCaptcha12h['stop_at'] = $stopAt;
         $result = $this->request('/v1/alerts', null, [$ipCaptcha12h], 'POST');
-        $this->logger->info('Decision '.$result[0]. ' added: '.$ipCaptcha12h['decisions'][0]['scenario'].'');
+        $this->logger->info('Decision '.$result[0].' added: '.$ipCaptcha12h['decisions'][0]['scenario'].'');
 
         $rangeBan24h = $data[1];
         $rangeBan24h['start_at'] = $startAt;
         $rangeBan24h['stop_at'] = $stopAt;
         $result = $this->request('/v1/alerts', null, [$rangeBan24h], 'POST');
-        $this->logger->info('Decision '.$result[0]. ' added: '.$rangeBan24h['decisions'][0]['scenario'].'');
+        $this->logger->info('Decision '.$result[0].' added: '.$rangeBan24h['decisions'][0]['scenario'].'');
     }
 
     /**
-     * Add new decisions (captcha 3.4.5.6 for 36h + ban 3.4.5.6/30 for 48h)
+     * Add new decisions (captcha 3.4.5.6 for 36h + ban 3.4.5.6/30 for 48h).
      */
     public function addNewDecisions(): void
     {
         /** @var string */
-        $jsonString = file_get_contents(__DIR__ . '/data/alerts_updated_state.json');
+        $jsonString = file_get_contents(__DIR__.'/data/alerts_updated_state.json');
         $data = json_decode($jsonString, true);
 
         $now = new DateTime();
@@ -135,12 +136,12 @@ class WatcherClient
         $ipBan36h['start_at'] = $startAt;
         $ipBan36h['stop_at'] = $stopAt;
         $result = $this->request('/v1/alerts', null, [$ipBan36h], 'POST');
-        $this->logger->info('Decision '.$result[0]. ' added: '.$ipBan36h['decisions'][0]['scenario'].'');
+        $this->logger->info('Decision '.$result[0].' added: '.$ipBan36h['decisions'][0]['scenario'].'');
 
         $rangeCaptcha48h = $data[1];
         $rangeCaptcha48h['start_at'] = $startAt;
         $rangeCaptcha48h['stop_at'] = $stopAt;
         $result = $this->request('/v1/alerts', null, [$rangeCaptcha48h], 'POST');
-        $this->logger->info('Decision '.$result[0]. ' added: '.$rangeCaptcha48h['decisions'][0]['scenario'].'');
+        $this->logger->info('Decision '.$result[0].' added: '.$rangeCaptcha48h['decisions'][0]['scenario'].'');
     }
 }

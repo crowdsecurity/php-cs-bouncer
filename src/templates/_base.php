@@ -92,7 +92,7 @@ function crowdSecBaseTemplatePart2()
                 <?php }
             function crowdSecBaseTemplatePart3(bool $hideCrowdSecMentions)
             {
-                if ($hideCrowdSecMentions) : ?>
+                if ($hideCrowdSecMentions) { ?>
                     <p class="powered">This security check has been powered by
                         <svg class="logo" width="33.92" height="33.76" viewBox="0 0 254.4 253.2">
                             <defs>
@@ -115,10 +115,11 @@ function crowdSecBaseTemplatePart2()
                         </svg>
                         <a href="https://crowdsec.net/" target="_blank" rel="noopener">CrowdSec</a>
                     </p>
-                <?php endif; ?>
+                <?php } ?>
             </div>
         </div>
     </body>
 
     </html>
-<?php } ?>
+<?php
+            } ?>
