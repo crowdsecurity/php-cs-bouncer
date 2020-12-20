@@ -1,5 +1,5 @@
 <?php
-function crowdSecBaseTemplatePart1()
+function crowdSecBaseTemplatePart1(): void
 { ?>
     <!DOCTYPE html>
     <html lang="en">
@@ -77,7 +77,7 @@ function crowdSecBaseTemplatePart1()
         </style>
     </head>
 <?php }
-function crowdSecBaseTemplatePart2()
+function crowdSecBaseTemplatePart2(): void
 { ?>
     <script>
         function newImage() {
@@ -90,7 +90,7 @@ function crowdSecBaseTemplatePart2()
         <div class="container">
             <div class="main">
                 <?php }
-            function crowdSecBaseTemplatePart3(bool $hideCrowdSecMentions)
+            function crowdSecBaseTemplatePart3(bool $hideCrowdSecMentions): void
             {
                 if ($hideCrowdSecMentions) { ?>
                     <p class="powered">This security check has been powered by

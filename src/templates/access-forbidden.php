@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__.'/_base.php';
-function displayAccessForbiddenTemplate(bool $hideCrowdSecMentions)
+function displayAccessForbiddenTemplate(bool $hideCrowdSecMentions): void
 {
     crowdSecBaseTemplatePart1();
     crowdSecBaseTemplatePart2(); ?>

@@ -19,16 +19,16 @@ use Psr\Log\LoggerInterface;
 class RestClient
 {
     /** @var string */
-    private $headerString;
+    private $headerString = null;
 
     /** @var int */
-    private $timeout;
+    private $timeout = null;
 
     /** @var string */
-    private $baseUri;
+    private $baseUri = null;
 
     /** @var LoggerInterface */
-    private $logger;
+    private $logger = null;
 
     public function __construct(LoggerInterface $logger)
     {
@@ -44,7 +44,7 @@ class RestClient
         $this->headerString = $this->convertHeadersToString($headers);
         $this->timeout = $timeout;
 
-        $this->logger->debug(null, [
+        $this->logger->debug('', [
             'type' => 'REST_CLIENT_INIT',
             'base_uri' => $this->baseUri,
             'timeout' => $this->timeout,
@@ -96,7 +96,7 @@ class RestClient
         }
         $context = stream_context_create($config);
 
-        $this->logger->debug(null, [
+        $this->logger->debug('', [
             'type' => 'HTTP CALL',
             'method' => $this->baseUri,
             'uri' => $this->baseUri.$endpoint,

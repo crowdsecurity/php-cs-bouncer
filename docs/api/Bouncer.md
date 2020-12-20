@@ -289,7 +289,7 @@ This method should be called periodically (ex: crontab) in a asynchronous way to
 
 `array`
 
-> number of deleted and new decisions.
+> number of deleted and new decisions
 
 
 <hr />
@@ -315,7 +315,7 @@ This method should be called only to force a cache warm up.
 
 `int`
 
-> number of decisions added.
+> number of decisions added
 
 
 <hr />

@@ -71,6 +71,7 @@ git checkout -b <basic-name> # the name is not important now, you can type "new-
 git commit # as mush as necessary.
 
 PHP_CS_FIXER_IGNORE_ENV=1 tools/php-cs-fixer/vendor/bin/php-cs-fixer fix # fix coding standards
+docker run -e "FILTER_REGEX_INCLUDE=/tmp/lint/src/.*" -e RUN_LOCAL=true -v ${PWD}:/tmp/lint github/super-linter # super linter local pass
 ./tests-local.sh # check tests are still OK
 docker-compose run --rm app vendor/bin/phpdoc-md # Regenerate php doc
 

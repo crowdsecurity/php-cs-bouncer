@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__.'/_base.php';
-function displayCaptchaTemplate(bool $error, string $captchaImageSrc, string $captchaResolutionFormUrl, bool $hideCrowdSecMentions)
+function displayCaptchaTemplate(bool $error, string $captchaImageSrc, string $captchaResolutionFormUrl, bool $hideCrowdSecMentions): void
 {
     crowdSecBaseTemplatePart1(); ?><style>
         input {

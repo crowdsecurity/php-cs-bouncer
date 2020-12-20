@@ -26,16 +26,16 @@ use Symfony\Component\Config\Definition\Processor;
 class Bouncer
 {
     /** @var LoggerInterface */
-    private $logger;
+    private $logger = null;
 
     /** @var array */
-    private $config;
+    private $config = [];
 
     /** @var ApiCache */
-    private $apiCache;
+    private $apiCache = null;
 
     /** @var int */
-    private $maxRemediationLevelIndex;
+    private $maxRemediationLevelIndex = null;
 
     public function __construct(AbstractAdapter $cacheAdapter = null, LoggerInterface $logger = null, ApiCache $apiCache = null)
     {
@@ -202,7 +202,7 @@ class Bouncer
     public function checkCaptcha(string $expected, string $try, string $ip)
     {
         $solved = PhraseBuilder::comparePhrases($expected, $try);
-        $this->logger->warning(null, [
+        $this->logger->warning('', [
             'type' => 'CAPTCHA_SOLVED',
             'ip' => $ip,
             'resolution' => $solved,

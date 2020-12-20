@@ -19,12 +19,12 @@ use Psr\Log\LoggerInterface;
 class ApiClient
 {
     /** @var LoggerInterface */
-    private $logger;
+    private $logger = null;
 
     /**
      * @var RestClient
      */
-    private $restClient;
+    private $restClient = null;
 
     public function __construct(LoggerInterface $logger)
     {
@@ -42,7 +42,7 @@ class ApiClient
             'X-Api-Key' => $apiKey,
             'Accept' => 'application/json',
         ], $timeout);
-        $this->logger->debug(null, [
+        $this->logger->debug('', [
             'type' => 'API_CLIENT_INIT',
             'user_agent' => $userAgent,
         ]);
