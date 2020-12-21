@@ -22,7 +22,7 @@ Here is the development environment for this library:
 First of all, install composer dependencies:
 
 ```bash
-   ./composer-install.sh
+docker-compose run app composer install
 ```
 Then run tests:
 ```bash
