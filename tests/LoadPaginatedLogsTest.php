@@ -3,10 +3,6 @@
 declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 
-/*
-TODO P3 Implement decisions pagination tests
-*/
-
 final class LoadPaginatedLogsTest extends TestCase
 {
     /**
