@@ -88,5 +88,6 @@ After the merge, don't forget to delete to branch.
 ```bash
 git checkout main && git pull
 git describe --tags `git rev-list --tags --max-count=1` # to verify what is the current tag
-gh release create --draft vx.x.x --title vx.x.x
+export NEW_GIT_VERSION=v #...X.X.X
+./scripts/publish-release.sh
 ```

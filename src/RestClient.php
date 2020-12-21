@@ -67,7 +67,7 @@ class RestClient
     /**
      * Send an HTTP request using the file_get_contents and parse its JSON result if any.
      *
-     * @throws BouncerException when the reponse status is not 2xx.
+     * @throws BouncerException when the reponse status is not 2xx
      */
     public function request(
         string $endpoint,
