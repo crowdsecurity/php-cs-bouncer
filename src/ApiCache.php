@@ -280,9 +280,9 @@ class ApiCache
         if (\count($decisions)) {
             foreach ($decisions as $decision) {
                 if (!\in_array($decision['type'], Constants::ORDERED_REMEDIATIONS)) {
-                    $highestRemediationLevel = Constants::ORDERED_REMEDIATIONS[0];
-                    $this->logger->warning('', ['type' => 'UNKNOWN_REMEDIATION', 'remediation' => $decision['type']]);
-                    $decision['type'] = $highestRemediationLevel;
+                    $fallback = $this->config['fallback_remediation'];
+                    $this->logger->warning('', ['type' => 'UNKNOWN_REMEDIATION', 'unknown' => $decision['type'], 'fallback' => $fallback]);
+                    $decision['type'] = $fallback;
                 }
                 $remediation = $this->formatRemediationFromDecision($decision);
                 $remediationResult = $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
