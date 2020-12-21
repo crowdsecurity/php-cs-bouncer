@@ -17,8 +17,11 @@ class Constants
     /** @var string The URL of the CrowdSec Central API */
     public const CAPI_URL = 'https://api.crowdsec.net/v2/';
 
+    /** @var string The last version of this library */
+    public const VERSION = 'v0.6.0';
+
     /** @var string The user agent used to send request to LAPI or CAPI */
-    public const BASE_USER_AGENT = 'PHP CrowdSec Bouncer/1.0.0';
+    public const BASE_USER_AGENT = 'PHP CrowdSec Bouncer/'.self::VERSION;
 
     /** @var int The timeout when calling LAPI or CAPI */
     public const API_TIMEOUT = 1;
