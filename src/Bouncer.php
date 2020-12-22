@@ -196,4 +196,14 @@ class Bouncer
 
         return $solved;
     }
+
+    /**
+     * Test the connection to the cache system (Redis or Memcached)
+     * 
+     * @throws BouncerException if the connection was not successful
+     * */
+    public function testConnection()
+    {
+        return $this->apiCache->testConnection();
+    }
 }

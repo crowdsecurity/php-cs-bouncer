@@ -11,8 +11,8 @@ Let's get started and follow the guide!
 Start the containers:
 
 ```bash
-./composer-install.sh
-./setup-local-crowdsec.sh
+docker-compose run app composer install
+./scripts/setup-local-crowdsec.sh
 ```
 
 Then get a bouncer API key with:

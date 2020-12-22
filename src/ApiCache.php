@@ -8,6 +8,7 @@ use DateTime;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\PruneableInterface;
 
 /**
@@ -243,7 +244,7 @@ class ApiCache
             }
         }
 
-        return $this->adapter->commit();
+        return $this->commit();
     }
 
     private function removeRemediations(array $decisions): bool
@@ -268,7 +269,7 @@ class ApiCache
             }
         }
 
-        return $this->adapter->commit();
+        return $this->commit();
     }
 
     /**
@@ -291,17 +292,22 @@ class ApiCache
             $remediation = $this->formatRemediationFromDecision(null);
             $remediationResult = $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
         }
-        $this->adapter->commit();
+        $this->commit();
 
         return $remediationResult;
     }
 
     public function clear(): bool
     {
-        $cleared = $this->adapter->clear();
+        $this->setCustomErrorHandler();
+        try {
+            $cleared = $this->adapter->clear();
+        } finally {
+            $this->unsetCustomErrorHandler();
+        }
         $this->warmedUp = false;
         $this->defferUpdateCacheConfig(['warmed_up' => $this->warmedUp]);
-        $this->adapter->commit();
+        $this->commit();
         $this->logger->info('', ['type' => 'CACHE_CLEARED']);
 
         return $cleared;
@@ -328,7 +334,7 @@ class ApiCache
         if ($newDecisions) {
             $this->warmedUp = $this->saveRemediations($newDecisions);
             $this->defferUpdateCacheConfig(['warmed_up' => $this->warmedUp]);
-            $this->adapter->commit();
+            $this->commit();
             if (!$this->warmedUp) {
                 throw new BouncerException('Unable to warm the cache up');
             }
@@ -338,7 +344,7 @@ class ApiCache
         // Store the fact that the cache has been warmed up.
         $this->defferUpdateCacheConfig(['warmed_up' => true]);
 
-        $this->adapter->commit();
+        $this->commit();
         $this->logger->info('', ['type' => 'CACHE_WARMED_UP', 'added_decisions' => $nbNew]);
 
         return $nbNew;
@@ -447,6 +453,9 @@ class ApiCache
         return $remediation;
     }
 
+    /**
+     * Prune the cache (only when using PHP File System cache).
+     */
     public function prune(): bool
     {
         if ($this->adapter instanceof PruneableInterface) {
@@ -457,5 +466,60 @@ class ApiCache
         }
 
         throw new BouncerException('Cache Adapter'.\get_class($this->adapter).' is not prunable.');
+    }
+
+    /**
+     * When Memcached connection fail, it throw an unhandled warning.
+     * To catch this warning as a clean execption we have to temporarily change the error handler.
+     */
+    private function setCustomErrorHandler(): void
+    {
+        if ($this->adapter instanceof MemcachedAdapter) {
+            set_error_handler(function () {
+                throw new BouncerException('Error when connecting to Memcached. Please fix the Memcached DSN or select another cache technology.');
+            });
+        }
+    }
+
+    /**
+     * When the selected cache adapter is MemcachedAdapter, revert to the previous error handler.
+     * */
+    private function unsetCustomErrorHandler(): void
+    {
+        if ($this->adapter instanceof MemcachedAdapter) {
+            restore_error_handler();
+        }
+    }
+
+    /**
+     * Wrap the cacheAdapter to catch warnings.
+     *
+     * @throws BouncerException if the connection was not successful
+     * */
+    private function commit(): bool
+    {
+        $this->setCustomErrorHandler();
+        try {
+            $result = $this->adapter->commit();
+        } finally {
+            $this->unsetCustomErrorHandler();
+        }
+
+        return $result;
+    }
+
+    /**
+     * Test the connection to the cache system (Redis or Memcached).
+     *
+     * @throws BouncerException if the connection was not successful
+     * */
+    public function testConnection(): void
+    {
+        $this->setCustomErrorHandler();
+        try {
+            $this->adapter->getItem(' ');
+        } finally {
+            $this->unsetCustomErrorHandler();
+        }
     }
 }
