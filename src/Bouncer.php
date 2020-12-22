@@ -198,8 +198,8 @@ class Bouncer
     }
 
     /**
-     * Test the connection to the cache system (Redis or Memcached)
-     * 
+     * Test the connection to the cache system (Redis or Memcached).
+     *
      * @throws BouncerException if the connection was not successful
      * */
     public function testConnection()

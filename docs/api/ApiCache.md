@@ -14,8 +14,9 @@ The cache mecanism to store every decisions from LAPI/CAPI. Symfony Cache compon
 |[clear](#apicacheclear)||
 |[configure](#apicacheconfigure)|Configure this instance.|
 |[get](#apicacheget)|Request the cache for the specified IP.|
-|[prune](#apicacheprune)||
+|[prune](#apicacheprune)|Prune the cache (only when using PHP File System cache).|
 |[pullUpdates](#apicachepullupdates)|Used in stream mode only.|
+|[testConnection](#apicachetestconnection)|Test the connection to the cache system (Redis or Memcached).|
 |[warmUp](#apicachewarmup)|Used in stream mode only.|
 
 
@@ -124,10 +125,10 @@ Request the cache for the specified IP.
 **Description**
 
 ```php
- prune (void)
+public prune (void)
 ```
 
- 
+Prune the cache (only when using PHP File System cache). 
 
  
 
@@ -166,6 +167,36 @@ Used for the stream mode when we have to update the remediations list.
 
 > number of deleted and new decisions
 
+
+<hr />
+
+
+### ApiCache::testConnection  
+
+**Description**
+
+```php
+public testConnection (void)
+```
+
+Test the connection to the cache system (Redis or Memcached). 
+
+ 
+
+**Parameters**
+
+`This function has no parameters.`
+
+**Return Values**
+
+`void`
+
+
+**Throws Exceptions**
+
+
+`\BouncerException`
+> if the connection was not successful
 
 <hr />
 

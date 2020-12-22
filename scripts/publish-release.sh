@@ -18,22 +18,17 @@ elif [[ "$unamestr" == 'Darwin' ]]; then
 fi
 git_base_dir=`git rev-parse --show-toplevel`
 
-# Update version everywhere (add and commit changes)
+# Update version everywhere (add and commit changes), tag and release
+git checkout main
 if [[ $platform == 'linux' ]]; then
-   sed -i -E "s/v[0-9]+\.[0-9]+\.[0-9]/$NEW_GIT_VERSION/" `git rev-parse --show-toplevel`/src/Constants.php
+   sed -i -E "s/v[0-9]+\.[0-9]+\.[0-9]/$NEW_GIT_VERSION/" $git_base_dir/src/Constants.php
 else
-   sed -i "" -E "s/v[0-9]+\.[0-9]+\.[0-9]/$NEW_GIT_VERSION/" `git rev-parse --show-toplevel`/src/Constants.php
+   sed -i "" -E "s/v[0-9]+\.[0-9]+\.[0-9]/$NEW_GIT_VERSION/" $git_base_dir/src/Constants.php
 fi
-git add `git rev-parse --show-toplevel`/src/Constants.php
-
-
 git add $git_base_dir/src/Constants.php
+
+git tag $NEW_GIT_VERSION
 git commit -m "bump version to $NEW_GIT_VERSION"
 git push
-echo "Note: new commit \"bump version to $NEW_GIT_VERSION\""
-
-# Tag and release
-git checkout main
-git tag $NEW_GIT_VERSION
 git push origin $NEW_GIT_VERSION
 gh release create --draft $NEW_GIT_VERSION --title $NEW_GIT_VERSION

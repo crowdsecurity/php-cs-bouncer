@@ -21,6 +21,7 @@ The main Class of this package. This is the first entry point of any PHP Bouncer
 |[getRemediationForIp](#bouncergetremediationforip)|Get the remediation for the specified IP. This method use the cache layer.|
 |[pruneCache](#bouncerprunecache)|This method prune the cache: it removes all the expired cache items.|
 |[refreshBlocklistCache](#bouncerrefreshblocklistcache)|Used in stream mode only.|
+|[testConnection](#bouncertestconnection)|Test the connection to the cache system (Redis or Memcached).|
 |[warmBlocklistCacheUp](#bouncerwarmblocklistcacheup)|Used in stream mode only.|
 
 
@@ -291,6 +292,36 @@ This method should be called periodically (ex: crontab) in a asynchronous way to
 
 > number of deleted and new decisions
 
+
+<hr />
+
+
+### Bouncer::testConnection  
+
+**Description**
+
+```php
+public testConnection (void)
+```
+
+Test the connection to the cache system (Redis or Memcached). 
+
+ 
+
+**Parameters**
+
+`This function has no parameters.`
+
+**Return Values**
+
+`void`
+
+
+**Throws Exceptions**
+
+
+`\BouncerException`
+> if the connection was not successful
 
 <hr />
 
