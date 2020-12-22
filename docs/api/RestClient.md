@@ -90,7 +90,7 @@ Send an HTTP request using the file_get_contents and parse its JSON result if an
 
 
 `\BouncerException`
-> when the reponse status is not 2xx.
+> when the reponse status is not 2xx
 
 <hr />
 
