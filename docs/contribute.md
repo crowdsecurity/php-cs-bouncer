@@ -67,17 +67,19 @@ We use the git workflow [Github Flow](https://guides.github.com/introduction/flo
 #### New feature
 
 ```bash
-git checkout -b <basic-name> # the name is not important now, you can type "new-features"
-git commit # as mush as necessary.
+git checkout -b <branch-name>
+git commit # as much as necessary.
 
 PHP_CS_FIXER_IGNORE_ENV=1 tools/php-cs-fixer/vendor/bin/php-cs-fixer fix # fix coding standards
 docker run -e "FILTER_REGEX_INCLUDE=/tmp/lint/src/.*" -e RUN_LOCAL=true -v ${PWD}:/tmp/lint github/super-linter # super linter local pass
 ./tests-local.sh # check tests are still OK
 docker-compose run --rm app vendor/bin/phpdoc-md # Regenerate php doc
 
-git branch -m <name-of-the-branch> # to rename the branch to what has really be done.
-git push origin :<basic-name> && git push origin <name-of-the-branch> # Only if already pushed
+# Rename branch if necessary
+git branch -m <new-name>
+git push origin :<old-name> && git push origin <new-name>
 
+# Create PR
 gh pr create --fill
 ```
 
@@ -90,4 +92,3 @@ git checkout main && git pull
 git describe --tags `git rev-list --tags --max-count=1` # to verify what is the current tag
 export NEW_GIT_VERSION=v #...X.X.X
 ./scripts/publish-release.sh
-```
