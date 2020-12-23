@@ -86,7 +86,7 @@ jobs:
                     key: ${{ runner.os }}-${{ matrix.php }}-composer-${{ hashFiles('**/composer.lock') }}
                     
             -   name: Install PHP dependencies
-                uses: php-actions/composer@v4
+                uses: php-actions/composer@v5
             
             -   name: Run tests
                 run: ./vendor/bin/phpunit --testdox --colors --exclude-group ignore --group integration -v tests/IpVerificationTest.php
