@@ -208,10 +208,20 @@ class ApiCache
     private function formatRemediationFromDecision(?array $decision): array
     {
         if (!$decision) {
-            return [Constants::REMEDIATION_BYPASS, time() + $this->cacheExpirationForCleanIp, 0];
+            $duration = time() + $this->cacheExpirationForCleanIp;
+            if (!$this->liveMode) {
+                // In stream mode we considere an clean IP forever... until the next resync.
+                $duration = PHP_INT_MAX;
+            }
+            return [Constants::REMEDIATION_BYPASS, $duration, 0];
         }
 
-        $duration = min($this->cacheExpirationForBadIp, self::parseDurationToSeconds($decision['duration']));
+        $duration = self::parseDurationToSeconds($decision['duration']);
+
+        // Don't set a max duration in stream mode to avoid bugs. Only the stream update has to change the cache state.
+        if ($this->liveMode) {
+            $duration = min($this->cacheExpirationForBadIp, $duration);
+        }
 
         return [
             $decision['type'], // ex: ban, captcha

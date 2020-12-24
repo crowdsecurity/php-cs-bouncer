@@ -96,7 +96,7 @@ class RestClient
 
         $this->logger->debug('', [
             'type' => 'HTTP CALL',
-            'method' => $this->baseUri,
+            'method' => $method,
             'uri' => $this->baseUri.$endpoint,
         ]);
 
