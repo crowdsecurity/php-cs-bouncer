@@ -45,7 +45,7 @@ function displayCaptchaTemplate(bool $error, string $captchaImageSrc, string $ca
     <p class="desc">Please complete the security check.</p>
 
     <img src="<?php echo $captchaImageSrc; ?>" alt="captcha to fill" />
-    <p><small><a href="#" onclick="newImage()">refresh image</a></small></p>
+    <p><small><a id="refresh_link" href="#" onclick="newImage()">refresh image</a></small></p>
 
     <form method="post" id="captcha" action="<?php echo $captchaResolutionFormUrl; ?>">
         <input type="text" name="phrase" placeholder="Type here..." autofocus autocomplete="off" />
