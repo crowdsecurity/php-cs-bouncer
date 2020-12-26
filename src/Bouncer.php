@@ -72,7 +72,8 @@ class Bouncer
             $this->config['api_user_agent'],
             $this->config['api_key'],
             $this->config['cache_expiration_for_clean_ip'],
-            $this->config['cache_expiration_for_bad_ip']
+            $this->config['cache_expiration_for_bad_ip'],
+            $this->config['fallback_remediation']
         );
     }
 

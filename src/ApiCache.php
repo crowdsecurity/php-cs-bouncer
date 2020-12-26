@@ -61,11 +61,13 @@ class ApiCache
         string $userAgent,
         string $apiKey,
         int $cacheExpirationForCleanIp,
-        int $cacheExpirationForBadIp
+        int $cacheExpirationForBadIp,
+        string $fallbackRemediation
     ): void {
         $this->liveMode = $liveMode;
         $this->cacheExpirationForCleanIp = $cacheExpirationForCleanIp;
         $this->cacheExpirationForBadIp = $cacheExpirationForBadIp;
+        $this->fallbackRemediation = $fallbackRemediation;
         $cacheConfigItem = $this->adapter->getItem('cacheConfig');
         $cacheConfig = $cacheConfigItem->get();
         $this->warmedUp = (\is_array($cacheConfig) && isset($cacheConfig['warmed_up'])
@@ -211,8 +213,9 @@ class ApiCache
             $duration = time() + $this->cacheExpirationForCleanIp;
             if (!$this->liveMode) {
                 // In stream mode we considere an clean IP forever... until the next resync.
-                $duration = PHP_INT_MAX;
+                $duration = \PHP_INT_MAX;
             }
+
             return [Constants::REMEDIATION_BYPASS, $duration, 0];
         }
 
@@ -257,8 +260,9 @@ class ApiCache
         return $this->commit();
     }
 
-    private function removeRemediations(array $decisions): bool
+    private function removeRemediations(array $decisions): int
     {
+        $count = 0;
         foreach ($decisions as $decision) {
             if (\is_int($decision['start_ip']) && \is_int($decision['end_ip'])) {
                 $ipRange = array_map('long2ip', range($decision['start_ip'], $decision['end_ip']));
@@ -271,7 +275,9 @@ class ApiCache
                         $success = false;
                     }
                 }
-                if (!$success) {
+                if ($success) {
+                    ++$count;
+                } else {
                     // The API may return stale deletion events due to API design.
                     // Ignoring them is therefore not a problem.
                     $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
@@ -279,7 +285,9 @@ class ApiCache
             }
         }
 
-        return $this->commit();
+        $this->commit();
+
+        return $count;
     }
 
     /**
@@ -291,9 +299,8 @@ class ApiCache
         if (\count($decisions)) {
             foreach ($decisions as $decision) {
                 if (!\in_array($decision['type'], Constants::ORDERED_REMEDIATIONS)) {
-                    $fallback = $this->config['fallback_remediation'];
-                    $this->logger->warning('', ['type' => 'UNKNOWN_REMEDIATION', 'unknown' => $decision['type'], 'fallback' => $fallback]);
-                    $decision['type'] = $fallback;
+                    $this->logger->warning('', ['type' => 'UNKNOWN_REMEDIATION', 'unknown' => $decision['type'], 'fallback' => $this->fallbackRemediation]);
+                    $decision['type'] = $this->fallbackRemediation;
                 }
                 $remediation = $this->formatRemediationFromDecision($decision);
                 $remediationResult = $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
@@ -380,8 +387,7 @@ class ApiCache
 
         $nbDeleted = 0;
         if ($deletedDecisions) {
-            $this->removeRemediations($deletedDecisions);
-            $nbDeleted = \count($deletedDecisions);
+            $nbDeleted = $this->removeRemediations($deletedDecisions);
         }
 
         $nbNew = 0;
@@ -485,8 +491,8 @@ class ApiCache
     private function setCustomErrorHandler(): void
     {
         if ($this->adapter instanceof MemcachedAdapter) {
-            set_error_handler(function () {
-                throw new BouncerException('Error when connecting to Memcached. Please fix the Memcached DSN or select another cache technology.');
+            set_error_handler(function ($errno, $errmsg) {
+                throw new BouncerException('Error when connecting to Memcached. Please fix the Memcached DSN or select another cache technology. Original message was: '.$errmsg);
             });
         }
     }
