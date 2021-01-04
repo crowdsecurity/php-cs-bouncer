@@ -213,7 +213,7 @@ class ApiCache
             $duration = time() + $this->cacheExpirationForCleanIp;
             if (!$this->liveMode) {
                 // In stream mode we considere an clean IP forever... until the next resync.
-                $duration = \PHP_INT_MAX;
+                $duration = 315360000; // in this case, forever is 10 years as PHP_INT_MAX will cause trouble with the Memcached Adapter (int to float unwanted conversion)
             }
 
             return [Constants::REMEDIATION_BYPASS, $duration, 0];
