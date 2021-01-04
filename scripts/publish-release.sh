@@ -27,8 +27,8 @@ else
 fi
 git add $git_base_dir/src/Constants.php
 
-git tag $NEW_GIT_VERSION
 git commit -m "bump version to $NEW_GIT_VERSION"
+git tag $NEW_GIT_VERSION
 git push
 git push origin $NEW_GIT_VERSION
 gh release create --draft $NEW_GIT_VERSION --title $NEW_GIT_VERSION
