@@ -111,7 +111,7 @@ class RestClient
         }
 
         if ($status < 200 || $status >= 300) {
-            throw new BouncerException("unexpected response status: {$status}\n".$response);
+            throw new BouncerException("unexpected response status from $this->baseUri$endpoint: $status\n".$response);
         }
         $data = json_decode($response, true);
 

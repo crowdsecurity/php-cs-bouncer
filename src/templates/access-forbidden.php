@@ -1,10 +1,10 @@
 <?php
 require_once __DIR__.'/_base.php';
-function displayAccessForbiddenTemplate(bool $hideCrowdSecMentions): void
+function displayAccessForbiddenTemplate(array $config): void
 {
-    crowdSecBaseTemplatePart1();
+    crowdSecBaseTemplatePart1($config, $config['text']['ban_wall']['tab_title']);
     crowdSecBaseTemplatePart2(); ?>
-    <h1>🤭 Oh!</h1>
-    <p class="desc">This page is protected against cyber attacks and your IP has been banned by our system.</p>
-<?php crowdSecBaseTemplatePart3($hideCrowdSecMentions);
+    <h1><?php echo htmlentities($config['text']['ban_wall']['title'], \ENT_QUOTES); ?></h1>
+    <p class="desc"><?php echo htmlentities($config['text']['ban_wall']['subtitle'], \ENT_QUOTES); ?></p>
+<?php crowdSecBaseTemplatePart3($config, $config['text']['ban_wall']['footer']);
 } ?>
