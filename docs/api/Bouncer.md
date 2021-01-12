@@ -157,7 +157,7 @@ public static getAccessForbiddenHtmlTemplate (void)
 
 Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP. 
 
- 
+The input $config should match the TemplateConfiguration input format. 
 
 **Parameters**
 
@@ -181,7 +181,7 @@ public static getCaptchaHtmlTemplate (void)
 
 Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP. 
 
- 
+The input $config should match the TemplateConfiguration input format. 
 
 **Parameters**
 

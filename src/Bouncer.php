@@ -110,22 +110,34 @@ class Bouncer
 
     /**
      * Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.
+     * The input $config should match the TemplateConfiguration input format.
      */
-    public static function getAccessForbiddenHtmlTemplate(bool $hideCrowdSecMentions = false): string
+    public static function getAccessForbiddenHtmlTemplate(array $config): string
     {
+        // Process template configuration.
+        $configuration = new TemplateConfiguration();
+        $processor = new Processor();
+        $config = $processor->processConfiguration($configuration, [$config]);
+
         ob_start();
-        displayAccessForbiddenTemplate($hideCrowdSecMentions);
+        displayAccessForbiddenTemplate($config);
 
         return ob_get_clean();
     }
 
     /**
      * Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.
+     * The input $config should match the TemplateConfiguration input format.
      */
-    public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, string $captchaResolutionFormUrl, bool $hideCrowdSecMentions = false): string
+    public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, string $captchaResolutionFormUrl, array $config): string
     {
+        // Process template configuration.
+        $configuration = new TemplateConfiguration();
+        $processor = new Processor();
+        $config = $processor->processConfiguration($configuration, [$config]);
+
         ob_start();
-        displayCaptchaTemplate($error, $captchaImageSrc, $captchaResolutionFormUrl, $hideCrowdSecMentions);
+        displayCaptchaTemplate($error, $captchaImageSrc, $captchaResolutionFormUrl, $config);
 
         return ob_get_clean();
     }
