@@ -2,7 +2,7 @@
 require_once __DIR__.'/_base.php';
 function displayCaptchaTemplate(bool $error, string $captchaImageSrc, string $captchaResolutionFormUrl, array $config): void
 {
-    crowdSecBaseTemplatePart1($config, $config['text']['captcha_wall']['tab_title'], \ENT_QUOTES); ?><style>
+    crowdSecBaseTemplatePart1($config, $config['text']['captcha_wall']['tab_title']); ?><style>
         input {
             margin-top: 10px;
             padding: 10px;
