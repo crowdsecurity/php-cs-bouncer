@@ -88,7 +88,7 @@ class ApiCache
      */
     private function addRemediationToCacheItem(string $ip, string $type, int $expiration, int $decisionId): string
     {
-        $item = $this->adapter->getItem($ip);
+        $item = $this->adapter->getItem(base64_encode($ip));
 
         // Merge with existing remediations (if any).
         $remediations = $item->isHit() ? $item->get() : [];
@@ -130,7 +130,7 @@ class ApiCache
      */
     private function removeDecisionFromRemediationItem(string $ip, int $decisionId): bool
     {
-        $item = $this->adapter->getItem($ip);
+        $item = $this->adapter->getItem(base64_encode($ip));
         $remediations = $item->get();
 
         $index = false;
@@ -149,7 +149,7 @@ class ApiCache
                 'type' => 'CACHE_ITEM_REMOVED',
                 'ip' => $ip,
             ]);
-            $this->adapter->delete($ip);
+            $this->adapter->delete(base64_encode($ip));
 
             return true;
         }
@@ -426,7 +426,7 @@ class ApiCache
      */
     private function hit(string $ip): string
     {
-        $remediations = $this->adapter->getItem($ip)->get();
+        $remediations = $this->adapter->getItem(base64_encode($ip))->get();
 
         // We apply array values first because keys are ids.
         $firstRemediation = array_values($remediations)[0];
@@ -447,7 +447,7 @@ class ApiCache
             throw new BouncerException('CrowdSec Bouncer configured in "stream" mode. Please warm the cache up before trying to access it.');
         }
 
-        if ($this->adapter->hasItem($ip)) {
+        if ($this->adapter->hasItem(base64_encode($ip))) {
             $remediation = $this->hit($ip);
             $cache = 'hit';
         } else {
