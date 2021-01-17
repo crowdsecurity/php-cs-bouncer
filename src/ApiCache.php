@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace CrowdSecBouncer;
 
 use DateTime;
+use IPLib\Factory;
+use IPLib\Range\Subnet;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -248,12 +250,29 @@ class ApiCache
     private function saveRemediations(array $decisions): bool
     {
         foreach ($decisions as $decision) {
-            if (\is_int($decision['start_ip']) && \is_int($decision['end_ip'])) {
-                $ipRange = array_map('long2ip', range($decision['start_ip'], $decision['end_ip']));
-                $remediation = $this->formatRemediationFromDecision($decision);
-                foreach ($ipRange as $ip) {
-                    $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
-                }
+            $remediation = $this->formatRemediationFromDecision($decision);
+            $type = $remediation[0];
+            $exp = $remediation[1];
+            $id = $remediation[2];
+
+            if ('Ip' === $decision['scope']) {
+                $address = Factory::addressFromString($decision['value']);
+                $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
+            } elseif ('Range' === $decision['scope']) {
+                $range = Subnet::fromString($decision['value']);
+
+                $comparableEndAddress = $range->getEndAddress()->getComparableString();
+                $address = $range->getStartAddress();
+                $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
+                $ipCount = 1;
+                do {
+                    $address = $address->getNextAddress();
+                    $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
+                    ++$ipCount;
+                    if ($ipCount >= Constants::MAX_ALLOWED_IP_RANGE_WIDTH) {
+                        throw new BouncerException("Unable to store the decision ${$decision['id']}, the IP range: ${$decision['value']} is too large and can cause storage problem. Decision ignored.");
+                    }
+                } while (0 !== strcmp($address->getComparableString(), $comparableEndAddress));
             }
         }
 
@@ -264,18 +283,44 @@ class ApiCache
     {
         $count = 0;
         foreach ($decisions as $decision) {
-            if (\is_int($decision['start_ip']) && \is_int($decision['end_ip'])) {
-                $ipRange = array_map('long2ip', range($decision['start_ip'], $decision['end_ip']));
-                $this->logger->debug('', [
-                    'type' => 'DECISION_REMOVED', 'decision' => $decision['id'], 'ips' => $ipRange,
-                ]);
+            if ('Ip' === $decision['scope']) {
+                $address = Factory::addressFromString($decision['value']);
+                if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
+                    $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
+                } else {
+                    $this->logger->debug('', [
+                    'type' => 'DECISION_REMOVED',
+                    'decision' => $decision['id'],
+                    'value' => $decision['value'],
+                    ]);
+                }
+            } elseif ('Range' === $decision['scope']) {
+                $range = Subnet::fromString($decision['value']);
+
+                $comparableEndAddress = $range->getEndAddress()->getComparableString();
+                $address = $range->getStartAddress();
+                if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
+                    $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
+                }
+                $ipCount = 1;
                 $success = true;
-                foreach ($ipRange as $ip) {
-                    if (!$this->removeDecisionFromRemediationItem($ip, $decision['id'])) {
+                do {
+                    $address = $address->getNextAddress();
+                    if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
                         $success = false;
                     }
-                }
+                    ++$ipCount;
+                    if ($ipCount >= Constants::MAX_ALLOWED_IP_RANGE_WIDTH) {
+                        throw new BouncerException("Unable to store the decision ${$decision['id']}, the IP range: ${$decision['value']} is too large and can cause storage problem. Decision ignored.");
+                    }
+                } while (0 !== strcmp($address->getComparableString(), $comparableEndAddress));
+
                 if ($success) {
+                    $this->logger->debug('', [
+                        'type' => 'DECISION_REMOVED',
+                        'decision' => $decision['id'],
+                        'value' => $decision['value'],
+                        ]);
                     ++$count;
                 } else {
                     // The API may return stale deletion events due to API design.
@@ -303,11 +348,17 @@ class ApiCache
                     $decision['type'] = $this->fallbackRemediation;
                 }
                 $remediation = $this->formatRemediationFromDecision($decision);
-                $remediationResult = $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
+                $type = $remediation[0];
+                $exp = $remediation[1];
+                $id = $remediation[2];
+                $remediationResult = $this->addRemediationToCacheItem($ip, $type, $exp, $id);
             }
         } else {
             $remediation = $this->formatRemediationFromDecision(null);
-            $remediationResult = $this->addRemediationToCacheItem($ip, $remediation[0], $remediation[1], $remediation[2]);
+            $type = $remediation[0];
+            $exp = $remediation[1];
+            $id = $remediation[2];
+            $remediationResult = $this->addRemediationToCacheItem($ip, $type, $exp, $id);
         }
         $this->commit();
 

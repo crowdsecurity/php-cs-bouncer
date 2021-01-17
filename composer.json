@@ -33,7 +33,8 @@
         "symfony/config": "^5.2",
         "symfony/cache": "^5.2",
         "monolog/monolog": "^2.1",
-        "gregwar/captcha": "^1.1"
+        "gregwar/captcha": "^1.1",
+        "mlocati/ip-lib": "^1.14"
     },
     "require-dev": {
         "bramus/monolog-colored-line-formatter": "^3.0",

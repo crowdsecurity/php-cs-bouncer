@@ -7,6 +7,7 @@ require_once __DIR__.'/templates/access-forbidden.php';
 
 use Gregwar\Captcha\CaptchaBuilder;
 use Gregwar\Captcha\PhraseBuilder;
+use IPLib\Factory;
 use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
@@ -99,11 +100,11 @@ class Bouncer
      */
     public function getRemediationForIp(string $ip): string
     {
-        $intIp = ip2long($ip);
-        if (false === $intIp) {
-            throw new BouncerException("IP $ip should looks like x.x.x.x, with x in 0-255. Ex: 1.2.3.4");
+        $ip = Factory::addressFromString($ip, false);
+        if (null === $ip) {
+            throw new BouncerException("IP $ip format is invalid.");
         }
-        $remediation = $this->apiCache->get(long2ip($intIp));
+        $remediation = $this->apiCache->get($ip->toString());
 
         return $this->capRemediationLevel($remediation);
     }
