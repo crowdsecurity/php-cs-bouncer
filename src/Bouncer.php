@@ -7,6 +7,8 @@ require_once __DIR__.'/templates/access-forbidden.php';
 
 use Gregwar\Captcha\CaptchaBuilder;
 use Gregwar\Captcha\PhraseBuilder;
+use IPLib\Address\AddressInterface;
+use IPLib\Address\Type;
 use IPLib\Factory;
 use Monolog\Handler\NullHandler;
 use Monolog\Logger;
@@ -92,6 +94,18 @@ class Bouncer
     }
 
     /**
+     * Format the input IP address as a cache key.
+     */
+    public static function formatIpAsCacheKey(AddressInterface $ip): string
+    {
+        if (Type::T_IPv6 === $ip->getAddressType) {
+            return implode(':', \array_slice($ip->toString(true), 0, 4));
+        }
+
+        return $ip->toString();
+    }
+
+    /**
      * Get the remediation for the specified IP. This method use the cache layer.
      * In live mode, when no remediation was found in cache,
      * the cache system will call the API to check if there is a decision.
@@ -100,11 +114,11 @@ class Bouncer
      */
     public function getRemediationForIp(string $ip): string
     {
-        $ip = Factory::addressFromString($ip, false);
-        if (null === $ip) {
+        $address = Factory::addressFromString($ip, false);
+        if (null === $address) {
             throw new BouncerException("IP $ip format is invalid.");
         }
-        $remediation = $this->apiCache->get($ip->toString());
+        $remediation = $this->apiCache->get($address);
 
         return $this->capRemediationLevel($remediation);
     }

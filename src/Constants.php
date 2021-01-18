@@ -45,7 +45,4 @@ class Constants
 
     /** @var array<string> The list of each known remediation, sorted by priority */
     public const ORDERED_REMEDIATIONS = [self::REMEDIATION_BAN, self::REMEDIATION_CAPTCHA, self::REMEDIATION_BYPASS];
-
-    /** @var int The maximum allowed range width */
-    public const MAX_ALLOWED_IP_RANGE_WIDTH = 1000000;
 }

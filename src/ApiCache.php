@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace CrowdSecBouncer;
 
 use DateTime;
+use IPLib\Address\AddressInterface;
 use IPLib\Factory;
 use IPLib\Range\Subnet;
 use Psr\Log\LoggerInterface;
@@ -257,19 +258,19 @@ class ApiCache
 
             if ('Ip' === $decision['scope']) {
                 $address = Factory::addressFromString($decision['value']);
-                $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
+                $this->addRemediationToCacheItem(Bouncer::formatIpAsCacheKey($address), $type, $exp, $id);
             } elseif ('Range' === $decision['scope']) {
                 $range = Subnet::fromString($decision['value']);
 
                 $comparableEndAddress = $range->getEndAddress()->getComparableString();
                 $address = $range->getStartAddress();
-                $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
+                $this->addRemediationToCacheItem(Bouncer::formatIpAsCacheKey($address), $type, $exp, $id);
                 $ipCount = 1;
                 do {
                     $address = $address->getNextAddress();
-                    $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
+                    $this->addRemediationToCacheItem(Bouncer::formatIpAsCacheKey($address), $type, $exp, $id);
                     ++$ipCount;
-                    if ($ipCount >= Constants::MAX_ALLOWED_IP_RANGE_WIDTH) {
+                    if ($ipCount >= 1000) {
                         throw new BouncerException("Unable to store the decision ${$decision['id']}, the IP range: ${$decision['value']} is too large and can cause storage problem. Decision ignored.");
                     }
                 } while (0 !== strcmp($address->getComparableString(), $comparableEndAddress));
@@ -285,7 +286,7 @@ class ApiCache
         foreach ($decisions as $decision) {
             if ('Ip' === $decision['scope']) {
                 $address = Factory::addressFromString($decision['value']);
-                if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
+                if (!$this->removeDecisionFromRemediationItem(Bouncer::formatIpAsCacheKey($address), $decision['id'])) {
                     $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
                 } else {
                     $this->logger->debug('', [
@@ -299,18 +300,18 @@ class ApiCache
 
                 $comparableEndAddress = $range->getEndAddress()->getComparableString();
                 $address = $range->getStartAddress();
-                if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
+                if (!$this->removeDecisionFromRemediationItem(Bouncer::formatIpAsCacheKey($address), $decision['id'])) {
                     $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
                 }
                 $ipCount = 1;
                 $success = true;
                 do {
                     $address = $address->getNextAddress();
-                    if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
+                    if (!$this->removeDecisionFromRemediationItem(Bouncer::formatIpAsCacheKey($address), $decision['id'])) {
                         $success = false;
                     }
                     ++$ipCount;
-                    if ($ipCount >= Constants::MAX_ALLOWED_IP_RANGE_WIDTH) {
+                    if ($ipCount >= 1000) {
                         throw new BouncerException("Unable to store the decision ${$decision['id']}, the IP range: ${$decision['value']} is too large and can cause storage problem. Decision ignored.");
                     }
                 } while (0 !== strcmp($address->getComparableString(), $comparableEndAddress));
@@ -458,16 +459,17 @@ class ApiCache
      * In stream mode, as we considere cache is the single source of truth, the IP is considered clean.
      * Finally the result is stored in caches for further calls.
      */
-    private function miss(string $ip): string
+    private function miss(string $ipToQuery, string $cacheKey): string
     {
         $decisions = [];
 
         if ($this->liveMode) {
-            $this->logger->debug('', ['type' => 'DIRECT_API_CALL', 'ip' => $ip]);
-            $decisions = $this->apiClient->getFilteredDecisions(['ip' => $ip]);
+            $this->logger->debug('', ['type' => 'DIRECT_API_CALL', 'ip' => $ipToQuery]);
+            $decisions = $this->apiClient->getFilteredDecisions(['ip' => $ipToQuery]);
         }
 
-        return $this->saveRemediationsForIp($decisions, $ip);
+
+        return $this->saveRemediationsForIp($decisions, $cacheKey);
     }
 
     /**
@@ -491,27 +493,28 @@ class ApiCache
      *
      * @return string the computed remediation string, or null if no decision was found
      */
-    public function get(string $ip): string
+    public function get(AddressInterface $address): string
     {
-        $this->logger->debug('', ['type' => 'START_IP_CHECK', 'ip' => $ip]);
+        $cacheKey = Bouncer::formatIpAsCacheKey($address);
+        $this->logger->debug('', ['type' => 'START_IP_CHECK', 'ip' => $cacheKey]);
         if (!$this->liveMode && !$this->warmedUp) {
             throw new BouncerException('CrowdSec Bouncer configured in "stream" mode. Please warm the cache up before trying to access it.');
         }
 
-        if ($this->adapter->hasItem(base64_encode($ip))) {
-            $remediation = $this->hit($ip);
+        if ($this->adapter->hasItem(base64_encode($cacheKey))) {
+            $remediation = $this->hit($cacheKey);
             $cache = 'hit';
         } else {
-            $remediation = $this->miss($ip);
+            $remediation = $this->miss($address->toString(), $cacheKey);
             $cache = 'miss';
         }
 
         if (Constants::REMEDIATION_BYPASS === $remediation) {
-            $this->logger->info('', ['type' => 'CLEAN_IP', 'ip' => $ip, 'cache' => $cache]);
+            $this->logger->info('', ['type' => 'CLEAN_IP', 'ip' => $cacheKey, 'cache' => $cache]);
         } else {
             $this->logger->warning('', [
                 'type' => 'BAD_IP',
-                'ip' => $ip,
+                'ip' => $cacheKey,
                 'remediation' => $remediation,
                 'cache' => $cache,
             ]);
