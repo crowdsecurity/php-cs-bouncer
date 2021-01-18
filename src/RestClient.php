@@ -98,6 +98,7 @@ class RestClient
             'type' => 'HTTP CALL',
             'method' => $method,
             'uri' => $this->baseUri.$endpoint,
+            'content' => 'POST' === $method ? $config['http']['content'] : null,
         ]);
 
         $response = file_get_contents($this->baseUri.$endpoint, false, $context);

@@ -16,6 +16,7 @@ class TestHelpers
     const BAD_IP = '1.2.3.4';
     const CLEAN_IP = '2.3.4.5';
     const NEWLY_BAD_IP = '3.4.5.6';
+    const IP_RANGE = '30';
 
     const FS_CACHE_ADAPTER_DIR = __DIR__.'/../var/fs.cache';
     const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__.'/../var/phpFiles.cache';

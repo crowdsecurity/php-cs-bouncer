@@ -46,7 +46,7 @@ class WatcherClient
         $this->logger->info('Watcher client initialized');
     }
 
-    /** Set the initial watcher state using the alert_base_state.json file */
+    /** Set the initial watcher state */
     public function setInitialState(): void
     {
         $this->logger->info('Set initial state');
@@ -54,7 +54,7 @@ class WatcherClient
         $this->addBaseDecisions();
     }
 
-    /** Set the initial watcher state using the alert_updated_state.json file */
+    /** Set the initial watcher state */
     public function setSecondState(): void
     {
         $this->logger->info('Set second state');
@@ -98,50 +98,148 @@ class WatcherClient
 
     private function addBaseDecisions(): void
     {
-        /** @var string */
-        $jsonString = file_get_contents(__DIR__.'/data/alerts_base_state.json');
-        $data = json_decode($jsonString, true);
-
         $now = new DateTime();
-        $stopAt = (clone $now)->modify('+1 day')->format('Y-m-d\TH:i:s.000\Z');
+        $stopAt12h = (clone $now)->modify('+12 hours')->format('Y-m-d\TH:i:s.000\Z');
+        $stopAt24h = (clone $now)->modify('+24 hours')->format('Y-m-d\TH:i:s.000\Z');
         $startAt = $now->format('Y-m-d\TH:i:s.000\Z');
 
-        $ipCaptcha12h = $data[0];
-        $ipCaptcha12h['start_at'] = $startAt;
-        $ipCaptcha12h['stop_at'] = $stopAt;
+        $ipCaptcha12h = [
+            'capacity' => 0,
+            'decisions' => [
+              [
+                'duration' => '12h',
+                'origin' => 'cscli',
+                'scenario' => 'captcha single IP '.TestHelpers::BAD_IP.' for 12h for PHPUnit tests',
+                'scope' => 'Ip',
+                'type' => 'captcha',
+                'value' => TestHelpers::BAD_IP,
+              ],
+            ],
+            'events' => [
+            ],
+            'events_count' => 1,
+            'labels' => null,
+            'leakspeed' => '0',
+            'message' => 'setup for PHPUnit tests',
+            'scenario' => 'setup for PHPUnit tests',
+            'scenario_hash' => '',
+            'scenario_version' => '',
+            'simulated' => false,
+            'source' => [
+              'scope' => 'Ip',
+              'value' => TestHelpers::BAD_IP,
+            ],
+            'start_at' => $startAt,
+            'stop_at' => $stopAt12h,
+          ];
         $result = $this->request('/v1/alerts', null, [$ipCaptcha12h], 'POST');
         $this->logger->info('Decision '.$result[0].' added: '.$ipCaptcha12h['decisions'][0]['scenario'].'');
 
-        $rangeBan24h = $data[1];
-        $rangeBan24h['start_at'] = $startAt;
-        $rangeBan24h['stop_at'] = $stopAt;
+        $rangeBan24h = [
+            'capacity' => 0,
+            'decisions' => [
+              [
+                'duration' => '24h',
+                'origin' => 'cscli',
+                'scenario' => 'ban range '.TestHelpers::BAD_IP.'/'.TestHelpers::IP_RANGE.' for 24h for PHPUnit tests',
+                'scope' => 'Range',
+                'type' => 'ban',
+                'value' => TestHelpers::BAD_IP.'/'.TestHelpers::IP_RANGE,
+              ],
+            ],
+            'events' => [
+            ],
+            'events_count' => 1,
+            'labels' => null,
+            'leakspeed' => '0',
+            'message' => 'setup for PHPUnit tests',
+            'scenario' => 'setup for PHPUnit tests',
+            'scenario_hash' => '',
+            'scenario_version' => '',
+            'simulated' => false,
+            'source' => [
+              'scope' => 'Range',
+              'value' => TestHelpers::BAD_IP.'/'.TestHelpers::IP_RANGE,
+            ],
+            'start_at' => $startAt,
+            'stop_at' => $stopAt24h,
+          ];
         $result = $this->request('/v1/alerts', null, [$rangeBan24h], 'POST');
         $this->logger->info('Decision '.$result[0].' added: '.$rangeBan24h['decisions'][0]['scenario'].'');
     }
 
     /**
-     * Add new decisions (captcha 3.4.5.6 for 36h + ban 3.4.5.6/30 for 48h).
+     * Add new decisions (captcha TestHelpers::NEWLY_BAD_IP for 36h + ban TestHelpers::NEWLY_BAD_IP/TestHelpers::IP_RANGE for 48h).
      */
     public function addNewDecisions(): void
     {
-        /** @var string */
-        $jsonString = file_get_contents(__DIR__.'/data/alerts_updated_state.json');
-        $data = json_decode($jsonString, true);
-
         $now = new DateTime();
-        $stopAt = (clone $now)->modify('+1 day')->format('Y-m-d\TH:i:s.000\Z');
+        $stopAt48h = (clone $now)->modify('+48 hours')->format('Y-m-d\TH:i:s.000\Z');
+        $stopAt36h = (clone $now)->modify('+36 hours')->format('Y-m-d\TH:i:s.000\Z');
         $startAt = $now->format('Y-m-d\TH:i:s.000\Z');
 
-        $ipBan36h = $data[0];
-        $ipBan36h['start_at'] = $startAt;
-        $ipBan36h['stop_at'] = $stopAt;
+        $ipBan36h = [
+            'capacity' => 0,
+            'decisions' => [
+              0 => [
+                'duration' => '36h',
+                'origin' => 'cscli',
+                'scenario' => 'ban single IP '.TestHelpers::NEWLY_BAD_IP.' for 36h for PHPUnit tests',
+                'scope' => 'Ip',
+                'type' => 'ban',
+                'value' => TestHelpers::NEWLY_BAD_IP,
+              ],
+            ],
+            'events' => [
+            ],
+            'events_count' => 1,
+            'labels' => null,
+            'leakspeed' => '0',
+            'message' => 'updated state for PHPUnit tests',
+            'scenario' => 'updated state for PHPUnit tests',
+            'scenario_hash' => '',
+            'scenario_version' => '',
+            'simulated' => false,
+            'source' => [
+              'scope' => 'Ip',
+              'value' => TestHelpers::NEWLY_BAD_IP,
+            ],
+            'start_at' => $startAt,
+            'stop_at' => $stopAt36h,
+          ];
         $result = $this->request('/v1/alerts', null, [$ipBan36h], 'POST');
         $this->logger->info('Decision '.$result[0].' added: '.$ipBan36h['decisions'][0]['scenario'].'');
 
-        $rangeCaptcha48h = $data[1];
-        $rangeCaptcha48h['start_at'] = $startAt;
-        $rangeCaptcha48h['stop_at'] = $stopAt;
+        $rangeCaptcha48h = [
+            'capacity' => 0,
+            'decisions' => [
+              0 => [
+                'duration' => '48h',
+                'origin' => 'cscli',
+                'scenario' => 'captcha range '.TestHelpers::NEWLY_BAD_IP.'/'.TestHelpers::IP_RANGE.' for 48h for PHPUnit tests',
+                'scope' => 'Range',
+                'type' => 'captcha',
+                'value' => TestHelpers::NEWLY_BAD_IP.'/'.TestHelpers::IP_RANGE,
+              ],
+            ],
+            'events' => [
+            ],
+            'events_count' => 1,
+            'labels' => null,
+            'leakspeed' => '0',
+            'message' => 'setup for PHPUnit tests',
+            'scenario' => 'setup for PHPUnit tests',
+            'scenario_hash' => '',
+            'scenario_version' => '',
+            'simulated' => false,
+            'source' => [
+              'scope' => 'Range',
+              'value' => TestHelpers::NEWLY_BAD_IP.'/'.TestHelpers::IP_RANGE,
+            ],
+            'start_at' => $startAt,
+            'stop_at' => $stopAt48h,
+          ];
         $result = $this->request('/v1/alerts', null, [$rangeCaptcha48h], 'POST');
-        $this->logger->info('Decision '.$result[0].' added: '.$rangeCaptcha48h['decisions'][0]['scenario'].'');
+        $this->logger->info('Decision '.$result[0].' added: '.$rangeCaptcha48h['decisions'][0]['scenario']);
     }
 }
