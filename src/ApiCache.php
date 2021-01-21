@@ -6,6 +6,7 @@ namespace CrowdSecBouncer;
 
 use DateTime;
 use IPLib\Address\AddressInterface;
+use IPLib\Address\Type;
 use IPLib\Factory;
 use IPLib\Range\Subnet;
 use Psr\Log\LoggerInterface;
@@ -246,13 +247,48 @@ class ApiCache
     }
 
     /**
+     * Update the cached remediation of the specified IP from these new decisions.
+     */
+    private function saveRemediationsForIp(array $decisions, string $ip): string
+    {
+        $remediationResult = Constants::REMEDIATION_BYPASS;
+        if (\count($decisions)) {
+            foreach ($decisions as $decision) {
+                if (!\in_array($decision['type'], Constants::ORDERED_REMEDIATIONS)) {
+                    $this->logger->warning('', ['type' => 'UNKNOWN_REMEDIATION', 'unknown' => $decision['type'], 'fallback' => $this->fallbackRemediation]);
+                    $decision['type'] = $this->fallbackRemediation;
+                }
+                $remediation = $this->formatRemediationFromDecision($decision);
+                $type = $remediation[0];
+                $exp = $remediation[1];
+                $id = $remediation[2];
+                $remediationResult = $this->addRemediationToCacheItem($ip, $type, $exp, $id);
+            }
+        } else {
+            $remediation = $this->formatRemediationFromDecision(null);
+            $type = $remediation[0];
+            $exp = $remediation[1];
+            $id = $remediation[2];
+            $remediationResult = $this->addRemediationToCacheItem($ip, $type, $exp, $id);
+        }
+        $this->commit();
+
+        return $remediationResult;
+    }
+
+    /**
      * Update the cached remediations from these new decisions.
      */
-    private function saveRemediations(array $decisions): bool
+    private function saveRemediations(array $decisions): array
     {
+        $errors = [];
         foreach ($decisions as $decision) {
             $remediation = $this->formatRemediationFromDecision($decision);
             $type = $remediation[0];
+            if (!\in_array($remediation[0], Constants::ORDERED_REMEDIATIONS)) {
+                $this->logger->warning('', ['type' => 'UNKNOWN_REMEDIATION', 'unknown' => $remediation[0], 'fallback' => $this->fallbackRemediation]);
+                $remediation[0] = $this->fallbackRemediation;
+            }
             $exp = $remediation[1];
             $id = $remediation[2];
 
@@ -262,7 +298,17 @@ class ApiCache
             } elseif ('Range' === $decision['scope']) {
                 $range = Subnet::fromString($decision['value']);
 
+                $addressType = $range->getAddressType();
+                $isIpv6 = (Type::T_IPv6 === $addressType);
+                if ($isIpv6 || ($range->getNetworkPrefix() < 24)) {
+                    $error = ['type' => 'DECISION_RANGE_TO_ADD_IS_TOO_LARGE', 'decision' => $decision['id'], 'range' => $decision['value'], 'remediation' => $type, 'expiration' => $exp];
+                    $errors[] = $error;
+                    $this->logger->warning('', $error);
+                    continue;
+                }
                 $comparableEndAddress = $range->getEndAddress()->getComparableString();
+
+                $comparableEndAddress = $range->getComparableEndString();
                 $address = $range->getStartAddress();
                 $this->addRemediationToCacheItem(Bouncer::formatIpAsCacheKey($address), $type, $exp, $id);
                 $ipCount = 1;
@@ -277,11 +323,12 @@ class ApiCache
             }
         }
 
-        return $this->commit();
+        return ['success' => $this->commit(), 'errors' => $errors];
     }
 
-    private function removeRemediations(array $decisions): int
+    private function removeRemediations(array $decisions): array
     {
+        $errors = [];
         $count = 0;
         foreach ($decisions as $decision) {
             if ('Ip' === $decision['scope']) {
@@ -298,7 +345,16 @@ class ApiCache
             } elseif ('Range' === $decision['scope']) {
                 $range = Subnet::fromString($decision['value']);
 
-                $comparableEndAddress = $range->getEndAddress()->getComparableString();
+                $addressType = $range->getAddressType();
+                $isIpv6 = (Type::T_IPv6 === $addressType);
+                if ($isIpv6 || ($range->getNetworkPrefix() < 24)) {
+                    $error = ['type' => 'DECISION_RANGE_TO_REMOVE_IS_TOO_LARGE', 'decision' => $decision['id'], 'range' => $decision['value']];
+                    $errors[] = $error;
+                    $this->logger->warning('', $error);
+                    continue;
+                }
+
+                $comparableEndAddress = $range->getComparableEndString();
                 $address = $range->getStartAddress();
                 if (!$this->removeDecisionFromRemediationItem(Bouncer::formatIpAsCacheKey($address), $decision['id'])) {
                     $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
@@ -333,37 +389,7 @@ class ApiCache
 
         $this->commit();
 
-        return $count;
-    }
-
-    /**
-     * Update the cached remediation of the specified IP from these new decisions.
-     */
-    private function saveRemediationsForIp(array $decisions, string $ip): string
-    {
-        $remediationResult = Constants::REMEDIATION_BYPASS;
-        if (\count($decisions)) {
-            foreach ($decisions as $decision) {
-                if (!\in_array($decision['type'], Constants::ORDERED_REMEDIATIONS)) {
-                    $this->logger->warning('', ['type' => 'UNKNOWN_REMEDIATION', 'unknown' => $decision['type'], 'fallback' => $this->fallbackRemediation]);
-                    $decision['type'] = $this->fallbackRemediation;
-                }
-                $remediation = $this->formatRemediationFromDecision($decision);
-                $type = $remediation[0];
-                $exp = $remediation[1];
-                $id = $remediation[2];
-                $remediationResult = $this->addRemediationToCacheItem($ip, $type, $exp, $id);
-            }
-        } else {
-            $remediation = $this->formatRemediationFromDecision(null);
-            $type = $remediation[0];
-            $exp = $remediation[1];
-            $id = $remediation[2];
-            $remediationResult = $this->addRemediationToCacheItem($ip, $type, $exp, $id);
-        }
-        $this->commit();
-
-        return $remediationResult;
+        return ['count' => $count, 'errors' => $errors];
     }
 
     public function clear(): bool
@@ -387,10 +413,12 @@ class ApiCache
      * Warm the cache up.
      * Used when the stream mode has just been activated.
      *
-     * @return int number of decisions added
+     * @return array "count": number of decisions added, "errors": decisions not added
      */
-    public function warmUp(): int
+    public function warmUp(): array
     {
+        $addErrors = [];
+
         if ($this->warmedUp) {
             $this->clear();
         }
@@ -401,7 +429,9 @@ class ApiCache
 
         $nbNew = 0;
         if ($newDecisions) {
-            $this->warmedUp = $this->saveRemediations($newDecisions);
+            $saveResult = $this->saveRemediations($newDecisions);
+            $addErrors = $saveResult['errors'];
+            $this->warmedUp = $saveResult['success'];
             $this->defferUpdateCacheConfig(['warmed_up' => $this->warmedUp]);
             $this->commit();
             if (!$this->warmedUp) {
@@ -416,7 +446,7 @@ class ApiCache
         $this->commit();
         $this->logger->info('', ['type' => 'CACHE_WARMED_UP', 'added_decisions' => $nbNew]);
 
-        return $nbNew;
+        return ['count' => $nbNew, 'errors' => $addErrors];
     }
 
     /**
@@ -424,12 +454,17 @@ class ApiCache
      * Pull decisions updates from the API and update the cached remediations.
      * Used for the stream mode when we have to update the remediations list.
      *
-     * @return array number of deleted and new decisions
+     * @return array number of deleted and new decisions, and errors when processing decisions
      */
     public function pullUpdates(): array
     {
+        $deletionErrors = [];
+        $addErrors = [];
         if (!$this->warmedUp) {
-            return ['deleted' => 0, 'new' => $this->warmUp()];
+            $warmUpResult = $this->warmUp();
+            $addErrors = $warmUpResult['errors'];
+
+            return ['deleted' => 0, 'new' => $warmUpResult['count'], 'deletionErrors' => $deletionErrors, 'addErrors' => $addErrors];
         }
 
         $this->logger->debug('', ['type' => 'START_CACHE_UPDATE']);
@@ -439,18 +474,21 @@ class ApiCache
 
         $nbDeleted = 0;
         if ($deletedDecisions) {
-            $nbDeleted = $this->removeRemediations($deletedDecisions);
+            $removingResult = $this->removeRemediations($deletedDecisions);
+            $deletionErrors = $removingResult['errors'];
+            $nbDeleted = $removingResult['count'];
         }
 
         $nbNew = 0;
         if ($newDecisions) {
-            $this->saveRemediations($newDecisions);
+            $saveResult = $this->saveRemediations($newDecisions);
+            $addErrors = $saveResult['errors'];
             $nbNew = \count($newDecisions);
         }
 
         $this->logger->debug('', ['type' => 'CACHE_UPDATED', 'deleted' => $nbDeleted, 'new' => $nbNew]);
 
-        return ['deleted' => $nbDeleted, 'new' => $nbNew];
+        return ['deleted' => $nbDeleted, 'new' => $nbNew, 'deletionErrors' => $deletionErrors, 'addErrors' => $addErrors];
     }
 
     /**
@@ -467,7 +505,6 @@ class ApiCache
             $this->logger->debug('', ['type' => 'DIRECT_API_CALL', 'ip' => $ipToQuery]);
             $decisions = $this->apiClient->getFilteredDecisions(['ip' => $ipToQuery]);
         }
-
 
         return $this->saveRemediationsForIp($decisions, $cacheKey);
     }

@@ -59,7 +59,7 @@ class WatcherClient
     /** Set the initial watcher state */
     public function setSecondState(): void
     {
-        $this->logger->info('Set second state');
+        $this->logger->info('Set "second" state');
         $this->deleteAllDecisions();
         $now = new DateTime();
         $this->addDecision($now, '36h', '+36 hours', TestHelpers::NEWLY_BAD_IP, 'ban');
@@ -93,14 +93,14 @@ class WatcherClient
         return $this->watcherClient->request($endpoint, $queryParams, $bodyParams, $method, $headers ?: $this->baseHeaders, $timeout);
     }
 
-    private function deleteAllDecisions(): void
+    public function deleteAllDecisions(): void
     {
         // Delete all existing decisions.
         $this->logger->info('Delete all decisions');
         $this->request('/v1/decisions', null, null, 'DELETE');
     }
 
-    private function addDecision(\DateTime $now, string $durationString, string $dateTimeDurationString, string $ipOrRange, string $type)
+    public function addDecision(\DateTime $now, string $durationString, string $dateTimeDurationString, string $ipOrRange, string $type)
     {
         $isRange = (2 === count(explode('/', $ipOrRange)));
         $stopAt = (clone $now)->modify($dateTimeDurationString)->format('Y-m-d\TH:i:s.000\Z');
