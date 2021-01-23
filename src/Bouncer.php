@@ -7,8 +7,6 @@ require_once __DIR__.'/templates/access-forbidden.php';
 
 use Gregwar\Captcha\CaptchaBuilder;
 use Gregwar\Captcha\PhraseBuilder;
-use IPLib\Address\AddressInterface;
-use IPLib\Address\Type;
 use IPLib\Factory;
 use Monolog\Handler\NullHandler;
 use Monolog\Logger;
@@ -91,18 +89,6 @@ class Bouncer
         }
 
         return $remediation;
-    }
-
-    /**
-     * Format the input IP address as a cache key.
-     */
-    public static function formatIpAsCacheKey(AddressInterface $ip): string
-    {
-        if (Type::T_IPv6 === $ip->getAddressType) {
-            return implode(':', \array_slice($ip->toString(true), 0, 4));
-        }
-
-        return $ip->toString();
     }
 
     /**

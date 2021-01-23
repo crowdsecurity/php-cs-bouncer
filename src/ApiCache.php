@@ -294,7 +294,7 @@ class ApiCache
 
             if ('Ip' === $decision['scope']) {
                 $address = Factory::addressFromString($decision['value']);
-                $this->addRemediationToCacheItem(Bouncer::formatIpAsCacheKey($address), $type, $exp, $id);
+                $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
             } elseif ('Range' === $decision['scope']) {
                 $range = Subnet::fromString($decision['value']);
 
@@ -310,11 +310,11 @@ class ApiCache
 
                 $comparableEndAddress = $range->getComparableEndString();
                 $address = $range->getStartAddress();
-                $this->addRemediationToCacheItem(Bouncer::formatIpAsCacheKey($address), $type, $exp, $id);
+                $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
                 $ipCount = 1;
                 do {
                     $address = $address->getNextAddress();
-                    $this->addRemediationToCacheItem(Bouncer::formatIpAsCacheKey($address), $type, $exp, $id);
+                    $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
                     ++$ipCount;
                     if ($ipCount >= 1000) {
                         throw new BouncerException("Unable to store the decision ${$decision['id']}, the IP range: ${$decision['value']} is too large and can cause storage problem. Decision ignored.");
@@ -333,7 +333,7 @@ class ApiCache
         foreach ($decisions as $decision) {
             if ('Ip' === $decision['scope']) {
                 $address = Factory::addressFromString($decision['value']);
-                if (!$this->removeDecisionFromRemediationItem(Bouncer::formatIpAsCacheKey($address), $decision['id'])) {
+                if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
                     $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
                 } else {
                     $this->logger->debug('', [
@@ -356,14 +356,14 @@ class ApiCache
 
                 $comparableEndAddress = $range->getComparableEndString();
                 $address = $range->getStartAddress();
-                if (!$this->removeDecisionFromRemediationItem(Bouncer::formatIpAsCacheKey($address), $decision['id'])) {
+                if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
                     $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
                 }
                 $ipCount = 1;
                 $success = true;
                 do {
                     $address = $address->getNextAddress();
-                    if (!$this->removeDecisionFromRemediationItem(Bouncer::formatIpAsCacheKey($address), $decision['id'])) {
+                    if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
                         $success = false;
                     }
                     ++$ipCount;
@@ -532,7 +532,7 @@ class ApiCache
      */
     public function get(AddressInterface $address): string
     {
-        $cacheKey = Bouncer::formatIpAsCacheKey($address);
+        $cacheKey = $address->toString();
         $this->logger->debug('', ['type' => 'START_IP_CHECK', 'ip' => $cacheKey]);
         if (!$this->liveMode && !$this->warmedUp) {
             throw new BouncerException('CrowdSec Bouncer configured in "stream" mode. Please warm the cache up before trying to access it.');
