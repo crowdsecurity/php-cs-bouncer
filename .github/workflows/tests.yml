@@ -48,10 +48,6 @@ jobs:
             -   name: Add a machine to pilot crowdsec state
                 run: docker exec crowdsec cscli machines add PhpUnitTestMachine --password PhpUnitTestMachinePassword
 
-            -   name: Install libmemcached
-                if: matrix.php == '8.0' # required only for php 8 as mentioned here: https://github.com/shivammathur/setup-php/issues/354
-                run: sudo apt-get install libmemcached-dev -y
-
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:

@@ -80,7 +80,7 @@ git branch -m <new-name>
 git push origin :<old-name> && git push origin <new-name>
 
 # Create PR
-gh pr create --fill
+gh pr create --fill --web
 ```
 
 > Note: after the merge, don't forget to delete to branch.
