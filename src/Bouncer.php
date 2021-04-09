@@ -227,9 +227,14 @@ class Bouncer
     }
 
     /**
+     * Check if the captcha filled by the user is correct or not.
+     * We are premissive with the user (0 is interpreted as "o" and 1 in interpretted as "l").
+     *
      * @param string $expected The expected phrase
      * @param string $expected The phrase to check (the user input)
      * @param string $ip       Th IP of the use (for logging purpose)
+     *
+     * @return bool If the captcha input was correct or not
      */
     public function checkCaptcha(string $expected, string $try, string $ip)
     {
