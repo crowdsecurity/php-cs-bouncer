@@ -12,7 +12,7 @@ The main Class of this package. This is the first entry point of any PHP Bouncer
 |------|-------------|
 |[__construct](#bouncer__construct)||
 |[buildCaptchaCouple](#bouncerbuildcaptchacouple)|Build a captcha couple.|
-|[checkCaptcha](#bouncercheckcaptcha)||
+|[checkCaptcha](#bouncercheckcaptcha)|Check if the captcha filled by the user is correct or not.|
 |[clearCache](#bouncerclearcache)|This method clear the full data in cache.|
 |[configure](#bouncerconfigure)|Configure this instance.|
 |[getAccessForbiddenHtmlTemplate](#bouncergetaccessforbiddenhtmltemplate)|Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.|
@@ -82,20 +82,27 @@ Build a captcha couple.
 **Description**
 
 ```php
- checkCaptcha (void)
+public checkCaptcha (string $expected, string $expected, string $ip)
 ```
 
- 
+Check if the captcha filled by the user is correct or not. 
 
- 
+We are premissive with the user (0 is interpreted as "o" and 1 in interpretted as "l"). 
 
 **Parameters**
 
-`This function has no parameters.`
+* `(string) $expected`
+: The expected phrase  
+* `(string) $expected`
+: The phrase to check (the user input)  
+* `(string) $ip`
+: Th IP of the use (for logging purpose)  
 
 **Return Values**
 
-`void`
+`bool`
+
+> If the captcha input was correct or not
 
 
 <hr />
