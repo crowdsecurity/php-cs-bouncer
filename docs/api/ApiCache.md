@@ -75,7 +75,7 @@ The cache mecanism to store every decisions from LAPI/CAPI. Symfony Cache compon
 **Description**
 
 ```php
-public configure (void)
+public configure (bool $liveMode, string $apiUrl, int $timeout, string $userAgent, string $apiKey, int $cacheExpirationForCleanIp, int $cacheExpirationForBadIp, string $fallbackRemediation)
 ```
 
 Configure this instance. 
@@ -84,7 +84,22 @@ Configure this instance.
 
 **Parameters**
 
-`This function has no parameters.`
+* `(bool) $liveMode`
+: If we use the live mode (else we use the stream mode)  
+* `(string) $apiUrl`
+: The URL of the LAPI  
+* `(int) $timeout`
+: The timeout well calling LAPI  
+* `(string) $userAgent`
+: The user agent to use when calling LAPI  
+* `(string) $apiKey`
+: The Bouncer API Key to use to connect LAPI  
+* `(int) $cacheExpirationForCleanIp`
+: The duration to cache an IP considered as clean by LAPI  
+* `(int) $cacheExpirationForBadIp`
+: The duration to cache an IP considered as bad by LAPI  
+* `(string) $fallbackRemediation`
+: The remediation to use when the remediation sent by LAPI is not supported by this library  
 
 **Return Values**
 
@@ -165,7 +180,7 @@ Used for the stream mode when we have to update the remediations list.
 
 `array`
 
-> number of deleted and new decisions
+> number of deleted and new decisions, and errors when processing decisions
 
 
 <hr />
@@ -220,9 +235,9 @@ Used when the stream mode has just been activated.
 
 **Return Values**
 
-`int`
+`array`
 
-> number of decisions added
+> "count": number of decisions added, "errors": decisions not added
 
 
 <hr />

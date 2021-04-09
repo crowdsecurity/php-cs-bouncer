@@ -48,6 +48,11 @@ class ApiCache
     /** @var bool */
     private $warmedUp = null;
 
+    /**
+     * @param LoggerInterface $logger    The logger to use
+     * @param ApiClient       $apiClient The APIClient instance to use
+     * @param AbstractAdapter $adapter   The AbstractAdapter adapter to use
+     */
     public function __construct(LoggerInterface $logger, ApiClient $apiClient = null, AbstractAdapter $adapter = null)
     {
         $this->logger = $logger;
@@ -57,6 +62,15 @@ class ApiCache
 
     /**
      * Configure this instance.
+     *
+     * @param bool   $liveMode                  If we use the live mode (else we use the stream mode)
+     * @param string $apiUrl                    The URL of the LAPI
+     * @param int    $timeout                   The timeout well calling LAPI
+     * @param string $userAgent                 The user agent to use when calling LAPI
+     * @param string $apiKey                    The Bouncer API Key to use to connect LAPI
+     * @param int    $cacheExpirationForCleanIp The duration to cache an IP considered as clean by LAPI
+     * @param int    $cacheExpirationForBadIp   The duration to cache an IP considered as bad by LAPI
+     * @param string $fallbackRemediation       The remediation to use when the remediation sent by LAPI is not supported by this library
      */
     public function configure(
         bool $liveMode,
