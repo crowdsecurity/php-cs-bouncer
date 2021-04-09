@@ -11,7 +11,7 @@ The main Class of this package. This is the first entry point of any PHP Bouncer
 | Name | Description |
 |------|-------------|
 |[__construct](#bouncer__construct)||
-|[buildCaptchaCouple](#bouncerbuildcaptchacouple)||
+|[buildCaptchaCouple](#bouncerbuildcaptchacouple)|Build a captcha couple.|
 |[checkCaptcha](#bouncercheckcaptcha)||
 |[clearCache](#bouncerclearcache)|This method clear the full data in cache.|
 |[configure](#bouncerconfigure)|Configure this instance.|
@@ -56,10 +56,10 @@ The main Class of this package. This is the first entry point of any PHP Bouncer
 **Description**
 
 ```php
- buildCaptchaCouple (void)
+public static buildCaptchaCouple (void)
 ```
 
- 
+Build a captcha couple. 
 
  
 
@@ -69,7 +69,9 @@ The main Class of this package. This is the first entry point of any PHP Bouncer
 
 **Return Values**
 
-`void`
+`array`
+
+> an array composed of two items, a "phrase" string representing the phrase and a "inlineImage" representing the image data
 
 
 <hr />
@@ -117,7 +119,9 @@ This method clear the full data in cache.
 
 **Return Values**
 
-`void`
+`bool`
+
+> If the cache has been successfully cleared or not
 
 
 <hr />
@@ -128,7 +132,7 @@ This method clear the full data in cache.
 **Description**
 
 ```php
-public configure (void)
+public configure (array $config)
 ```
 
 Configure this instance. 
@@ -137,7 +141,8 @@ Configure this instance.
 
 **Parameters**
 
-`This function has no parameters.`
+* `(array) $config`
+: An array with all configuration parameters  
 
 **Return Values**
 
@@ -152,7 +157,7 @@ Configure this instance.
 **Description**
 
 ```php
-public static getAccessForbiddenHtmlTemplate (void)
+public static getAccessForbiddenHtmlTemplate (array $config)
 ```
 
 Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP. 
@@ -161,11 +166,14 @@ The input $config should match the TemplateConfiguration input format.
 
 **Parameters**
 
-`This function has no parameters.`
+* `(array) $config`
+: An array of template configuration parameters  
 
 **Return Values**
 
-`void`
+`string`
+
+> The HTML compiled template
 
 
 <hr />
@@ -176,7 +184,7 @@ The input $config should match the TemplateConfiguration input format.
 **Description**
 
 ```php
-public static getCaptchaHtmlTemplate (void)
+public static getCaptchaHtmlTemplate (array $config)
 ```
 
 Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP. 
@@ -185,11 +193,14 @@ The input $config should match the TemplateConfiguration input format.
 
 **Parameters**
 
-`This function has no parameters.`
+* `(array) $config`
+: An array of template configuration parameters  
 
 **Return Values**
 
-`void`
+`string`
+
+> The HTML compiled template
 
 
 <hr />
@@ -213,7 +224,9 @@ Returns the logger instance.
 
 **Return Values**
 
-`void`
+`\LoggerInterface`
+
+> the logger used by this library
 
 
 <hr />
@@ -224,7 +237,7 @@ Returns the logger instance.
 **Description**
 
 ```php
-public getRemediationForIp (void)
+public getRemediationForIp (string $ip)
 ```
 
 Get the remediation for the specified IP. This method use the cache layer. 
@@ -234,7 +247,8 @@ the cache system will call the API to check if there is a decision.
 
 **Parameters**
 
-`This function has no parameters.`
+* `(string) $ip`
+: The IP to check  
 
 **Return Values**
 
@@ -264,7 +278,9 @@ This method prune the cache: it removes all the expired cache items.
 
 **Return Values**
 
-`void`
+`bool`
+
+> If the cache has been successfully pruned or not
 
 
 <hr />
@@ -290,7 +306,7 @@ This method should be called periodically (ex: crontab) in a asynchronous way to
 
 `array`
 
-> number of deleted and new decisions
+> Number of deleted and new decisions, and errors when processing decisions
 
 
 <hr />
@@ -314,7 +330,9 @@ Test the connection to the cache system (Redis or Memcached).
 
 **Return Values**
 
-`void`
+`bool`
+
+> If the connection was successful or not
 
 
 **Throws Exceptions**
@@ -344,9 +362,9 @@ This method should be called only to force a cache warm up.
 
 **Return Values**
 
-`int`
+`array`
 
-> number of decisions added
+> "count": number of decisions added, "errors": decisions not added
 
 
 <hr />

@@ -50,6 +50,8 @@ class Bouncer
 
     /**
      * Configure this instance.
+     *
+     * @param array $config An array with all configuration parameters
      */
     public function configure(array $config): void
     {
@@ -80,6 +82,10 @@ class Bouncer
 
     /**
      * Cap the remediation to a fixed value given in configuration.
+     *
+     * @param string $remediation The maximum remediation that can ban applied (ex: 'ban', 'captcha', 'bypass')
+     *
+     * @return string $remediation The resulting remediation to use (ex: 'ban', 'captcha', 'bypass')
      */
     private function capRemediationLevel(string $remediation): string
     {
@@ -95,6 +101,8 @@ class Bouncer
      * Get the remediation for the specified IP. This method use the cache layer.
      * In live mode, when no remediation was found in cache,
      * the cache system will call the API to check if there is a decision.
+     *
+     * @param string $ip The IP to check
      *
      * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
      */
@@ -112,6 +120,10 @@ class Bouncer
     /**
      * Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.
      * The input $config should match the TemplateConfiguration input format.
+     *
+     * @param array $config An array of template configuration parameters
+     *
+     * @return string The HTML compiled template
      */
     public static function getAccessForbiddenHtmlTemplate(array $config): string
     {
@@ -129,6 +141,10 @@ class Bouncer
     /**
      * Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.
      * The input $config should match the TemplateConfiguration input format.
+     *
+     * @param array $config An array of template configuration parameters
+     *
+     * @return string The HTML compiled template
      */
     public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, string $captchaResolutionFormUrl, array $config): string
     {
@@ -158,7 +174,7 @@ class Bouncer
      * Used in stream mode only.
      * This method should be called periodically (ex: crontab) in a asynchronous way to update the bouncer cache.
      *
-     * @return array number of deleted and new decisions, and errors when processing decisions
+     * @return array Number of deleted and new decisions, and errors when processing decisions
      */
     public function refreshBlocklistCache(): array
     {
@@ -167,6 +183,8 @@ class Bouncer
 
     /**
      * This method clear the full data in cache.
+     *
+     * @return bool If the cache has been successfully cleared or not
      */
     public function clearCache(): bool
     {
@@ -175,6 +193,8 @@ class Bouncer
 
     /**
      * This method prune the cache: it removes all the expired cache items.
+     *
+     * @return bool If the cache has been successfully pruned or not
      */
     public function pruneCache(): bool
     {
@@ -183,12 +203,19 @@ class Bouncer
 
     /**
      * Returns the logger instance.
+     *
+     * @return LoggerInterface the logger used by this library
      */
     public function getLogger(): LoggerInterface
     {
         return $this->logger;
     }
 
+    /**
+     * Build a captcha couple.
+     *
+     * @return array an array composed of two items, a "phrase" string representing the phrase and a "inlineImage" representing the image data
+     */
     public static function buildCaptchaCouple()
     {
         $captchaBuilder = new CaptchaBuilder();
@@ -199,6 +226,11 @@ class Bouncer
         ];
     }
 
+    /**
+     * @param string $expected The expected phrase
+     * @param string $expected The phrase to check (the user input)
+     * @param string $ip       Th IP of the use (for logging purpose)
+     */
     public function checkCaptcha(string $expected, string $try, string $ip)
     {
         $solved = PhraseBuilder::comparePhrases($expected, $try);
@@ -213,6 +245,8 @@ class Bouncer
 
     /**
      * Test the connection to the cache system (Redis or Memcached).
+     *
+     * @return bool If the connection was successful or not
      *
      * @throws BouncerException if the connection was not successful
      * */
