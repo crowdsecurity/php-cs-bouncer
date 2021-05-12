@@ -28,6 +28,7 @@ jobs:
                     - 8080:8080
                 env:
                     DISABLE_AGENT: true
+                    DISABLE_ONLINE_API: true
                 options: >-
                     --name crowdsec
 
