@@ -49,7 +49,7 @@ jobs:
                 run: docker exec crowdsec cscli machines add PhpUnitTestMachine --password PhpUnitTestMachinePassword
 
             -   name: Setup PHP
-                uses: shivammathur/setup-php@v2
+                uses: shivammathur/setup-php@2.11.0
                 with:
                     coverage: "none"
                     extensions: "json,memcached,redis,xsl,ldap,gd"
