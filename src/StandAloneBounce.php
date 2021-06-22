@@ -31,7 +31,9 @@ class StandAloneBounce extends AbstractBounce implements IBounce
 
     public function init(array $crowdSecStandaloneBouncerConfig)
     {
-        session_start();
+        if (\PHP_SESSION_NONE === session_status()) {
+            session_start();
+        }
         $this->settings = $crowdSecStandaloneBouncerConfig;
         $this->initLogger();
     }
