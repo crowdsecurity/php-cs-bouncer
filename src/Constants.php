@@ -45,4 +45,22 @@ class Constants
 
     /** @var array<string> The list of each known remediation, sorted by priority */
     public const ORDERED_REMEDIATIONS = [self::REMEDIATION_BAN, self::REMEDIATION_CAPTCHA, self::REMEDIATION_BYPASS];
+
+    /** @var string The "disabled" bouncing level */
+    public const BOUNCING_LEVEL_DISABLED = 'bouncing_disabled';
+
+    /** @var string The "flex" bouncing level */
+    public const BOUNCING_LEVEL_FLEX = 'flex_boucing';
+
+    /** @var string The "normal" bouncing level */
+    public const BOUNCING_LEVEL_NORMAL = 'normal_boucing';
+
+    /** @var string The "PHPFS" cache system */
+    public const CACHE_SYSTEM_PHPFS = 'phpfs';
+
+    /** @var string The "REDIS" cache system */
+    public const CACHE_SYSTEM_REDIS = 'redis';
+
+    /** @var string The "MEMCACHED" cache system */
+    public const CACHE_SYSTEM_MEMCACHED = 'memcached';
 }
