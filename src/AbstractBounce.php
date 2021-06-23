@@ -26,6 +26,9 @@ abstract class AbstractBounce
     /** @var array */
     protected $settings = [];
 
+    /** @var bool */
+    protected $debug = false;
+
     /** @var LoggerInterface */
     protected $logger;
 
@@ -47,7 +50,12 @@ abstract class AbstractBounce
         }
     }
 
-    protected function initLoggerHelper($logDirectoryPath, $loggerName, $debugMode): void
+    public function setDebug(bool $debug)
+    {
+        $this->debug = $debug;
+    }
+
+    protected function initLoggerHelper($logDirectoryPath, $loggerName): void
     {
         // Singleton for this function
         if ($this->logger) {
@@ -60,8 +68,8 @@ abstract class AbstractBounce
         $fileHandler->setFormatter(new LineFormatter("%datetime%|%level%|%context%\n"));
         $this->logger->pushHandler($fileHandler);
 
-        // Set custom readable logger when debug_mode=true
-        if ($debugMode) {
+        // Set custom readable logger when debug=true
+        if ($this->debug) {
             $debugLogPath = $logDirectoryPath.'/debug.log';
             $debugFileHandler = new RotatingFileHandler($debugLogPath, 0, Logger::DEBUG);
             if (class_exists('\Bramus\Monolog\Formatter\ColoredLineFormatter')) {
@@ -104,7 +112,7 @@ abstract class AbstractBounce
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
-            if ($this->getSettings('debug_mode')) {
+            if ($this->debug) {
                 throw $e;
             }
         }

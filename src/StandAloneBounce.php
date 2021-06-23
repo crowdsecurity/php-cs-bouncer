@@ -149,7 +149,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
 
     public function initLogger(): void
     {
-        $this->initLoggerHelper($this->getSettings('log_directory_path'), 'php_standalone_bouncer', $this->getSettings('debug_mode'));
+        $this->initLoggerHelper($this->getSettings('log_directory_path'), 'php_standalone_bouncer');
     }
 
     /**
@@ -371,7 +371,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
-            if ($this->getSettings('debug_mode')) {
+            if ($this->debug) {
                 throw $e;
             }
         }
