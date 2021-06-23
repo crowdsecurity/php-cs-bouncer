@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://raw.githubusercontent.com/crowdsecurity/crowdsec/master/docs/assets/images/crowdsec_logo.png" alt="CrowdSec" title="CrowdSec" width="200" height="120"/>
+<img src="https://raw.githubusercontent.com/crowdsecurity/crowdsec-docs/main/docs/assets/images/crowdsec_logo.png" alt="CrowdSec" title="CrowdSec" width="200" height="120"/>
 </p>
 
 # PHP Bouncer Library
