@@ -37,12 +37,12 @@ abstract class AbstractBounce
 
     protected function getStringSettings(string $name): string
     {
-        $this->settings[$name];
+        return $this->settings[$name];
     }
 
     protected function getArraySettings(string $name): array
     {
-        $this->settings[$name];
+        return $this->settings[$name];
     }
 
     /**
