@@ -45,14 +45,14 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             return $this->cacheAdapter;
         }
 
-        $cacheSystem = $this->getSettings('cache_system');
+        $cacheSystem = $this->getStringSettings('cache_system');
         switch ($cacheSystem) {
             case Constants::CACHE_SYSTEM_PHPFS:
-                $this->cacheAdapter = new PhpFilesAdapter('', 0, $this->getSettings('fs_cache_path'));
+                $this->cacheAdapter = new PhpFilesAdapter('', 0, $this->getStringSettings('fs_cache_path'));
                 break;
 
             case Constants::CACHE_SYSTEM_MEMCACHED:
-                $memcachedDsn = $this->getSettings('memcached_dsn');
+                $memcachedDsn = $this->getStringSettings('memcached_dsn');
                 if (empty($memcachedDsn)) {
                     throw new BouncerException('The selected cache technology is Memcached.'.
                     ' Please set a Memcached DSN or select another cache technology.');
@@ -62,7 +62,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
                 break;
 
             case Constants::CACHE_SYSTEM_REDIS:
-                $redisDsn = $this->getSettings('redis_dsn');
+                $redisDsn = $this->getStringSettings('redis_dsn');
                 if (empty($redisDsn)) {
                     throw new BouncerException('The selected cache technology is Redis.'.
                     ' Please set a Redis DSN or select another cache technology.');
@@ -95,17 +95,17 @@ class StandAloneBounce extends AbstractBounce implements IBounce
 
         // Parse options.
 
-        if (empty($this->getSettings('api_url'))) {
+        if (empty($this->getStringSettings('api_url'))) {
             throw new BouncerException('Bouncer enabled but no API URL provided');
         }
-        if (empty($this->getSettings('api_key'))) {
+        if (empty($this->getStringSettings('api_key'))) {
             throw new BouncerException('Bouncer enabled but no API key provided');
         }
-        $isStreamMode = $this->getSettings('stream_mode');
-        $cleanIpCacheDuration = (int) $this->getSettings('clean_ip_cache_duration');
-        $badIpCacheDuration = (int) $this->getSettings('bad_ip_cache_duration');
-        $fallbackRemediation = $this->getSettings('fallback_remediation');
-        $bouncingLevel = $this->getSettings('bouncing_level');
+        $isStreamMode = $this->getStringSettings('stream_mode');
+        $cleanIpCacheDuration = (int) $this->getStringSettings('clean_ip_cache_duration');
+        $badIpCacheDuration = (int) $this->getStringSettings('bad_ip_cache_duration');
+        $fallbackRemediation = $this->getStringSettings('fallback_remediation');
+        $bouncingLevel = $this->getStringSettings('bouncing_level');
 
         // Init Bouncer instance
 
@@ -125,31 +125,31 @@ class StandAloneBounce extends AbstractBounce implements IBounce
 
         // Instanciate the bouncer
         try {
-            $cacheAdapter = $this->getCacheAdapterInstance();
-        } catch (Symfony\Component\Cache\Exception\InvalidArgumentException $e) {
+            $this->cacheAdapter = $this->getCacheAdapterInstance();
+        } catch (InvalidArgumentException $e) {
             throw new BouncerException($e->getMessage());
         }
 
         $apiUserAgent = 'Standalone CrowdSec PHP Bouncer/'.Constants::VERSION;
 
-        $this->bouncer = new Bouncer($cacheAdapter, $this->logger);
+        $this->bouncer = new Bouncer($this->cacheAdapter, $this->logger);
         $this->bouncer->configure([
-            'api_key' => $this->getSettings('api_key'),
-            'api_url' => $this->getSettings('api_url'),
+            'api_key' => $this->getStringSettings('api_key'),
+            'api_url' => $this->getStringSettings('api_url'),
             'api_user_agent' => $apiUserAgent,
             'live_mode' => !$isStreamMode,
             'max_remediation_level' => $maxRemediationLevel,
             'fallback_remediation' => $fallbackRemediation,
             'cache_expiration_for_clean_ip' => $cleanIpCacheDuration,
             'cache_expiration_for_bad_ip' => $badIpCacheDuration,
-        ], $cacheAdapter);
+        ], $this->cacheAdapter);
 
         return $this->bouncer;
     }
 
     public function initLogger(): void
     {
-        $this->initLoggerHelper($this->getSettings('log_directory_path'), 'php_standalone_bouncer');
+        $this->initLoggerHelper($this->getStringSettings('log_directory_path'), 'php_standalone_bouncer');
     }
 
     /**
@@ -187,34 +187,34 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     public function getCaptchaWallOptions(): array
     {
         return [
-            'hide_crowdsec_mentions' => (bool) $this->getSettings('hide_mentions'),
+            'hide_crowdsec_mentions' => (bool) $this->getStringSettings('hide_mentions'),
             'color' => [
               'text' => [
-                'primary' => htmlspecialchars_decode($this->getSettings('theme_color_text_primary'), \ENT_QUOTES),
-                'secondary' => htmlspecialchars_decode($this->getSettings('theme_color_text_secondary'), \ENT_QUOTES),
-                'button' => htmlspecialchars_decode($this->getSettings('theme_color_text_button'), \ENT_QUOTES),
-                'error_message' => htmlspecialchars_decode($this->getSettings('theme_color_text_error_message'), \ENT_QUOTES),
+                'primary' => htmlspecialchars_decode($this->getStringSettings('theme_color_text_primary'), \ENT_QUOTES),
+                'secondary' => htmlspecialchars_decode($this->getStringSettings('theme_color_text_secondary'), \ENT_QUOTES),
+                'button' => htmlspecialchars_decode($this->getStringSettings('theme_color_text_button'), \ENT_QUOTES),
+                'error_message' => htmlspecialchars_decode($this->getStringSettings('theme_color_text_error_message'), \ENT_QUOTES),
               ],
               'background' => [
-                'page' => htmlspecialchars_decode($this->getSettings('theme_color_background_page'), \ENT_QUOTES),
-                'container' => htmlspecialchars_decode($this->getSettings('theme_color_background_container'), \ENT_QUOTES),
-                'button' => htmlspecialchars_decode($this->getSettings('theme_color_background_button'), \ENT_QUOTES),
-                'button_hover' => htmlspecialchars_decode($this->getSettings('theme_color_background_button_hover'), \ENT_QUOTES),
+                'page' => htmlspecialchars_decode($this->getStringSettings('theme_color_background_page'), \ENT_QUOTES),
+                'container' => htmlspecialchars_decode($this->getStringSettings('theme_color_background_container'), \ENT_QUOTES),
+                'button' => htmlspecialchars_decode($this->getStringSettings('theme_color_background_button'), \ENT_QUOTES),
+                'button_hover' => htmlspecialchars_decode($this->getStringSettings('theme_color_background_button_hover'), \ENT_QUOTES),
               ],
             ],
             'text' => [
               'captcha_wall' => [
-                'tab_title' => htmlspecialchars_decode($this->getSettings('theme_text_captcha_wall_tab_title'), \ENT_QUOTES),
-                'title' => htmlspecialchars_decode($this->getSettings('theme_text_captcha_wall_title'), \ENT_QUOTES),
-                'subtitle' => htmlspecialchars_decode($this->getSettings('theme_text_captcha_wall_subtitle'), \ENT_QUOTES),
-                'refresh_image_link' => htmlspecialchars_decode($this->getSettings('theme_text_captcha_wall_refresh_image_link'), \ENT_QUOTES),
-                'captcha_placeholder' => htmlspecialchars_decode($this->getSettings('theme_text_captcha_wall_captcha_placeholder'), \ENT_QUOTES),
-                'send_button' => htmlspecialchars_decode($this->getSettings('theme_text_captcha_wall_send_button'), \ENT_QUOTES),
-                'error_message' => htmlspecialchars_decode($this->getSettings('theme_text_captcha_wall_error_message'), \ENT_QUOTES),
-                'footer' => htmlspecialchars_decode($this->getSettings('theme_text_captcha_wall_footer'), \ENT_QUOTES),
+                'tab_title' => htmlspecialchars_decode($this->getStringSettings('theme_text_captcha_wall_tab_title'), \ENT_QUOTES),
+                'title' => htmlspecialchars_decode($this->getStringSettings('theme_text_captcha_wall_title'), \ENT_QUOTES),
+                'subtitle' => htmlspecialchars_decode($this->getStringSettings('theme_text_captcha_wall_subtitle'), \ENT_QUOTES),
+                'refresh_image_link' => htmlspecialchars_decode($this->getStringSettings('theme_text_captcha_wall_refresh_image_link'), \ENT_QUOTES),
+                'captcha_placeholder' => htmlspecialchars_decode($this->getStringSettings('theme_text_captcha_wall_captcha_placeholder'), \ENT_QUOTES),
+                'send_button' => htmlspecialchars_decode($this->getStringSettings('theme_text_captcha_wall_send_button'), \ENT_QUOTES),
+                'error_message' => htmlspecialchars_decode($this->getStringSettings('theme_text_captcha_wall_error_message'), \ENT_QUOTES),
+                'footer' => htmlspecialchars_decode($this->getStringSettings('theme_text_captcha_wall_footer'), \ENT_QUOTES),
               ],
             ],
-            'custom_css' => $this->getSettings('theme_custom_css'),
+            'custom_css' => $this->getStringSettings('theme_custom_css'),
           ];
     }
 
@@ -224,29 +224,29 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     public function getBanWallOptions(): array
     {
         return [
-            'hide_crowdsec_mentions' => (bool) $this->getSettings('hide_mentions'),
+            'hide_crowdsec_mentions' => (bool) $this->getStringSettings('hide_mentions'),
             'color' => [
               'text' => [
-                'primary' => htmlspecialchars_decode($this->getSettings('theme_color_text_primary'), \ENT_QUOTES),
-                'secondary' => htmlspecialchars_decode($this->getSettings('theme_color_text_secondary'), \ENT_QUOTES),
-                'error_message' => htmlspecialchars_decode($this->getSettings('theme_color_text_error_message'), \ENT_QUOTES),
+                'primary' => htmlspecialchars_decode($this->getStringSettings('theme_color_text_primary'), \ENT_QUOTES),
+                'secondary' => htmlspecialchars_decode($this->getStringSettings('theme_color_text_secondary'), \ENT_QUOTES),
+                'error_message' => htmlspecialchars_decode($this->getStringSettings('theme_color_text_error_message'), \ENT_QUOTES),
               ],
               'background' => [
-                'page' => htmlspecialchars_decode($this->getSettings('theme_color_background_page'), \ENT_QUOTES),
-                'container' => htmlspecialchars_decode($this->getSettings('theme_color_background_container'), \ENT_QUOTES),
-                'button' => htmlspecialchars_decode($this->getSettings('theme_color_background_button'), \ENT_QUOTES),
-                'button_hover' => htmlspecialchars_decode($this->getSettings('theme_color_background_button_hover'), \ENT_QUOTES),
+                'page' => htmlspecialchars_decode($this->getStringSettings('theme_color_background_page'), \ENT_QUOTES),
+                'container' => htmlspecialchars_decode($this->getStringSettings('theme_color_background_container'), \ENT_QUOTES),
+                'button' => htmlspecialchars_decode($this->getStringSettings('theme_color_background_button'), \ENT_QUOTES),
+                'button_hover' => htmlspecialchars_decode($this->getStringSettings('theme_color_background_button_hover'), \ENT_QUOTES),
               ],
             ],
             'text' => [
               'ban_wall' => [
-                'tab_title' => htmlspecialchars_decode($this->getSettings('theme_text_ban_wall_tab_title'), \ENT_QUOTES),
-                'title' => htmlspecialchars_decode($this->getSettings('theme_text_ban_wall_title'), \ENT_QUOTES),
-                'subtitle' => htmlspecialchars_decode($this->getSettings('theme_text_ban_wall_subtitle'), \ENT_QUOTES),
-                'footer' => htmlspecialchars_decode($this->getSettings('theme_text_ban_wall_footer'), \ENT_QUOTES),
+                'tab_title' => htmlspecialchars_decode($this->getStringSettings('theme_text_ban_wall_tab_title'), \ENT_QUOTES),
+                'title' => htmlspecialchars_decode($this->getStringSettings('theme_text_ban_wall_title'), \ENT_QUOTES),
+                'subtitle' => htmlspecialchars_decode($this->getStringSettings('theme_text_ban_wall_subtitle'), \ENT_QUOTES),
+                'footer' => htmlspecialchars_decode($this->getStringSettings('theme_text_ban_wall_footer'), \ENT_QUOTES),
               ],
             ],
-            'custom_css' => htmlspecialchars_decode($this->getSettings('theme_custom_css'), \ENT_QUOTES),
+            'custom_css' => htmlspecialchars_decode($this->getStringSettings('theme_custom_css'), \ENT_QUOTES),
           ];
     }
 
@@ -255,7 +255,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
      */
     public function getTrustForwardedIpBoundsList(): array
     {
-        return $this->getSettings('trust_ip_forward_array');
+        return $this->getArraySettings('trust_ip_forward_array');
     }
 
     /**
@@ -307,16 +307,12 @@ class StandAloneBounce extends AbstractBounce implements IBounce
      */
     public function shouldBounceCurrentIp(): bool
     {
-        // Don't bounce favicon calls.
-        if ('/favicon.ico' === $_SERVER['REQUEST_URI']) {
-            return false;
-        }
-        if (!$this->isConfigValid()) {
-            // We bounce only if plugin config is valid
+        // Don't bounce favicon calls or when the config is invalid.
+        if ('/favicon.ico' === $_SERVER['REQUEST_URI'] || !$this->isConfigValid()) {
             return false;
         }
 
-        $bouncingDisabled = (Constants::BOUNCING_LEVEL_DISABLED === $this->getSettings('bouncing_level'));
+        $bouncingDisabled = (Constants::BOUNCING_LEVEL_DISABLED === $this->getStringSettings('bouncing_level'));
         if ($bouncingDisabled) {
             return false;
         }
@@ -381,11 +377,11 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     {
         $issues = ['errors' => [], 'warnings' => []];
 
-        $bouncingLevel = $this->getSettings('bouncing_level');
+        $bouncingLevel = $this->getStringSettings('bouncing_level');
         $shouldBounce = (Constants::BOUNCING_LEVEL_DISABLED !== $bouncingLevel);
 
         if ($shouldBounce) {
-            $apiUrl = $this->getSettings('api_url');
+            $apiUrl = $this->getStringSettings('api_url');
             if (empty($apiUrl)) {
                 $issues['errors'][] = [
                 'type' => 'INCORRECT_API_URL',
@@ -393,7 +389,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             ];
             }
 
-            $apiKey = $this->getSettings('api_key');
+            $apiKey = $this->getStringSettings('api_key');
             if (empty($apiKey)) {
                 $issues['errors'][] = [
                 'type' => 'INCORRECT_API_KEY',

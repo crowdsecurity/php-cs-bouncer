@@ -35,7 +35,12 @@ abstract class AbstractBounce
     /** @var Bouncer */
     protected $bouncer;
 
-    protected function getSettings(string $name)
+    protected function getStringSettings(string $name): string
+    {
+        $this->settings[$name];
+    }
+
+    protected function getArraySettings(string $name): array
     {
         $this->settings[$name];
     }
@@ -166,18 +171,13 @@ abstract class AbstractBounce
 
     protected function handleCaptchaResolutionForm(string $ip)
     {
-        // Early return if no captcha has to be resolved.
-        if (null === $this->getSessionVariable('crowdsec_captcha_has_to_be_resolved')) {
-            return;
-        }
-
-        // Captcha already resolved.
-        if (false === $this->getSessionVariable('crowdsec_captcha_has_to_be_resolved')) {
+        // Early return if no captcha has to be resolved or if captcha already resolved.
+        if (\in_array($this->getSessionVariable('crowdsec_captcha_has_to_be_resolved'), [null, false])) {
             return;
         }
 
         // Early return if no form captcha form has been filled.
-        if (('POST' !== $this->getHttpMethod() || null === $this->getPostedVariable('crowdsec_captcha'))) {
+        if ('POST' !== $this->getHttpMethod() || null === $this->getPostedVariable('crowdsec_captcha')) {
             return;
         }
 
@@ -242,6 +242,9 @@ abstract class AbstractBounce
                 break;
             case Constants::REMEDIATION_BAN:
                 $this->handleBanRemediation();
+                break;
+            default:
+                return;
         }
     }
 }
