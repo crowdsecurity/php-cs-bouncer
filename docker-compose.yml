@@ -1,60 +1,60 @@
-version: '3'
+version: "3"
 services:
-  crowdsec:
-    image: crowdsecurity/crowdsec:latest
-    environment:
-      - DISABLE_AGENT=true
-    volumes:
-      - ./var/docker-data:/var/lib/crowdsec/data
-    ports: 
-      - 8085:8080
-  app-php8.0:
-    build:
-      context: .
-      dockerfile: ./docker/php-8.0.Dockerfile
-    env_file: ./docker/.env
-    volumes:
-      - .:/app
-    links:
-      - crowdsec
-      - redis
-      - memcached
-  app-php7.4:
-    build:
-      context: .
-      dockerfile: ./docker/php-7.4.Dockerfile
-    env_file: ./docker/.env
-    volumes:
-      - .:/app
-    links:
-      - crowdsec
-      - redis
-      - memcached
-  app-php7.3:
-    build:
-      context: .
-      dockerfile: ./docker/php-7.3.Dockerfile
-    env_file: ./docker/.env
-    volumes:
-      - .:/app
-    links:
-      - crowdsec
-      - redis
-      - memcached
-  app:
-    build:
-      context: .
-      dockerfile: ./docker/php-7.2.Dockerfile
-    env_file: ./docker/.env
-    volumes:
-      - .:/app
-    links:
-      - crowdsec
-      - redis
-      - memcached
-  redis:
-    image: redis:6-alpine
-  memcached:
-    image: memcached:1-alpine
-  curl:
-    image: curlimages/curl  
+    crowdsec:
+        image: crowdsecurity/crowdsec:latest
+        environment:
+            - DISABLE_AGENT=true
+        volumes:
+            - ./var/docker-data:/var/lib/crowdsec/data
+        ports:
+            - 8085:8080
+    app-php8.0:
+        build:
+            context: .
+            dockerfile: ./docker/php-8.0.Dockerfile
+        env_file: ./docker/.env
+        volumes:
+            - .:/app
+        links:
+            - crowdsec
+            - redis
+            - memcached
+    app-php7.4:
+        build:
+            context: .
+            dockerfile: ./docker/php-7.4.Dockerfile
+        env_file: ./docker/.env
+        volumes:
+            - .:/app
+        links:
+            - crowdsec
+            - redis
+            - memcached
+    app-php7.3:
+        build:
+            context: .
+            dockerfile: ./docker/php-7.3.Dockerfile
+        env_file: ./docker/.env
+        volumes:
+            - .:/app
+        links:
+            - crowdsec
+            - redis
+            - memcached
+    app:
+        build:
+            context: .
+            dockerfile: ./docker/php-7.2.Dockerfile
+        env_file: ./docker/.env
+        volumes:
+            - .:/app
+        links:
+            - crowdsec
+            - redis
+            - memcached
+    redis:
+        image: redis:6-alpine
+    memcached:
+        image: memcached:1-alpine
+    curl:
+        image: curlimages/curl

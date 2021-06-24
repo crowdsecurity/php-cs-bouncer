@@ -2,20 +2,20 @@
 
 Here is the development environment for this library:
 
-- Docker dev environment (Dockerized Crowdsec, Redis, Memcached, PHP)
-- Continuous Integration (CI, includes Integration Tests and Super Linter)
-- Integration tests (with TDD)
-- Documented (Static documentation, PHP Doc)
+-   Docker dev environment (Dockerized Crowdsec, Redis, Memcached, PHP)
+-   Continuous Integration (CI, includes Integration Tests and Super Linter)
+-   Integration tests (with TDD)
+-   Documented (Static documentation, PHP Doc)
 
 ## The guidelines
 
--  We use TDD to code the library, with PHP Unit
--  CI via Github actions: run all tests over each PHP versions
--  Git workflow: [Github Flow](https://guides.github.com/introduction/flow/)
--  PHP Source fully documented
--  Versioning system: Semver
--  Code coverage (not now)
--  Coding standards using [php-cs-fixer](https://cs.symfony.com/) configuration in **.php_cs**
+-   We use TDD to code the library, with PHP Unit
+-   CI via Github actions: run all tests over each PHP versions
+-   Git workflow: [Github Flow](https://guides.github.com/introduction/flow/)
+-   PHP Source fully documented
+-   Versioning system: Semver
+-   Code coverage (not now)
+-   Coding standards using [php-cs-fixer](https://cs.symfony.com/) configuration in **.php_cs**
 
 ## Run tests
 
@@ -24,7 +24,9 @@ First of all, install composer dependencies:
 ```bash
 docker-compose run app composer install
 ```
+
 Then run tests:
+
 ```bash
 ./tests-local.sh # This will test with PHP 7.2 version
 ```
@@ -36,6 +38,7 @@ Alternatively, you can tests with various php versions:
    ./tests-local-php7.4.sh
    ./tests-local-php8.0.sh
 ```
+
 ## How to lint the code
 
 You can run "Super linter" locally:
@@ -92,3 +95,4 @@ git checkout main && git pull && git co -
 git describe --tags `git rev-list --tags --max-count=1` # to verify what is the current tag
 export NEW_GIT_VERSION=v #...X.X.X
 ./scripts/publish-release.sh
+```
