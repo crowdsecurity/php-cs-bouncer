@@ -370,6 +370,10 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             if ($this->debug) {
                 throw $e;
             }
+        } finally {
+            if (\PHP_SESSION_NONE !== session_status()) {
+                session_write_close();
+            }
         }
     }
 
