@@ -80,6 +80,9 @@ class TemplateConfiguration implements ConfigurationInterface
                 ->end()
                 ->booleanNode('hide_crowdsec_mentions')->defaultValue(false)->end()
                 ->scalarNode('custom_css')->defaultValue(null)->end()
+                ->arrayNode('custom_inputs')->defaultValue([])
+                    ->scalarPrototype()->end()
+                ->end()
             ->end();
 
         return $treeBuilder;

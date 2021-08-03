@@ -51,6 +51,11 @@ function displayCaptchaTemplate(bool $error, string $captchaImageSrc, string $ca
         <input type="text" name="phrase" placeholder="<?php echo htmlentities($config['text']['captcha_wall']['captcha_placeholder'], \ENT_QUOTES); ?>" autofocus autocomplete="off" />
         <input type="hidden" name="crowdsec_captcha" value="1">
         <input type="hidden" name="refresh" value="0" id="refresh">
+        <?php if(isset($config['custom_inputs'])): ?>
+        <?php foreach ($config['custom_inputs'] as $customInput):?>
+            <?php echo $customInput; ?>
+        <?php endforeach; ?>
+        <?php endif; ?>
         <?php if ($error) { ?><p class="error"><?php echo htmlentities($config['text']['captcha_wall']['error_message'], \ENT_QUOTES); ?></p><?php } ?>
 
         <button type="submit" /><?php echo htmlentities($config['text']['captcha_wall']['send_button'], \ENT_QUOTES); ?></button>
