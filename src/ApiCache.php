@@ -311,7 +311,7 @@ class ApiCache
                 if (null === $address) {
                     $this->logger->warning('', [
                         'type' => 'INVALID_IP_TO_ADD_FROM_REMEDIATION',
-                        'ip' => $decision['value'],
+                        'decision' => $decision,
                     ]);
                     continue;
                 }
@@ -357,7 +357,7 @@ class ApiCache
                 if (null === $address) {
                     $this->logger->warning('', [
                         'type' => 'INVALID_IP_TO_REMOVE_FROM_REMEDIATION',
-                        'ip' => $decision['value'],
+                        'decision' => $decision,
                     ]);
                     continue;
                 }
