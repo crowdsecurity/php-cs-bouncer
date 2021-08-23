@@ -126,6 +126,14 @@ abstract class AbstractBounce
     protected function shouldTrustXforwardedFor(string $ip): bool
     {
         $comparableAddress = Factory::addressFromString($ip)->getComparableString();
+        if (null === $comparableAddress) {
+            $this->logger->warning('', [
+                'type' => 'INVALID_INPUT_IP',
+                'ip' => $ip,
+            ]);
+
+            return false;
+        }
         foreach ($this->getTrustForwardedIpBoundsList() as $comparableIpBounds) {
             if ($comparableAddress >= $comparableIpBounds[0] && $comparableAddress <= $comparableIpBounds[1]) {
                 return true;

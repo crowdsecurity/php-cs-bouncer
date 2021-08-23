@@ -308,6 +308,13 @@ class ApiCache
 
             if ('Ip' === $decision['scope']) {
                 $address = Factory::addressFromString($decision['value']);
+                if (null === $address) {
+                    $this->logger->warning('', [
+                        'type' => 'INVALID_IP_TO_ADD_FROM_REMEDIATION',
+                        'ip' => $decision['value'],
+                    ]);
+                    continue;
+                }
                 $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
             } elseif ('Range' === $decision['scope']) {
                 $range = Subnet::fromString($decision['value']);
@@ -347,6 +354,13 @@ class ApiCache
         foreach ($decisions as $decision) {
             if ('Ip' === $decision['scope']) {
                 $address = Factory::addressFromString($decision['value']);
+                if (null === $address) {
+                    $this->logger->warning('', [
+                        'type' => 'INVALID_IP_TO_REMOVE_FROM_REMEDIATION',
+                        'ip' => $decision['value'],
+                    ]);
+                    continue;
+                }
                 if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
                     $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
                 } else {
