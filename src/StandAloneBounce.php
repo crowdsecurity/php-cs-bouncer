@@ -32,6 +32,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     public function init(array $crowdSecStandaloneBouncerConfig)
     {
         if (\PHP_SESSION_NONE === session_status()) {
+            $this->session_name = session_name("crowdsec");
             session_start();
         }
         $this->settings = $crowdSecStandaloneBouncerConfig;
@@ -373,6 +374,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         } finally {
             if (\PHP_SESSION_NONE !== session_status()) {
                 session_write_close();
+                session_name($this->session_name);
             }
         }
     }
