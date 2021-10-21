@@ -19,13 +19,7 @@ Here is the development environment for this library:
 
 ## Run tests
 
-First of all, install composer dependencies:
-
-```bash
-docker-compose run app composer install
-```
-
-Then run tests:
+Run tests with:
 
 ```bash
 ./tests-local.sh # This will test with PHP 7.2 version
@@ -38,6 +32,15 @@ Alternatively, you can tests with various php versions:
    ./tests-local-php7.4.sh
    ./tests-local-php8.0.sh
 ```
+N.B: If you have a permission error message while launching these other scripts, you should try to remove first the
+`var/docker-data` folder and build the images separately:
+
+```bash
+docker-compose build app-php7.4
+docker-compose build app-php7.3
+docker-compose build app-php8.0
+```
+
 
 ## How to lint the code
 
