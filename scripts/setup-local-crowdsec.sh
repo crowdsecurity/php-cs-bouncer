@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Delete existing LAPI database.
-[ -e ./var/docker-data/crowdsec.db ] && rm ./var/docker-data/crowdsec.db
+[ -e ./var/docker-data/crowdsec.db ] && docker-compose exec crowdsec rm -f /var/lib/crowdsec/data/crowdsec.db
 
 # Start containers.
 docker-compose up --force-recreate -d crowdsec
