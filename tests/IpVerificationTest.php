@@ -62,7 +62,7 @@ final class IpVerificationTest extends TestCase
         $bouncer = new Bouncer(null, $this->logger, $apiCache);
         $bouncer->configure($bouncerConfig);
 
-        // A the end of test, we shoud have exactly 3 "cache miss")
+        // At the end of test, we should have exactly 3 "cache miss")
         /** @var MockObject $apiClientMock */
         $apiClientMock->expects($this->exactly(4))->method('getFilteredDecisions');
 
@@ -104,12 +104,12 @@ final class IpVerificationTest extends TestCase
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
         $bouncerConfig['max_remediation_level'] = 'captcha';
-        $bouncer->configure($bouncerConfig, $cacheAdapter);
+        $bouncer->configure($bouncerConfig);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
         // Reset the max remediation level to its origin state
         unset($bouncerConfig['max_remediation_level']);
-        $bouncer->configure($bouncerConfig, $cacheAdapter);
+        $bouncer->configure($bouncerConfig);
 
         $this->logger->info('set "Large IPV4 range banned" state');
         $this->watcherClient->deleteAllDecisions();
@@ -174,11 +174,11 @@ final class IpVerificationTest extends TestCase
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
         $bouncerConfig['max_remediation_level'] = 'captcha';
-        $bouncer->configure($bouncerConfig, $cacheAdapter);
+        $bouncer->configure($bouncerConfig);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
         unset($bouncerConfig['max_remediation_level']);
-        $bouncer->configure($bouncerConfig, $cacheAdapter);
+        $bouncer->configure($bouncerConfig);
 
         $this->assertEquals(
             'bypass',

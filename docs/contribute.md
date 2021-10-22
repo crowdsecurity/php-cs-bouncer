@@ -10,8 +10,8 @@ Here is the development environment for this library:
 ## The guidelines
 
 -   We use TDD to code the library, with PHP Unit
--   CI via Github actions: run all tests over each PHP versions
--   Git workflow: [Github Flow](https://guides.github.com/introduction/flow/)
+-   CI via GitHub actions: run all tests over each PHP versions
+-   Git workflow: [GitHub Flow](https://guides.github.com/introduction/flow/)
 -   PHP Source fully documented
 -   Versioning system: Semver
 -   Code coverage (not now)
@@ -25,17 +25,18 @@ Run tests with:
 ./tests-local.sh # This will test with PHP 7.2 version
 ```
 
-Alternatively, you can tests with various php versions:
+Alternatively, you can test with various php versions:
 
 ```bash
    ./tests-local-php7.3.sh
    ./tests-local-php7.4.sh
    ./tests-local-php8.0.sh
 ```
-N.B: If you have a permission error message while launching these other scripts, you should try to remove first the
-`var/docker-data` folder and build the images separately:
+N.B: If you have a permission error message while launching these scripts, you should try to remove first the
+`var/docker-data` (if exists) folder and build the images separately:
 
 ```bash
+docker-compose build app
 docker-compose build app-php7.4
 docker-compose build app-php7.3
 docker-compose build app-php8.0
