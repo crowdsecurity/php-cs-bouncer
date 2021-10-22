@@ -22,11 +22,11 @@ echo "\nClear the cache...\n";
 $logPath = __DIR__ . '/.crowdsec.log';
 $cachePath = __DIR__ . '/.cache';
 
-// Instanciate a the "PhpFilesAdapter" cache adapter
+// Instantiate a the "PhpFilesAdapter" cache adapter
 // Note: to select another cache adapter (Memcached, Redis, ...), try other examples.
 $cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter('', 0, $cachePath);
 
-// Instanciate the Stream logger with info level(optional)
+// Instantiate the Stream logger with info level(optional)
 $logger = new Logger('example');
 
 // Display logs with INFO verbosity
@@ -38,7 +38,7 @@ $logger->pushHandler($streamHandler);
 $fileHandler = new RotatingFileHandler($logPath, 0, Logger::WARNING);
 $logger->pushHandler($fileHandler);
 
-// Instanciate the bouncer
+// Instantiate the bouncer
 $bouncer = new Bouncer($cacheAdapter, $logger);
 $bouncer->configure(['api_key' => $bouncerApiKey, 'api_url' => $apiUrl]);
 

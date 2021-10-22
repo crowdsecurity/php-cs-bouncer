@@ -104,15 +104,15 @@ $cacheAdapter = new PhpFilesAdapter('', 0, __DIR__.'/.cache');
 
 $requestedIp = $argv[1];
 if (!$requestedIp) {
-    die('Usage: php check-ip.php <api_key>');
+    die('Usage: php check-ip.php <IP>');
 }
 
 // Init
-$bouncer = new Bouncer();
+$bouncer = new Bouncer($cacheAdapter);
 $bouncer->configure([
     'api_key' => getenv('BOUNCER_KEY'),
     'api_url' => 'http://crowdsec:8080'
-    ], $cacheAdapter
+    ]
 );
 
 // Ask remediation to LAPI
@@ -267,7 +267,7 @@ $bouncer->configure([
     'api_key' => getenv('BOUNCER_KEY'),
     'api_url' => 'http://crowdsec:8080',
     'max_remediation_level' => 'captcha' // <== ADD THIS LINE!
-    ], $cacheAdapter
+    ]
 );
 ```
 
@@ -309,7 +309,7 @@ and replace these lines:
 
 ```php
 // Instanciate the bouncer
-$bouncer = new Bouncer();
+$bouncer = new Bouncer($cacheAdapter);
 ```
 
 with:
@@ -328,7 +328,7 @@ $fileHandler = new RotatingFileHandler(__DIR__.'/crowdsec.log', 0, Logger::WARNI
 $logger->pushHandler($fileHandler);
 
 // Instanciate the bouncer
-$bouncer = new Bouncer($logger);
+$bouncer = new Bouncer($cacheAdapter, $logger);
 ```
 
 ## Important note about cache expiration
@@ -371,12 +371,12 @@ use Monolog\Logger;
 $cacheAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection('memcached://memcached:11211'));
 
 
-// Instanciate the Stream logger with info level(optional)
+// Instantiate the Stream logger with info level(optional)
 $logger = new Logger('example');
 $fileHandler = new RotatingFileHandler(__DIR__.'/crowdsec.log', 0, Logger::WARNING);
 $logger->pushHandler($fileHandler);
 
-// Instanciate the bouncer
+// Instantiate the bouncer
 $bouncer = new Bouncer($cacheAdapter, $logger);
 $bouncer->configure([
     'api_key' => getenv('BOUNCER_KEY'),
