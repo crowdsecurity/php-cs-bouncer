@@ -20,7 +20,7 @@ class Constants
     public const CAPI_URL = 'https://api.crowdsec.net/v2/';
 
     /** @var string The last version of this library */
-    public const VERSION = 'v0.13.30';
+    public const VERSION = 'v0.13.3';
 
     /** @var string The user agent used to send request to LAPI or CAPI */
     public const BASE_USER_AGENT = 'PHP CrowdSec Bouncer/'.self::VERSION;
@@ -43,7 +43,7 @@ class Constants
     /** @var string The bypass remediation */
     public const REMEDIATION_BYPASS = 'bypass';
 
-    /** @var array<string> The list of each known remediation, sorted by priority */
+    /** @var array<string> The list of each known remediation, sorted by priority: smaller is the index, higher is the priority  */
     public const ORDERED_REMEDIATIONS = [self::REMEDIATION_BAN, self::REMEDIATION_CAPTCHA, self::REMEDIATION_BYPASS];
 
     /** @var string The "disabled" bouncing level */

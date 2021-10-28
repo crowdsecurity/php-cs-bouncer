@@ -59,11 +59,14 @@ class Bouncer
         $configuration = new Configuration();
         $processor = new Processor();
         $this->config = $processor->processConfiguration($configuration, [$config]);
-
+        $orderedRemediations = $this->config['ordered_remediations'];
+        if (count($orderedRemediations) !== count(array_flip($orderedRemediations))) {
+            throw new BouncerException('Ordered remediations contains duplicated values.');
+        }
         /** @var int */
         $index = array_search(
             $this->config['max_remediation_level'],
-            Constants::ORDERED_REMEDIATIONS
+            $orderedRemediations
         );
         $this->maxRemediationLevelIndex = $index;
 
@@ -76,7 +79,8 @@ class Bouncer
             $this->config['api_key'],
             $this->config['cache_expiration_for_clean_ip'],
             $this->config['cache_expiration_for_bad_ip'],
-            $this->config['fallback_remediation']
+            $this->config['fallback_remediation'],
+            $orderedRemediations
         );
     }
 
@@ -89,9 +93,11 @@ class Bouncer
      */
     private function capRemediationLevel(string $remediation): string
     {
-        $currentIndex = array_search($remediation, Constants::ORDERED_REMEDIATIONS);
+        $orderedRemediations = $this->config['ordered_remediations'];
+        $currentIndex = array_search($remediation, $orderedRemediations);
+
         if ($currentIndex < $this->maxRemediationLevelIndex) {
-            return Constants::ORDERED_REMEDIATIONS[$this->maxRemediationLevelIndex];
+            return $orderedRemediations[$this->maxRemediationLevelIndex];
         }
 
         return $remediation;

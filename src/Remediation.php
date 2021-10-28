@@ -31,11 +31,11 @@ class Remediation
     /**
      * Add numerical priority allowing easy sorting.
      */
-    private static function addPriority(array $remediation): array
+    private static function addPriority(array $remediation, array $orderedRemediations): array
     {
-        $prio = array_search($remediation[0], Constants::ORDERED_REMEDIATIONS);
+        $prio = array_search($remediation[0], $orderedRemediations);
 
-        // Considere every unknown type as a top priority
+        // Consider every unknown type as a top priority
         $remediation[3] = false !== $prio ? $prio : 0;
 
         return $remediation;
@@ -44,12 +44,12 @@ class Remediation
     /**
      * Sort the remediations array of a cache item, by remediation priorities.
      */
-    public static function sortRemediationByPriority(array $remediations): array
+    public static function sortRemediationByPriority(array $remediations, array $orderedRemediations): array
     {
         // Add priorities.
         $remediationsWithPriorities = [];
         foreach ($remediations as $key => $remediation) {
-            $remediationsWithPriorities[$key] = self::addPriority($remediation);
+            $remediationsWithPriorities[$key] = self::addPriority($remediation, $orderedRemediations);
         }
 
         // Sort by priorities.

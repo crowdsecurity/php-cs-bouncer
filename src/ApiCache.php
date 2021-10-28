@@ -48,6 +48,9 @@ class ApiCache
     /** @var bool */
     private $warmedUp = null;
 
+    /** @var array */
+    private $orderedRemediations = Constants::ORDERED_REMEDIATIONS;
+
     /**
      * @param LoggerInterface $logger    The logger to use
      * @param ApiClient       $apiClient The APIClient instance to use
@@ -71,6 +74,7 @@ class ApiCache
      * @param int    $cacheExpirationForCleanIp The duration to cache an IP considered as clean by LAPI
      * @param int    $cacheExpirationForBadIp   The duration to cache an IP considered as bad by LAPI
      * @param string $fallbackRemediation       The remediation to use when the remediation sent by LAPI is not supported by this library
+     * @param array $orderedRemediations        The list of known remediations sorted by priority: smaller is the index, higher is the priority
      */
     public function configure(
         bool $liveMode,
@@ -80,12 +84,14 @@ class ApiCache
         string $apiKey,
         int $cacheExpirationForCleanIp,
         int $cacheExpirationForBadIp,
-        string $fallbackRemediation
+        string $fallbackRemediation,
+        array $orderedRemediations = Constants::ORDERED_REMEDIATIONS
     ): void {
         $this->liveMode = $liveMode;
         $this->cacheExpirationForCleanIp = $cacheExpirationForCleanIp;
         $this->cacheExpirationForBadIp = $cacheExpirationForBadIp;
         $this->fallbackRemediation = $fallbackRemediation;
+        $this->orderedRemediations = $orderedRemediations;
         $cacheConfigItem = $this->adapter->getItem('cacheConfig');
         $cacheConfig = $cacheConfigItem->get();
         $this->warmedUp = (\is_array($cacheConfig) && isset($cacheConfig['warmed_up'])
@@ -129,7 +135,7 @@ class ApiCache
 
         // Build the item lifetime in cache and sort remediations by priority
         $maxLifetime = max(array_column($remediations, 1));
-        $prioritizedRemediations = Remediation::sortRemediationByPriority($remediations);
+        $prioritizedRemediations = Remediation::sortRemediationByPriority($remediations, $this->orderedRemediations);
 
         $item->set($prioritizedRemediations);
         $item->expiresAt(new DateTime('@'.$maxLifetime));
@@ -173,7 +179,7 @@ class ApiCache
         }
         // Build the item lifetime in cache and sort remediations by priority
         $maxLifetime = max(array_column($remediations, 1));
-        $cacheContent = Remediation::sortRemediationByPriority($remediations);
+        $cacheContent = Remediation::sortRemediationByPriority($remediations, $this->orderedRemediations);
         $item->expiresAt(new DateTime('@'.$maxLifetime));
         $item->set($cacheContent);
 

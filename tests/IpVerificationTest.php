@@ -7,11 +7,14 @@ require __DIR__.'/WatcherClient.php';
 use CrowdSecBouncer\ApiCache;
 use CrowdSecBouncer\ApiClient;
 use CrowdSecBouncer\Bouncer;
+use CrowdSecBouncer\BouncerException;
+use IPLib\Factory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\PruneableInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 final class IpVerificationTest extends TestCase
 {
@@ -127,18 +130,126 @@ final class IpVerificationTest extends TestCase
     /**
      * @group integration
      * @covers \Bouncer
+     * @group ignore_
+     */
+    public function testOrderedRemediations(): void
+    {
+        $phpFilesAdapter = $this->cacheAdapterProvider()['PhpFilesAdapter'][0];
+        // Init context
+
+        $this->watcherClient->deleteAllDecisions();
+        $now = new DateTime();
+        // Add ban and captcha decision for the same IP
+        $this->watcherClient->addDecision($now, '12h', '+12 hours', TestHelpers::BAD_IP, 'captcha');
+        $this->watcherClient->addDecision($now, '12h', '+12 hours', TestHelpers::BAD_IP, 'ban');
+
+        // Init bouncer
+        /** @var ApiClient */
+        $apiClientMock = $this->getMockBuilder(ApiClient::class)
+            ->setConstructorArgs([$this->logger])
+            ->enableProxyingToOriginalMethods()
+            ->getMock();
+        $apiCache = new ApiCache($this->logger, $apiClientMock, $phpFilesAdapter);
+        $bouncerConfig = [
+            'api_key' => TestHelpers::getBouncerKey(),
+            'api_url' => TestHelpers::getLapiUrl(),
+        ];
+        $bouncer = new Bouncer($phpFilesAdapter, $this->logger, $apiCache);
+        $bouncer->configure($bouncerConfig);
+        $bouncer->clearCache();
+
+        // Test result for default ordered remediation
+        $rawCacheResult = $apiCache->get(Factory::addressFromString(TestHelpers::BAD_IP, false));
+        $this->assertEquals(
+            'ban',
+             $rawCacheResult,
+            'Ban should be the result as ban as higher priority than captcha'
+        );
+        $this->assertEquals(
+            'ban',
+            $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
+            'Ban should be the result after raw result has been capped'
+        );
+
+        // Test with custom riority order : set captcha with a higher priority than ban
+        $bouncerConfig['ordered_remediations'] = ['captcha', 'ban', 'bypass'];
+        $bouncer->configure($bouncerConfig);
+        // Add ban and captcha decision for another IP
+        $this->watcherClient->addDecision($now, '12h', '+12 hours', TestHelpers::NEWLY_BAD_IP, 'captcha');
+        $this->watcherClient->addDecision($now, '12h', '+12 hours', TestHelpers::NEWLY_BAD_IP, 'ban');
+        $rawCacheResult = $apiCache->get(Factory::addressFromString(TestHelpers::NEWLY_BAD_IP, false));
+        $this->assertEquals(
+            'captcha',
+            $rawCacheResult,
+            'Captcha should be the result as captcha as higher priority than ban'
+        );
+        $this->assertEquals(
+            'ban',
+            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP),
+            'Ban should be the result after raw result has been capped'
+        );
+
+        $bouncer->clearCache();
+        // Test after clearing the cache, new remediations order should be effective for the first IP too
+        $rawCacheResult = $apiCache->get(Factory::addressFromString(TestHelpers::BAD_IP, false));
+        $this->assertEquals(
+            'captcha',
+            $rawCacheResult,
+            'Captcha should be the result as captcha as higher priority than ban'
+        );
+        $this->assertEquals(
+            'ban',
+            $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
+            'Ban should be the result after raw result has been capped'
+        );
+
+        // Test bad configurations
+        $className = null;
+        $msg = null;
+        try {
+            $bouncerConfig['ordered_remediations'] = ['captcha', 'captcha', 'bypass'];
+            $bouncer->configure($bouncerConfig);
+        } catch (Exception $e) {
+            $className = get_class($e);
+            $msg = $e->getMessage();
+        }
+        $this->assertSame(BouncerException::class, $className);
+        $this->assertSame('Ordered remediations contains duplicated values.', $msg);
+
+        try {
+            $bouncerConfig['ordered_remediations'] = ['captcha', 'bypass'];
+            $bouncer->configure($bouncerConfig);
+        } catch (Exception $e) {
+            $className = get_class($e);
+            $msg = $e->getMessage();
+        }
+        $this->assertSame(InvalidConfigurationException::class, $className);
+        $this->assertSame('The child config "2" under "config.ordered_remediations" must be configured.', $msg);
+
+        try {
+            $bouncerConfig['ordered_remediations'] = ['captcha', 'bypass', 'bad_value'];
+            $bouncer->configure($bouncerConfig);
+        } catch (Exception $e) {
+            $className = get_class($e);
+            $msg = $e->getMessage();
+        }
+        $this->assertSame(InvalidConfigurationException::class, $className);
+        $this->assertSame('The value "bad_value" is not allowed for path "config.ordered_remediations.2". Permissible values: "ban", "captcha", "bypass"', $msg);
+    }
+
+    /**
+     * @group integration
+     * @covers \Bouncer
      * @dataProvider cacheAdapterProvider
      * @group ignore_
      */
     public function testCanVerifyIpInStreamModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
     {
         // Init context
-
         $this->watcherClient->setInitialState();
         $cacheAdapter->clear();
 
         // Init bouncer
-
         /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
             ->setConstructorArgs([$this->logger])

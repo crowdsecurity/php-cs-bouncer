@@ -56,7 +56,7 @@ class WatcherClient
         $this->addDecision($now, '24h', '+24 hours', TestHelpers::BAD_IP.'/'.TestHelpers::IP_RANGE, 'ban');
     }
 
-    /** Set the initial watcher state */
+    /** Set the second watcher state */
     public function setSecondState(): void
     {
         $this->logger->info('Set "second" state');
