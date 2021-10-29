@@ -97,7 +97,11 @@ ddev create-watcher [name] [password]
 
 First, create a bouncer and keep the result key. 
 
-The, create a specific watcher for unit test: 
+```
+ddev create-bouncer
+```
+
+Then, create a specific watcher for unit test:
 
 ```
 ddev create-watcher PhpUnitTestMachine PhpUnitTestMachinePassword
