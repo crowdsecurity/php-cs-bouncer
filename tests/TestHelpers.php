@@ -70,6 +70,9 @@ class TestHelpers
 
     public static function getBouncerKey(): string
     {
+        if($bouncerKey = getenv('BOUNCER_KEY')){
+            return $bouncerKey;
+        }
         $path = realpath(__DIR__.'/../.bouncer-key');
         if (false === $path) {
             throw new RuntimeException("'.bouncer-key' file was not found.");
