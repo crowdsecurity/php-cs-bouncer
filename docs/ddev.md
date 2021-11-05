@@ -93,6 +93,15 @@ It will return the bouncer key.
 ddev create-watcher [name] [password]
 ```
 
+
+### Use composer to update or install the lib
+
+Run:
+
+```
+ddev composer update --working-dir ./my-own-modules/crowdsec-php-lib
+```
+
 ### Unit test
 
 First, create a bouncer and keep the result key. 
@@ -111,6 +120,5 @@ Finally, run
 
 
 ```
-ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 
-REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
+ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
 ```
