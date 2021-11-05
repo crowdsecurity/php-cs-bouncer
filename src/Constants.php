@@ -50,10 +50,10 @@ class Constants
     public const BOUNCING_LEVEL_DISABLED = 'bouncing_disabled';
 
     /** @var string The "flex" bouncing level */
-    public const BOUNCING_LEVEL_FLEX = 'flex_boucing';
+    public const BOUNCING_LEVEL_FLEX = 'flex_bouncing';
 
     /** @var string The "normal" bouncing level */
-    public const BOUNCING_LEVEL_NORMAL = 'normal_boucing';
+    public const BOUNCING_LEVEL_NORMAL = 'normal_bouncing';
 
     /** @var string The "PHPFS" cache system */
     public const CACHE_SYSTEM_PHPFS = 'phpfs';
