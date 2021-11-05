@@ -21,9 +21,9 @@ git_base_dir=`git rev-parse --show-toplevel`
 # Update version everywhere (add and commit changes), tag and release
 git checkout main
 if [[ $platform == 'linux' ]]; then
-   sed -i -E "s/v[0-9]+\.[0-9]+\.[0-9]/$NEW_GIT_VERSION/" $git_base_dir/src/Constants.php
+   sed -i -E "s/v[0-9]+\.[0-9]+\.[0-9]+/$NEW_GIT_VERSION/" $git_base_dir/src/Constants.php
 else
-   sed -i "" -E "s/v[0-9]+\.[0-9]+\.[0-9]/$NEW_GIT_VERSION/" $git_base_dir/src/Constants.php
+   sed -i "" -E "s/v[0-9]+\.[0-9]+\.[0-9]+/$NEW_GIT_VERSION/" $git_base_dir/src/Constants.php
 fi
 git add $git_base_dir/src/Constants.php
 
