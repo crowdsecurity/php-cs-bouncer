@@ -214,11 +214,14 @@ abstract class AbstractBounce
                 $this->getPostedVariable('phrase'),
                 $ip)) {
                 // User has correctly fill the captcha
-
                 $this->setSessionVariable('crowdsec_captcha_has_to_be_resolved', false);
                 $this->unsetSessionVariable('crowdsec_captcha_phrase_to_guess');
                 $this->unsetSessionVariable('crowdsec_captcha_inline_image');
                 $this->unsetSessionVariable('crowdsec_captcha_resolution_failed');
+                $redirect = $this->getSessionVariable('crowdsec_captcha_resolution_redirect')??'/';
+                $this->unsetSessionVariable('crowdsec_captcha_resolution_redirect');
+                header("Location: $redirect");
+                exit(0);
             } else {
                 // The user failed to resolve the captcha.
                 $this->setSessionVariable('crowdsec_captcha_resolution_failed', true);
@@ -237,6 +240,9 @@ abstract class AbstractBounce
             $this->storeNewCaptchaCoupleInSession();
             $this->setSessionVariable('crowdsec_captcha_has_to_be_resolved', true);
             $this->setSessionVariable('crowdsec_captcha_resolution_failed', false);
+            $this->setSessionVariable('crowdsec_captcha_resolution_redirect', 'POST' === $this->getHttpMethod() &&
+                                                                              !empty($_SERVER['HTTP_REFERER']) ?
+                $_SERVER['HTTP_REFERER'] : $_SERVER['REQUEST_URI']);
         }
 
         // Display captcha page if this is required.
