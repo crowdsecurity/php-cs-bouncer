@@ -29,6 +29,9 @@ abstract class AbstractBounce
     /** @var bool */
     protected $debug = false;
 
+    /** @var bool */
+    protected $displayErrors = false;
+
     /** @var LoggerInterface */
     protected $logger;
 
@@ -58,6 +61,11 @@ abstract class AbstractBounce
     public function setDebug(bool $debug)
     {
         $this->debug = $debug;
+    }
+
+    public function setDisplayErrors(bool $displayErrors)
+    {
+        $this->displayErrors = $displayErrors;
     }
 
     protected function initLoggerHelper($logDirectoryPath, $loggerName): void
@@ -112,12 +120,12 @@ abstract class AbstractBounce
             $this->logger->warning('', [
                 'type' => 'UNKNOWN_EXCEPTION_WHILE_BOUNCING',
                 'ip' => $ip,
-                'messsage' => $e->getMessage(),
+                'message' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
-            if ($this->debug) {
+            if ($this->displayErrors) {
                 throw $e;
             }
         }

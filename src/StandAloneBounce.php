@@ -363,12 +363,12 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         } catch (\Exception $e) {
             $this->logger->error('', [
                 'type' => 'EXCEPTION_WHILE_BOUNCING',
-                'messsage' => $e->getMessage(),
+                'message' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
-            if ($this->debug) {
+            if ($this->displayErrors) {
                 throw $e;
             }
         } finally {
