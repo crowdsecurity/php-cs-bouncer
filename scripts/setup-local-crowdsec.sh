@@ -1,7 +1,9 @@
 #!/bin/sh
 
+CONTAINER_NAME=${1:-app}
+
 # Delete existing LAPI database.
-[ -e ./var/docker-data/crowdsec.db ] && rm ./var/docker-data/crowdsec.db
+[ -e ./var/docker-data/crowdsec.db ] && docker-compose exec crowdsec rm -f /var/lib/crowdsec/data/crowdsec.db
 
 # Start containers.
 docker-compose up --force-recreate -d crowdsec
@@ -14,4 +16,4 @@ docker-compose exec crowdsec /usr/local/bin/cscli bouncers add bouncer-php-libra
 docker-compose exec crowdsec cscli machines add PhpUnitTestMachine --password PhpUnitTestMachinePassword > /dev/null 2>&1
 
 # Ensure composer deps are presents
-docker-compose run app composer install
+docker-compose run $CONTAINER_NAME composer install
