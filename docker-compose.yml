@@ -4,10 +4,19 @@ services:
         image: crowdsecurity/crowdsec:latest
         environment:
             - DISABLE_AGENT=true
-        volumes:
-            - ./var/docker-data:/var/lib/crowdsec/data
         ports:
             - 8085:8080
+    app-php8.1:
+        build:
+            context: .
+            dockerfile: ./docker/php-8.1.Dockerfile
+        env_file: ./docker/.env
+        volumes:
+            - .:/app
+        links:
+            - crowdsec
+            - redis
+            - memcached
     app-php8.0:
         build:
             context: .
