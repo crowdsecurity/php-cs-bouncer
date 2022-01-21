@@ -122,3 +122,87 @@ Finally, run
 ```
 ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
 ```
+
+### Use a `check-ip` php script for test
+
+
+Create this short `check-ip.php` script in your root folder:
+
+```php
+<?php
+
+require __DIR__ . '/my-own-modules/crowdsec-php-lib/vendor/autoload.php';
+
+use CrowdSecBouncer\Bouncer;
+use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\RotatingFileHandler;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+
+// Init cache adapter
+
+$cacheAdapter = new PhpFilesAdapter('', 0, __DIR__.'/.cache');
+
+// Parse argument
+
+$requestedIp = $argv[1];
+$bouncerKey = $argv[2];
+if (!$requestedIp || !$bouncerKey) {
+    die('Usage: php check-ip.php <IP> <BOUNCER_KEY>');
+}
+// Instantiate the Stream logger with info level(optional)
+$logger = new Logger('example');
+
+// Display logs with INFO verbosity
+$streamHandler = new StreamHandler('php://stdout', Logger::DEBUG);
+$streamHandler->setFormatter(new LineFormatter("[%datetime%] %message% %context%\n"));
+$logger->pushHandler($streamHandler);
+
+// Store logs with WARNING verbosity
+$fileHandler = new RotatingFileHandler(__DIR__.'/crowdsec.log', 0, Logger::DEBUG);
+$logger->pushHandler($fileHandler);
+
+// Init
+$bouncer = new Bouncer($cacheAdapter, $logger);
+$bouncer->configure([
+    'api_key' => $bouncerKey,
+    'api_url' => 'http://crowdsec:8080'
+]
+);
+
+// Ask remediation to LAPI
+
+echo "\nVerify $requestedIp...\n";
+$remediation = $bouncer->getRemediationForIp($requestedIp);
+echo "\nResult: $remediation\n\n"; // "ban", "captcha" or "bypass"
+```
+
+To run this script, you have to know your bouncer key `<BOUNCER_KEY>` and run
+```command
+ddev exec php check-ip.php <IP> <BOUNCER_KEY>
+```
+
+As a reminder, your bouncer key is returned by the `ddev create-bouncer` command.
+
+For example, run the php script:
+
+```bash
+ddev exec php check-ip.php 1.2.3.4 <BOUNCER_KEY>
+```
+
+As your CrowdSec instance contains no decisions, you received the result "bypass".
+
+Let's now add a new decision in CrowdSec, for example we will ban the 1.2.3.4/30 for 4h:
+
+```bash
+ddev exec -s crowdsec cscli decisions add --range 1.2.3.4/30 --duration 4h --type ban
+```
+
+Now, if you run the php script against the `1.2.3.4` IP:
+
+```bash
+ddev exec php check-ip.php 1.2.3.4 <BOUNCER_KEY>
+```
+
+LAPI will advise you to ban this IP as it's within the 1.2.3.4/30 range.
