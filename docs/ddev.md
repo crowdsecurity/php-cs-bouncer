@@ -236,3 +236,12 @@ And then:
 ddev exec PHP_CS_FIXER_IGNORE_ENV=1 ./my-own-modules/crowdsec-php-lib/tools/php-cs-fixer/vendor/bin/php-cs-fixer fix ./my-own-modules/crowdsec-php-lib
 
 ```
+
+#### PHP Mess Detector
+
+To use the `phpmd` tool, you can run:
+
+```
+ddev phpmd ./my-own-modules/crowdsec-php-lib tools/phpmd/rulesets.xml src
+
+```
