@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__.'/../../vendor/autoload.php';
 
 use CrowdSecBouncer\Bouncer;
 use Monolog\Formatter\LineFormatter;
@@ -20,8 +20,8 @@ if (!$bouncerApiKey || !$requestedIp) {
 echo "\nVerify $requestedIp with $apiUrl...\n";
 
 // Configure paths
-$logPath = __DIR__ . '/../.crowdsec.log';
-$cachePath = __DIR__ . '/../.cache';
+$logPath = __DIR__.'/../.crowdsec.log';
+$cachePath = __DIR__.'/../.cache';
 
 // Instanciate the "PhpFilesAdapter" cache adapter
 $cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter('', 0, $cachePath);
@@ -50,7 +50,7 @@ $bouncer->configure([
     'live_mode' => true,
     'max_remediation_level' => 'ban',
     'cache_expiration_for_clean_ip' => 2,
-    'cache_expiration_for_bad_ip' => 30
+    'cache_expiration_for_bad_ip' => 30,
 ]);
 
 // Ask remediation to LAPI

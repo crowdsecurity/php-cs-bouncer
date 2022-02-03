@@ -32,7 +32,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     public function init(array $crowdSecStandaloneBouncerConfig)
     {
         if (\PHP_SESSION_NONE === session_status()) {
-            $this->session_name = session_name("crowdsec");
+            $this->session_name = session_name('crowdsec');
             session_start();
         }
         $this->settings = $crowdSecStandaloneBouncerConfig;
@@ -55,8 +55,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             case Constants::CACHE_SYSTEM_MEMCACHED:
                 $memcachedDsn = $this->getStringSettings('memcached_dsn');
                 if (empty($memcachedDsn)) {
-                    throw new BouncerException('The selected cache technology is Memcached.'.
-                    ' Please set a Memcached DSN or select another cache technology.');
+                    throw new BouncerException('The selected cache technology is Memcached.'.' Please set a Memcached DSN or select another cache technology.');
                 }
 
                 $this->cacheAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedDsn));
@@ -65,15 +64,13 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             case Constants::CACHE_SYSTEM_REDIS:
                 $redisDsn = $this->getStringSettings('redis_dsn');
                 if (empty($redisDsn)) {
-                    throw new BouncerException('The selected cache technology is Redis.'.
-                    ' Please set a Redis DSN or select another cache technology.');
+                    throw new BouncerException('The selected cache technology is Redis.'.' Please set a Redis DSN or select another cache technology.');
                 }
 
                 try {
                     $this->cacheAdapter = new RedisAdapter(RedisAdapter::createConnection($redisDsn));
                 } catch (InvalidArgumentException $e) {
-                    throw new BouncerException('Error when connecting to Redis.'.
-                    ' Please fix the Redis DSN or select another cache technology.');
+                    throw new BouncerException('Error when connecting to Redis.'.' Please fix the Redis DSN or select another cache technology.');
                 }
 
                 break;
@@ -348,7 +345,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         if (null !== $body) {
             echo $body;
         }
-        die();
+        exit();
     }
 
     public function safelyBounce(): void

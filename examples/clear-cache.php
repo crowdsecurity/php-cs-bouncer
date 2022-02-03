@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
 use CrowdSecBouncer\Bouncer;
 use Monolog\Formatter\LineFormatter;
@@ -19,8 +19,8 @@ if (!$bouncerApiKey) {
 echo "\nClear the cache...\n";
 
 // Configure paths
-$logPath = __DIR__ . '/.crowdsec.log';
-$cachePath = __DIR__ . '/.cache';
+$logPath = __DIR__.'/.crowdsec.log';
+$cachePath = __DIR__.'/.cache';
 
 // Instantiate a the "PhpFilesAdapter" cache adapter
 // Note: to select another cache adapter (Memcached, Redis, ...), try other examples.

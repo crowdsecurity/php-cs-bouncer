@@ -100,7 +100,7 @@ class WatcherClient
         $this->request('/v1/decisions', null, null, 'DELETE');
     }
 
-    public function addDecision(\DateTime $now, string $durationString, string $dateTimeDurationString, string $ipOrRange, string $type)
+    public function addDecision(DateTime $now, string $durationString, string $dateTimeDurationString, string $ipOrRange, string $type)
     {
         $isRange = (2 === count(explode('/', $ipOrRange)));
         $stopAt = (clone $now)->modify($dateTimeDurationString)->format('Y-m-d\TH:i:s.000\Z');

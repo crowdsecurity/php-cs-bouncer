@@ -218,7 +218,7 @@ abstract class AbstractBounce
                 $this->unsetSessionVariable('crowdsec_captcha_phrase_to_guess');
                 $this->unsetSessionVariable('crowdsec_captcha_inline_image');
                 $this->unsetSessionVariable('crowdsec_captcha_resolution_failed');
-                $redirect = $this->getSessionVariable('crowdsec_captcha_resolution_redirect')??'/';
+                $redirect = $this->getSessionVariable('crowdsec_captcha_resolution_redirect') ?? '/';
                 $this->unsetSessionVariable('crowdsec_captcha_resolution_redirect');
                 header("Location: $redirect");
                 exit(0);

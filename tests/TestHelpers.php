@@ -6,7 +6,6 @@ use Bramus\Monolog\Formatter\ColoredLineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Predis\ClientInterface;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
@@ -52,7 +51,7 @@ class TestHelpers
         $redisAdapter = new RedisAdapter($redisClient);
 
         // memcached version 3.1.5 is not ready for PHP 8.1
-        if (PHP_VERSION_ID >= 80100 && version_compare(phpversion('memcached'), '3.1.5', '<=')) {
+        if (\PHP_VERSION_ID >= 80100 && version_compare(phpversion('memcached'), '3.1.5', '<=')) {
             return [
                 'PhpFilesAdapter' => [$phpFilesAdapter],
                 'RedisAdapter' => [$redisAdapter],
@@ -61,6 +60,7 @@ class TestHelpers
         /** @var string */
         $memcachedCacheAdapterDsn = getenv('MEMCACHED_DSN');
         $memcachedAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedCacheAdapterDsn));
+
         return [
             'PhpFilesAdapter' => [$phpFilesAdapter],
             'RedisAdapter' => [$redisAdapter],
@@ -75,7 +75,7 @@ class TestHelpers
 
     public static function getBouncerKey(): string
     {
-        if($bouncerKey = getenv('BOUNCER_KEY')){
+        if ($bouncerKey = getenv('BOUNCER_KEY')) {
             return $bouncerKey;
         }
         $path = realpath(__DIR__.'/../.bouncer-key');
