@@ -7,7 +7,8 @@ vendor
 
 #Tools
 super-linter.log
-.php_cs.cache
+.php-cs-fixer.cache
+.php-cs-fixer.php
 
 # App
 /var/

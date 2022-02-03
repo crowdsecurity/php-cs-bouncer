@@ -1,10 +1,10 @@
 <?php
 
 if (!file_exists(__DIR__.'/src')) {
-    exit(0);
+    exit(1);
 }
 
-$config = new PhpCsFixer\Config;
+$config = new PhpCsFixer\Config("crowdsec-php-lib");
 return $config
     ->setRules([
         '@Symfony' => true,

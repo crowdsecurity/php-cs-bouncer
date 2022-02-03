@@ -233,7 +233,7 @@ ddev composer update --working-dir=./my-own-modules/crowdsec-php-lib/tools/php-c
 And then:
 
 ```
-ddev exec PHP_CS_FIXER_IGNORE_ENV=1 ./my-own-modules/crowdsec-php-lib/tools/php-cs-fixer/vendor/bin/php-cs-fixer fix ./my-own-modules/crowdsec-php-lib
+ddev phpcsfixer my-own-modules/crowdsec-php-lib tools/php-cs-fixer
 
 ```
 
