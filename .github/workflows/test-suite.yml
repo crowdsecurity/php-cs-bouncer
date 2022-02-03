@@ -1,0 +1,72 @@
+name: Test suite
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test-suite:
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: [7.2, 7.3, 7.4, 8.0, 8.1]
+
+    name: Test suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone DDEV files
+        uses: actions/checkout@v2
+        with:
+          path: .ddev
+          repository: julienloizelet/ddev-php
+
+      - name: Install DDEV
+        run: |
+          # @see https://ddev.readthedocs.io/en/stable/#installationupgrade-script-linux-and-macos-armarm64-and-amd64-architectures
+          sudo apt-get -qq update
+          sudo apt-get -qq -y install libnss3-tools
+          curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh
+          bash install_ddev.sh
+          ddev config global --instrumentation-opt-in=false --omit-containers=dba,ddev-ssh-agent
+          rm install_ddev.sh
+
+      - name: Set PHP_VERSION_CODE env
+        # used in some directory path and conventional file naming
+        # Example : 7.4 => 74
+        run: |
+           echo "PHP_VERSION_CODE=$(echo php${{ matrix.php-version }} | sed 's/\.//g' )" >> $GITHUB_ENV
+
+
+      - name: Start DDEV  with PHP ${{ matrix.php-version }}
+        run: |
+          cp .ddev/config_overrides/config.${{ env.PHP_VERSION_CODE }}.yaml .ddev/config.${{ env.PHP_VERSION_CODE }}.yaml
+          cp .ddev/additional_docker_compose/docker-compose.crowdsec.yaml .ddev/docker-compose.crowdsec.yaml
+          ddev start
+          ddev exec php -v
+          
+
+      - name: Set BOUNCER_KEY env
+        run: |
+          echo "BOUNCER_KEY=$(ddev create-bouncer)" >> $GITHUB_ENV    
+
+
+      - name: Clone PHP lib Crowdsec files
+        uses: actions/checkout@v2
+        with:
+          path: my-own-modules/crowdsec-php-lib
+
+      - name: Install CrowdSec lib dependencies
+        run: |
+          ddev composer update --working-dir ./my-own-modules/crowdsec-php-lib
+
+
+      - name: PHP UNIT
+        run: |
+          ddev create-watcher PhpUnitTestMachine PhpUnitTestMachinePassword
+          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
+
+
+

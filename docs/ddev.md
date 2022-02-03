@@ -52,10 +52,20 @@ php-project-sources
 ```
 mkdir php-project-sources
 ```
+
+- Create a `crowdsec-php-lib` folder with sources of this repo:
+
+```
+cd php-project-sources
+mkdir my-own-modules && mkdir my-own-modules/crowdsec-php-lib
+cd my-own-modules/crowdsec-php-lib && git clone git@github.com:crowdsecurity/php-cs-bouncer.git ./
+```
+
 - Create an empty `.ddev` folder for DDEV and clone our pre-configured DDEV repo:
 
 ```
-mkdir php-project-sources/.ddev && cd php-project-sources/.ddev && git clone git@github.com:julienloizelet/ddev-php.
+cd php-project-sources
+mkdir .ddev && cd .ddev && git clone git@github.com:julienloizelet/ddev-php.
 git ./
 ```
 - Copy some configurations file:
@@ -64,6 +74,7 @@ By default, ddev will launch a PHP 7.2 container. If you want to work with anoth
 corresponding config file. For example:
 
 ```
+cd php-project-sources
 cp .ddev/config_overrides/config.php74.yaml .ddev/config.php74.yaml
 ```
 - Launch DDEV
