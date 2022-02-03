@@ -12,21 +12,21 @@ use Symfony\Component\Cache\Adapter\RedisAdapter;
 
 class TestHelpers
 {
-    const BAD_IP = '1.2.3.4';
-    const CLEAN_IP = '2.3.4.5';
-    const NEWLY_BAD_IP = '3.4.5.6';
-    const IP_RANGE = '24';
-    const LARGE_IPV4_RANGE = '23';
-    const BAD_IPV6 = '2001:0db8:85a3:0000:0000:8a2e:0370:7334';
-    const IPV6_RANGE = '64';
+    public const BAD_IP = '1.2.3.4';
+    public const CLEAN_IP = '2.3.4.5';
+    public const NEWLY_BAD_IP = '3.4.5.6';
+    public const IP_RANGE = '24';
+    public const LARGE_IPV4_RANGE = '23';
+    public const BAD_IPV6 = '2001:0db8:85a3:0000:0000:8a2e:0370:7334';
+    public const IPV6_RANGE = '64';
 
-    const FS_CACHE_ADAPTER_DIR = __DIR__.'/../var/fs.cache';
-    const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__.'/../var/phpFiles.cache';
+    public const FS_CACHE_ADAPTER_DIR = __DIR__.'/../var/fs.cache';
+    public const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__.'/../var/phpFiles.cache';
 
-    const WATCHER_LOGIN = 'PhpUnitTestMachine';
-    const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
+    public const WATCHER_LOGIN = 'PhpUnitTestMachine';
+    public const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
 
-    const LOG_LEVEL = Logger::WARNING; // set to Logger::DEBUG to get high verbosity
+    public const LOG_LEVEL = Logger::WARNING; // set to Logger::DEBUG to get high verbosity
 
     public static function createLogger(): Logger
     {

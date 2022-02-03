@@ -4,7 +4,8 @@ if (!file_exists(__DIR__.'/src')) {
     exit(0);
 }
 
-return PhpCsFixer\Config::create()
+$config = new PhpCsFixer\Config;
+return $config
     ->setRules([
         '@Symfony' => true,
         '@Symfony:risky' => true,

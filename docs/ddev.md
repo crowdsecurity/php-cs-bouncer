@@ -217,3 +217,22 @@ ddev exec php check-ip.php 1.2.3.4 <BOUNCER_KEY>
 ```
 
 LAPI will advise you to ban this IP as it's within the 1.2.3.4/30 range.
+
+
+### Coding standards
+
+#### PHPCS
+
+We are using the [PHP Coding Standards Fixer](https://cs.symfony.com/)
+
+With ddev, you can do the following:
+
+```command
+ddev composer update --working-dir=./my-own-modules/crowdsec-php-lib/tools/php-cs-fixer
+```
+And then:
+
+```
+ddev exec PHP_CS_FIXER_IGNORE_ENV=1 ./my-own-modules/crowdsec-php-lib/tools/php-cs-fixer/vendor/bin/php-cs-fixer fix ./my-own-modules/crowdsec-php-lib
+
+```

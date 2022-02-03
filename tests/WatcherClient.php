@@ -8,8 +8,8 @@ use Psr\Log\LoggerInterface;
 
 class WatcherClient
 {
-    const WATCHER_LOGIN = 'PhpUnitTestMachine';
-    const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
+    public const WATCHER_LOGIN = 'PhpUnitTestMachine';
+    public const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
 
     /** @var LoggerInterface */
     private $logger;
