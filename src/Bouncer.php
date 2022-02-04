@@ -27,13 +27,13 @@ use Symfony\Component\Config\Definition\Processor;
 class Bouncer
 {
     /** @var LoggerInterface */
-    private $logger = null;
+    private $logger;
 
     /** @var array */
     private $config = [];
 
     /** @var ApiCache */
-    private $apiCache = null;
+    private $apiCache;
 
     /** @var int */
     private $maxRemediationLevelIndex = null;
@@ -172,7 +172,7 @@ class Bouncer
 
     /**
      * Used in stream mode only.
-     * This method should be called periodically (ex: crontab) in a asynchronous way to update the bouncer cache.
+     * This method should be called periodically (ex: crontab) in an asynchronous way to update the bouncer cache.
      *
      * @return array Number of deleted and new decisions, and errors when processing decisions
      */
@@ -228,11 +228,11 @@ class Bouncer
 
     /**
      * Check if the captcha filled by the user is correct or not.
-     * We are premissive with the user (0 is interpreted as "o" and 1 in interpretted as "l").
+     * We are permissive with the user (0 is interpreted as "o" and 1 in interpreted as "l").
      *
      * @param string $expected The expected phrase
-     * @param string $expected The phrase to check (the user input)
-     * @param string $ip       Th IP of the use (for logging purpose)
+     * @param string $try The phrase to check (the user input)
+     * @param string $ip       The IP of the use (for logging purpose)
      *
      * @return bool If the captcha input was correct or not
      */
@@ -251,12 +251,12 @@ class Bouncer
     /**
      * Test the connection to the cache system (Redis or Memcached).
      *
-     * @return bool If the connection was successful or not
+     * @return void If the connection was successful or not
      *
      * @throws BouncerException if the connection was not successful
      * */
     public function testConnection()
     {
-        return $this->apiCache->testConnection();
+        $this->apiCache->testConnection();
     }
 }

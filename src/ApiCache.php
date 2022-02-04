@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace CrowdSecBouncer;
 
 use DateTime;
+use Exception;
 use IPLib\Address\AddressInterface;
 use IPLib\Address\Type;
 use IPLib\Factory;
 use IPLib\Range\Subnet;
+use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
@@ -16,7 +18,7 @@ use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\PruneableInterface;
 
 /**
- * The cache mecanism to store every decisions from LAPI/CAPI. Symfony Cache component powered.
+ * The cache mechanism to store every decision from LAPI/CAPI. Symfony Cache component powered.
  *
  * @author    CrowdSec team
  *
@@ -47,11 +49,15 @@ class ApiCache
 
     /** @var bool */
     private $warmedUp = null;
+    /**
+     * @var string
+     */
+    private $fallbackRemediation;
 
     /**
-     * @param LoggerInterface $logger    The logger to use
-     * @param ApiClient       $apiClient The APIClient instance to use
-     * @param AbstractAdapter $adapter   The AbstractAdapter adapter to use
+     * @param LoggerInterface $logger The logger to use
+     * @param ApiClient|null $apiClient The APIClient instance to use
+     * @param AbstractAdapter|null $adapter The AbstractAdapter adapter to use
      */
     public function __construct(LoggerInterface $logger, ApiClient $apiClient = null, AbstractAdapter $adapter = null)
     {
@@ -63,14 +69,16 @@ class ApiCache
     /**
      * Configure this instance.
      *
-     * @param bool   $liveMode                  If we use the live mode (else we use the stream mode)
-     * @param string $apiUrl                    The URL of the LAPI
-     * @param int    $timeout                   The timeout well calling LAPI
-     * @param string $userAgent                 The user agent to use when calling LAPI
-     * @param string $apiKey                    The Bouncer API Key to use to connect LAPI
-     * @param int    $cacheExpirationForCleanIp The duration to cache an IP considered as clean by LAPI
-     * @param int    $cacheExpirationForBadIp   The duration to cache an IP considered as bad by LAPI
-     * @param string $fallbackRemediation       The remediation to use when the remediation sent by LAPI is not supported by this library
+     * @param bool $liveMode If we use the live mode (else we use the stream mode)
+     * @param string $apiUrl The URL of the LAPI
+     * @param int $timeout The timeout well calling LAPI
+     * @param string $userAgent The user agent to use when calling LAPI
+     * @param string $apiKey The Bouncer API Key to use to connect LAPI
+     * @param int $cacheExpirationForCleanIp The duration to cache an IP considered as clean by LAPI
+     * @param int $cacheExpirationForBadIp The duration to cache an IP considered as bad by LAPI
+     * @param string $fallbackRemediation The remediation to use when the remediation sent by LAPI is not supported by
+     *     this library
+     * @throws InvalidArgumentException
      */
     public function configure(
         bool $liveMode,
@@ -103,6 +111,8 @@ class ApiCache
 
     /**
      * Add remediation to a Symfony Cache Item identified by IP.
+     * @throws InvalidArgumentException
+     * @throws Exception
      */
     private function addRemediationToCacheItem(string $ip, string $type, int $expiration, int $decisionId): string
     {
@@ -145,6 +155,8 @@ class ApiCache
 
     /**
      * Remove a decision from a Symfony Cache Item identified by ip.
+     * @throws InvalidArgumentException
+     * @throws Exception
      */
     private function removeDecisionFromRemediationItem(string $ip, int $decisionId): bool
     {
@@ -177,7 +189,7 @@ class ApiCache
         $item->expiresAt(new DateTime('@'.$maxLifetime));
         $item->set($cacheContent);
 
-        // Save the cache without commiting it to the cache system.
+        // Save the cache without committing it to the cache system.
         // Useful to improve performance when updating the cache.
         if (!$this->adapter->saveDeferred($item)) {
             throw new BouncerException("cache#$ip: Unable to save item");
@@ -230,7 +242,7 @@ class ApiCache
         if (!$decision) {
             $duration = time() + $this->cacheExpirationForCleanIp;
             if (!$this->liveMode) {
-                // In stream mode we considere an clean IP forever... until the next resync.
+                // In stream mode we consider a clean IP forever... until the next resync.
                 $duration = 315360000; // in this case, forever is 10 years as PHP_INT_MAX will cause trouble with the Memcached Adapter (int to float unwanted conversion)
             }
 
@@ -251,6 +263,9 @@ class ApiCache
         ];
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function defferUpdateCacheConfig(array $config): void
     {
         $cacheConfigItem = $this->adapter->getItem('cacheConfig');
@@ -262,6 +277,7 @@ class ApiCache
 
     /**
      * Update the cached remediation of the specified IP from these new decisions.
+     * @throws InvalidArgumentException
      */
     private function saveRemediationsForIp(array $decisions, string $ip): string
     {
@@ -292,6 +308,7 @@ class ApiCache
 
     /**
      * Update the cached remediations from these new decisions.
+     * @throws InvalidArgumentException
      */
     private function saveRemediations(array $decisions): array
     {
@@ -347,6 +364,9 @@ class ApiCache
         return ['success' => $this->commit(), 'errors' => $errors];
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     private function removeRemediations(array $decisions): array
     {
         $errors = [];
@@ -420,6 +440,9 @@ class ApiCache
         return ['count' => $count, 'errors' => $errors];
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function clear(): bool
     {
         $this->setCustomErrorHandler();
@@ -442,6 +465,7 @@ class ApiCache
      * Used when the stream mode has just been activated.
      *
      * @return array "count": number of decisions added, "errors": decisions not added
+     * @throws InvalidArgumentException
      */
     public function warmUp(): array
     {
@@ -451,8 +475,7 @@ class ApiCache
             $this->clear();
         }
         $this->logger->debug('', ['type' => 'START_CACHE_WARMUP']);
-        $startup = true;
-        $decisionsDiff = $this->apiClient->getStreamedDecisions($startup);
+        $decisionsDiff = $this->apiClient->getStreamedDecisions(true);
         $newDecisions = $decisionsDiff['new'];
 
         $nbNew = 0;
@@ -483,6 +506,7 @@ class ApiCache
      * Used for the stream mode when we have to update the remediations list.
      *
      * @return array number of deleted and new decisions, and errors when processing decisions
+     * @throws InvalidArgumentException
      */
     public function pullUpdates(): array
     {
@@ -522,8 +546,9 @@ class ApiCache
     /**
      * This method is called when nothing has been found in cache for the requested IP.
      * In live mode is enabled, calls the API for decisions concerning the specified IP
-     * In stream mode, as we considere cache is the single source of truth, the IP is considered clean.
-     * Finally the result is stored in caches for further calls.
+     * In stream mode, as we consider cache is the single source of truth, the IP is considered clean.
+     * Finally, the result is stored in caches for further calls.
+     * @throws InvalidArgumentException
      */
     private function miss(string $ipToQuery, string $cacheKey): string
     {
@@ -538,9 +563,10 @@ class ApiCache
     }
 
     /**
-     * Used in both mode (stream and ruptue).
+     * Used in both mode (stream and rupture).
      * This method formats the cached item as a remediation.
      * It returns the highest remediation level found.
+     * @throws InvalidArgumentException
      */
     private function hit(string $ip): string
     {
@@ -557,6 +583,7 @@ class ApiCache
      * Request the cache for the specified IP.
      *
      * @return string the computed remediation string, or null if no decision was found
+     * @throws InvalidArgumentException
      */
     public function get(AddressInterface $address): string
     {
@@ -604,8 +631,8 @@ class ApiCache
     }
 
     /**
-     * When Memcached connection fail, it throw an unhandled warning.
-     * To catch this warning as a clean execption we have to temporarily change the error handler.
+     * When Memcached connection fail, it throws an unhandled warning.
+     * To catch this warning as a clean exception we have to temporarily change the error handler.
      */
     private function setCustomErrorHandler(): void
     {
@@ -646,7 +673,7 @@ class ApiCache
     /**
      * Test the connection to the cache system (Redis or Memcached).
      *
-     * @throws BouncerException if the connection was not successful
+     * @throws BouncerException|InvalidArgumentException if the connection was not successful
      * */
     public function testConnection(): void
     {
