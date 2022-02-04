@@ -221,7 +221,7 @@ LAPI will advise you to ban this IP as it's within the 1.2.3.4/30 range.
 
 ### Coding standards
 
-#### PHPCS
+#### PHPCS Fixer
 
 We are using the [PHP Coding Standards Fixer](https://cs.symfony.com/)
 
@@ -239,9 +239,23 @@ ddev phpcsfixer my-own-modules/crowdsec-php-lib tools/php-cs-fixer
 
 #### PHP Mess Detector
 
-To use the `phpmd` tool, you can run:
+To use the [PHPMD](https://github.com/phpmd/phpmd) tool, you can run:
 
 ```
 ddev phpmd ./my-own-modules/crowdsec-php-lib tools/phpmd/rulesets.xml src
 
+```
+
+#### PHPCS and PHPCBF
+
+To use [PHP Code Sniffer](https://github.com/squizlabs/PHP_CodeSniffer) tools, you can run:
+
+```
+ddev phpcs ./my-own-modules/crowdsec-php-lib/vendor/bin/phpcs my-own-modules/crowdsec-php-lib/src
+```
+
+and:
+
+```
+ddev phpcbf ./my-own-modules/crowdsec-php-lib/vendor/bin/phpcs my-own-modules/crowdsec-php-lib/src
 ```
