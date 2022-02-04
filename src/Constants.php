@@ -66,4 +66,10 @@ class Constants
 
     /** @var string The "MaxMind" geolocation type */
     public const GEOLOCATION_TYPE_MAXMIND = 'maxmind';
+
+    /** @var string The Maxmind "Country" database type */
+    public const MAXMIND_COUNTRY = 'country';
+
+    /** @var string The Maxmind "City" database type */
+    public const MAXMIND_CITY = 'city';
 }
