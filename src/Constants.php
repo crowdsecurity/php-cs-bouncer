@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace CrowdSecBouncer;
 
 /**
- * Every constants of the library are set here.
+ * Every constant of the library are set here.
  *
  * @author    CrowdSec team
  *
@@ -63,4 +63,7 @@ class Constants
 
     /** @var string The "MEMCACHED" cache system */
     public const CACHE_SYSTEM_MEMCACHED = 'memcached';
+
+    /** @var string The "MaxMind" geolocation type */
+    public const GEOLOCATION_TYPE_MAXMIND = 'maxmind';
 }
