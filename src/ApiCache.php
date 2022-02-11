@@ -29,30 +29,54 @@ use Symfony\Component\Cache\PruneableInterface;
  */
 class ApiCache
 {
-    private LoggerInterface $logger;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
-    private ApiClient $apiClient;
+    /**
+     * @var ApiClient
+     */
+    private $apiClient;
 
     /** @var AbstractAdapter */
     private $adapter;
 
-    private Geolocation $geolocation;
+    /**
+     * @var Geolocation
+     */
+    private $geolocation;
 
     /** @var bool */
-    private ?bool $liveMode = null;
+    private $liveMode = false;
 
-    private int $cacheExpirationForCleanIp = 0;
+    /**
+     * @var int
+     */
+    private $cacheExpirationForCleanIp = 0;
 
-    private int $cacheExpirationForBadIp = 0;
+    /**
+     * @var int
+     */
+    private $cacheExpirationForBadIp = 0;
 
     /** @var bool */
-    private ?bool $warmedUp = null;
+    private $warmedUp = false;
 
-    private string $fallbackRemediation;
+    /**
+     * @var string
+     */
+    private $fallbackRemediation;
 
-    private array $geolocConfig;
+    /**
+     * @var array|null
+     */
+    private $geolocConfig;
 
-    private array $cacheKey = [];
+    /**
+     * @var array
+     */
+    private $cacheKey = [];
 
     /**
      * @param LoggerInterface      $logger      The logger to use

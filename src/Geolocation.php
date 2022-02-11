@@ -23,9 +23,15 @@ use MaxMind\Db\Reader\InvalidDatabaseException;
  */
 class Geolocation
 {
-    protected array $maxmindCountry = [];
+    /**
+     * @var array
+     */
+    protected $maxmindCountry = [];
 
-    private array $resultTemplate = ['country' => '', 'not_found' => '', 'error' => ''];
+    /**
+     * @var string[]
+     */
+    private $resultTemplate = ['country' => '', 'not_found' => '', 'error' => ''];
 
     /**
      * Retrieve a country from a MaxMind database.
