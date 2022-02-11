@@ -8,6 +8,7 @@ require_once __DIR__.'/templates/access-forbidden.php';
 use CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder;
 use Gregwar\Captcha\PhraseBuilder;
 use IPLib\Factory;
+use IPLib\ParseStringFlag;
 use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
@@ -109,7 +110,7 @@ class Bouncer
      */
     public function getRemediationForIp(string $ip): string
     {
-        $address = Factory::addressFromString($ip, false);
+        $address = Factory::parseAddressString($ip, ParseStringFlag::MAY_INCLUDE_ZONEID);
         if (null === $address) {
             throw new BouncerException("IP $ip format is invalid.");
         }

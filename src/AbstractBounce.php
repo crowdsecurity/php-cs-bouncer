@@ -5,6 +5,8 @@ namespace CrowdSecBouncer;
 require_once __DIR__.'/templates/captcha.php';
 require_once __DIR__.'/templates/access-forbidden.php';
 
+use Bramus\Monolog\Formatter\ColoredLineFormatter;
+use Exception;
 use IPLib\Factory;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
@@ -50,6 +52,7 @@ abstract class AbstractBounce
 
     /**
      * Run a bounce.
+     * @throws Exception
      */
     public function run(
     ): void {
@@ -86,12 +89,15 @@ abstract class AbstractBounce
             $debugLogPath = $logDirectoryPath.'/debug.log';
             $debugFileHandler = new RotatingFileHandler($debugLogPath, 0, Logger::DEBUG);
             if (class_exists('\Bramus\Monolog\Formatter\ColoredLineFormatter')) {
-                $debugFileHandler->setFormatter(new \Bramus\Monolog\Formatter\ColoredLineFormatter(null, "[%datetime%] %message% %context%\n", 'H:i:s'));
+                $debugFileHandler->setFormatter(new ColoredLineFormatter(null, "[%datetime%] %message% %context%\n", 'H:i:s'));
                 $this->logger->pushHandler($debugFileHandler);
             }
         }
     }
 
+    /**
+     * @throws Exception
+     */
     protected function bounceCurrentIp()
     {
         $ip = $this->getRemoteIp();
@@ -116,7 +122,7 @@ abstract class AbstractBounce
             $this->getBouncerInstance();
             $remediation = $this->bouncer->getRemediationForIp($ip);
             $this->handleRemediation($remediation, $ip);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->warning('', [
                 'type' => 'UNKNOWN_EXCEPTION_WHILE_BOUNCING',
                 'ip' => $ip,
@@ -133,7 +139,7 @@ abstract class AbstractBounce
 
     protected function shouldTrustXforwardedFor(string $ip): bool
     {
-        $comparableAddress = Factory::addressFromString($ip)->getComparableString();
+        $comparableAddress = Factory::parseAddressString($ip, 3)->getComparableString();
         if (null === $comparableAddress) {
             $this->logger->warning('', [
                 'type' => 'INVALID_INPUT_IP',
@@ -198,7 +204,7 @@ abstract class AbstractBounce
         }
 
         // Handle image refresh.
-        if (null !== $this->getPostedVariable('refresh') && (bool) (int) $this->getPostedVariable('refresh')) {
+        if (null !== $this->getPostedVariable('refresh') && (int) $this->getPostedVariable('refresh')) {
             // Generate new captcha image for the user
             $this->storeNewCaptchaCoupleInSession();
             $this->setSessionVariable('crowdsec_captcha_resolution_failed', false);
@@ -213,7 +219,7 @@ abstract class AbstractBounce
                 $this->getSessionVariable('crowdsec_captcha_phrase_to_guess'),
                 $this->getPostedVariable('phrase'),
                 $ip)) {
-                // User has correctly fill the captcha
+                // User has correctly filled the captcha
                 $this->setSessionVariable('crowdsec_captcha_has_to_be_resolved', false);
                 $this->unsetSessionVariable('crowdsec_captcha_phrase_to_guess');
                 $this->unsetSessionVariable('crowdsec_captcha_inline_image');
@@ -235,7 +241,7 @@ abstract class AbstractBounce
         $this->handleCaptchaResolutionForm($ip);
 
         if (null === $this->getSessionVariable('crowdsec_captcha_has_to_be_resolved')) {
-            // Setup the first captcha remediation.
+            // Set up the first captcha remediation.
 
             $this->storeNewCaptchaCoupleInSession();
             $this->setSessionVariable('crowdsec_captcha_has_to_be_resolved', true);
@@ -257,16 +263,14 @@ abstract class AbstractBounce
             $this->clearCaptchaSessionContext();
         }
         switch ($remediation) {
-            case Constants::REMEDIATION_BYPASS:
-                return;
             case Constants::REMEDIATION_CAPTCHA:
                 $this->handleCaptchaRemediation($ip);
                 break;
             case Constants::REMEDIATION_BAN:
                 $this->handleBanRemediation();
                 break;
+            case Constants::REMEDIATION_BYPASS:
             default:
-                return;
         }
     }
 }

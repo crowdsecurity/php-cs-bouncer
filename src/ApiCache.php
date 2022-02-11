@@ -384,7 +384,7 @@ class ApiCache
             $id = $remediation[2];
 
             if (Constants::SCOPE_IP === $decision['scope']) {
-                $address = Factory::addressFromString($decision['value']);
+                $address = Factory::parseAddressString($decision['value'], 3);
                 if (null === $address) {
                     $this->logger->warning('', [
                         'type' => 'INVALID_IP_TO_ADD_FROM_REMEDIATION',
@@ -395,7 +395,7 @@ class ApiCache
                 $cacheKey = $this->getCacheKey($decision['scope'], $address->toString());
                 $this->addRemediationToCacheItem($cacheKey, $type, $exp, $id);
             } elseif (Constants::SCOPE_RANGE === $decision['scope']) {
-                $range = Subnet::fromString($decision['value']);
+                $range = Subnet::parseString($decision['value']);
 
                 $addressType = $range->getAddressType();
                 $isIpv6 = (Type::T_IPv6 === $addressType);
@@ -438,7 +438,7 @@ class ApiCache
         $count = 0;
         foreach ($decisions as $decision) {
             if (Constants::SCOPE_IP === $decision['scope']) {
-                $address = Factory::addressFromString($decision['value']);
+                $address = Factory::parseAddressString($decision['value'], 3);
                 if (null === $address) {
                     $this->logger->warning('', [
                         'type' => 'INVALID_IP_TO_REMOVE_FROM_REMEDIATION',
@@ -457,7 +457,7 @@ class ApiCache
                     ]);
                 }
             } elseif (Constants::SCOPE_RANGE === $decision['scope']) {
-                $range = Subnet::fromString($decision['value']);
+                $range = Subnet::parseString($decision['value']);
 
                 $addressType = $range->getAddressType();
                 $isIpv6 = (Type::T_IPv6 === $addressType);
