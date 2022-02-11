@@ -232,7 +232,7 @@ class Bouncer
      * We are permissive with the user (0 is interpreted as "o" and 1 in interpreted as "l").
      *
      * @param string $expected The expected phrase
-     * @param string $try The phrase to check (the user input)
+     * @param string $try      The phrase to check (the user input)
      * @param string $ip       The IP of the use (for logging purpose)
      *
      * @return bool If the captcha input was correct or not

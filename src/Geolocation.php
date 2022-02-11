@@ -1,16 +1,18 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
+use BadMethodCallException;
 use Exception;
 use GeoIp2\Database\Reader;
 use GeoIp2\Exception\AddressNotFoundException;
-use MaxMind\Db\Reader\InvalidDatabaseException;
 use InvalidArgumentException;
-use BadMethodCallException;
+use MaxMind\Db\Reader\InvalidDatabaseException;
 
 /**
- * The Library geolocation helper. You'll find here methods used for geolocation purposes
+ * The Library geolocation helper. You'll find here methods used for geolocation purposes.
  *
  * @author    CrowdSec team
  *
@@ -21,17 +23,13 @@ use BadMethodCallException;
  */
 class Geolocation
 {
-
     protected array $maxmindCountry = [];
 
-    private array $resultTemplate = ['country' => "", 'not_found' => "", 'error' => ""];
+    private array $resultTemplate = ['country' => '', 'not_found' => '', 'error' => ''];
 
     /**
-     * Retrieve a country from a MaxMind database
-     * @param string $ip
-     * @param string $databaseType
-     * @param string $databasePath
-     * @return array
+     * Retrieve a country from a MaxMind database.
+     *
      * @throws Exception
      */
     private function getMaxMindCountry(string $ip, string $databaseType, string $databasePath): array
@@ -64,10 +62,8 @@ class Geolocation
     }
 
     /**
-     * Retrieve country from a geo-localised IP
-     * @param array $geolocConfig
-     * @param string $ip
-     * @return array
+     * Retrieve country from a geo-localised IP.
+     *
      * @throws Exception
      */
     public function getCountryResult(array $geolocConfig, string $ip): array
@@ -91,13 +87,13 @@ class Geolocation
                     $this->getMaxMindCountry($currentIp, $configPath['database_type'], $configPath['database_path']);
                 break;
             default:
-                throw new Exception('Unknown Geolocation type:' . $geolocConfig['type']);
+                throw new Exception('Unknown Geolocation type:'.$geolocConfig['type']);
         }
 
-        if($saveInSession){
+        if ($saveInSession) {
             if (!empty($result['country'])) {
                 Session::setSessionVariable('crowdsec_geolocation_country', $result['country']);
-            } elseif ( !empty($result['not_found'])) {
+            } elseif (!empty($result['not_found'])) {
                 Session::setSessionVariable('crowdsec_geolocation_not_found', $result['not_found']);
             }
         }

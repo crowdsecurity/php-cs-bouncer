@@ -8,7 +8,6 @@ use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 
-
 /**
  * The class that apply a bounce.
  *
@@ -136,7 +135,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             'fallback_remediation' => $fallbackRemediation,
             'cache_expiration_for_clean_ip' => $cleanIpCacheDuration,
             'cache_expiration_for_bad_ip' => $badIpCacheDuration,
-            'geolocation' => $geolocation
+            'geolocation' => $geolocation,
         ]);
 
         return $this->bouncer;
@@ -258,7 +257,6 @@ class StandAloneBounce extends AbstractBounce implements IBounce
      */
     public function getSessionVariable(string $name)
     {
-
         return Session::getSessionVariable($name);
     }
 
