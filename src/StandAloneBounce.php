@@ -8,11 +8,6 @@ use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 
-/** @var Bouncer|null */
-$crowdSecBouncer = null;
-
-/** @var AbstractAdapter|null */
-$crowdSecCacheAdapterInstance = null;
 
 /**
  * The class that apply a bounce.
@@ -104,6 +99,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         $badIpCacheDuration = (int) $this->getStringSettings('bad_ip_cache_duration');
         $fallbackRemediation = $this->getStringSettings('fallback_remediation');
         $bouncingLevel = $this->getStringSettings('bouncing_level');
+        $geolocation = $this->getArraySettings('geolocation');
 
         // Init Bouncer instance
 
@@ -121,7 +117,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             throw new BouncerException("Unknown $bouncingLevel");
     }
 
-        // Instanciate the bouncer
+        // Instantiate the bouncer
         try {
             $this->cacheAdapter = $this->getCacheAdapterInstance();
         } catch (InvalidArgumentException $e) {
@@ -140,7 +136,8 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             'fallback_remediation' => $fallbackRemediation,
             'cache_expiration_for_clean_ip' => $cleanIpCacheDuration,
             'cache_expiration_for_bad_ip' => $badIpCacheDuration,
-        ], $this->cacheAdapter);
+            'geolocation' => $geolocation
+        ]);
 
         return $this->bouncer;
     }
@@ -259,13 +256,10 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     /**
      * Return a session variable, null if not set.
      */
-    public function getSessionVariable(string $name): ?string
+    public function getSessionVariable(string $name)
     {
-        if (!isset($_SESSION[$name])) {
-            return null;
-        }
 
-        return $_SESSION[$name];
+        return Session::getSessionVariable($name);
     }
 
     /**
@@ -273,7 +267,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
      */
     public function setSessionVariable(string $name, $value): void
     {
-        $_SESSION[$name] = $value;
+        Session::setSessionVariable($name, $value);
     }
 
     /**
@@ -283,9 +277,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
      */
     public function unsetSessionVariable(string $name): void
     {
-        if (isset($_SESSION[$name])) {
-            unset($_SESSION[$name]);
-        }
+        Session::unsetSessionVariable($name);
     }
 
     /**

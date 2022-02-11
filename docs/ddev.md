@@ -259,3 +259,31 @@ and:
 ```
 ddev phpcbf ./my-own-modules/crowdsec-php-lib/vendor/bin/phpcs my-own-modules/crowdsec-php-lib/src
 ```
+
+
+### Auto prepend mode
+
+Before using the bouncer in a standalone mode (i.e. with an auto-prepend directive), you should copy the 
+`examples/auto-prepend/settings.example.php` file to a `examples/auto-prepend/settings.php` and edit it depending on 
+your needs.
+
+And you need also to have functional php website sources under your `php-project-sources` folder. For a quick test, 
+you could just create a `php-project-sources/index.php` with the following content;
+```php
+<?php
+
+echo "This is HOMEPAGE";
+```
+
+Then, to configure the Nginx service in order that it uses an auto-prepend directive pointing to the 
+`examples/auto-prepend/scripts/bounce-via-auto-prepend.php` script, please run the 
+following command from the `.ddev` folder:
+
+```
+ddev crowdsec-prepend-nginx
+
+```
+
+
+With that done, every access to your ddev url (i.e. `https://phpXX.ddev.site` where `XX` is your php version) will 
+be bounce

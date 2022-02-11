@@ -30,40 +30,54 @@ use Symfony\Component\Cache\PruneableInterface;
 class ApiCache
 {
     /** @var LoggerInterface */
-    private $logger;
+    private LoggerInterface $logger;
 
     /** @var ApiClient */
-    private $apiClient;
+    private ApiClient $apiClient;
 
     /** @var AbstractAdapter */
     private $adapter;
 
-    /** @var bool */
-    private $liveMode = null;
-
-    /** @var int */
-    private $cacheExpirationForCleanIp = null;
-
-    /** @var int */
-    private $cacheExpirationForBadIp = null;
+    /** @var Geolocation */
+    private Geolocation $geolocation;
 
     /** @var bool */
-    private $warmedUp = null;
+    private ?bool $liveMode = null;
+
+    /** @var int */
+    private int $cacheExpirationForCleanIp = 0;
+
+    /** @var int */
+    private int $cacheExpirationForBadIp = 0;
+
+    /** @var bool */
+    private ?bool $warmedUp = null;
     /**
      * @var string
      */
-    private $fallbackRemediation;
+    private string $fallbackRemediation;
+    /**
+     * @var array
+     */
+    private array $geolocConfig;
+    /**
+     * @var array
+     */
+    private array $cacheKey = [];
 
     /**
      * @param LoggerInterface $logger The logger to use
      * @param ApiClient|null $apiClient The APIClient instance to use
      * @param AbstractAdapter|null $adapter The AbstractAdapter adapter to use
+     * @param Geolocation|null $geolocation The Geolocation helper to use
      */
-    public function __construct(LoggerInterface $logger, ApiClient $apiClient = null, AbstractAdapter $adapter = null)
+    public function __construct(LoggerInterface $logger, ApiClient $apiClient = null, AbstractAdapter $adapter =
+    null, Geolocation $geolocation = null)
     {
         $this->logger = $logger;
         $this->apiClient = $apiClient ?: new ApiClient($logger);
         $this->adapter = $adapter ?: new FilesystemAdapter();
+        $this->geolocation = $geolocation ?: new Geolocation();
     }
 
     /**
@@ -88,12 +102,14 @@ class ApiCache
         string $apiKey,
         int $cacheExpirationForCleanIp,
         int $cacheExpirationForBadIp,
-        string $fallbackRemediation
+        string $fallbackRemediation,
+        array $geolocConfig = []
     ): void {
         $this->liveMode = $liveMode;
         $this->cacheExpirationForCleanIp = $cacheExpirationForCleanIp;
         $this->cacheExpirationForBadIp = $cacheExpirationForBadIp;
         $this->fallbackRemediation = $fallbackRemediation;
+        $this->geolocConfig = $geolocConfig;
         $cacheConfigItem = $this->adapter->getItem('cacheConfig');
         $cacheConfig = $cacheConfigItem->get();
         $this->warmedUp = (\is_array($cacheConfig) && isset($cacheConfig['warmed_up'])
@@ -105,18 +121,25 @@ class ApiCache
             'exp_clean_ips' => $cacheExpirationForCleanIp,
             'exp_bad_ips' => $cacheExpirationForBadIp,
             'warmed_up' => ($this->warmedUp ? 'true' : 'false'),
+            'geolocation' => $this->geolocConfig
         ]);
         $this->apiClient->configure($apiUrl, $timeout, $userAgent, $apiKey);
     }
 
     /**
-     * Add remediation to a Symfony Cache Item identified by IP.
+     * Add remediation to a Symfony Cache Item identified by a cache key.
+     * @param string $cacheKey
+     * @param string $type
+     * @param int $expiration
+     * @param int $decisionId
+     * @return string
      * @throws InvalidArgumentException
      * @throws Exception
      */
-    private function addRemediationToCacheItem(string $ip, string $type, int $expiration, int $decisionId): string
+    private function addRemediationToCacheItem(string $cacheKey, string $type, int $expiration, int $decisionId):
+    string
     {
-        $item = $this->adapter->getItem(base64_encode($ip));
+        $item = $this->adapter->getItem(base64_encode($cacheKey));
 
         // Merge with existing remediations (if any).
         $remediations = $item->isHit() ? $item->get() : [];
@@ -125,7 +148,7 @@ class ApiCache
         if (false !== $index) {
             $this->logger->debug('', [
                 'type' => 'IP_CLEAN_TO_BAD',
-                'ip' => $ip,
+                'cache_key' => $cacheKey,
                 'old_remediation' => Constants::REMEDIATION_BYPASS,
             ]);
             unset($remediations[$index]);
@@ -147,20 +170,20 @@ class ApiCache
         // Save the cache without committing it to the cache system.
         // Useful to improve performance when updating the cache.
         if (!$this->adapter->saveDeferred($item)) {
-            throw new BouncerException("cache#$ip: Unable to save this deferred item in cache: "."$type for $expiration sec, (decision $decisionId)");
+            throw new BouncerException("cache#$cacheKey: Unable to save this deferred item in cache: "."$type for $expiration sec, (decision $decisionId)");
         }
 
         return $prioritizedRemediations[0][0];
     }
 
     /**
-     * Remove a decision from a Symfony Cache Item identified by ip.
+     * Remove a decision from a Symfony Cache Item identified by a cache key.
      * @throws InvalidArgumentException
      * @throws Exception
      */
-    private function removeDecisionFromRemediationItem(string $ip, int $decisionId): bool
+    private function removeDecisionFromRemediationItem(string $cacheKey, int $decisionId): bool
     {
-        $item = $this->adapter->getItem(base64_encode($ip));
+        $item = $this->adapter->getItem(base64_encode($cacheKey));
         $remediations = $item->get();
 
         $index = false;
@@ -177,9 +200,9 @@ class ApiCache
         if (!$remediations) {
             $this->logger->debug('', [
                 'type' => 'CACHE_ITEM_REMOVED',
-                'ip' => $ip,
+                'cache_key' => $cacheKey,
             ]);
-            $this->adapter->delete(base64_encode($ip));
+            $this->adapter->delete(base64_encode($cacheKey));
 
             return true;
         }
@@ -192,12 +215,12 @@ class ApiCache
         // Save the cache without committing it to the cache system.
         // Useful to improve performance when updating the cache.
         if (!$this->adapter->saveDeferred($item)) {
-            throw new BouncerException("cache#$ip: Unable to save item");
+            throw new BouncerException("cache#$cacheKey: Unable to save item");
         }
         $this->logger->debug('', [
             'type' => 'DECISION_REMOVED',
             'decision' => $decisionId,
-            'ips' => [$ip],
+            'cache_key' => $cacheKey,
         ]);
 
         return true;
@@ -276,10 +299,13 @@ class ApiCache
     }
 
     /**
-     * Update the cached remediation of the specified IP from these new decisions.
+     * Update the cached remediation of the specified cacheKey from these new decisions.
+     * @param array $decisions
+     * @param string $cacheKey
+     * @return string
      * @throws InvalidArgumentException
      */
-    private function saveRemediationsForIp(array $decisions, string $ip): string
+    private function saveRemediationsForCacheKey(array $decisions, string $cacheKey): string
     {
         $remediationResult = Constants::REMEDIATION_BYPASS;
         if (\count($decisions)) {
@@ -292,14 +318,14 @@ class ApiCache
                 $type = $remediation[0];
                 $exp = $remediation[1];
                 $id = $remediation[2];
-                $remediationResult = $this->addRemediationToCacheItem($ip, $type, $exp, $id);
+                $remediationResult = $this->addRemediationToCacheItem($cacheKey, $type, $exp, $id);
             }
         } else {
             $remediation = $this->formatRemediationFromDecision(null);
             $type = $remediation[0];
             $exp = $remediation[1];
             $id = $remediation[2];
-            $remediationResult = $this->addRemediationToCacheItem($ip, $type, $exp, $id);
+            $remediationResult = $this->addRemediationToCacheItem($cacheKey, $type, $exp, $id);
         }
         $this->commit();
 
@@ -307,8 +333,35 @@ class ApiCache
     }
 
     /**
+     * Cache key convention
+     * @param string $scope
+     * @param string $value
+     * @return string
+     * @throws Exception
+     */
+    private function getCacheKey(string $scope, string $value): string
+    {
+        if(!isset($this->cacheKey[$scope][$value])){
+            switch ($scope) {
+                case Constants::SCOPE_RANGE:
+                case Constants::SCOPE_IP:
+                    $this->cacheKey[$scope][$value] = Constants::SCOPE_IP . ':' . $value;
+                    break;
+                case Constants::SCOPE_COUNTRY:
+                    $this->cacheKey[$scope][$value] = Constants::SCOPE_COUNTRY . ':' . $value;
+                    break;
+                default:
+                    throw new Exception('Unknown scope:' . $scope);
+            }
+        }
+
+        return $this->cacheKey[$scope][$value];
+    }
+
+    /**
      * Update the cached remediations from these new decisions.
      * @throws InvalidArgumentException
+     * @throws Exception
      */
     private function saveRemediations(array $decisions): array
     {
@@ -323,7 +376,7 @@ class ApiCache
             $exp = $remediation[1];
             $id = $remediation[2];
 
-            if ('Ip' === $decision['scope']) {
+            if (Constants::SCOPE_IP === $decision['scope']) {
                 $address = Factory::addressFromString($decision['value']);
                 if (null === $address) {
                     $this->logger->warning('', [
@@ -332,8 +385,9 @@ class ApiCache
                     ]);
                     continue;
                 }
-                $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
-            } elseif ('Range' === $decision['scope']) {
+                $cacheKey = $this->getCacheKey($decision['scope'], $address->toString());
+                $this->addRemediationToCacheItem($cacheKey, $type, $exp, $id);
+            } elseif (Constants::SCOPE_RANGE === $decision['scope']) {
                 $range = Subnet::fromString($decision['value']);
 
                 $addressType = $range->getAddressType();
@@ -344,20 +398,23 @@ class ApiCache
                     $this->logger->warning('', $error);
                     continue;
                 }
-                $comparableEndAddress = $range->getEndAddress()->getComparableString();
-
                 $comparableEndAddress = $range->getComparableEndString();
                 $address = $range->getStartAddress();
-                $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
+                $cacheKey = $this->getCacheKey($decision['scope'], $address->toString());
+                $this->addRemediationToCacheItem($cacheKey, $type, $exp, $id);
                 $ipCount = 1;
                 do {
                     $address = $address->getNextAddress();
-                    $this->addRemediationToCacheItem($address->toString(), $type, $exp, $id);
+                    $cacheKey = $this->getCacheKey($decision['scope'], $address->toString());
+                    $this->addRemediationToCacheItem($cacheKey, $type, $exp, $id);
                     ++$ipCount;
                     if ($ipCount >= 1000) {
                         throw new BouncerException("Unable to store the decision ${$decision['id']}, the IP range: ${$decision['value']} is too large and can cause storage problem. Decision ignored.");
                     }
                 } while (0 !== strcmp($address->getComparableString(), $comparableEndAddress));
+            } elseif (Constants::SCOPE_COUNTRY === $decision['scope']) {
+                $cacheKey = $this->getCacheKey($decision['scope'], $decision['value']);
+                $this->addRemediationToCacheItem($cacheKey, $type, $exp, $id);
             }
         }
 
@@ -366,13 +423,14 @@ class ApiCache
 
     /**
      * @throws InvalidArgumentException
+     * @throws Exception
      */
     private function removeRemediations(array $decisions): array
     {
         $errors = [];
         $count = 0;
         foreach ($decisions as $decision) {
-            if ('Ip' === $decision['scope']) {
+            if (Constants::SCOPE_IP === $decision['scope']) {
                 $address = Factory::addressFromString($decision['value']);
                 if (null === $address) {
                     $this->logger->warning('', [
@@ -381,7 +439,8 @@ class ApiCache
                     ]);
                     continue;
                 }
-                if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
+                $cacheKey = $this->getCacheKey($decision['scope'], $address->toString());
+                if (!$this->removeDecisionFromRemediationItem($cacheKey, $decision['id'])) {
                     $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
                 } else {
                     $this->logger->debug('', [
@@ -390,7 +449,7 @@ class ApiCache
                     'value' => $decision['value'],
                     ]);
                 }
-            } elseif ('Range' === $decision['scope']) {
+            } elseif (Constants::SCOPE_RANGE === $decision['scope']) {
                 $range = Subnet::fromString($decision['value']);
 
                 $addressType = $range->getAddressType();
@@ -404,14 +463,16 @@ class ApiCache
 
                 $comparableEndAddress = $range->getComparableEndString();
                 $address = $range->getStartAddress();
-                if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
+                $cacheKey = $this->getCacheKey($decision['scope'], $address->toString());
+                if (!$this->removeDecisionFromRemediationItem($cacheKey, $decision['id'])) {
                     $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
                 }
                 $ipCount = 1;
                 $success = true;
                 do {
                     $address = $address->getNextAddress();
-                    if (!$this->removeDecisionFromRemediationItem($address->toString(), $decision['id'])) {
+                    $cacheKey = $this->getCacheKey($decision['scope'], $address->toString());
+                    if (!$this->removeDecisionFromRemediationItem($cacheKey, $decision['id'])) {
                         $success = false;
                     }
                     ++$ipCount;
@@ -424,6 +485,7 @@ class ApiCache
                     $this->logger->debug('', [
                         'type' => 'DECISION_REMOVED',
                         'decision' => $decision['id'],
+                        'scope' => $decision['scope'],
                         'value' => $decision['value'],
                         ]);
                     ++$count;
@@ -432,6 +494,18 @@ class ApiCache
                     // Ignoring them is therefore not a problem.
                     $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
                 }
+            } elseif (Constants::SCOPE_COUNTRY === $decision['scope']) {
+                $cacheKey = $this->getCacheKey($decision['scope'], $decision['value']);
+                if (!$this->removeDecisionFromRemediationItem($cacheKey, $decision['id'])) {
+                    $this->logger->debug('', ['type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE', 'decision' => $decision['id']]);
+                } else {
+                    $this->logger->debug('', [
+                        'type' => 'DECISION_REMOVED',
+                        'decision' => $decision['id'],
+                        'value' => $decision['value'],
+                    ]);
+                }
+
             }
         }
 
@@ -544,22 +618,34 @@ class ApiCache
     }
 
     /**
-     * This method is called when nothing has been found in cache for the requested IP.
+     * This method is called when nothing has been found in cache for the requested value/cacheScope pair (IP,country).
      * In live mode is enabled, calls the API for decisions concerning the specified IP
-     * In stream mode, as we consider cache is the single source of truth, the IP is considered clean.
+     * In stream mode, as we consider cache is the single source of truth, the value is considered clean.
      * Finally, the result is stored in caches for further calls.
+     * @param string $value
+     * @param string $cacheScope
+     * @return string
      * @throws InvalidArgumentException
+     * @throws Exception
      */
-    private function miss(string $ipToQuery, string $cacheKey): string
+    private function miss(string $value, string $cacheScope): string
     {
         $decisions = [];
-
+        $cacheKey = $this->getCacheKey($cacheScope, $value);
         if ($this->liveMode) {
-            $this->logger->debug('', ['type' => 'DIRECT_API_CALL', 'ip' => $ipToQuery]);
-            $decisions = $this->apiClient->getFilteredDecisions(['ip' => $ipToQuery]);
+            if($cacheScope === Constants::SCOPE_IP){
+                $this->logger->debug('', ['type' => 'DIRECT_API_CALL', 'ip' => $value]);
+                $decisions = $this->apiClient->getFilteredDecisions(['ip' => $value]);
+            } elseif($cacheScope === Constants::SCOPE_COUNTRY){
+                $this->logger->debug('', ['type' => 'DIRECT_API_CALL', 'country' => $value]);
+                $decisions = $this->apiClient->getFilteredDecisions([
+                    'scope' => Constants::SCOPE_COUNTRY,
+                    'value' => $value
+                ]);
+            }
         }
 
-        return $this->saveRemediationsForIp($decisions, $cacheKey);
+        return $this->saveRemediationsForCacheKey($decisions, $cacheKey);
     }
 
     /**
@@ -580,39 +666,87 @@ class ApiCache
     }
 
     /**
-     * Request the cache for the specified IP.
-     *
-     * @return string the computed remediation string, or null if no decision was found
+     * @param string $cacheScope
+     * @param $value
+     * @return string
      * @throws InvalidArgumentException
+     * @throws Exception
      */
-    public function get(AddressInterface $address): string
+    private function handleCacheRemediation (string $cacheScope, $value): string
     {
-        $cacheKey = $address->toString();
-        $this->logger->debug('', ['type' => 'START_IP_CHECK', 'ip' => $cacheKey]);
-        if (!$this->liveMode && !$this->warmedUp) {
-            throw new BouncerException('CrowdSec Bouncer configured in "stream" mode. Please warm the cache up before trying to access it.');
-        }
-
+        $cacheKey = $this->getCacheKey($cacheScope, $value);
         if ($this->adapter->hasItem(base64_encode($cacheKey))) {
             $remediation = $this->hit($cacheKey);
             $cache = 'hit';
         } else {
-            $remediation = $this->miss($address->toString(), $cacheKey);
+            $remediation = $this->miss($value, $cacheScope);
             $cache = 'miss';
         }
 
         if (Constants::REMEDIATION_BYPASS === $remediation) {
-            $this->logger->info('', ['type' => 'CLEAN_IP', 'ip' => $cacheKey, 'cache' => $cache]);
+            $this->logger->info('', ['type' => 'CLEAN_VALUE', 'scope' => $cacheScope, 'value' => $value, 'cache' =>
+            $cache]);
         } else {
             $this->logger->warning('', [
-                'type' => 'BAD_IP',
-                'ip' => $cacheKey,
+                'type' => 'BAD_VALUE',
+                'value' => $value,
+                'scope' => $cacheScope,
                 'remediation' => $remediation,
                 'cache' => $cache,
             ]);
         }
-
         return $remediation;
+
+    }
+
+    /**
+     * Request the cache for the specified IP.
+     *
+     * @return string the computed remediation string, or null if no decision was found
+     * @throws InvalidArgumentException
+     * @throws Exception
+     */
+    public function get(AddressInterface $address): string
+    {
+        $ip = $address->toString();
+        $this->logger->debug('', ['type' => 'START_IP_CHECK', 'ip' => $ip]);
+
+        if (!$this->liveMode && !$this->warmedUp) {
+            throw new BouncerException('CrowdSec Bouncer configured in "stream" mode. Please warm the cache up before trying to access it.');
+        }
+
+        // Handle Ip and Range remediation
+        $remediations = [[$this->handleCacheRemediation(Constants::SCOPE_IP, $ip), "", "",]];
+
+        // Handle Geolocation remediation
+        if (!empty($this->geolocConfig['enabled'])) {
+            $countryResult = $this->geolocation->getCountryResult($this->geolocConfig, $ip);
+            $countryToQuery = null;
+            if (!empty($countryResult['country'])) {
+                $countryToQuery = $countryResult['country'];
+                $this->logger->debug('', ['type' => 'GEOLOCALISED_COUNTRY', 'ip' => $ip, 'country' => $countryToQuery]);
+            } elseif (!empty($countryResult['not_found'])) {
+                $this->logger->warning('', [
+                    'type' => 'IP_NOT_FOUND_WHILE_GETTING_GEOLOC_COUNTRY',
+                    'ip' => $ip,
+                    'error' => $countryResult['not_found'],
+                ]);
+            } elseif (!empty($countryResult['error'])) {
+                $this->logger->warning('', [
+                    'type' => 'ERROR_WHILE_GETTING_GEOLOC_COUNTRY',
+                    'ip' => $ip,
+                    'error' => $countryResult['error'],
+                ]);
+            }
+            if ($countryToQuery) {
+                $remediations[] = [$this->handleCacheRemediation(Constants::SCOPE_COUNTRY, $countryToQuery), "", "",];
+            }
+        }
+        $prioritizedRemediations = Remediation::sortRemediationByPriority($remediations);
+        $finalRemediation = $prioritizedRemediations[0][0];
+        $this->logger->info('', ['type' => 'FINAL_REMEDIATION', 'ip' => $ip, 'remediation' => $finalRemediation]);
+
+        return $finalRemediation;
     }
 
     /**

@@ -5,7 +5,8 @@ use CrowdSecBouncer\Constants;
 $crowdSecStandaloneBouncerConfig = [
     'api_url' => 'http://url-to-your-lapi:8080', // [FILL ME] Set the LAPI URL here. Example in the docker-compose dev context, use http://crowdsec:8080
     'api_key' => '...', // [FILL ME] Set a bouncer key here
-    'debug_mode' => false, // [FILL ME] Set to true to stop the process and display errors if any
+    'debug_mode' => false, // [FILL ME] Set to true to enable debug log
+    'display_errors' => false, // [FILL ME] Set to true to stop the process and display errors if any
     'log_directory_path' => __DIR__.'/.logs', // [FILL ME] Important note: be sur this path won't be publicly accessible!
     'fs_cache_path' => __DIR__.'/.cache', // [FILL ME] Important note: be sur this path won't be publicly accessible!
 
@@ -48,4 +49,15 @@ $crowdSecStandaloneBouncerConfig = [
     'theme_text_ban_wall_subtitle' => 'This page is protected against cyber attacks and your IP has been banned by our system.',
     'theme_text_ban_wall_footer' => '',
     'theme_custom_css' => '',
+
+    'geolocation' => [
+        'save_in_session' => true, // Set to true to avoid multiple call to the geolocation database
+        'test_public_ip' => '210.249.74.42', // Only if you test on a local network (docker, etc.)
+        'enabled' => true, // Set to true if you want to geo-localize IP
+        'type' => 'maxmind', // At this moment, only 'maxmind' type is available
+        'maxmind' => [ // MaxMind settings
+            'database_type' => 'city', // You can set 'city' or 'country'
+            'database_path' => '/var/www/html/GeoLite2-City.mmdb' // Absolute path to the MaxMind database
+        ]
+    ]
 ];
