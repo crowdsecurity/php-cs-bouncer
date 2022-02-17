@@ -24,12 +24,14 @@ jobs:
           repository: julienloizelet/ddev-php
 
       - name: Install DDEV
+        env:
+          DDEV_VERSION: v1.18.2
         run: |
           # @see https://ddev.readthedocs.io/en/stable/#installationupgrade-script-linux-and-macos-armarm64-and-amd64-architectures
           sudo apt-get -qq update
           sudo apt-get -qq -y install libnss3-tools
           curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh
-          bash install_ddev.sh
+          bash install_ddev.sh ${{env.DDEV_VERSION}}
           ddev config global --instrumentation-opt-in=false --omit-containers=dba,ddev-ssh-agent
           rm install_ddev.sh
 
@@ -44,13 +46,16 @@ jobs:
         run: |
           cp .ddev/config_overrides/config.${{ env.PHP_VERSION_CODE }}.yaml .ddev/config.${{ env.PHP_VERSION_CODE }}.yaml
           cp .ddev/additional_docker_compose/docker-compose.crowdsec.yaml .ddev/docker-compose.crowdsec.yaml
+          cp .ddev/additional_docker_compose/docker-compose.playwright.yaml .ddev/docker-compose.playwright.yaml
           ddev start
+          ddev --version
           ddev exec php -v
           
 
-      - name: Set BOUNCER_KEY env
+      - name: Set BOUNCER_KEY and PROXY_IP env
         run: |
-          echo "BOUNCER_KEY=$(ddev create-bouncer)" >> $GITHUB_ENV    
+          echo "BOUNCER_KEY=$(ddev create-bouncer)" >> $GITHUB_ENV
+          echo "PROXY_IP=$(ddev find-ip ddev-router)" >> $GITHUB_ENV
 
 
       - name: Clone PHP lib Crowdsec files
@@ -63,10 +68,29 @@ jobs:
           ddev composer update --working-dir ./my-own-modules/crowdsec-php-lib
 
 
-      - name: PHP UNIT
+      - name: Run PHP UNIT tests
         run: |
           ddev create-watcher PhpUnitTestMachine PhpUnitTestMachinePassword
           ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
 
-
+      - name: Prepare END TO END tests
+        run: |
+          ddev create-watcher
+          cd ${{ github.workspace }}/.ddev
+          ddev crowdsec-prepend-nginx
+          cd ${{ github.workspace }}
+          cp .ddev/custom_files/crowdsec-lib-settings.php crowdsec-lib-settings.php
+          sed -i -e 's/REPLACE_API_KEY/${{ env.BOUNCER_KEY }}/g' crowdsec-lib-settings.php
+          sed -i -e 's/REPLACE_PROXY_IP/${{ env.PROXY_IP }}/g' crowdsec-lib-settings.php
+          mv crowdsec-lib-settings.php my-own-modules/crowdsec-php-lib/examples/auto-prepend/settings.php
+          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
+          chmod +x test-init.sh
+          ./test-init.sh
+          chmod +x run-tests.sh
+            
+      - name: Run End to end test
+        run: |
+          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
+          ./run-tests.sh ci "./__tests__/1-live-mode.js"
+      
 

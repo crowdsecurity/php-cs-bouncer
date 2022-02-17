@@ -267,13 +267,6 @@ Before using the bouncer in a standalone mode (i.e. with an auto-prepend directi
 `examples/auto-prepend/settings.example.php` file to a `examples/auto-prepend/settings.php` and edit it depending on 
 your needs.
 
-And you need also to have functional php website sources under your `php-project-sources` folder. For a quick test, 
-you could just create a `php-project-sources/index.php` with the following content;
-```php
-<?php
-
-echo "This is HOMEPAGE";
-```
 
 Then, to configure the Nginx service in order that it uses an auto-prepend directive pointing to the 
 `examples/auto-prepend/scripts/bounce-via-auto-prepend.php` script, please run the 
@@ -286,4 +279,46 @@ ddev crowdsec-prepend-nginx
 
 
 With that done, every access to your ddev url (i.e. `https://phpXX.ddev.site` where `XX` is your php version) will 
-be bounce
+be bounce.
+
+For example, you should try to browse the following url:
+
+```
+https://phpXX.ddev.site/my-own-modules/crowdsec-php-lib/examples/auto-prepend/public/protected-page.php
+```
+
+#### End to end tests
+
+In auto-prepend mode, you can run some end to end tests. 
+
+We are using a Jest/Playwright Node.js stack to launch a suite of end-to-end tests.
+
+Tests code is in the `tests/end-to-end` folder. You should have to `chmod +x` the scripts you will find in  
+`tests/end-to-end/__scripts__`.
+
+
+Then you can use the `run-test.sh` script to run the tests:
+
+- the first parameter specifies if you want to run the test on your machine (`host`) or in the
+  docker containers (`docker`). You can also use `ci` if you want to have the same behavior as in Github action.
+- the second parameter list the test files you want to execute. If empty, all the test suite will be launched.
+
+For example:
+
+    ./run-tests.sh host "./__tests__/1-live-mode.js"
+    ./run-tests.sh docker "./__tests__/1-live-mode.js" 
+    ./run-tests.sh host
+
+Before testing with the `docker` or `ci` parameter, you have to install all the required dependencies
+in the playwright container with this command :
+
+    ./test-init.sh
+
+If you want to test with the `host` parameter, you will have to install manually all the required dependencies:
+
+```
+yarn --cwd ./tests/end-to-end --force
+yarn global add cross-env
+```
+ 
+
