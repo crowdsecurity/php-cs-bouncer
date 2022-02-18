@@ -5,7 +5,7 @@ namespace CrowdSecBouncer;
 require_once __DIR__.'/templates/captcha.php';
 require_once __DIR__.'/templates/access-forbidden.php';
 
-use Gregwar\Captcha\CaptchaBuilder;
+use CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder;
 use Gregwar\Captcha\PhraseBuilder;
 use IPLib\Factory;
 use Monolog\Handler\NullHandler;
