@@ -6,6 +6,7 @@ require_once __DIR__.'/../settings.php';
 use CrowdSecBouncer\StandAloneBounce;
 
 $bounce = new StandAloneBounce();
-$bounce->init($crowdSecStandaloneBouncerConfig);
 $bounce->setDebug($crowdSecStandaloneBouncerConfig['debug_mode']);
+$bounce->setDisplayErrors($crowdSecStandaloneBouncerConfig['display_errors']);
+$bounce->init($crowdSecStandaloneBouncerConfig);
 $bounce->safelyBounce();

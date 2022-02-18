@@ -121,7 +121,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             $maxRemediationLevel = Constants::REMEDIATION_BAN;
             break;
         default:
-            throw new Exception("Unknown $bouncingLevel");
+            throw new BouncerException("Unknown $bouncingLevel");
     }
 
         // Instanciate the bouncer
@@ -343,7 +343,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
                 header('Pragma: no-cache');
                 break;
             default:
-                throw new Exception("Unhandled code ${statusCode}");
+                throw new BouncerException("Unhandled code $statusCode");
         }
         if (null !== $body) {
             echo $body;
@@ -353,10 +353,10 @@ class StandAloneBounce extends AbstractBounce implements IBounce
 
     public function safelyBounce(): void
     {
-        // If there is any technical problem while bouncing, don't block the user. Bypass boucing and log the error.
+        // If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
         try {
-            set_error_handler(function ($errno, $errstr, $errfile, $errline) {
-                throw new BouncerException($errstr, $errno, 0, $errfile, $errline);
+            set_error_handler(function ($errno, $errstr) {
+                throw new BouncerException("$errstr (Error level: $errno)");
             });
             $this->run();
             restore_error_handler();
