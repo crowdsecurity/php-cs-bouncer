@@ -121,7 +121,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             $maxRemediationLevel = Constants::REMEDIATION_BAN;
             break;
         default:
-            throw new \Exception("Unknown $bouncingLevel");
+            throw new BouncerException("Unknown $bouncingLevel");
     }
 
         // Instanciate the bouncer
@@ -343,7 +343,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
                 header('Pragma: no-cache');
                 break;
             default:
-                throw new \Exception("Unhandled code ${statusCode}");
+                throw new BouncerException("Unhandled code $statusCode");
         }
         if (null !== $body) {
             echo $body;
