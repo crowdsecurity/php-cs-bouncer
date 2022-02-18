@@ -2,6 +2,7 @@
 
 namespace CrowdSecBouncer;
 
+use ErrorException;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
@@ -356,7 +357,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         // If there is any technical problem while bouncing, don't block the user. Bypass boucing and log the error.
         try {
             set_error_handler(function ($errno, $errstr, $errfile, $errline) {
-                throw new BouncerException($errstr, $errno, 0, $errfile, $errline);
+                throw new ErrorException($errstr, $errno, 0, $errfile, $errline);
             });
             $this->run();
             restore_error_handler();
