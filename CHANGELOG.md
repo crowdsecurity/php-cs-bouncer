@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.15.0] - 2022-02-24
+### Added
+- Add tests for PHP 8.1 (memcached is excluded)
+- Add GitHub action for Release process
+- Add `CHANGELOG.md`
+### Changed
+- Remove `composer.lock` file
+- Use `BouncerException` for some specific errors
+### Fixed
+- Fix auto-prepend script: set `debug_mode` and `display_errors` values before bouncer init
+- Fix `gregwar/captcha` for PHP 8.1
+- Fix BouncerException arguments in `set_error_handler` method
+
 ## [0.14.0] - 2021-11-18
 ### Changed
 - Allow older versions of symfony config and monolog
