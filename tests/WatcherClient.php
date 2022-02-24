@@ -54,7 +54,7 @@ class WatcherClient
         $now = new DateTime();
         $this->addDecision($now, '12h', '+12 hours', TestHelpers::BAD_IP, 'captcha');
         $this->addDecision($now, '24h', '+24 hours', TestHelpers::BAD_IP.'/'.TestHelpers::IP_RANGE, 'ban');
-        $this->addDecision($now, '24h', '+24 hours', TestHelpers::JAPAN, 'captcha', 'country');
+        $this->addDecision($now, '24h', '+24 hours', TestHelpers::JAPAN, 'captcha', Constants::SCOPE_COUNTRY);
     }
 
     /** Set the initial watcher state */

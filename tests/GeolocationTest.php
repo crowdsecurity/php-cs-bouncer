@@ -98,10 +98,5 @@ final class GeolocationTest extends TestCase
             'Get decisions for a clean IP and bad country but with geolocation disabled'
         );
 
-
-
-
-
-
     }
 }

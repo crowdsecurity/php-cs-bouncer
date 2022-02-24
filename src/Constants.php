@@ -68,7 +68,7 @@ class Constants
     public const GEOLOCATION_TYPE_MAXMIND = 'maxmind';
 
     /** @var string The CrowdSec country scope for decisions */
-    public const SCOPE_COUNTRY = 'country';
+    public const SCOPE_COUNTRY = 'Country';
 
     /** @var string The CrowdSec Ip scope for decisions */
     public const SCOPE_IP = 'Ip';

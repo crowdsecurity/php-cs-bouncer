@@ -1,5 +1,4 @@
 on:
-  push:
   workflow_dispatch:
 
 name: Markdown files test and update

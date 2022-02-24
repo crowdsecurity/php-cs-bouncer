@@ -48,15 +48,17 @@ jobs:
           cp .ddev/additional_docker_compose/docker-compose.crowdsec.yaml .ddev/docker-compose.crowdsec.yaml
           cp .ddev/additional_docker_compose/docker-compose.playwright.yaml .ddev/docker-compose.playwright.yaml
           ddev start
-          ddev --version
-          ddev exec php -v
-          
 
       - name: Set BOUNCER_KEY and PROXY_IP env
         run: |
           echo "BOUNCER_KEY=$(ddev create-bouncer)" >> $GITHUB_ENV
           echo "PROXY_IP=$(ddev find-ip ddev-router)" >> $GITHUB_ENV
 
+      - name: Some DEBUG information
+        run: |
+          ddev --version
+          ddev exec php -v
+          ddev exec -s crowdsec crowdsec -version
 
       - name: Clone PHP lib Crowdsec files
         uses: actions/checkout@v2
@@ -81,9 +83,8 @@ jobs:
 
 
       - name: Run PHP UNIT tests
-        # ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
         run: |
-          ddev exec -s crowdsec crowdsec -version
+          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
           ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/GeolocationTest.php
 
       - name: Prepare END TO END tests
