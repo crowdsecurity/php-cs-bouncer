@@ -102,9 +102,16 @@ jobs:
           ./test-init.sh
           chmod +x run-tests.sh
             
-      - name: Run End to end test
+      - name: Run End to end test without geolocation
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/1-live-mode.js"
+
+      - name: Run End to end test with geolocation
+        run: |
+          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib
+          sed -i  's/\x27enabled\x27 => false/\x27enabled\x27 => true/g' examples/auto-prepend/settings.php
+          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
+          ./run-tests.sh ci "./__tests__/2-live-mode-with-geolocation.js"
       
 

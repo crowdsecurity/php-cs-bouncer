@@ -27,7 +27,6 @@ describe(`Live mode run`, () => {
         await publicHomepageShouldBeCaptchaWallWithMentions();
     });
 
-
     it("Should display a ban wall", async () => {
         await banIpForSeconds(15 * 60, CURRENT_IP);
         await publicHomepageShouldBeBanWall();
@@ -38,13 +37,10 @@ describe(`Live mode run`, () => {
         await publicHomepageShouldBeAccessible();
     });
 
-
     it("Should fallback to the selected remediation for unknown remediation", async () => {
         await removeAllDecisions();
         await addDecision(CURRENT_IP, "mfa", 15 * 60);
         await wait(1000);
         await publicHomepageShouldBeCaptchaWall();
-        
     });
 });
-

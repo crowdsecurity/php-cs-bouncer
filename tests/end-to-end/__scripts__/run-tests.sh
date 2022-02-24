@@ -8,7 +8,7 @@
 YELLOW='\033[33m'
 RESET='\033[0m'
 if ! ddev --version >/dev/null 2>&1; then
-    printf "${YELLOW}Ddev is required for this script. Please see docs/ddev.md.${RESET}\n"
+    printf "%bDdev is required for this script. Please see docs/ddev.md.%b\n" "${YELLOW}" "${RESET}"
     exit 1
 fi
 
@@ -44,6 +44,7 @@ PHPVERSION=$(ddev exec printenv DDEV_PROJECT | sed 's/\r//g')
 PHP_URL=https://$HOSTNAME
 PROXY_IP=$(ddev find-ip ddev-router)
 BOUNCER_KEY=$(ddev exec grep "'api_key'" /var/www/html/my-own-modules/crowdsec-php-lib/examples/auto-prepend/settings.php | sed 's/api_key//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
+GEOLOC_ENABLED=$(ddev exec grep -E "'enabled'.*,$" /var/www/html/my-own-modules/crowdsec-php-lib/examples/auto-prepend/settings.php | sed 's/enabled//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
 JEST_PARAMS="--bail=true  --runInBand --verbose"
 # If FAIL_FAST, will exit on first individual test fail
 # @see CustomEnvironment.js
@@ -97,18 +98,19 @@ esac
 # Run command
 
 $COMMAND \
-PHP_URL=$PHP_URL \
+PHP_URL="$PHP_URL" \
 $DEBUG_STRING \
-BOUNCER_KEY=$BOUNCER_KEY \
-PROXY_IP=$PROXY_IP  \
+BOUNCER_KEY="$BOUNCER_KEY" \
+PROXY_IP="$PROXY_IP"  \
+GEOLOC_ENABLED="$GEOLOC_ENABLED" \
 LAPI_URL_FROM_PLAYWRIGHT=$LAPI_URL_FROM_PLAYWRIGHT \
-CURRENT_IP=$CURRENT_IP \
+CURRENT_IP="$CURRENT_IP" \
 TIMEOUT=$TIMEOUT \
 HEADLESS=$HEADLESS \
 FAIL_FAST=$FAIL_FAST \
 SLOWMO=$SLOWMO \
 yarn --cwd $YARN_PATH test \
-    $JEST_PARAMS \
+    "$JEST_PARAMS" \
     --json \
-    --outputFile=./.test-results-$PHPVERSION.json \
-    $FILE_LIST
+    --outputFile=./.test-results-"$PHPVERSION".json \
+    "$FILE_LIST"

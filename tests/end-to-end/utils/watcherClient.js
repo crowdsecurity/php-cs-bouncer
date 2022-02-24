@@ -114,27 +114,30 @@ const auth = async () => {
 };
 
 module.exports.addDecision = async (
-    ipOrCidr,
-    remediation = "ban",
+    value,
+    remediation,
     durationInSeconds,
+    scope = "Ip"
 ) => {
     await auth();
-    let startIp;
-    let endIp;
-    if (ipOrCidr.split("/").length === 2) {
-        [startIp, endIp] = cidrToRange(ipOrCidr);
-    } else {
-        startIp = ipOrCidr;
-        endIp = ipOrCidr;
+    let finalScope = "Country";
+    if(["Ip", "Range"].includes(scope)){
+        let startIp;
+        let endIp;
+        if (value.split("/").length === 2) {
+            [startIp, endIp] = cidrToRange(value);
+        } else {
+            startIp = value;
+            endIp = value;
+        }
+        const startLongIp = ip2long(startIp);
+        const endLongIp = ip2long(endIp);
+        const isRange = startLongIp !== endLongIp;
+        finalScope = isRange ? "Range" : "Ip";
     }
-    const startLongIp = ip2long(startIp);
-    const endLongIp = ip2long(endIp);
-    const isRange = startLongIp !== endLongIp;
-    const scenario = `add ${remediation} to ${
-        isRange ? `range ${startIp} to ${endIp}` : `ip ${startIp}`
-    } for ${durationInSeconds} seconds for e2e tests`;
-    const scope = isRange ? "Range" : "Ip";
-    const value = ipOrCidr;
+    
+    const scenario = `add ${remediation} with scope/value ${scope}/${value} for ${durationInSeconds} seconds for e2e tests`;
+    
     const startAt = new Date();
     const stopAt = new Date();
     stopAt.setTime(stopAt.getTime() + durationInSeconds * 1000);
@@ -144,11 +147,9 @@ module.exports.addDecision = async (
             decisions: [
                 {
                     duration: `${durationInSeconds}s`,
-                    start_ip: startLongIp,
                     origin: "cscli",
                     scenario,
-                    scope,
-                    end_ip: endLongIp,
+                    scope: finalScope,
                     type: remediation,
                     value,
                 },
@@ -163,7 +164,7 @@ module.exports.addDecision = async (
             scenario_version: "",
             simulated: false,
             source: {
-                scope,
+                scope: finalScope,
                 value,
             },
             start_at: startAt.toISOString(),
