@@ -65,6 +65,9 @@ class WatcherClient
         $now = new DateTime();
         $this->addDecision($now, '36h', '+36 hours', TestHelpers::NEWLY_BAD_IP, 'ban');
         $this->addDecision($now, '48h', '+48 hours', TestHelpers::NEWLY_BAD_IP.'/'.TestHelpers::IP_RANGE, 'captcha');
+        $this->addDecision($now, '24h', '+24 hours', TestHelpers::JAPAN, 'captcha', Constants::SCOPE_COUNTRY);
+        $this->addDecision($now, '24h', '+24 hours', TestHelpers::IP_JAPAN, 'ban');
+        $this->addDecision($now, '24h', '+24 hours', TestHelpers::IP_FRANCE, 'ban');
     }
 
     /**
@@ -102,11 +105,11 @@ class WatcherClient
     }
 
     protected function getFinalScope($scope, $value){
-        return ($scope === 'Ip' && 2 === count(explode('/', $value))) ? 'Range' : $scope;
+        return ($scope === Constants::SCOPE_IP && 2 === count(explode('/', $value))) ? Constants::SCOPE_RANGE : $scope;
     }
 
     public function addDecision(DateTime $now, string $durationString, string $dateTimeDurationString, string
-    $value, string $type, string $scope = 'Ip')
+    $value, string $type, string $scope = Constants::SCOPE_IP)
     {
         $stopAt = (clone $now)->modify($dateTimeDurationString)->format('Y-m-d\TH:i:s.000\Z');
         $startAt = $now->format('Y-m-d\TH:i:s.000\Z');

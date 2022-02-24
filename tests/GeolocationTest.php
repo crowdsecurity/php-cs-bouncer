@@ -7,7 +7,6 @@ require __DIR__ . '/WatcherClient.php';
 use CrowdSecBouncer\ApiCache;
 use CrowdSecBouncer\ApiClient;
 use CrowdSecBouncer\Bouncer;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
@@ -46,7 +45,6 @@ final class GeolocationTest extends TestCase
         // Check if MaxMind database exist
         if (!file_exists($maxmindConfig['database_path'])) {
             $this->fail('There must be a MaxMind Database here: '.$maxmindConfig['database_path']);
-            $this->stopFlag = true; // Stop further processing if this occurs
         }
         // Init context
         $cacheAdapter = new PhpFilesAdapter('php_array_adapter_backup_cache', 0,
@@ -81,9 +79,14 @@ final class GeolocationTest extends TestCase
         $this->assertEquals(
             'captcha',
             $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
-            'Get decisions for a clean IP but bad country'
+            'Get decisions for a clean IP but bad country (captcha)'
         );
 
+        $this->assertEquals(
+            'bypass',
+            $bouncer->getRemediationForIp(TestHelpers::IP_FRANCE),
+            'Get decisions for a clean IP and clean country'
+        );
 
         // Disable Geolocation feature
         $geolocationConfig['enabled'] = false;
@@ -97,6 +100,43 @@ final class GeolocationTest extends TestCase
             $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
             'Get decisions for a clean IP and bad country but with geolocation disabled'
         );
+
+
+        // Enable again geolocation and change testing conditions
+        $this->watcherClient->setSecondState();
+        $geolocationConfig['enabled'] = true;
+        $bouncerConfig['geolocation'] = $geolocationConfig;
+        $bouncer = new Bouncer(null, $this->logger, $apiCache);
+        $bouncer->configure($bouncerConfig);
+        $cacheAdapter->clear();
+
+        $this->assertEquals(
+            'ban',
+            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
+            'Get decisions for a bad IP (ban) and bad country (captcha)'
+        );
+
+
+        $this->assertEquals(
+            'ban',
+            $bouncer->getRemediationForIp(TestHelpers::IP_FRANCE),
+            'Get decisions for a bad IP (ban) and clean country'
+        );
+
+    }
+
+
+    /**
+     * @group integration
+     * @covers       \Bouncer
+     * @dataProvider maxmindConfigProvider
+     * @group ignore_
+     * @throws \Symfony\Component\Cache\Exception\CacheException
+     */
+    public function testCanVerifyIpAndCountryWithMaxmindInStreamMode(array $maxmindConfig):
+    void
+    {
+        $this->markTestIncomplete('This test has not been implemented yet.');
 
     }
 }

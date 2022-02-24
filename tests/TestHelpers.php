@@ -21,7 +21,6 @@ class TestHelpers
     public const IPV6_RANGE = '64';
     public const JAPAN = 'JP';
     public const IP_JAPAN = '210.249.74.42';
-    public const FRANCE = 'FR';
     public const IP_FRANCE = '78.119.253.85';
 
 
