@@ -54,6 +54,7 @@ class WatcherClient
         $now = new DateTime();
         $this->addDecision($now, '12h', '+12 hours', TestHelpers::BAD_IP, 'captcha');
         $this->addDecision($now, '24h', '+24 hours', TestHelpers::BAD_IP.'/'.TestHelpers::IP_RANGE, 'ban');
+        $this->addDecision($now, '24h', '+24 hours', TestHelpers::JAPAN, 'captcha', 'country');
     }
 
     /** Set the initial watcher state */
@@ -100,9 +101,13 @@ class WatcherClient
         $this->request('/v1/decisions', null, null, 'DELETE');
     }
 
-    public function addDecision(DateTime $now, string $durationString, string $dateTimeDurationString, string $ipOrRange, string $type)
+    protected function getFinalScope($scope, $value){
+        return ($scope === 'Ip' && 2 === count(explode('/', $value))) ? 'Range' : $scope;
+    }
+
+    public function addDecision(DateTime $now, string $durationString, string $dateTimeDurationString, string
+    $value, string $type, string $scope = 'Ip')
     {
-        $isRange = (2 === count(explode('/', $ipOrRange)));
         $stopAt = (clone $now)->modify($dateTimeDurationString)->format('Y-m-d\TH:i:s.000\Z');
         $startAt = $now->format('Y-m-d\TH:i:s.000\Z');
 
@@ -112,10 +117,10 @@ class WatcherClient
               [
                 'duration' => $durationString,
                 'origin' => 'cscli',
-                'scenario' => 'captcha for '.$ipOrRange.' for '.$durationString.' for PHPUnit tests',
-                'scope' => $isRange ? 'Range' : 'Ip',
+                'scenario' => $type.' for scope/value ('.$scope.'/'.$value.') for '.$durationString.' for PHPUnit tests',
+                'scope' => $this->getFinalScope($scope, $value),
                 'type' => $type,
-                'value' => $ipOrRange,
+                'value' => $value,
               ],
             ],
             'events' => [
@@ -129,8 +134,8 @@ class WatcherClient
             'scenario_version' => '',
             'simulated' => false,
             'source' => [
-              'scope' => $isRange ? 'Range' : 'Ip',
-              'value' => $ipOrRange,
+              'scope' => $this->getFinalScope($scope, $value),
+              'value' => $value,
             ],
             'start_at' => $startAt,
             'stop_at' => $stopAt,

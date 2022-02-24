@@ -1,6 +1,4 @@
-<p align="center">
-<img src="https://raw.githubusercontent.com/crowdsecurity/crowdsec-docs/main/docs/assets/images/crowdsec_logo.png" alt="CrowdSec" title="CrowdSec" width="200" height="120"/>
-</p>
+![CrowdSec Logo](docs/images/logo_crowdsec.png)
 
 # PHP Bouncer Library
 

@@ -134,6 +134,18 @@ Finally, run
 ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
 ```
 
+For geolocation Unit Test, you should first put 2 free MaxMind databases in the `tests` folder : `GeoLite2-City.mmdb` 
+and`GeoLite2-Country.mmdb`. You can download these databases by creating a maxmind account and browse to [the download page](https://www.maxmind.com/en/accounts/current/geoip/downloads).
+
+
+Then, you can run:
+
+```
+ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/GeolocationTest.php
+
+```
+
+
 ### Use a `check-ip` php script for test
 
 

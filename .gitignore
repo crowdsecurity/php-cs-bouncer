@@ -19,3 +19,6 @@ super-linter.log
 examples/auto-prepend/settings.php
 examples/auto-prepend/.logs
 examples/auto-prepend/.cache
+
+# MaxMind databases
+*.mmdb
