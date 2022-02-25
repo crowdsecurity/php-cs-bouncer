@@ -19,12 +19,12 @@ use Psr\Log\LoggerInterface;
 class ApiClient
 {
     /** @var LoggerInterface */
-    private $logger = null;
+    private $logger;
 
     /**
      * @var RestClient
      */
-    private $restClient = null;
+    private $restClient;
 
     public function __construct(LoggerInterface $logger)
     {

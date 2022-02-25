@@ -37,7 +37,7 @@ class Session
     }
 
     /**
-     * Unset a session variable, throw an error if this does not exists.
+     * Unset a session variable, throw an error if this does not exist.
      *
      * @return void;
      */

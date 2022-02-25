@@ -11,6 +11,7 @@ use IPLib\Factory;
 use IPLib\ParseStringFlag;
 use Monolog\Handler\NullHandler;
 use Monolog\Logger;
+use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Config\Definition\Processor;
@@ -54,7 +55,7 @@ class Bouncer
      *
      * @param array $config An array with all configuration parameters
      *
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function configure(array $config): void
     {
@@ -110,7 +111,7 @@ class Bouncer
      *
      * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
      *
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function getRemediationForIp(string $ip): string
     {
@@ -172,7 +173,7 @@ class Bouncer
      *
      * @return array "count": number of decisions added, "errors": decisions not added
      *
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function warmBlocklistCacheUp(): array
     {
@@ -185,7 +186,7 @@ class Bouncer
      *
      * @return array Number of deleted and new decisions, and errors when processing decisions
      *
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function refreshBlocklistCache(): array
     {
@@ -197,7 +198,7 @@ class Bouncer
      *
      * @return bool If the cache has been successfully cleared or not
      *
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function clearCache(): bool
     {
@@ -266,7 +267,7 @@ class Bouncer
      *
      * @return void If the connection was successful or not
      *
-     * @throws BouncerException|\Psr\Cache\InvalidArgumentException if the connection was not successful
+     * @throws BouncerException|InvalidArgumentException if the connection was not successful
      * */
     public function testConnection()
     {

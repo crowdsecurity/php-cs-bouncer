@@ -2,10 +2,13 @@
 
 namespace CrowdSecBouncer;
 
+use ErrorException;
+use Exception;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
+use Symfony\Component\Cache\Exception\CacheException;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 
 /**
@@ -23,6 +26,11 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     /** @var AbstractAdapter */
     protected $cacheAdapter;
 
+    /**
+     * @var string
+     */
+    protected $session_name;
+
     public function init(array $crowdSecStandaloneBouncerConfig)
     {
         if (\PHP_SESSION_NONE === session_status()) {
@@ -33,6 +41,10 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         $this->initLogger();
     }
 
+    /**
+     * @throws CacheException
+     * @throws ErrorException
+     */
     private function getCacheAdapterInstance(): AbstractAdapter
     {
         // Singleton for this function
@@ -69,7 +81,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
 
                 break;
             default:
-                throw new BouncerException('Unknow selected cache technology.');
+                throw new BouncerException('Unknown selected cache technology.');
         }
 
         return $this->cacheAdapter;
@@ -77,6 +89,10 @@ class StandAloneBounce extends AbstractBounce implements IBounce
 
     /**
      * @return Bouncer get the bouncer instance
+     *
+     * @throws CacheException
+     * @throws ErrorException
+     * @throws \Psr\Cache\InvalidArgumentException
      */
     public function getBouncerInstance(): Bouncer
     {
@@ -271,7 +287,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     }
 
     /**
-     * Unset a session variable, throw an error if this does not exists.
+     * Unset a session variable, throw an error if this does not exist.
      *
      * @return void;
      */
@@ -294,6 +310,9 @@ class StandAloneBounce extends AbstractBounce implements IBounce
 
     /**
      * If the current IP should be bounced or not, matching custom business rules.
+     *
+     * @throws CacheException
+     * @throws ErrorException
      */
     public function shouldBounceCurrentIp(): bool
     {
@@ -340,6 +359,10 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         exit();
     }
 
+    /**
+     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws Exception
+     */
     public function safelyBounce(): void
     {
         // If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
@@ -349,7 +372,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             });
             $this->run();
             restore_error_handler();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error('', [
                 'type' => 'EXCEPTION_WHILE_BOUNCING',
                 'message' => $e->getMessage(),
@@ -368,6 +391,10 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         }
     }
 
+    /**
+     * @throws ErrorException
+     * @throws CacheException
+     */
     public function isConfigValid(): bool
     {
         $issues = ['errors' => [], 'warnings' => []];

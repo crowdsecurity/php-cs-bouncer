@@ -11,6 +11,7 @@ use IPLib\Factory;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
+use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -53,7 +54,7 @@ abstract class AbstractBounce
     /**
      * Run a bounce.
      *
-     * @throws Exception
+     * @throws Exception|InvalidArgumentException
      */
     public function run(
     ): void {
@@ -97,7 +98,7 @@ abstract class AbstractBounce
     }
 
     /**
-     * @throws Exception
+     * @throws Exception|InvalidArgumentException
      */
     protected function bounceCurrentIp()
     {

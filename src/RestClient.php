@@ -28,7 +28,7 @@ class RestClient
     private $baseUri = null;
 
     /** @var LoggerInterface */
-    private $logger = null;
+    private $logger;
 
     public function __construct(LoggerInterface $logger)
     {
@@ -52,7 +52,7 @@ class RestClient
     }
 
     /**
-     * Convert an key-value array of headers to the official HTTP header string.
+     * Convert a key-value array of headers to the official HTTP header string.
      */
     private function convertHeadersToString(array $headers): string
     {
@@ -67,7 +67,7 @@ class RestClient
     /**
      * Send an HTTP request using the file_get_contents and parse its JSON result if any.
      *
-     * @throws BouncerException when the reponse status is not 2xx
+     * @throws BouncerException when the response status is not 2xx
      */
     public function request(
         string $endpoint,
@@ -115,8 +115,7 @@ class RestClient
         if ($status < 200 || $status >= 300) {
             throw new BouncerException("unexpected response status from $this->baseUri$endpoint: $status\n".$response);
         }
-        $data = json_decode($response, true);
 
-        return $data;
+        return json_decode($response, true);
     }
 }
