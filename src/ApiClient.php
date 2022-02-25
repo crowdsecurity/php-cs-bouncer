@@ -56,13 +56,20 @@ class ApiClient
         return $this->restClient->request('/v1/decisions', $filter) ?: [];
     }
 
+
     /**
      * Request decisions using the stream mode. When the $startup flag is used, all the decisions are returned.
      * Else only the decisions updates (add or remove) from the last stream call are returned.
+     * @param bool $startup
+     * @param array $scopes
+     * @return array
      */
-    public function getStreamedDecisions(bool $startup = false): array
+    public function getStreamedDecisions(bool $startup = false, array $scopes = [Constants::SCOPE_IP, Constants::SCOPE_RANGE]): array
     {
         /** @var array */
-        return $this->restClient->request('/v1/decisions/stream', $startup ? ['startup' => 'true'] : null);
+        return $this->restClient->request(
+            '/v1/decisions/stream',
+            ['startup' => $startup ? 'true': 'false', 'scopes' => implode(',', $scopes)]
+        );
     }
 }

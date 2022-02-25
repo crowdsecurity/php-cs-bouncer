@@ -79,6 +79,11 @@ class ApiCache
     private $cacheKey = [];
 
     /**
+     * @var array|null
+     */
+    private $scopes;
+
+    /**
      * @param LoggerInterface      $logger      The logger to use
      * @param ApiClient|null       $apiClient   The APIClient instance to use
      * @param AbstractAdapter|null $adapter     The AbstractAdapter adapter to use
@@ -138,6 +143,21 @@ class ApiCache
             'geolocation' => $this->geolocConfig,
         ]);
         $this->apiClient->configure($apiUrl, $timeout, $userAgent, $apiKey);
+    }
+
+    /**
+     * @return array
+     */
+    private function getScopes(): ?array
+    {
+        if($this->scopes === null){
+            $scopes = [Constants::SCOPE_IP, Constants::SCOPE_RANGE];
+            if (!empty($this->geolocConfig['enabled'])) {
+                $scopes[] =  Constants::SCOPE_COUNTRY;
+            }
+            $this->scopes = $scopes;
+        }
+        return $this->scopes;
     }
 
     /**
@@ -556,7 +576,7 @@ class ApiCache
             $this->clear();
         }
         $this->logger->debug('', ['type' => 'START_CACHE_WARMUP']);
-        $decisionsDiff = $this->apiClient->getStreamedDecisions(true);
+        $decisionsDiff = $this->apiClient->getStreamedDecisions(true, $this->getScopes());
         $newDecisions = $decisionsDiff['new'];
 
         $nbNew = 0;
@@ -602,7 +622,7 @@ class ApiCache
         }
 
         $this->logger->debug('', ['type' => 'START_CACHE_UPDATE']);
-        $decisionsDiff = $this->apiClient->getStreamedDecisions();
+        $decisionsDiff = $this->apiClient->getStreamedDecisions(false, $this->getScopes());
         $newDecisions = $decisionsDiff['new'];
         $deletedDecisions = $decisionsDiff['deleted'];
 

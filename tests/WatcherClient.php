@@ -57,7 +57,7 @@ class WatcherClient
         $this->addDecision($now, '24h', '+24 hours', TestHelpers::JAPAN, 'captcha', Constants::SCOPE_COUNTRY);
     }
 
-    /** Set the initial watcher state */
+    /** Set the second watcher state */
     public function setSecondState(): void
     {
         $this->logger->info('Set "second" state');

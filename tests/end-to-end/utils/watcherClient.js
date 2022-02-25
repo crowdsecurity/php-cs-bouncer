@@ -117,11 +117,11 @@ module.exports.addDecision = async (
     value,
     remediation,
     durationInSeconds,
-    scope = "Ip"
+    scope = "Ip",
 ) => {
     await auth();
     let finalScope = "Country";
-    if(["Ip", "Range"].includes(scope)){
+    if (["Ip", "Range"].includes(scope)) {
         let startIp;
         let endIp;
         if (value.split("/").length === 2) {
@@ -135,9 +135,9 @@ module.exports.addDecision = async (
         const isRange = startLongIp !== endLongIp;
         finalScope = isRange ? "Range" : "Ip";
     }
-    
+
     const scenario = `add ${remediation} with scope/value ${scope}/${value} for ${durationInSeconds} seconds for e2e tests`;
-    
+
     const startAt = new Date();
     const stopAt = new Date();
     stopAt.setTime(stopAt.getTime() + durationInSeconds * 1000);

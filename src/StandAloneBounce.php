@@ -99,6 +99,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         $fallbackRemediation = $this->getStringSettings('fallback_remediation');
         $bouncingLevel = $this->getStringSettings('bouncing_level');
         $geolocation = $this->getArraySettings('geolocation');
+        $forcedTestIp = $this->getStringSettings('forced_test_ip');
 
         // Init Bouncer instance
 
@@ -136,6 +137,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             'cache_expiration_for_clean_ip' => $cleanIpCacheDuration,
             'cache_expiration_for_bad_ip' => $badIpCacheDuration,
             'geolocation' => $geolocation,
+            'forced_test_ip' => $forcedTestIp
         ]);
 
         return $this->bouncer;

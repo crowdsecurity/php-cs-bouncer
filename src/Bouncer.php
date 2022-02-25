@@ -53,6 +53,7 @@ class Bouncer
      * Configure this instance.
      *
      * @param array $config An array with all configuration parameters
+     * @throws \Psr\Cache\InvalidArgumentException
      */
     public function configure(array $config): void
     {
@@ -107,12 +108,14 @@ class Bouncer
      * @param string $ip The IP to check
      *
      * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
+     * @throws \Psr\Cache\InvalidArgumentException
      */
     public function getRemediationForIp(string $ip): string
     {
-        $address = Factory::parseAddressString($ip, ParseStringFlag::MAY_INCLUDE_ZONEID);
+        $ipToCheck = !empty($this->config['forced_test_ip']) ? $this->config['forced_test_ip'] : $ip;
+        $address = Factory::parseAddressString($ipToCheck, ParseStringFlag::MAY_INCLUDE_ZONEID);
         if (null === $address) {
-            throw new BouncerException("IP $ip format is invalid.");
+            throw new BouncerException("IP $ipToCheck format is invalid.");
         }
         $remediation = $this->apiCache->get($address);
 
@@ -166,6 +169,7 @@ class Bouncer
      * This method should be called only to force a cache warm up.
      *
      * @return array "count": number of decisions added, "errors": decisions not added
+     * @throws \Psr\Cache\InvalidArgumentException
      */
     public function warmBlocklistCacheUp(): array
     {
@@ -177,6 +181,7 @@ class Bouncer
      * This method should be called periodically (ex: crontab) in an asynchronous way to update the bouncer cache.
      *
      * @return array Number of deleted and new decisions, and errors when processing decisions
+     * @throws \Psr\Cache\InvalidArgumentException
      */
     public function refreshBlocklistCache(): array
     {
@@ -187,6 +192,7 @@ class Bouncer
      * This method clear the full data in cache.
      *
      * @return bool If the cache has been successfully cleared or not
+     * @throws \Psr\Cache\InvalidArgumentException
      */
     public function clearCache(): bool
     {
@@ -218,7 +224,7 @@ class Bouncer
      *
      * @return array an array composed of two items, a "phrase" string representing the phrase and a "inlineImage" representing the image data
      */
-    public static function buildCaptchaCouple()
+    public static function buildCaptchaCouple(): array
     {
         $captchaBuilder = new CaptchaBuilder();
 
@@ -238,7 +244,7 @@ class Bouncer
      *
      * @return bool If the captcha input was correct or not
      */
-    public function checkCaptcha(string $expected, string $try, string $ip)
+    public function checkCaptcha(string $expected, string $try, string $ip): bool
     {
         $solved = PhraseBuilder::comparePhrases($expected, $try);
         $this->logger->warning('', [
@@ -255,7 +261,7 @@ class Bouncer
      *
      * @return void If the connection was successful or not
      *
-     * @throws BouncerException if the connection was not successful
+     * @throws BouncerException|\Psr\Cache\InvalidArgumentException if the connection was not successful
      * */
     public function testConnection()
     {

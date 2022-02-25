@@ -81,7 +81,6 @@ jobs:
           tar -xf GeoLite2-City.tar.gz
           rm GeoLite2-Country.tar.gz GeoLite2-Country.tar.gz.sha256.txt GeoLite2-City.tar.gz GeoLite2-City.tar.gz.sha256.txt
 
-
       - name: Run PHP UNIT tests
         run: |
           ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
@@ -102,16 +101,24 @@ jobs:
           ./test-init.sh
           chmod +x run-tests.sh
             
-      - name: Run End to end test without geolocation
+      - name: Run End to end test (live mode without geolocation)
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/1-live-mode.js"
 
-      - name: Run End to end test with geolocation
+      - name: Run End to end test (live mode with geolocation)
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib
           sed -i  's/\x27enabled\x27 => false/\x27enabled\x27 => true/g' examples/auto-prepend/settings.php
+          sed -i  's/\x27forced_test_ip\x27 => \x27\x27/\x27forced_test_ip\x27 => \x27210.249.74.42\x27/g' examples/auto-prepend/settings.php
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/2-live-mode-with-geolocation.js"
-      
 
+      - name: Run End to end test (stream mode without geolocation)
+        run: |
+          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib
+          sed -i  's/\x27enabled\x27 => true/\x27enabled\x27 => false/g' examples/auto-prepend/settings.php
+          sed -i  's/\x27forced_test_ip\x27 => \x27210.249.74.42\x27/\x27forced_test_ip\x27 => \x27\x27/g' examples/auto-prepend/settings.php
+          sed -i  's/\x27stream_mode\x27 => false/\x27stream_mode\x27 => true/g' examples/auto-prepend/settings.php
+          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
+          ./run-tests.sh ci "./__tests__/3-stream-mode.js"

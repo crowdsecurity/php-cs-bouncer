@@ -45,6 +45,8 @@ PHP_URL=https://$HOSTNAME
 PROXY_IP=$(ddev find-ip ddev-router)
 BOUNCER_KEY=$(ddev exec grep "'api_key'" /var/www/html/my-own-modules/crowdsec-php-lib/examples/auto-prepend/settings.php | sed 's/api_key//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
 GEOLOC_ENABLED=$(ddev exec grep -E "'enabled'.*,$" /var/www/html/my-own-modules/crowdsec-php-lib/examples/auto-prepend/settings.php | sed 's/enabled//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
+FORCED_TEST_IP=$(ddev exec grep -E "'forced_test_ip'.*,$" /var/www/html/my-own-modules/crowdsec-php-lib/examples/auto-prepend/settings.php | sed 's/forced_test_ip//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
+STREAM_MODE=$(ddev exec grep -E "'stream_mode'.*,$" /var/www/html/my-own-modules/crowdsec-php-lib/examples/auto-prepend/settings.php | sed 's/stream_mode//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
 JEST_PARAMS="--bail=true  --runInBand --verbose"
 # If FAIL_FAST, will exit on first individual test fail
 # @see CustomEnvironment.js
@@ -103,6 +105,8 @@ $DEBUG_STRING \
 BOUNCER_KEY="$BOUNCER_KEY" \
 PROXY_IP="$PROXY_IP"  \
 GEOLOC_ENABLED="$GEOLOC_ENABLED" \
+STREAM_MODE="$STREAM_MODE" \
+FORCED_TEST_IP="$FORCED_TEST_IP" \
 LAPI_URL_FROM_PLAYWRIGHT=$LAPI_URL_FROM_PLAYWRIGHT \
 CURRENT_IP="$CURRENT_IP" \
 TIMEOUT=$TIMEOUT \

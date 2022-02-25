@@ -2,20 +2,23 @@
 const fs = require("fs");
 
 const { addDecision, deleteAllDecisions } = require("./watcherClient");
-const {
-    PHP_URL,
-    TIMEOUT,
-    PUBLIC_URL
-} = require("./constants");
+const { PHP_URL, TIMEOUT, PUBLIC_URL } = require("./constants");
 
 const wait = async (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 jest.setTimeout(TIMEOUT);
 
-
-
 const goToPublicPage = async (endpoint = PUBLIC_URL) => {
     return page.goto(`${PHP_URL}${endpoint}`);
+};
+
+const runCacheAction = async (actionType = "refresh") => {
+    await goToPublicPage(
+        `/my-own-modules/crowdsec-php-lib/examples/auto-prepend/scripts/cache-actions.php?action=${actionType}`,
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(page).not.toMatchTitle(/404/);
+    await expect(page).toMatchTitle(`Cache action: ${actionType}`);
 };
 
 const computeCurrentPageRemediation = async (
@@ -73,7 +76,6 @@ const publicHomepageShouldBeAccessible = async () => {
     await expect(remediation).toBe("bypass");
 };
 
-
 const banIpForSeconds = async (seconds, ip) => {
     await addDecision(ip, "ban", seconds);
     await wait(1000);
@@ -117,4 +119,5 @@ module.exports = {
     removeAllDecisions,
     getFileContent,
     deleteFileContent,
+    runCacheAction,
 };

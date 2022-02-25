@@ -33,26 +33,16 @@ final class GeolocationTest extends TestCase
     }
 
     /**
-     * @group integration
-     * @covers       \Bouncer
-     * @dataProvider maxmindConfigProvider
-     * @group ignore_
-     * @throws \Symfony\Component\Cache\Exception\CacheException
+     * @param array $maxmindConfig
+     * @return array
      */
-    public function testCanVerifyIpAndCountryWithMaxmindInLiveMode(array $maxmindConfig):
-    void
+    private function handleMaxMindConfig(array $maxmindConfig): array
     {
         // Check if MaxMind database exist
         if (!file_exists($maxmindConfig['database_path'])) {
             $this->fail('There must be a MaxMind Database here: '.$maxmindConfig['database_path']);
         }
-        // Init context
-        $cacheAdapter = new PhpFilesAdapter('php_array_adapter_backup_cache', 0,
-            TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR);
-        $this->watcherClient->setInitialState();
-        $cacheAdapter->clear();
-
-        $geolocationConfig = [
+        return [
             'save_in_session' => false,
             'enabled' => true,
             'type' => 'maxmind',
@@ -61,6 +51,25 @@ final class GeolocationTest extends TestCase
                 'database_path' => $maxmindConfig['database_path']
             ]
         ];
+    }
+
+    /**
+     * @group integration
+     * @covers       \Bouncer
+     * @dataProvider maxmindConfigProvider
+     * @group ignore_
+     * @throws \Symfony\Component\Cache\Exception\CacheException
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function testCanVerifyIpAndCountryWithMaxmindInLiveMode(array $maxmindConfig):
+    void
+    {
+        $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
+        // Init context
+        $cacheAdapter = new PhpFilesAdapter('php_array_adapter_backup_cache', 0,
+            TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR);
+        $this->watcherClient->setInitialState();
+        $cacheAdapter->clear();
         // Init bouncer
         /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
@@ -122,7 +131,6 @@ final class GeolocationTest extends TestCase
             $bouncer->getRemediationForIp(TestHelpers::IP_FRANCE),
             'Get decisions for a bad IP (ban) and clean country'
         );
-
     }
 
 
@@ -131,12 +139,61 @@ final class GeolocationTest extends TestCase
      * @covers       \Bouncer
      * @dataProvider maxmindConfigProvider
      * @group ignore_
-     * @throws \Symfony\Component\Cache\Exception\CacheException
+     * @throws \Symfony\Component\Cache\Exception\CacheException|\Psr\Cache\InvalidArgumentException
      */
     public function testCanVerifyIpAndCountryWithMaxmindInStreamMode(array $maxmindConfig):
     void
     {
-        $this->markTestIncomplete('This test has not been implemented yet.');
+        $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
+        // Init context
+        $cacheAdapter = new PhpFilesAdapter('php_array_adapter_backup_cache', 0,
+            TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR);
+        $this->watcherClient->setInitialState();
+        $cacheAdapter->clear();
+        // Init bouncer
+        /** @var ApiClient */
+        $apiClientMock = $this->getMockBuilder(ApiClient::class)
+            ->setConstructorArgs([$this->logger])
+            ->enableProxyingToOriginalMethods()
+            ->getMock();
+        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter);
+        $bouncerConfig = [
+            'api_key' => TestHelpers::getBouncerKey(),
+            'api_url' => TestHelpers::getLapiUrl(),
+            'live_mode' => false,
+            'geolocation' => $geolocationConfig
+        ];
+        $bouncer = new Bouncer(null, $this->logger, $apiCache);
+        $bouncer->configure($bouncerConfig);
 
+        // Warm BlockList cache up
+        $bouncer->refreshBlocklistCache();
+
+        $this->logger->debug('Refresh the cache just after the warm up. Nothing should append.');
+        $bouncer->refreshBlocklistCache();
+
+        $this->assertEquals(
+            'captcha',
+            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
+            'Should captcha a clean IP coming from a bad country (capctha)'
+        );
+
+        // Add and remove decision
+        $this->watcherClient->setSecondState();
+
+        $this->assertEquals(
+            'captcha',
+            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
+            'Should still captcha a bad IP (ban) coming from a bad country (captcha) as cache has not been refreshed'
+        );
+
+        // Pull updates
+        $bouncer->refreshBlocklistCache();
+
+        $this->assertEquals(
+            'ban',
+            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
+            'The new decision should now be added, so the previously captcha IP should now be ban'
+        );
     }
 }

@@ -85,12 +85,11 @@ class Geolocation
 
             return $result;
         }
-        $currentIp = empty($geolocConfig['test_public_ip']) ? $ip : $geolocConfig['test_public_ip'];
         switch ($geolocConfig['type']) {
             case Constants::GEOLOCATION_TYPE_MAXMIND:
                 $configPath = $geolocConfig[Constants::GEOLOCATION_TYPE_MAXMIND];
                 $result =
-                    $this->getMaxMindCountry($currentIp, $configPath['database_type'], $configPath['database_path']);
+                    $this->getMaxMindCountry($ip, $configPath['database_type'], $configPath['database_path']);
                 break;
             default:
                 throw new Exception('Unknown Geolocation type:'.$geolocConfig['type']);

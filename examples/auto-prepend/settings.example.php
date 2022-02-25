@@ -11,6 +11,7 @@ $crowdSecStandaloneBouncerConfig = [
     'fs_cache_path' => __DIR__.'/.cache', // [FILL ME] Important note: be sur this path won't be publicly accessible!
 
     'bouncing_level' => Constants::BOUNCING_LEVEL_NORMAL,
+    'forced_test_ip' => '', // Set a specific for test purpose only (testing geolocation for example).
 
     'stream_mode' => false,
 
@@ -52,12 +53,11 @@ $crowdSecStandaloneBouncerConfig = [
 
     'geolocation' => [
         'save_in_session' => true, // Set to true to avoid multiple call to the geolocation database
-        'test_public_ip' => '210.249.74.42', // Only if you test on a local network (docker, etc.)
         'enabled' => true, // Set to true if you want to geo-localize IP
         'type' => 'maxmind', // At this moment, only 'maxmind' type is available
         'maxmind' => [ // MaxMind settings
-            'database_type' => 'city', // You can set 'city' or 'country'
-            'database_path' => '/var/www/html/GeoLite2-City.mmdb' // Absolute path to the MaxMind database
+            'database_type' => 'country', // You can set 'city' or 'country'
+            'database_path' => '/var/www/html/GeoLite2-Country.mmdb' // Absolute path to the MaxMind database
         ]
     ]
 ];
