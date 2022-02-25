@@ -8,6 +8,8 @@ const FORCED_TEST_IP =
 const GEOLOC_ENABLED = process.env.GEOLOC_ENABLED === "true";
 const STREAM_MODE = process.env.STREAM_MODE === "true";
 const GEOLOC_BAD_COUNTRY = "JP";
+const JAPAN_IP = "210.249.74.42";
+const FRANCE_IP = "78.119.253.85";
 const { LAPI_URL_FROM_PLAYWRIGHT } = process.env;
 const { BOUNCER_KEY } = process.env;
 const WATCHER_LOGIN = "watcherLogin";
@@ -33,4 +35,6 @@ module.exports = {
     GEOLOC_ENABLED,
     GEOLOC_BAD_COUNTRY,
     STREAM_MODE,
+    JAPAN_IP,
+    FRANCE_IP,
 };

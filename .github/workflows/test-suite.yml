@@ -122,3 +122,8 @@ jobs:
           sed -i  's/\x27stream_mode\x27 => false/\x27stream_mode\x27 => true/g' examples/auto-prepend/settings.php
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/3-stream-mode.js"
+
+      - name: Run End to end test (standalone geolocation)
+        run: |
+          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
+          ./run-tests.sh ci "./__tests__/4-geolocation.js"

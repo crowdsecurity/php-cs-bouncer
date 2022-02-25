@@ -21,6 +21,17 @@ const runCacheAction = async (actionType = "refresh") => {
     await expect(page).toMatchTitle(`Cache action: ${actionType}`);
 };
 
+const runGeolocationTest = async (ip, saveInSession) => {
+    let url = `/my-own-modules/crowdsec-php-lib/examples/auto-prepend/scripts/geolocation-test.php?ip=${ip}`;
+    if (saveInSession) {
+        url += `&session-save=1`;
+    }
+    await goToPublicPage(`${url}`);
+    await page.waitForLoadState("networkidle");
+    await expect(page).not.toMatchTitle(/404/);
+    await expect(page).toMatchTitle(`Geolocation for IP: ${ip}`);
+};
+
 const computeCurrentPageRemediation = async (
     accessibleTextInTitle = "Home page",
 ) => {
@@ -120,4 +131,5 @@ module.exports = {
     getFileContent,
     deleteFileContent,
     runCacheAction,
+    runGeolocationTest,
 };
