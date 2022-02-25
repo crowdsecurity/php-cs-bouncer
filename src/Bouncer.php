@@ -53,6 +53,7 @@ class Bouncer
      * Configure this instance.
      *
      * @param array $config An array with all configuration parameters
+     *
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function configure(array $config): void
@@ -108,6 +109,7 @@ class Bouncer
      * @param string $ip The IP to check
      *
      * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
+     *
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function getRemediationForIp(string $ip): string
@@ -169,6 +171,7 @@ class Bouncer
      * This method should be called only to force a cache warm up.
      *
      * @return array "count": number of decisions added, "errors": decisions not added
+     *
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function warmBlocklistCacheUp(): array
@@ -181,6 +184,7 @@ class Bouncer
      * This method should be called periodically (ex: crontab) in an asynchronous way to update the bouncer cache.
      *
      * @return array Number of deleted and new decisions, and errors when processing decisions
+     *
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function refreshBlocklistCache(): array
@@ -192,6 +196,7 @@ class Bouncer
      * This method clear the full data in cache.
      *
      * @return bool If the cache has been successfully cleared or not
+     *
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function clearCache(): bool

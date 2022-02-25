@@ -137,7 +137,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             'cache_expiration_for_clean_ip' => $cleanIpCacheDuration,
             'cache_expiration_for_bad_ip' => $badIpCacheDuration,
             'geolocation' => $geolocation,
-            'forced_test_ip' => $forcedTestIp
+            'forced_test_ip' => $forcedTestIp,
         ]);
 
         return $this->bouncer;

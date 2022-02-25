@@ -52,6 +52,7 @@ abstract class AbstractBounce
 
     /**
      * Run a bounce.
+     *
      * @throws Exception
      */
     public function run(

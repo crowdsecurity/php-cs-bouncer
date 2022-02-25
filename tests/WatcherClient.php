@@ -104,12 +104,12 @@ class WatcherClient
         $this->request('/v1/decisions', null, null, 'DELETE');
     }
 
-    protected function getFinalScope($scope, $value){
-        return ($scope === Constants::SCOPE_IP && 2 === count(explode('/', $value))) ? Constants::SCOPE_RANGE : $scope;
+    protected function getFinalScope($scope, $value)
+    {
+        return (Constants::SCOPE_IP === $scope && 2 === count(explode('/', $value))) ? Constants::SCOPE_RANGE : $scope;
     }
 
-    public function addDecision(DateTime $now, string $durationString, string $dateTimeDurationString, string
-    $value, string $type, string $scope = Constants::SCOPE_IP)
+    public function addDecision(DateTime $now, string $durationString, string $dateTimeDurationString, string $value, string $type, string $scope = Constants::SCOPE_IP)
     {
         $stopAt = (clone $now)->modify($dateTimeDurationString)->format('Y-m-d\TH:i:s.000\Z');
         $startAt = $now->format('Y-m-d\TH:i:s.000\Z');

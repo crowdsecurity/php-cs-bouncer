@@ -150,13 +150,14 @@ class ApiCache
      */
     private function getScopes(): ?array
     {
-        if($this->scopes === null){
+        if (null === $this->scopes) {
             $scopes = [Constants::SCOPE_IP, Constants::SCOPE_RANGE];
             if (!empty($this->geolocConfig['enabled'])) {
-                $scopes[] =  Constants::SCOPE_COUNTRY;
+                $scopes[] = Constants::SCOPE_COUNTRY;
             }
             $this->scopes = $scopes;
         }
+
         return $this->scopes;
     }
 

@@ -1,8 +1,8 @@
 <?php
 
 declare(strict_types=1);
-require __DIR__ . '/TestHelpers.php';
-require __DIR__ . '/WatcherClient.php';
+require __DIR__.'/TestHelpers.php';
+require __DIR__.'/WatcherClient.php';
 
 use CrowdSecBouncer\ApiCache;
 use CrowdSecBouncer\ApiClient;
@@ -32,24 +32,21 @@ final class GeolocationTest extends TestCase
         return TestHelpers::maxmindConfigProvider();
     }
 
-    /**
-     * @param array $maxmindConfig
-     * @return array
-     */
     private function handleMaxMindConfig(array $maxmindConfig): array
     {
         // Check if MaxMind database exist
         if (!file_exists($maxmindConfig['database_path'])) {
             $this->fail('There must be a MaxMind Database here: '.$maxmindConfig['database_path']);
         }
+
         return [
             'save_in_session' => false,
             'enabled' => true,
             'type' => 'maxmind',
             'maxmind' => [
                 'database_type' => $maxmindConfig['database_type'],
-                'database_path' => $maxmindConfig['database_path']
-            ]
+                'database_path' => $maxmindConfig['database_path'],
+            ],
         ];
     }
 
@@ -58,11 +55,11 @@ final class GeolocationTest extends TestCase
      * @covers       \Bouncer
      * @dataProvider maxmindConfigProvider
      * @group ignore_
+     *
      * @throws \Symfony\Component\Cache\Exception\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function testCanVerifyIpAndCountryWithMaxmindInLiveMode(array $maxmindConfig):
-    void
+    public function testCanVerifyIpAndCountryWithMaxmindInLiveMode(array $maxmindConfig): void
     {
         $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
         // Init context
@@ -80,7 +77,7 @@ final class GeolocationTest extends TestCase
         $bouncerConfig = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
-            'geolocation' => $geolocationConfig
+            'geolocation' => $geolocationConfig,
         ];
         $bouncer = new Bouncer(null, $this->logger, $apiCache);
         $bouncer->configure($bouncerConfig);
@@ -110,7 +107,6 @@ final class GeolocationTest extends TestCase
             'Get decisions for a clean IP and bad country but with geolocation disabled'
         );
 
-
         // Enable again geolocation and change testing conditions
         $this->watcherClient->setSecondState();
         $geolocationConfig['enabled'] = true;
@@ -125,7 +121,6 @@ final class GeolocationTest extends TestCase
             'Get decisions for a bad IP (ban) and bad country (captcha)'
         );
 
-
         $this->assertEquals(
             'ban',
             $bouncer->getRemediationForIp(TestHelpers::IP_FRANCE),
@@ -133,16 +128,15 @@ final class GeolocationTest extends TestCase
         );
     }
 
-
     /**
      * @group integration
      * @covers       \Bouncer
      * @dataProvider maxmindConfigProvider
      * @group ignore_
+     *
      * @throws \Symfony\Component\Cache\Exception\CacheException|\Psr\Cache\InvalidArgumentException
      */
-    public function testCanVerifyIpAndCountryWithMaxmindInStreamMode(array $maxmindConfig):
-    void
+    public function testCanVerifyIpAndCountryWithMaxmindInStreamMode(array $maxmindConfig): void
     {
         $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
         // Init context
@@ -161,7 +155,7 @@ final class GeolocationTest extends TestCase
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'live_mode' => false,
-            'geolocation' => $geolocationConfig
+            'geolocation' => $geolocationConfig,
         ];
         $bouncer = new Bouncer(null, $this->logger, $apiCache);
         $bouncer->configure($bouncerConfig);
