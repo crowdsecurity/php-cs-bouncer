@@ -8,8 +8,6 @@ use CrowdSecBouncer\StandAloneBounce;
 if (isset($_GET['action']) && in_array($_GET['action'],['refresh', 'clear', 'prune', 'warm-up'])) {
     $action = $_GET['action'];
     $bounce = new StandAloneBounce();
-    $bounce->setDebug($crowdSecStandaloneBouncerConfig['debug_mode']??false);
-    $bounce->setDisplayErrors($crowdSecStandaloneBouncerConfig['display_errors'] ?? false);
     $bounce->init($crowdSecStandaloneBouncerConfig);
     $bouncer = $bounce->getBouncerInstance();
     switch ($action) {

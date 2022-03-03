@@ -6,6 +6,7 @@ require_once __DIR__.'/templates/captcha.php';
 require_once __DIR__.'/templates/access-forbidden.php';
 
 use Bramus\Monolog\Formatter\ColoredLineFormatter;
+use ErrorException;
 use Exception;
 use IPLib\Factory;
 use Monolog\Formatter\LineFormatter;
@@ -13,6 +14,7 @@ use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Cache\Exception\CacheException;
 
 /**
  * The class that apply a bounce.
@@ -41,14 +43,19 @@ abstract class AbstractBounce
     /** @var Bouncer */
     protected $bouncer;
 
+    protected function getBoolSettings(string $name): bool
+    {
+        return $this->settings[$name]??false;
+    }
+
     protected function getStringSettings(string $name): string
     {
-        return $this->settings[$name];
+        return $this->settings[$name] ?? '';
     }
 
     protected function getArraySettings(string $name): array
     {
-        return $this->settings[$name];
+        return $this->settings[$name] ?? [];
     }
 
     /**
@@ -193,6 +200,11 @@ abstract class AbstractBounce
         $this->unsetSessionVariable('crowdsec_captcha_resolution_failed');
     }
 
+    /**
+     * @throws ErrorException
+     * @throws InvalidArgumentException
+     * @throws CacheException
+     */
     protected function handleCaptchaResolutionForm(string $ip)
     {
         // Early return if no captcha has to be resolved or if captcha already resolved.
@@ -237,6 +249,11 @@ abstract class AbstractBounce
         }
     }
 
+    /**
+     * @throws ErrorException
+     * @throws InvalidArgumentException
+     * @throws CacheException
+     */
     protected function handleCaptchaRemediation($ip)
     {
         // Check captcha resolution form
@@ -259,6 +276,11 @@ abstract class AbstractBounce
         }
     }
 
+    /**
+     * @throws CacheException
+     * @throws ErrorException
+     * @throws InvalidArgumentException
+     */
     protected function handleRemediation(string $remediation, string $ip)
     {
         if (Constants::REMEDIATION_CAPTCHA !== $remediation && null !== $this->getSessionVariable('crowdsec_captcha_has_to_be_resolved')) {

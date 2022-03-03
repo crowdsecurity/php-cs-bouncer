@@ -38,6 +38,8 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             session_start();
         }
         $this->settings = $crowdSecStandaloneBouncerConfig;
+        $this->setDebug($this->getBoolSettings('debug_mode'));
+        $this->setDisplayErrors($this->getBoolSettings('display_errors'));
         $this->initLogger();
     }
 
@@ -109,7 +111,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         if (empty($this->getStringSettings('api_key'))) {
             throw new BouncerException('Bouncer enabled but no API key provided');
         }
-        $isStreamMode = $this->getStringSettings('stream_mode');
+        $isStreamMode = $this->getBoolSettings('stream_mode');
         $cleanIpCacheDuration = (int) $this->getStringSettings('clean_ip_cache_duration');
         $badIpCacheDuration = (int) $this->getStringSettings('bad_ip_cache_duration');
         $fallbackRemediation = $this->getStringSettings('fallback_remediation');
@@ -147,7 +149,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             'api_key' => $this->getStringSettings('api_key'),
             'api_url' => $this->getStringSettings('api_url'),
             'api_user_agent' => $apiUserAgent,
-            'live_mode' => !$isStreamMode,
+            'stream_mode' => $isStreamMode,
             'max_remediation_level' => $maxRemediationLevel,
             'fallback_remediation' => $fallbackRemediation,
             'cache_expiration_for_clean_ip' => $cleanIpCacheDuration,
@@ -199,7 +201,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     public function getCaptchaWallOptions(): array
     {
         return [
-            'hide_crowdsec_mentions' => (bool) $this->getStringSettings('hide_mentions'),
+            'hide_crowdsec_mentions' => $this->getBoolSettings('hide_mentions'),
             'color' => [
               'text' => [
                 'primary' => htmlspecialchars_decode($this->getStringSettings('theme_color_text_primary'), \ENT_QUOTES),
@@ -236,7 +238,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     public function getBanWallOptions(): array
     {
         return [
-            'hide_crowdsec_mentions' => (bool) $this->getStringSettings('hide_mentions'),
+            'hide_crowdsec_mentions' => $this->getBoolSettings('hide_mentions'),
             'color' => [
               'text' => [
                 'primary' => htmlspecialchars_decode($this->getStringSettings('theme_color_text_primary'), \ENT_QUOTES),

@@ -73,7 +73,7 @@ class Bouncer
 
         // Configure Api Cache.
         $this->apiCache->configure(
-            $this->config['live_mode'],
+            $this->config['stream_mode'],
             $this->config['api_url'],
             $this->config['api_timeout'],
             $this->config['api_user_agent'],

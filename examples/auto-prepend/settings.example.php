@@ -24,7 +24,6 @@ $crowdSecStandaloneBouncerConfig = [
     'fallback_remediation' => Constants::REMEDIATION_CAPTCHA,
 
     'hide_mentions' => false,
-    'trust_ip_forward' => '',
     'trust_ip_forward_array' => [],
 
     'theme_color_text_primary' => 'black',

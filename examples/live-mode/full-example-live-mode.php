@@ -47,7 +47,7 @@ $bouncer->configure([
     'api_url' => $apiUrl,
     'api_user_agent' => 'MyCMS CrowdSec Bouncer/1.0.0',
     'api_timeout' => 1,
-    'live_mode' => true,
+    'stream_mode' => false,
     'max_remediation_level' => 'ban',
     'cache_expiration_for_clean_ip' => 2,
     'cache_expiration_for_bad_ip' => 30,

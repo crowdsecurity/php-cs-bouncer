@@ -48,7 +48,7 @@ class ApiCache
     private $geolocation;
 
     /** @var bool */
-    private $liveMode = false;
+    private $streamMode = false;
 
     /**
      * @var int
@@ -101,7 +101,7 @@ class ApiCache
     /**
      * Configure this instance.
      *
-     * @param bool   $liveMode                  If we use the live mode (else we use the stream mode)
+     * @param bool   $streamMode                If we use the stream mode (else we use the live mode)
      * @param string $apiUrl                    The URL of the LAPI
      * @param int    $timeout                   The timeout well calling LAPI
      * @param string $userAgent                 The user agent to use when calling LAPI
@@ -114,7 +114,7 @@ class ApiCache
      * @throws InvalidArgumentException
      */
     public function configure(
-        bool $liveMode,
+        bool $streamMode,
         string $apiUrl,
         int $timeout,
         string $userAgent,
@@ -124,7 +124,7 @@ class ApiCache
         string $fallbackRemediation,
         array $geolocConfig = []
     ): void {
-        $this->liveMode = $liveMode;
+        $this->streamMode = $streamMode;
         $this->cacheExpirationForCleanIp = $cacheExpirationForCleanIp;
         $this->cacheExpirationForBadIp = $cacheExpirationForBadIp;
         $this->fallbackRemediation = $fallbackRemediation;
@@ -136,7 +136,7 @@ class ApiCache
         $this->logger->debug('', [
             'type' => 'API_CACHE_INIT',
             'adapter' => \get_class($this->adapter),
-            'mode' => ($liveMode ? 'live' : 'stream'),
+            'mode' => ($streamMode ? 'stream' : 'live'),
             'exp_clean_ips' => $cacheExpirationForCleanIp,
             'exp_bad_ips' => $cacheExpirationForBadIp,
             'warmed_up' => ($this->warmedUp ? 'true' : 'false'),
@@ -295,7 +295,7 @@ class ApiCache
     {
         if (!$decision) {
             $duration = time() + $this->cacheExpirationForCleanIp;
-            if (!$this->liveMode) {
+            if ($this->streamMode) {
                 // In stream mode we consider a clean IP forever... until the next resync.
                 $duration = 315360000; // in this case, forever is 10 years as PHP_INT_MAX will cause trouble with the Memcached Adapter (int to float unwanted conversion)
             }
@@ -306,7 +306,7 @@ class ApiCache
         $duration = self::parseDurationToSeconds($decision['duration']);
 
         // Don't set a max duration in stream mode to avoid bugs. Only the stream update has to change the cache state.
-        if ($this->liveMode) {
+        if (!$this->streamMode) {
             $duration = min($this->cacheExpirationForBadIp, $duration);
         }
 
@@ -659,7 +659,7 @@ class ApiCache
     {
         $decisions = [];
         $cacheKey = $this->getCacheKey($cacheScope, $value);
-        if ($this->liveMode) {
+        if (!$this->streamMode) {
             if (Constants::SCOPE_IP === $cacheScope) {
                 $this->logger->debug('', ['type' => 'DIRECT_API_CALL', 'ip' => $value]);
                 $decisions = $this->apiClient->getFilteredDecisions(['ip' => $value]);
@@ -694,8 +694,10 @@ class ApiCache
     }
 
     /**
+     * @param string $cacheScope
      * @param $value
      *
+     * @return string
      * @throws InvalidArgumentException
      * @throws Exception
      */
@@ -738,7 +740,7 @@ class ApiCache
         $ip = $address->toString();
         $this->logger->debug('', ['type' => 'START_IP_CHECK', 'ip' => $ip]);
 
-        if (!$this->liveMode && !$this->warmedUp) {
+        if ($this->streamMode && !$this->warmedUp) {
             throw new BouncerException('CrowdSec Bouncer configured in "stream" mode. Please warm the cache up before trying to access it.');
         }
 

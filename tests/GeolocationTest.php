@@ -154,7 +154,7 @@ final class GeolocationTest extends TestCase
         $bouncerConfig = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
-            'live_mode' => false,
+            'stream_mode' => true,
             'geolocation' => $geolocationConfig,
         ];
         $bouncer = new Bouncer(null, $this->logger, $apiCache);

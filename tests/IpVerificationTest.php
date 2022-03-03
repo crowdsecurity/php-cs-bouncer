@@ -149,7 +149,7 @@ final class IpVerificationTest extends TestCase
         $bouncerConfig = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
-            'live_mode' => false,
+            'stream_mode' => true,
         ];
         $bouncer = new Bouncer($cacheAdapter, $this->logger, $apiCache);
         $bouncer->configure($bouncerConfig);
@@ -229,7 +229,7 @@ final class IpVerificationTest extends TestCase
         $bouncerConfig = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
-            'live_mode' => false,
+            'stream_mode' => true,
         ];
         $bouncer = new Bouncer($cacheAdapter, $this->logger, $apiCache2);
         $bouncer->configure($bouncerConfig);
