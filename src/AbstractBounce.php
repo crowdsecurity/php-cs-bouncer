@@ -45,7 +45,7 @@ abstract class AbstractBounce
 
     protected function getBoolSettings(string $name): bool
     {
-        return $this->settings[$name]??false;
+        return $this->settings[$name] ?? false;
     }
 
     protected function getStringSettings(string $name): string
