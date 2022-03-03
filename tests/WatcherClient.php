@@ -11,6 +11,8 @@ class WatcherClient
     public const WATCHER_LOGIN = 'PhpUnitTestMachine';
     public const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
 
+    public const HOURS24 = '+24 hours';
+
     /** @var LoggerInterface */
     private $logger;
 
@@ -53,7 +55,7 @@ class WatcherClient
         $this->deleteAllDecisions();
         $now = new DateTime();
         $this->addDecision($now, '12h', '+12 hours', TestHelpers::BAD_IP, 'captcha');
-        $this->addDecision($now, '24h', '+24 hours', TestHelpers::BAD_IP.'/'.TestHelpers::IP_RANGE, 'ban');
+        $this->addDecision($now, '24h', self::HOURS24, TestHelpers::BAD_IP.'/'.TestHelpers::IP_RANGE, 'ban');
         $this->addDecision($now, '24h', '+24 hours', TestHelpers::JAPAN, 'captcha', Constants::SCOPE_COUNTRY);
     }
 
@@ -65,9 +67,9 @@ class WatcherClient
         $now = new DateTime();
         $this->addDecision($now, '36h', '+36 hours', TestHelpers::NEWLY_BAD_IP, 'ban');
         $this->addDecision($now, '48h', '+48 hours', TestHelpers::NEWLY_BAD_IP.'/'.TestHelpers::IP_RANGE, 'captcha');
-        $this->addDecision($now, '24h', '+24 hours', TestHelpers::JAPAN, 'captcha', Constants::SCOPE_COUNTRY);
-        $this->addDecision($now, '24h', '+24 hours', TestHelpers::IP_JAPAN, 'ban');
-        $this->addDecision($now, '24h', '+24 hours', TestHelpers::IP_FRANCE, 'ban');
+        $this->addDecision($now, '24h', self::HOURS24, TestHelpers::JAPAN, 'captcha', Constants::SCOPE_COUNTRY);
+        $this->addDecision($now, '24h', self::HOURS24, TestHelpers::IP_JAPAN, 'ban');
+        $this->addDecision($now, '24h', self::HOURS24, TestHelpers::IP_FRANCE, 'ban');
     }
 
     /**

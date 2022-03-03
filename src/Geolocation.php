@@ -52,7 +52,7 @@ class Geolocation
                         $record = $reader->city($ip);
                         break;
                     default:
-                        throw new Exception("Unknown MaxMind database type:$databaseType");
+                        throw new BouncerException("Unknown MaxMind database type:$databaseType");
                 }
                 $result['country'] = $record->country->isoCode;
             } catch (AddressNotFoundException $e) {
@@ -85,14 +85,11 @@ class Geolocation
 
             return $result;
         }
-        switch ($geolocConfig['type']) {
-            case Constants::GEOLOCATION_TYPE_MAXMIND:
-                $configPath = $geolocConfig[Constants::GEOLOCATION_TYPE_MAXMIND];
-                $result =
-                    $this->getMaxMindCountry($ip, $configPath['database_type'], $configPath['database_path']);
-                break;
-            default:
-                throw new Exception('Unknown Geolocation type:'.$geolocConfig['type']);
+        if (Constants::GEOLOCATION_TYPE_MAXMIND === $geolocConfig['type']) {
+            $configPath = $geolocConfig[Constants::GEOLOCATION_TYPE_MAXMIND];
+            $result = $this->getMaxMindCountry($ip, $configPath['database_type'], $configPath['database_path']);
+        } else {
+            throw new BouncerException('Unknown Geolocation type:'.$geolocConfig['type']);
         }
 
         if ($saveInSession) {

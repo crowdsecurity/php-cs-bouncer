@@ -76,7 +76,7 @@ class ApiCache
     /**
      * @var array
      */
-    private $cacheKey = [];
+    private $cacheKeys = [];
 
     /**
      * @var array|null
@@ -151,11 +151,11 @@ class ApiCache
     private function getScopes(): ?array
     {
         if (null === $this->scopes) {
-            $scopes = [Constants::SCOPE_IP, Constants::SCOPE_RANGE];
+            $finalScopes = [Constants::SCOPE_IP, Constants::SCOPE_RANGE];
             if (!empty($this->geolocConfig['enabled'])) {
-                $scopes[] = Constants::SCOPE_COUNTRY;
+                $finalScopes[] = Constants::SCOPE_COUNTRY;
             }
-            $this->scopes = $scopes;
+            $this->scopes = $finalScopes;
         }
 
         return $this->scopes;
@@ -368,21 +368,21 @@ class ApiCache
      */
     private function getCacheKey(string $scope, string $value): string
     {
-        if (!isset($this->cacheKey[$scope][$value])) {
+        if (!isset($this->cacheKeys[$scope][$value])) {
             switch ($scope) {
                 case Constants::SCOPE_RANGE:
                 case Constants::SCOPE_IP:
-                    $this->cacheKey[$scope][$value] = Constants::SCOPE_IP.':'.$value;
+                    $this->cacheKeys[$scope][$value] = Constants::SCOPE_IP.':'.$value;
                     break;
                 case Constants::SCOPE_COUNTRY:
-                    $this->cacheKey[$scope][$value] = Constants::SCOPE_COUNTRY.':'.$value;
+                    $this->cacheKeys[$scope][$value] = Constants::SCOPE_COUNTRY.':'.$value;
                     break;
                 default:
-                    throw new Exception('Unknown scope:'.$scope);
+                    throw new BouncerException('Unknown scope:'.$scope);
             }
         }
 
-        return $this->cacheKey[$scope][$value];
+        return $this->cacheKeys[$scope][$value];
     }
 
     /**

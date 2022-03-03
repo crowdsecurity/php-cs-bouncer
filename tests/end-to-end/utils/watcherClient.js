@@ -52,7 +52,7 @@ const ip2long = (argIpParam) => {
     );
     argIP = argIP.match(pattern);
     if (!argIP) {
-        return false;
+        throw new Error(`${argIpParam} is not a valid IP`);
     }
     argIP[0] = 0;
     for (i = 1; i < 5; i += 1) {
@@ -68,7 +68,9 @@ const ip2long = (argIpParam) => {
         argIP[3] >= argIP[7] ||
         argIP[4] >= argIP[8]
     ) {
-        return false;
+        throw new Error(
+            `Something went wrong with ${argIpParam} ip2long process`,
+        );
     }
     return (
         argIP[1] * (argIP[0] === 1 || 16777216) +
