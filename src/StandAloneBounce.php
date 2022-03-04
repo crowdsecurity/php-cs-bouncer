@@ -104,7 +104,6 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         }
 
         // Parse options.
-
         if (empty($this->getStringSettings('api_url'))) {
             throw new BouncerException('Bouncer enabled but no API URL provided');
         }
@@ -120,20 +119,19 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         $forcedTestIp = $this->getStringSettings('forced_test_ip');
 
         // Init Bouncer instance
-
         switch ($bouncingLevel) {
-        case Constants::BOUNCING_LEVEL_DISABLED:
-            $maxRemediationLevel = Constants::REMEDIATION_BYPASS;
-            break;
-        case Constants::BOUNCING_LEVEL_FLEX:
-            $maxRemediationLevel = Constants::REMEDIATION_CAPTCHA;
-            break;
-        case Constants::BOUNCING_LEVEL_NORMAL:
-            $maxRemediationLevel = Constants::REMEDIATION_BAN;
-            break;
-        default:
-            throw new BouncerException("Unknown $bouncingLevel");
-    }
+            case Constants::BOUNCING_LEVEL_DISABLED:
+                $maxRemediationLevel = Constants::REMEDIATION_BYPASS;
+                break;
+            case Constants::BOUNCING_LEVEL_FLEX:
+                $maxRemediationLevel = Constants::REMEDIATION_CAPTCHA;
+                break;
+            case Constants::BOUNCING_LEVEL_NORMAL:
+                $maxRemediationLevel = Constants::REMEDIATION_BAN;
+                break;
+            default:
+                throw new BouncerException("Unknown $bouncingLevel");
+        }
 
         // Instantiate the bouncer
         try {

@@ -1,6 +1,7 @@
 # Full configuration reference
 
 ```php
+   use CrowdSecBouncer\StandAloneBounce;
    $config = [
        // Required. The bouncer api key to access LAPI or CAPI.
        'api_key'=> 'YOUR_BOUNCER_API_KEY',
@@ -14,13 +15,13 @@
        // Optional. In seconds. The timeout when calling CAPI/LAPI. Defaults to 1 sec.
        'api_timeout'=> 1,
        
-       // Optional. Select from 'bouncing_disabled', 'normal_bouncing' or 'flex_bouncing'. Default to 'normal_bouncing'
+       // Optional. Select from 'bouncing_disabled', 'normal_bouncing' or 'flex_bouncing'.
        'bouncing_level' => 'normal_bouncing',
        
        // Optional. Absolute path to store log files.
        'log_directory_path' => __DIR__.'/.logs',
        
-       // Optional. Select from 'phpfs' (File system cache), 'redis' or 'memcached'. Default to 'phpcs'
+       // Optional. Select from 'phpfs' (File system cache), 'redis' or 'memcached'.
        'cache_system' => 'phpfs',
        
        // Optional. Will be used only if you choose File system as cache_system
@@ -34,19 +35,18 @@
        
        // Optional. If you use a CDN, a reverse proxy or a load balancer, set an array of IPs.
        // For other IPs, the bouncer will not trust the X-Forwarded-For header.
-       // Default to empty array
        'trust_ip_forward_array' => [],
 
        // Optional. true to enable stream mode, true to enable the stream mode. Default to false.
        'stream_mode'=> false,
        
-       // Optional. true to enable verbose debug log. Default to false
+       // Optional. true to enable verbose debug log.
        'debug_mode' => false,
        
-       // Optional. true to stop the process and display errors if any. Default to false.
+       // Optional. true to stop the process and display errors if any.
        'display_errors' => false,
        
-       // Optional. true to hide CrowdSec mentions on ban and captcha walls. Default to false.
+       // Optional. true to hide CrowdSec mentions on ban and captcha walls.
        'hide_mentions' => false,
        
        // Optional. Only for test or debug purpose.
@@ -93,6 +93,7 @@
              ]
         ]       
    ]
-   $bouncer = new Bouncer();
-   $bouncer->configure($config);
+   $bouncer = new StandAloneBounce();
+   $bouncer->init($config);
+   $bouncer->safelyBounce();
 ```
