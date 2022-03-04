@@ -115,10 +115,9 @@ class Bouncer
      */
     public function getRemediationForIp(string $ip): string
     {
-        $ipToCheck = !empty($this->config['forced_test_ip']) ? $this->config['forced_test_ip'] : $ip;
-        $address = Factory::parseAddressString($ipToCheck, ParseStringFlag::MAY_INCLUDE_ZONEID);
+        $address = Factory::parseAddressString($ip, ParseStringFlag::MAY_INCLUDE_ZONEID);
         if (null === $address) {
-            throw new BouncerException("IP $ipToCheck format is invalid.");
+            throw new BouncerException("IP $ip format is invalid.");
         }
         $remediation = $this->apiCache->get($address);
 

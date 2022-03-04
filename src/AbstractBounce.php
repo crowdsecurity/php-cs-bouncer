@@ -110,7 +110,6 @@ abstract class AbstractBounce
     protected function bounceCurrentIp()
     {
         $ip = $this->getRemoteIp();
-
         // X-Forwarded-For override
         $XForwardedForHeader = $this->getHttpRequestHeader('X-Forwarded-For');
         if (null !== $XForwardedForHeader) {
@@ -129,8 +128,9 @@ abstract class AbstractBounce
 
         try {
             $this->getBouncerInstance();
-            $remediation = $this->bouncer->getRemediationForIp($ip);
-            $this->handleRemediation($remediation, $ip);
+            $ipToCheck = !empty($this->settings['forced_test_ip']) ? $this->settings['forced_test_ip'] : $ip;
+            $remediation = $this->bouncer->getRemediationForIp($ipToCheck);
+            $this->handleRemediation($remediation, $ipToCheck);
         } catch (Exception $e) {
             $this->logger->warning('', [
                 'type' => 'UNKNOWN_EXCEPTION_WHILE_BOUNCING',

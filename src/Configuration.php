@@ -33,7 +33,6 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('api_user_agent')->defaultValue(Constants::BASE_USER_AGENT)->end()
                 ->integerNode('api_timeout')->defaultValue(Constants::API_TIMEOUT)->end()
                 ->booleanNode('stream_mode')->defaultValue(false)->end()
-                ->scalarNode('forced_test_ip')->defaultValue('')->end()
                 ->enumNode('max_remediation_level')
                     ->values(Constants::ORDERED_REMEDIATIONS)
                     ->defaultValue(Constants::REMEDIATION_BAN)
