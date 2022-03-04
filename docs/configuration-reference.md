@@ -34,6 +34,7 @@
        
        // Optional. If you use a CDN, a reverse proxy or a load balancer, set an array of IPs.
        // For other IPs, the bouncer will not trust the X-Forwarded-For header.
+       // Default to empty array
        'trust_ip_forward_array' => [],
 
        // Optional. true to enable stream mode, true to enable the stream mode. Default to false.
@@ -50,6 +51,7 @@
        
        // Optional. Only for test or debug purpose.
        // If not empty, it will be used for all remediation and geolocation processes.
+       // Default to empty
        'forced_test_ip' => '1.2.3.4',
        
        // Optional. Cap the remediation to the selected one.
@@ -68,30 +70,27 @@
        // Optional. Set the duration we keep in cache the fact that an IP is bad. In seconds. Defaults to 20.
        'cache_expiration_for_bad_ip'=> '20',
        
-       // Optional
-       'hide_mentions' => false
-       
        // Optional. Settings for geolocation remediation (i.e. country based remediation).
        'geolocation' => [
-                     // Optional. true to enable remediation based on country.
-                     // Default to false.
-                     'enabled' => false,
-                     // Optional. Geolocation system. Only 'maxmind' is available for the moment. 
-                     // Default to 'maxmind'
-                     'type' => 'maxmind',
-                     // Optional. true to store the geolocalized country in session
-                     // Setting true will avoid multiple call to the geolocalized system (e.g. maxmind database)
-                     // Default to true.
-                     'save_in_session' => true,
-                     // Optional. MaxMind settings
-                     'maxmind' => [
-                               // Optional. Select from 'country' or 'city'.
-                               // These are the two available MaxMind database types.
-                               // Default to 'country'
-                               'database_type' => 'country',
-                               // Optional. Absolute path to the MaxMind database (mmdb file).
-                               'database_path' => '/some/path/GeoLite2-Country.mmdb',
-                     ]
+             // Optional. true to enable remediation based on country.
+             // Default to false.
+             'enabled' => false,
+             // Optional. Geolocation system. Only 'maxmind' is available for the moment. 
+             // Default to 'maxmind'
+             'type' => 'maxmind',
+             // Optional. true to store the geolocalized country in session
+             // Setting true will avoid multiple call to the geolocalized system (e.g. maxmind database)
+             // Default to true.
+             'save_in_session' => true,
+             // Optional. MaxMind settings
+             'maxmind' => [
+                       // Optional. Select from 'country' or 'city'.
+                       // These are the two available MaxMind database types.
+                       // Default to 'country'
+                       'database_type' => 'country',
+                       // Optional. Absolute path to the MaxMind database (mmdb file).
+                       'database_path' => '/some/path/GeoLite2-Country.mmdb',
+             ]
         ]       
    ]
    $bouncer = new Bouncer();
