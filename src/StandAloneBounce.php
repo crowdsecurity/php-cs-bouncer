@@ -116,7 +116,6 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         $fallbackRemediation = $this->getStringSettings('fallback_remediation');
         $bouncingLevel = $this->getStringSettings('bouncing_level');
         $geolocation = $this->getArraySettings('geolocation');
-        $forcedTestIp = $this->getStringSettings('forced_test_ip');
 
         // Init Bouncer instance
         switch ($bouncingLevel) {
