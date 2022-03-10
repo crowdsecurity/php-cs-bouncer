@@ -2,12 +2,19 @@ name: Create Release
 # example: gh workflow run release.yml -f tag_name=v1.1.4 -f draft=true
 on:
   workflow_dispatch:
+    branches:
+      - main
     inputs:
       tag_name:
-        default: ""
+        type: string
+        required: true
       draft:
+        type: boolean
+        description: Draft release
         default: false
       prerelease:
+        type: boolean
+        description: Prerelease
         default: false
 
 jobs:

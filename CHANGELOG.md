@@ -5,6 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.16.0] - 2022-03-10
+### Added
+- Add geolocation feature to get remediation from `Country` scoped decisions (using MaxMind databases)
+- Add end-to-end tests GitHub actions
+- Add GitHub action to check links in markdown and update TOC
+
+### Changed
+- *Breaking change*: Remove `live_mode` occurrences and use `stream_mode` instead
+- Change PHP scripts for testing examples (auto-prepend, cron)
+- Update docs
+
+### Fixed
+- Fix debug log in `no-dev` environment
+- Fix empty logs in Unit Tests
+
 ## [0.15.0] - 2022-02-24
 ### Added
 - Add tests for PHP 8.1 (memcached is excluded)
