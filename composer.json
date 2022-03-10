@@ -38,7 +38,6 @@
         "geoip2/geoip2": "^2.12.2"
     },
     "require-dev": {
-        "bramus/monolog-colored-line-formatter": "^3.0",
         "symfony/var-dumper": "^5.2",
         "phpunit/phpunit": "8.5.21",
         "clean/phpdoc-md": "^0.19.1",

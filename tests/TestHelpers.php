@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Bramus\Monolog\Formatter\ColoredLineFormatter;
+use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
@@ -31,7 +31,7 @@ class TestHelpers
     {
         $log = new Logger('TESTS');
         $handler = new StreamHandler('php://stdout', self::LOG_LEVEL);
-        $handler->setFormatter(new ColoredLineFormatter(null, "[%datetime%] %message% %context%\n", 'H:i:s'));
+        $handler->setFormatter(new LineFormatter("%datetime%|%level%|%context%\n"));
         $log->pushHandler($handler);
 
         return $log;

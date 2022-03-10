@@ -5,7 +5,6 @@ namespace CrowdSecBouncer;
 require_once __DIR__.'/templates/captcha.php';
 require_once __DIR__.'/templates/access-forbidden.php';
 
-use Bramus\Monolog\Formatter\ColoredLineFormatter;
 use ErrorException;
 use Exception;
 use IPLib\Factory;
@@ -97,10 +96,8 @@ abstract class AbstractBounce
         if ($this->debug) {
             $debugLogPath = $logDirectoryPath.'/debug.log';
             $debugFileHandler = new RotatingFileHandler($debugLogPath, 0, Logger::DEBUG);
-            if (class_exists('\Bramus\Monolog\Formatter\ColoredLineFormatter')) {
-                $debugFileHandler->setFormatter(new ColoredLineFormatter(null, "[%datetime%] %message% %context%\n", 'H:i:s'));
-                $this->logger->pushHandler($debugFileHandler);
-            }
+            $debugFileHandler->setFormatter(new LineFormatter("%datetime%|%level%|%context%\n"));
+            $this->logger->pushHandler($debugFileHandler);
         }
     }
 
