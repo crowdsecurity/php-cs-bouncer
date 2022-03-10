@@ -1,10 +1,11 @@
 <?php
 
 if (!file_exists(__DIR__.'/src')) {
-    exit(0);
+    exit(1);
 }
 
-return PhpCsFixer\Config::create()
+$config = new PhpCsFixer\Config("crowdsec-php-lib");
+return $config
     ->setRules([
         '@Symfony' => true,
         '@Symfony:risky' => true,
@@ -22,6 +23,6 @@ return PhpCsFixer\Config::create()
     ->setFinder(
         PhpCsFixer\Finder::create()
             ->in(__DIR__.'/src')
-            ->in(__DIR__.'/tests')
+            ->in(__DIR__.'/tests')->depth(0)
     )
 ;

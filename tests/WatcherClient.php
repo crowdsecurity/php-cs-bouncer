@@ -8,8 +8,10 @@ use Psr\Log\LoggerInterface;
 
 class WatcherClient
 {
-    const WATCHER_LOGIN = 'PhpUnitTestMachine';
-    const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
+    public const WATCHER_LOGIN = 'PhpUnitTestMachine';
+    public const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
+
+    public const HOURS24 = '+24 hours';
 
     /** @var LoggerInterface */
     private $logger;
@@ -53,10 +55,11 @@ class WatcherClient
         $this->deleteAllDecisions();
         $now = new DateTime();
         $this->addDecision($now, '12h', '+12 hours', TestHelpers::BAD_IP, 'captcha');
-        $this->addDecision($now, '24h', '+24 hours', TestHelpers::BAD_IP.'/'.TestHelpers::IP_RANGE, 'ban');
+        $this->addDecision($now, '24h', self::HOURS24, TestHelpers::BAD_IP.'/'.TestHelpers::IP_RANGE, 'ban');
+        $this->addDecision($now, '24h', '+24 hours', TestHelpers::JAPAN, 'captcha', Constants::SCOPE_COUNTRY);
     }
 
-    /** Set the initial watcher state */
+    /** Set the second watcher state */
     public function setSecondState(): void
     {
         $this->logger->info('Set "second" state');
@@ -64,6 +67,9 @@ class WatcherClient
         $now = new DateTime();
         $this->addDecision($now, '36h', '+36 hours', TestHelpers::NEWLY_BAD_IP, 'ban');
         $this->addDecision($now, '48h', '+48 hours', TestHelpers::NEWLY_BAD_IP.'/'.TestHelpers::IP_RANGE, 'captcha');
+        $this->addDecision($now, '24h', self::HOURS24, TestHelpers::JAPAN, 'captcha', Constants::SCOPE_COUNTRY);
+        $this->addDecision($now, '24h', self::HOURS24, TestHelpers::IP_JAPAN, 'ban');
+        $this->addDecision($now, '24h', self::HOURS24, TestHelpers::IP_FRANCE, 'ban');
     }
 
     /**
@@ -100,9 +106,13 @@ class WatcherClient
         $this->request('/v1/decisions', null, null, 'DELETE');
     }
 
-    public function addDecision(\DateTime $now, string $durationString, string $dateTimeDurationString, string $ipOrRange, string $type)
+    protected function getFinalScope($scope, $value)
     {
-        $isRange = (2 === count(explode('/', $ipOrRange)));
+        return (Constants::SCOPE_IP === $scope && 2 === count(explode('/', $value))) ? Constants::SCOPE_RANGE : $scope;
+    }
+
+    public function addDecision(DateTime $now, string $durationString, string $dateTimeDurationString, string $value, string $type, string $scope = Constants::SCOPE_IP)
+    {
         $stopAt = (clone $now)->modify($dateTimeDurationString)->format('Y-m-d\TH:i:s.000\Z');
         $startAt = $now->format('Y-m-d\TH:i:s.000\Z');
 
@@ -112,10 +122,10 @@ class WatcherClient
               [
                 'duration' => $durationString,
                 'origin' => 'cscli',
-                'scenario' => 'captcha for '.$ipOrRange.' for '.$durationString.' for PHPUnit tests',
-                'scope' => $isRange ? 'Range' : 'Ip',
+                'scenario' => $type.' for scope/value ('.$scope.'/'.$value.') for '.$durationString.' for PHPUnit tests',
+                'scope' => $this->getFinalScope($scope, $value),
                 'type' => $type,
-                'value' => $ipOrRange,
+                'value' => $value,
               ],
             ],
             'events' => [
@@ -129,8 +139,8 @@ class WatcherClient
             'scenario_version' => '',
             'simulated' => false,
             'source' => [
-              'scope' => $isRange ? 'Range' : 'Ip',
-              'value' => $ipOrRange,
+              'scope' => $this->getFinalScope($scope, $value),
+              'value' => $value,
             ],
             'start_at' => $startAt,
             'stop_at' => $stopAt,

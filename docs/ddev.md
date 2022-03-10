@@ -52,10 +52,20 @@ php-project-sources
 ```
 mkdir php-project-sources
 ```
+
+- Create a `crowdsec-php-lib` folder with sources of this repo:
+
+```
+cd php-project-sources
+mkdir my-own-modules && mkdir my-own-modules/crowdsec-php-lib
+cd my-own-modules/crowdsec-php-lib && git clone git@github.com:crowdsecurity/php-cs-bouncer.git ./
+```
+
 - Create an empty `.ddev` folder for DDEV and clone our pre-configured DDEV repo:
 
 ```
-mkdir php-project-sources/.ddev && cd php-project-sources/.ddev && git clone git@github.com:julienloizelet/ddev-php.
+cd php-project-sources
+mkdir .ddev && cd .ddev && git clone git@github.com:julienloizelet/ddev-php.
 git ./
 ```
 - Copy some configurations file:
@@ -64,6 +74,7 @@ By default, ddev will launch a PHP 7.2 container. If you want to work with anoth
 corresponding config file. For example:
 
 ```
+cd php-project-sources
 cp .ddev/config_overrides/config.php74.yaml .ddev/config.php74.yaml
 ```
 - Launch DDEV
@@ -122,6 +133,18 @@ Finally, run
 ```
 ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
 ```
+
+For geolocation Unit Test, you should first put 2 free MaxMind databases in the `tests` folder : `GeoLite2-City.mmdb` 
+and`GeoLite2-Country.mmdb`. You can download these databases by creating a maxmind account and browse to [the download page](https://www.maxmind.com/en/accounts/current/geoip/downloads).
+
+
+Then, you can run:
+
+```
+ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/GeolocationTest.php
+
+```
+
 
 ### Use a `check-ip` php script for test
 
@@ -206,3 +229,108 @@ ddev exec php check-ip.php 1.2.3.4 <BOUNCER_KEY>
 ```
 
 LAPI will advise you to ban this IP as it's within the 1.2.3.4/30 range.
+
+
+### Coding standards
+
+#### PHPCS Fixer
+
+We are using the [PHP Coding Standards Fixer](https://cs.symfony.com/)
+
+With ddev, you can do the following:
+
+```command
+ddev composer update --working-dir=./my-own-modules/crowdsec-php-lib/tools/php-cs-fixer
+```
+And then:
+
+```
+ddev phpcsfixer my-own-modules/crowdsec-php-lib tools/php-cs-fixer
+
+```
+
+#### PHP Mess Detector
+
+To use the [PHPMD](https://github.com/phpmd/phpmd) tool, you can run:
+
+```
+ddev phpmd ./my-own-modules/crowdsec-php-lib tools/phpmd/rulesets.xml src
+
+```
+
+#### PHPCS and PHPCBF
+
+To use [PHP Code Sniffer](https://github.com/squizlabs/PHP_CodeSniffer) tools, you can run:
+
+```
+ddev phpcs ./my-own-modules/crowdsec-php-lib/vendor/bin/phpcs my-own-modules/crowdsec-php-lib/src
+```
+
+and:
+
+```
+ddev phpcbf ./my-own-modules/crowdsec-php-lib/vendor/bin/phpcs my-own-modules/crowdsec-php-lib/src
+```
+
+
+### Auto prepend mode
+
+Before using the bouncer in a standalone mode (i.e. with an auto-prepend directive), you should copy the 
+`examples/auto-prepend/settings.example.php` file to a `examples/auto-prepend/settings.php` and edit it depending on 
+your needs.
+
+
+Then, to configure the Nginx service in order that it uses an auto-prepend directive pointing to the 
+`examples/auto-prepend/scripts/bounce-via-auto-prepend.php` script, please run the 
+following command from the `.ddev` folder:
+
+```
+ddev crowdsec-prepend-nginx
+
+```
+
+
+With that done, every access to your ddev url (i.e. `https://phpXX.ddev.site` where `XX` is your php version) will 
+be bounce.
+
+For example, you should try to browse the following url:
+
+```
+https://phpXX.ddev.site/my-own-modules/crowdsec-php-lib/examples/auto-prepend/public/protected-page.php
+```
+
+#### End to end tests
+
+In auto-prepend mode, you can run some end to end tests. 
+
+We are using a Jest/Playwright Node.js stack to launch a suite of end-to-end tests.
+
+Tests code is in the `tests/end-to-end` folder. You should have to `chmod +x` the scripts you will find in  
+`tests/end-to-end/__scripts__`.
+
+
+Then you can use the `run-test.sh` script to run the tests:
+
+- the first parameter specifies if you want to run the test on your machine (`host`) or in the
+  docker containers (`docker`). You can also use `ci` if you want to have the same behavior as in Github action.
+- the second parameter list the test files you want to execute. If empty, all the test suite will be launched.
+
+For example:
+
+    ./run-tests.sh host "./__tests__/1-live-mode.js"
+    ./run-tests.sh docker "./__tests__/1-live-mode.js" 
+    ./run-tests.sh host
+
+Before testing with the `docker` or `ci` parameter, you have to install all the required dependencies
+in the playwright container with this command :
+
+    ./test-init.sh
+
+If you want to test with the `host` parameter, you will have to install manually all the required dependencies:
+
+```
+yarn --cwd ./tests/end-to-end --force
+yarn global add cross-env
+```
+ 
+

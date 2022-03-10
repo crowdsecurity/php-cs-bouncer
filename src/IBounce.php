@@ -2,8 +2,6 @@
 
 namespace CrowdSecBouncer;
 
-use Monolog\Logger;
-
 /**
  * The interface to implement when bouncing.
  *
@@ -52,7 +50,7 @@ interface IBounce
     public function getBanWallOptions(): array;
 
     /**
-     * @return [[string, string], ...] Returns IP ranges to trust as proxies as an array of comparables ip bounds
+     * @return array [[string, string], ...] Returns IP ranges to trust as proxies as an array of comparables ip bounds
      */
     public function getTrustForwardedIpBoundsList(): array;
 
@@ -67,7 +65,7 @@ interface IBounce
     public function setSessionVariable(string $name, $value): void;
 
     /**
-     * Unset a session variable, throw an error if this does not exists.
+     * Unset a session variable, throw an error if this does not exist.
      *
      * @return void;
      */

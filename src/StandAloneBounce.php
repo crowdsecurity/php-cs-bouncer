@@ -2,17 +2,14 @@
 
 namespace CrowdSecBouncer;
 
+use ErrorException;
+use Exception;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
+use Symfony\Component\Cache\Exception\CacheException;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
-
-/** @var Bouncer|null */
-$crowdSecBouncer = null;
-
-/** @var AbstractAdapter|null */
-$crowdSecCacheAdapterInstance = null;
 
 /**
  * The class that apply a bounce.
@@ -29,16 +26,27 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     /** @var AbstractAdapter */
     protected $cacheAdapter;
 
+    /**
+     * @var string
+     */
+    protected $session_name;
+
     public function init(array $crowdSecStandaloneBouncerConfig)
     {
         if (\PHP_SESSION_NONE === session_status()) {
-            $this->session_name = session_name("crowdsec");
+            $this->session_name = session_name('crowdsec');
             session_start();
         }
         $this->settings = $crowdSecStandaloneBouncerConfig;
+        $this->setDebug($this->getBoolSettings('debug_mode'));
+        $this->setDisplayErrors($this->getBoolSettings('display_errors'));
         $this->initLogger();
     }
 
+    /**
+     * @throws CacheException
+     * @throws ErrorException
+     */
     private function getCacheAdapterInstance(): AbstractAdapter
     {
         // Singleton for this function
@@ -55,8 +63,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             case Constants::CACHE_SYSTEM_MEMCACHED:
                 $memcachedDsn = $this->getStringSettings('memcached_dsn');
                 if (empty($memcachedDsn)) {
-                    throw new BouncerException('The selected cache technology is Memcached.'.
-                    ' Please set a Memcached DSN or select another cache technology.');
+                    throw new BouncerException('The selected cache technology is Memcached.'.' Please set a Memcached DSN or select another cache technology.');
                 }
 
                 $this->cacheAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedDsn));
@@ -65,20 +72,18 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             case Constants::CACHE_SYSTEM_REDIS:
                 $redisDsn = $this->getStringSettings('redis_dsn');
                 if (empty($redisDsn)) {
-                    throw new BouncerException('The selected cache technology is Redis.'.
-                    ' Please set a Redis DSN or select another cache technology.');
+                    throw new BouncerException('The selected cache technology is Redis.'.' Please set a Redis DSN or select another cache technology.');
                 }
 
                 try {
                     $this->cacheAdapter = new RedisAdapter(RedisAdapter::createConnection($redisDsn));
                 } catch (InvalidArgumentException $e) {
-                    throw new BouncerException('Error when connecting to Redis.'.
-                    ' Please fix the Redis DSN or select another cache technology.');
+                    throw new BouncerException('Error when connecting to Redis.'.' Please fix the Redis DSN or select another cache technology.');
                 }
 
                 break;
             default:
-                throw new BouncerException('Unknow selected cache technology.');
+                throw new BouncerException('Unknown selected cache technology.');
         }
 
         return $this->cacheAdapter;
@@ -86,6 +91,10 @@ class StandAloneBounce extends AbstractBounce implements IBounce
 
     /**
      * @return Bouncer get the bouncer instance
+     *
+     * @throws CacheException
+     * @throws ErrorException
+     * @throws \Psr\Cache\InvalidArgumentException
      */
     public function getBouncerInstance(): Bouncer
     {
@@ -95,36 +104,35 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         }
 
         // Parse options.
-
         if (empty($this->getStringSettings('api_url'))) {
             throw new BouncerException('Bouncer enabled but no API URL provided');
         }
         if (empty($this->getStringSettings('api_key'))) {
             throw new BouncerException('Bouncer enabled but no API key provided');
         }
-        $isStreamMode = $this->getStringSettings('stream_mode');
+        $isStreamMode = $this->getBoolSettings('stream_mode');
         $cleanIpCacheDuration = (int) $this->getStringSettings('clean_ip_cache_duration');
         $badIpCacheDuration = (int) $this->getStringSettings('bad_ip_cache_duration');
         $fallbackRemediation = $this->getStringSettings('fallback_remediation');
         $bouncingLevel = $this->getStringSettings('bouncing_level');
+        $geolocation = $this->getArraySettings('geolocation');
 
         // Init Bouncer instance
-
         switch ($bouncingLevel) {
-        case Constants::BOUNCING_LEVEL_DISABLED:
-            $maxRemediationLevel = Constants::REMEDIATION_BYPASS;
-            break;
-        case Constants::BOUNCING_LEVEL_FLEX:
-            $maxRemediationLevel = Constants::REMEDIATION_CAPTCHA;
-            break;
-        case Constants::BOUNCING_LEVEL_NORMAL:
-            $maxRemediationLevel = Constants::REMEDIATION_BAN;
-            break;
-        default:
-            throw new BouncerException("Unknown $bouncingLevel");
-    }
+            case Constants::BOUNCING_LEVEL_DISABLED:
+                $maxRemediationLevel = Constants::REMEDIATION_BYPASS;
+                break;
+            case Constants::BOUNCING_LEVEL_FLEX:
+                $maxRemediationLevel = Constants::REMEDIATION_CAPTCHA;
+                break;
+            case Constants::BOUNCING_LEVEL_NORMAL:
+                $maxRemediationLevel = Constants::REMEDIATION_BAN;
+                break;
+            default:
+                throw new BouncerException("Unknown $bouncingLevel");
+        }
 
-        // Instanciate the bouncer
+        // Instantiate the bouncer
         try {
             $this->cacheAdapter = $this->getCacheAdapterInstance();
         } catch (InvalidArgumentException $e) {
@@ -138,12 +146,13 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             'api_key' => $this->getStringSettings('api_key'),
             'api_url' => $this->getStringSettings('api_url'),
             'api_user_agent' => $apiUserAgent,
-            'live_mode' => !$isStreamMode,
+            'stream_mode' => $isStreamMode,
             'max_remediation_level' => $maxRemediationLevel,
             'fallback_remediation' => $fallbackRemediation,
             'cache_expiration_for_clean_ip' => $cleanIpCacheDuration,
             'cache_expiration_for_bad_ip' => $badIpCacheDuration,
-        ], $this->cacheAdapter);
+            'geolocation' => $geolocation,
+        ]);
 
         return $this->bouncer;
     }
@@ -188,7 +197,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     public function getCaptchaWallOptions(): array
     {
         return [
-            'hide_crowdsec_mentions' => (bool) $this->getStringSettings('hide_mentions'),
+            'hide_crowdsec_mentions' => $this->getBoolSettings('hide_mentions'),
             'color' => [
               'text' => [
                 'primary' => htmlspecialchars_decode($this->getStringSettings('theme_color_text_primary'), \ENT_QUOTES),
@@ -225,7 +234,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     public function getBanWallOptions(): array
     {
         return [
-            'hide_crowdsec_mentions' => (bool) $this->getStringSettings('hide_mentions'),
+            'hide_crowdsec_mentions' => $this->getBoolSettings('hide_mentions'),
             'color' => [
               'text' => [
                 'primary' => htmlspecialchars_decode($this->getStringSettings('theme_color_text_primary'), \ENT_QUOTES),
@@ -262,13 +271,9 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     /**
      * Return a session variable, null if not set.
      */
-    public function getSessionVariable(string $name): ?string
+    public function getSessionVariable(string $name)
     {
-        if (!isset($_SESSION[$name])) {
-            return null;
-        }
-
-        return $_SESSION[$name];
+        return Session::getSessionVariable($name);
     }
 
     /**
@@ -276,19 +281,17 @@ class StandAloneBounce extends AbstractBounce implements IBounce
      */
     public function setSessionVariable(string $name, $value): void
     {
-        $_SESSION[$name] = $value;
+        Session::setSessionVariable($name, $value);
     }
 
     /**
-     * Unset a session variable, throw an error if this does not exists.
+     * Unset a session variable, throw an error if this does not exist.
      *
      * @return void;
      */
     public function unsetSessionVariable(string $name): void
     {
-        if (isset($_SESSION[$name])) {
-            unset($_SESSION[$name]);
-        }
+        Session::unsetSessionVariable($name);
     }
 
     /**
@@ -305,6 +308,9 @@ class StandAloneBounce extends AbstractBounce implements IBounce
 
     /**
      * If the current IP should be bounced or not, matching custom business rules.
+     *
+     * @throws CacheException
+     * @throws ErrorException
      */
     public function shouldBounceCurrentIp(): bool
     {
@@ -348,9 +354,13 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         if (null !== $body) {
             echo $body;
         }
-        die();
+        exit();
     }
 
+    /**
+     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws Exception
+     */
     public function safelyBounce(): void
     {
         // If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
@@ -360,7 +370,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             });
             $this->run();
             restore_error_handler();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error('', [
                 'type' => 'EXCEPTION_WHILE_BOUNCING',
                 'message' => $e->getMessage(),
@@ -379,6 +389,10 @@ class StandAloneBounce extends AbstractBounce implements IBounce
         }
     }
 
+    /**
+     * @throws ErrorException
+     * @throws CacheException
+     */
     public function isConfigValid(): bool
     {
         $issues = ['errors' => [], 'warnings' => []];

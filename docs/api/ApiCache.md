@@ -75,7 +75,8 @@ The cache mecanism to store every decisions from LAPI/CAPI. Symfony Cache compon
 **Description**
 
 ```php
-public configure (bool $liveMode, string $apiUrl, int $timeout, string $userAgent, string $apiKey, int $cacheExpirationForCleanIp, int $cacheExpirationForBadIp, string $fallbackRemediation)
+public configure (bool $streamMode, string $apiUrl, int $timeout, string $userAgent, string $apiKey, int 
+$cacheExpirationForCleanIp, int $cacheExpirationForBadIp, string $fallbackRemediation)
 ```
 
 Configure this instance. 
@@ -84,8 +85,8 @@ Configure this instance.
 
 **Parameters**
 
-* `(bool) $liveMode`
-: If we use the live mode (else we use the stream mode)  
+* `(bool) $streamMode`
+: If we use the stream mode (else we use the live mode)  
 * `(string) $apiUrl`
 : The URL of the LAPI  
 * `(int) $timeout`

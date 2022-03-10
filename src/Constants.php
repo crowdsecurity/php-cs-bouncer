@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace CrowdSecBouncer;
 
 /**
- * Every constants of the library are set here.
+ * Every constant of the library are set here.
  *
  * @author    CrowdSec team
  *
@@ -63,4 +63,22 @@ class Constants
 
     /** @var string The "MEMCACHED" cache system */
     public const CACHE_SYSTEM_MEMCACHED = 'memcached';
+
+    /** @var string The "MaxMind" geolocation type */
+    public const GEOLOCATION_TYPE_MAXMIND = 'maxmind';
+
+    /** @var string The CrowdSec country scope for decisions */
+    public const SCOPE_COUNTRY = 'Country';
+
+    /** @var string The CrowdSec Ip scope for decisions */
+    public const SCOPE_IP = 'Ip';
+
+    /** @var string The CrowdSec Range scope for decisions */
+    public const SCOPE_RANGE = 'Range';
+
+    /** @var string The Maxmind "Country" database type */
+    public const MAXMIND_COUNTRY = 'country';
+
+    /** @var string The Maxmind "City" database type */
+    public const MAXMIND_CITY = 'city';
 }
