@@ -111,13 +111,13 @@ final class IpVerificationTest extends TestCase
         unset($bouncerConfig['max_remediation_level']);
         $bouncer->configure($bouncerConfig);
 
-        $this->logger->info('set "Large IPV4 range banned" state');
+        $this->logger->info('', ['message' => 'set "Large IPV4 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
         $this->watcherClient->addDecision(new \DateTime(), '24h', '+24 hours', TestHelpers::BAD_IP.'/'.TestHelpers::LARGE_IPV4_RANGE, 'ban');
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('ban', $cappedRemediation, 'The remediation for the banned IP with a too large range should now be "ban" as we are in live mode');
 
-        $this->logger->info('set "IPV6 range banned" state');
+        $this->logger->info('',['message' => 'set "IPV6 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
         $this->watcherClient->addDecision(new \DateTime(), '24h', '+24 hours', TestHelpers::BAD_IPV6.'/'.TestHelpers::IPV6_RANGE, 'ban');
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
@@ -163,7 +163,7 @@ final class IpVerificationTest extends TestCase
 
         $bouncer->refreshBlocklistCache();
 
-        $this->logger->debug('Refresh the cache just after the warm up. Nothing should append.');
+        $this->logger->debug('', ['message' => 'Refresh the cache just after the warm up. Nothing should append.']);
         $bouncer->refreshBlocklistCache();
 
         $this->assertEquals(
@@ -199,10 +199,10 @@ final class IpVerificationTest extends TestCase
         // Pull updates
         $bouncer->refreshBlocklistCache();
 
-        $this->logger->debug('Refresh 2nd time the cache. Nothing should append.');
+        $this->logger->debug('', ['message' => 'Refresh 2nd time the cache. Nothing should append.']);
         $bouncer->refreshBlocklistCache();
 
-        $this->logger->debug('Refresh 3rd time the cache. Nothing should append.');
+        $this->logger->debug('', ['message' => 'Refresh 3rd time the cache. Nothing should append.']);
         $bouncer->refreshBlocklistCache();
 
         $this->assertEquals(
@@ -245,7 +245,7 @@ final class IpVerificationTest extends TestCase
             'The cache warm up should be stored across each instanciation'
         );
 
-        $this->logger->info('set "Large IPV4 range banned" + "IPV6 range banned" state');
+        $this->logger->info('', ['message' => 'set "Large IPV4 range banned" + "IPV6 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
         $this->watcherClient->addDecision(new \DateTime(), '24h', '+24 hours', TestHelpers::BAD_IP.'/'.TestHelpers::LARGE_IPV4_RANGE, 'ban');
         $this->watcherClient->addDecision(new \DateTime(), '24h', '+24 hours', TestHelpers::BAD_IPV6.'/'.TestHelpers::IPV6_RANGE, 'ban');

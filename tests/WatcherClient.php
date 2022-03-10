@@ -45,13 +45,13 @@ class WatcherClient
         ];
         $this->watcherClient = new RestClient($this->logger);
         $this->watcherClient->configure($apiUrl, $this->baseHeaders, 2);
-        $this->logger->info('Watcher client initialized');
+        $this->logger->info('', ['message' => 'Watcher client initialized']);
     }
 
     /** Set the initial watcher state */
     public function setInitialState(): void
     {
-        $this->logger->info('Set initial state');
+        $this->logger->info('', ['message' => 'Set initial state']);
         $this->deleteAllDecisions();
         $now = new DateTime();
         $this->addDecision($now, '12h', '+12 hours', TestHelpers::BAD_IP, 'captcha');
@@ -62,7 +62,7 @@ class WatcherClient
     /** Set the second watcher state */
     public function setSecondState(): void
     {
-        $this->logger->info('Set "second" state');
+        $this->logger->info('', ['message' => 'Set "second" state']);
         $this->deleteAllDecisions();
         $now = new DateTime();
         $this->addDecision($now, '36h', '+36 hours', TestHelpers::NEWLY_BAD_IP, 'ban');
@@ -102,7 +102,7 @@ class WatcherClient
     public function deleteAllDecisions(): void
     {
         // Delete all existing decisions.
-        $this->logger->info('Delete all decisions');
+        $this->logger->info('', ['message' => 'Delete all decisions']);
         $this->request('/v1/decisions', null, null, 'DELETE');
     }
 
@@ -146,6 +146,6 @@ class WatcherClient
             'stop_at' => $stopAt,
           ];
         $result = $this->request('/v1/alerts', null, [$body], 'POST');
-        $this->logger->info('Decision '.$result[0].' added: '.$body['decisions'][0]['scenario'].'');
+        $this->logger->info('', ['message' => 'Decision '.$result[0].' added: '.$body['decisions'][0]['scenario'].'']);
     }
 }

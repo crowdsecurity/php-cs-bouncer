@@ -163,7 +163,7 @@ final class GeolocationTest extends TestCase
         // Warm BlockList cache up
         $bouncer->refreshBlocklistCache();
 
-        $this->logger->debug('Refresh the cache just after the warm up. Nothing should append.');
+        $this->logger->debug('', ['message' =>'Refresh the cache just after the warm up. Nothing should append.']);
         $bouncer->refreshBlocklistCache();
 
         $this->assertEquals(
