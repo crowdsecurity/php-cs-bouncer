@@ -35,6 +35,6 @@ jobs:
         with:
           MAX_HEADER_LEVEL: 5
           COMMIT_NAME: CrowdSec Dev Bot
-          TARGET_PATHS: 'docs/**'
+          TARGET_PATHS: 'docs/*.md'
           CHECK_ONLY_DEFAULT_BRANCH: true
           CREATE_PR: true
