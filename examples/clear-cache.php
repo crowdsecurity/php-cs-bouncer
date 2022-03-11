@@ -10,7 +10,7 @@ use Monolog\Logger;
 
 // Parse arguments
 $bouncerApiKey = $argv[1]; // required
-$apiUrl = $argv[3] ?: 'http://127.0.0.1:8080';
+$apiUrl = $argv[3] ?: 'http://crowdsec:8080';
 
 if (!$bouncerApiKey) {
     echo 'Usage: php clear-cache.php <api_key>';
@@ -22,9 +22,10 @@ echo "\nClear the cache...\n";
 $logPath = __DIR__.'/.crowdsec.log';
 $cachePath = __DIR__.'/.cache';
 
-// Instantiate a the "PhpFilesAdapter" cache adapter
-// Note: to select another cache adapter (Memcached, Redis, ...), try other examples.
+// Instantiate the "PhpFilesAdapter" cache adapter
 $cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter('', 0, $cachePath);
+// Or Redis: $cacheAdapter = new RedisAdapter(RedisAdapter::createConnection('redis://your-redis-host:6379'));
+// Or Memcached: $cacheAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection('memcached://your-memcached-host:11211'));
 
 // Instantiate the Stream logger with info level(optional)
 $logger = new Logger('example');

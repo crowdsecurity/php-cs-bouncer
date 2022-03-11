@@ -798,8 +798,8 @@ class ApiCache
     private function setCustomErrorHandler(): void
     {
         if ($this->adapter instanceof MemcachedAdapter) {
-            set_error_handler(function ($errno, $errmsg) {
-                throw new BouncerException('Error when connecting to Memcached. Please fix the Memcached DSN or select another cache technology. Original message was: '.$errmsg);
+            set_error_handler(function ($errno, $errstr) {
+                throw new BouncerException("Error when connecting to Memcached. (Error level: $errno) Please fix the Memcached DSN or select another cache technology. Original message was: $errstr");
             });
         }
     }

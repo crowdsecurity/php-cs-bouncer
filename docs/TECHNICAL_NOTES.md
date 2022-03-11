@@ -1,4 +1,14 @@
-# FAQ
+![CrowdSec Logo](images/logo_crowdsec.png)
+
+# CrowdSec Bouncer PHP library
+
+## Technical notes
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 We explain here each important technical decision used to design this
 library.
@@ -24,7 +34,7 @@ CAPI/LAPI.
 ## Why not using Swagger Codegen?
 
 We were not able to use this client with ease ex: impossible to get
-JSON data, it's seems there is a bug with unserialization, we received
+JSON data, it seems there is a bug with unserialization, we received
 an empty array.
 
 ## Which PHP compatibility matrix?
@@ -43,3 +53,5 @@ These PHP versions are not anymore maintained for security fixes since 2019! We 
 To get a robust library and not provide security bug unmaintained, we use [components](https://packagist.org/packages/symfony/cache#v3.4.47) under [LTS versioning](https://symfony.com/releases/3.4).
 
 The oldest PHP version compatible with these libraries is PHP 7.2.x.
+
+
