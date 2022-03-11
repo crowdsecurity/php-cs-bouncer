@@ -36,19 +36,19 @@ exposed applications. It can also be used in a standalone mode using auto-prepen
 To be able to use this bouncer, the first step is to install [CrowdSec v1](https://doc.crowdsec.net/docs/getting_started/install_crowdsec/).
 CrowdSec is only in charge of the "detection", and won't block anything on its own. You need to deploy a bouncer to "apply" decisions.
 
-Please note that first and foremost CrowdSec must be installed on a server that is accessible via the server where 
-this library is installed.
+Please note that first and foremost a CrowdSec agent must be installed on a server that is accessible by this library.
 
 ## Features
 
-- Fast API client
-- LAPI Support (CAPI not supported yet)
+- CrowdSec LAPI Support (CAPI not supported yet)
+  - Handle IP, IP ranges and Country scoped decisions
+  - Clear, prune and refresh the LAPI cache
+  - `Live mode` or `Stream mode`
+- Large PHP matrix compatibility: 7.2.x, 7.3.x, 7.4.x, 8.0.x and 8.1.x
 - Built-in support for the most known cache systems like Redis, Memcached, PhpFiles
-- **Live mode** or **Stream mode**
 - Events logged using monolog
-- Large PHP matrix compatibility: 7.2.x, 7.3.x, 7.4.x and 8.0.x
 - Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)
-- Clear, prune and refresh the cache
+
 
 
 ## Usage
