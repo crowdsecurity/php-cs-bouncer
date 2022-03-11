@@ -1,6 +1,6 @@
 ![CrowdSec Logo](docs/images/logo_crowdsec.png)
 
-# PHP Bouncer Library
+# CrowdSec Bouncer PHP library
 
 > The official PHP bouncer library for the CrowdSec LAPI
 
@@ -20,7 +20,7 @@
 
 ## Usage
 
-See [User Guide](../docs/USER_GUIDE.md)
+See [User Guide](docs/USER_GUIDE.md)
 
 ## Installation
 
