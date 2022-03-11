@@ -113,13 +113,14 @@ final class IpVerificationTest extends TestCase
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
-        $this->watcherClient->addDecision(new \DateTime(), '24h', '+24 hours', TestHelpers::BAD_IP.'/'.TestHelpers::LARGE_IPV4_RANGE, 'ban');
+        $this->watcherClient->addDecision(new \DateTime(), '24h', WatcherClient::HOURS24, TestHelpers::BAD_IP.'/'
+                                                                     .TestHelpers::LARGE_IPV4_RANGE, 'ban');
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('ban', $cappedRemediation, 'The remediation for the banned IP with a too large range should now be "ban" as we are in live mode');
 
         $this->logger->info('',['message' => 'set "IPV6 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
-        $this->watcherClient->addDecision(new \DateTime(), '24h', '+24 hours', TestHelpers::BAD_IPV6.'/'.TestHelpers::IPV6_RANGE, 'ban');
+        $this->watcherClient->addDecision(new \DateTime(), '24h', WatcherClient::HOURS24, TestHelpers::BAD_IPV6.'/'.TestHelpers::IPV6_RANGE, 'ban');
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
         $this->assertEquals('ban', $cappedRemediation, 'The remediation for the banned IPV6 with a too large range should now be "ban" as we are in live mode');
     }
@@ -247,8 +248,8 @@ final class IpVerificationTest extends TestCase
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" + "IPV6 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
-        $this->watcherClient->addDecision(new \DateTime(), '24h', '+24 hours', TestHelpers::BAD_IP.'/'.TestHelpers::LARGE_IPV4_RANGE, 'ban');
-        $this->watcherClient->addDecision(new \DateTime(), '24h', '+24 hours', TestHelpers::BAD_IPV6.'/'.TestHelpers::IPV6_RANGE, 'ban');
+        $this->watcherClient->addDecision(new \DateTime(), '24h', WatcherClient::HOURS24, TestHelpers::BAD_IP.'/'.TestHelpers::LARGE_IPV4_RANGE, 'ban');
+        $this->watcherClient->addDecision(new \DateTime(), '24h', WatcherClient::HOURS24, TestHelpers::BAD_IPV6.'/'.TestHelpers::IPV6_RANGE, 'ban');
         // Pull updates
         $bouncer->refreshBlocklistCache();
 

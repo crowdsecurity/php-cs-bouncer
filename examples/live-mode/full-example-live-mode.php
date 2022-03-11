@@ -11,7 +11,7 @@ use Monolog\Logger;
 // Parse arguments
 $bouncerApiKey = $argv[1]; // required
 $requestedIp = $argv[2]; // required
-$apiUrl = $argv[3] ?: 'http://127.0.0.1:8080';
+$apiUrl = $argv[3] ?: 'http://crowdsec:8080';
 
 if (!$bouncerApiKey || !$requestedIp) {
     echo 'Usage: php full-example-live-mode.php <api_key> <requested_ip> [<api_url>]';
@@ -20,15 +20,15 @@ if (!$bouncerApiKey || !$requestedIp) {
 echo "\nVerify $requestedIp with $apiUrl...\n";
 
 // Configure paths
-$logPath = __DIR__.'/../.crowdsec.log';
+$logPath = __DIR__.'/../crowdsec.log';
 $cachePath = __DIR__.'/../.cache';
 
-// Instanciate the "PhpFilesAdapter" cache adapter
+// Instantiate the "PhpFilesAdapter" cache adapter
 $cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter('', 0, $cachePath);
 // Or Redis: $cacheAdapter = new RedisAdapter(RedisAdapter::createConnection('redis://your-redis-host:6379'));
 // Or Memcached: $cacheAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection('memcached://your-memcached-host:11211'));
 
-// Instanciate the Stream logger with info level(optional)
+// Instantiate the Stream logger with info level(optional)
 $logger = new Logger('example');
 
 // Display logs with INFO verbosity
@@ -40,7 +40,7 @@ $logger->pushHandler($streamHandler);
 $fileHandler = new RotatingFileHandler($logPath, 0, Logger::WARNING);
 $logger->pushHandler($fileHandler);
 
-// Instanciate the bouncer
+// Instantiate the bouncer
 $bouncer = new Bouncer($cacheAdapter, $logger);
 $bouncer->configure([
     'api_key' => $bouncerApiKey,
@@ -49,7 +49,7 @@ $bouncer->configure([
     'api_timeout' => 1,
     'stream_mode' => false,
     'max_remediation_level' => 'ban',
-    'cache_expiration_for_clean_ip' => 2,
+    'cache_expiration_for_clean_ip' => 300,
     'cache_expiration_for_bad_ip' => 30,
 ]);
 

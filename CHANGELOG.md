@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.16.0] - 2022-03-10
 ### Added
 - Add geolocation feature to get remediation from `Country` scoped decisions (using MaxMind databases)
-- Add end-to-end tests GitHub actions
+- Add end-to-end tests GitHub action
 - Add GitHub action to check links in markdown and update TOC
 
 ### Changed

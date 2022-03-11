@@ -1,17 +1,17 @@
 <?php
-
+// @see ../../docs/USER_GUIDE.md for details
 use CrowdSecBouncer\Constants;
 
 $crowdSecStandaloneBouncerConfig = [
-    'api_url' => 'http://url-to-your-lapi:8080', // [FILL ME] Set the LAPI URL here. Example in the docker-compose dev context, use http://crowdsec:8080
-    'api_key' => '...', // [FILL ME] Set a bouncer key here
-    'debug_mode' => false, // [FILL ME] Set to true to enable debug log
-    'display_errors' => false, // [FILL ME] Set to true to stop the process and display errors if any
-    'log_directory_path' => __DIR__.'/.logs', // [FILL ME] Important note: be sur this path won't be publicly accessible!
-    'fs_cache_path' => __DIR__.'/.cache', // [FILL ME] Important note: be sur this path won't be publicly accessible!
+    'api_url' => 'http://url-to-your-lapi:8080',
+    'api_key' => '...',
+    'debug_mode' => false,
+    'display_errors' => false,
+    'log_directory_path' => __DIR__.'/.logs',
+    'fs_cache_path' => __DIR__.'/.cache',
 
     'bouncing_level' => Constants::BOUNCING_LEVEL_NORMAL,
-    'forced_test_ip' => '', // Set a specific for test purpose only (testing geolocation for example).
+    'forced_test_ip' => '',
 
     'stream_mode' => false,
 
@@ -51,12 +51,12 @@ $crowdSecStandaloneBouncerConfig = [
     'theme_custom_css' => '',
 
     'geolocation' => [
-        'save_in_session' => true, // Set to true to avoid multiple call to the geolocation database
-        'enabled' => true, // Set to true if you want to geo-localize IP
-        'type' => 'maxmind', // At this moment, only 'maxmind' type is available
-        'maxmind' => [ // MaxMind settings
-            'database_type' => 'country', // You can set 'city' or 'country'
-            'database_path' => '/var/www/html/GeoLite2-Country.mmdb' // Absolute path to the MaxMind database
+        'save_in_session' => true,
+        'enabled' => true,
+        'type' => 'maxmind',
+        'maxmind' => [
+            'database_type' => 'country',
+            'database_path' => '/var/www/html/GeoLite2-Country.mmdb'
         ]
     ]
 ];
