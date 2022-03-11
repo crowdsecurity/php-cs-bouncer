@@ -6,6 +6,14 @@
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Why use *Symfony/Cache* and *Symfony/Config* component?](#why-use-symfonycache-and-symfonyconfig-component)
+- [Why not using Guzzle?](#why-not-using-guzzle)
+- [Why not using Swagger Codegen?](#why-not-using-swagger-codegen)
+- [Which PHP compatibility matrix?](#which-php-compatibility-matrix)
+  - [Why not PHP 5.6?](#why-not-php-56)
+  - [Why not 7.0.x nor 7.1.x ?](#why-not-70x-nor-71x-)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

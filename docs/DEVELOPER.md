@@ -6,6 +6,45 @@
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Local development](#local-development)
+  - [DDEV-Local setup](#ddev-local-setup)
+    - [DDEV installation](#ddev-installation)
+    - [Prepare DDEV PHP environment](#prepare-ddev-php-environment)
+  - [DDEV Usage](#ddev-usage)
+    - [Add CrowdSec bouncer and watcher](#add-crowdsec-bouncer-and-watcher)
+    - [Use composer to update or install the lib](#use-composer-to-update-or-install-the-lib)
+    - [Unit test](#unit-test)
+    - [Auto-prepend mode (standalone mode)](#auto-prepend-mode-standalone-mode)
+    - [End-to-end tests](#end-to-end-tests)
+    - [Coding standards](#coding-standards)
+      - [PHPCS Fixer](#phpcs-fixer)
+      - [PHP Mess Detector](#php-mess-detector)
+      - [PHPCS and PHPCBF](#phpcs-and-phpcbf)
+    - [Generate CrowdSec tools and settings on start](#generate-crowdsec-tools-and-settings-on-start)
+- [Quick start guide](#quick-start-guide)
+  - [Check IP script](#check-ip-script)
+    - [Cap remediation level](#cap-remediation-level)
+    - [Play with other cache layers](#play-with-other-cache-layers)
+  - [Clear cache script](#clear-cache-script)
+  - [Full Live mode example](#full-live-mode-example)
+    - [Set up the context](#set-up-the-context)
+    - [Get the remediation the clean IP "1.2.3.4"](#get-the-remediation-the-clean-ip-1234)
+    - [Simulate LAPI down by using a bad url](#simulate-lapi-down-by-using-a-bad-url)
+    - [Now ban range 1.2.3.4 to 1.2.3.7 for 12h](#now-ban-range-1234-to-1237-for-12h)
+    - [Clear cache and get the new remediation](#clear-cache-and-get-the-new-remediation)
+- [Discover the CrowdSec LAPI](#discover-the-crowdsec-lapi)
+  - [Use the CrowdSec cli (`cscli`)](#use-the-crowdsec-cli-cscli)
+    - [Add decision for an IP or a range of IPs](#add-decision-for-an-ip-or-a-range-of-ips)
+    - [Add decision to ban or captcha a country](#add-decision-to-ban-or-captcha-a-country)
+    - [Delete decisions](#delete-decisions)
+    - [Create a bouncer](#create-a-bouncer)
+    - [Create a watcher](#create-a-watcher)
+  - [Use the web container to call LAPI](#use-the-web-container-to-call-lapi)
+- [Commit message](#commit-message)
+  - [Allowed message `type` values](#allowed-message-type-values)
+- [Release process](#release-process)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
