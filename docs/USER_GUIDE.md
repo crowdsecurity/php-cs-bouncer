@@ -111,7 +111,7 @@ In this mode, every browser access to a php script will be bounced.
 To enable the `auto prepend file` mode, you have to:
 
 
-- copy the `examples/auto-prepend/settings.example.php` to a `examples/auto-prepend/settings.php` and fill the
+- copy the `scripts/auto-prepend/settings.example.php` to a `scripts/auto-prepend/settings.php` and fill the
   necessary settings in it (see below for the settings details).
 
 
@@ -125,7 +125,7 @@ Adding an `auto_prepend_file` directive can be done in different ways:
 
 You should add this line to a `.ini` file :
 
-    auto_prepend_file = /absolute/path/to/examples/auto-prepend/scripts/bounce-via-auto-prepend.php
+    auto_prepend_file = /absolute/path/to/scripts/auto-prepend/scripts/bounce-via-auto-prepend.php
 
 
 #### Nginx
@@ -139,7 +139,7 @@ location ~ \.php$ {
     ...
     ...
     ...
-    fastcgi_param PHP_VALUE "/absolute/path/to/examples/auto-prepend/scripts/bounce-via-auto-prepend.php";
+    fastcgi_param PHP_VALUE "/absolute/path/to/scripts/auto-prepend/scripts/bounce-via-auto-prepend.php";
 }
 ```
 
@@ -147,12 +147,12 @@ location ~ \.php$ {
 
 If you are using Apache, you should add this line to your `.htaccess` file:
 
-    php_value auto_prepend_file "/absolute/path/to/examples/auto-prepend/scripts/bounce-via-auto-prepend.php"
+    php_value auto_prepend_file "/absolute/path/to/scripts/auto-prepend/scripts/bounce-via-auto-prepend.php"
 
 
 #### Standalone settings
 
-Once you have created the `examples/auto-prepend/settings.php` file, you have to fill the necessary fields: 
+Once you have created the `scripts/auto-prepend/settings.php` file, you have to fill the necessary fields: 
 
 ```php
 use CrowdSecBouncer\Constants;

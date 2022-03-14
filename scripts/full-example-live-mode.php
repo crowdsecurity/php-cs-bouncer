@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__.'/../vendor/autoload.php';
+require_once __DIR__ . '../../vendor/autoload.php';
 
 use CrowdSecBouncer\Bouncer;
 use Monolog\Formatter\LineFormatter;
@@ -10,17 +10,18 @@ use Monolog\Logger;
 
 // Parse arguments
 $bouncerApiKey = $argv[1]; // required
+$requestedIp = $argv[2]; // required
 $apiUrl = $argv[3] ?: 'http://crowdsec:8080';
 
-if (!$bouncerApiKey) {
-    echo 'Usage: php clear-cache.php <api_key>';
+if (!$bouncerApiKey || !$requestedIp) {
+    echo 'Usage: php full-example-live-mode.php <api_key> <requested_ip> [<api_url>]';
     exit(1);
 }
-echo "\nClear the cache...\n";
+echo "\nVerify $requestedIp with $apiUrl...\n";
 
 // Configure paths
-$logPath = __DIR__.'/.crowdsec.log';
-$cachePath = __DIR__.'/.cache';
+$logPath = __DIR__.'/../crowdsec.log';
+$cachePath = __DIR__ . '/../.cache';
 
 // Instantiate the "PhpFilesAdapter" cache adapter
 $cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter('', 0, $cachePath);
@@ -41,8 +42,19 @@ $logger->pushHandler($fileHandler);
 
 // Instantiate the bouncer
 $bouncer = new Bouncer($cacheAdapter, $logger);
-$bouncer->configure(['api_key' => $bouncerApiKey, 'api_url' => $apiUrl]);
+$bouncer->configure([
+    'api_key' => $bouncerApiKey,
+    'api_url' => $apiUrl,
+    'api_user_agent' => 'MyCMS CrowdSec Bouncer/1.0.0',
+    'api_timeout' => 1,
+    'stream_mode' => false,
+    'max_remediation_level' => 'ban',
+    'cache_expiration_for_clean_ip' => 300,
+    'cache_expiration_for_bad_ip' => 30,
+]);
 
-// Clear the cache.
-$bouncer->clearCache();
-echo "Cache successfully cleared.\n";
+// Ask remediation to LAPI
+$remediation = $bouncer->getRemediationForIp($requestedIp);
+
+// "ban", "captcha" or "bypass"
+echo "\nResult: $remediation\n\n";

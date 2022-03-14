@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '../../vendor/autoload.php';
 
 use CrowdSecBouncer\Bouncer;
 use Monolog\Handler\RotatingFileHandler;
@@ -8,7 +8,7 @@ use Monolog\Logger;
 
 // Configure paths
 $logPath = __DIR__.'/.crowdsec.log';
-$cachePath = __DIR__.'/.cache';
+$cachePath = __DIR__ . '/.cache';
 
 // Instantiate the "PhpFilesAdapter" cache adapter
 $cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter('', 0, $cachePath);

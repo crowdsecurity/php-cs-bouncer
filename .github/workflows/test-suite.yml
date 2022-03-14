@@ -102,7 +102,7 @@ jobs:
           cp .ddev/custom_files/crowdsec-lib-settings.php crowdsec-lib-settings.php
           sed -i -e 's/REPLACE_API_KEY/${{ env.BOUNCER_KEY }}/g' crowdsec-lib-settings.php
           sed -i -e 's/REPLACE_PROXY_IP/${{ env.PROXY_IP }}/g' crowdsec-lib-settings.php
-          mv crowdsec-lib-settings.php my-own-modules/crowdsec-php-lib/examples/auto-prepend/settings.php
+          mv crowdsec-lib-settings.php my-own-modules/crowdsec-php-lib/scripts/auto-prepend/settings.php
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           chmod +x test-init.sh
           ./test-init.sh
@@ -116,17 +116,17 @@ jobs:
       - name: Run End to end test (live mode with geolocation)
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib
-          sed -i  's/\x27enabled\x27 => false/\x27enabled\x27 => true/g' examples/auto-prepend/settings.php
-          sed -i  's/\x27forced_test_ip\x27 => \x27\x27/\x27forced_test_ip\x27 => \x27210.249.74.42\x27/g' examples/auto-prepend/settings.php
+          sed -i  's/\x27enabled\x27 => false/\x27enabled\x27 => true/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27forced_test_ip\x27 => \x27\x27/\x27forced_test_ip\x27 => \x27210.249.74.42\x27/g' scripts/auto-prepend/settings.php
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/2-live-mode-with-geolocation.js"
 
       - name: Run End to end test (stream mode without geolocation)
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib
-          sed -i  's/\x27enabled\x27 => true/\x27enabled\x27 => false/g' examples/auto-prepend/settings.php
-          sed -i  's/\x27forced_test_ip\x27 => \x27210.249.74.42\x27/\x27forced_test_ip\x27 => \x27\x27/g' examples/auto-prepend/settings.php
-          sed -i  's/\x27stream_mode\x27 => false/\x27stream_mode\x27 => true/g' examples/auto-prepend/settings.php
+          sed -i  's/\x27enabled\x27 => true/\x27enabled\x27 => false/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27forced_test_ip\x27 => \x27210.249.74.42\x27/\x27forced_test_ip\x27 => \x27\x27/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27stream_mode\x27 => false/\x27stream_mode\x27 => true/g' scripts/auto-prepend/settings.php
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/3-stream-mode.js"
 

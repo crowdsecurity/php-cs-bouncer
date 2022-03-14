@@ -1,7 +1,11 @@
 <?php
-
-require_once __DIR__.'/../../../vendor/autoload.php';
-require_once __DIR__.'/../settings.php';
+/**
+ * This script is aimed to be called directly in a browser
+ * It will act on the LAPI cache depending on the auto-prepend settings file and on the passed parameter
+ *
+ */
+require_once __DIR__ . '../../../vendor/autoload.php';
+require_once __DIR__ . '/../auto-prepend/settings.php';
 
 use CrowdSecBouncer\StandAloneBounce;
 

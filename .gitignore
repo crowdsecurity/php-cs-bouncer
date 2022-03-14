@@ -16,10 +16,10 @@ super-linter.log
 .cache
 
 # Auto prepend demo
-examples/auto-prepend/settings.php
-examples/auto-prepend/.logs
-examples/auto-prepend/.cache
-examples/**/*.log
+scripts/auto-prepend/settings.php
+scripts/auto-prepend/.logs
+scripts/auto-prepend/.cache
+scripts/**/*.log
 
 # MaxMind databases
 *.mmdb
