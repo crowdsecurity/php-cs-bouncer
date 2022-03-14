@@ -29,7 +29,7 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
                 ->scalarNode('api_key')->isRequired()->end()
-                ->scalarNode('api_url')->defaultValue(Constants::CAPI_URL)->end()
+                ->scalarNode('api_url')->defaultValue(Constants::DEFAULT_LAPI_URL)->end()
                 ->scalarNode('api_user_agent')->defaultValue(Constants::BASE_USER_AGENT)->end()
                 ->integerNode('api_timeout')->defaultValue(Constants::API_TIMEOUT)->end()
                 ->booleanNode('stream_mode')->defaultValue(false)->end()

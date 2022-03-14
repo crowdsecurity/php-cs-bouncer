@@ -165,12 +165,27 @@ $crowdSecStandaloneBouncerConfig = [
 
        /** Define the URL to your LAPI server, default to CAPI URL.
        * 
-       * If you have installed the CrowdSec agant on your server, it should be "http://crowdsec:8080"
+       * If you have installed the CrowdSec agent on your server, it should be "http://localhost:8080"
        */
-       'api_url'=> 'https://api.crowdsec.net/v2/', 
-
+       'api_url'=> 'http://localhost:8080',
+       
        // HTTP user agent used to call CAPI or LAPI. Default to this library name/current version.
        'api_user_agent'=> 'CrowdSec PHP Library/x.x.x',
+       
+       // true to enable verbose debug log.
+       'debug_mode' => false,
+       
+       // Absolute path to store log files.
+       'log_directory_path' => __DIR__.'/.logs',
+       
+       // true to stop the process and display errors if any.
+       'display_errors' => false,
+       
+       /** Only for test or debug purpose. Default to empty.
+       * 
+       * If not empty, it will be used for all remediation and geolocation processes.
+       */ 
+       'forced_test_ip' => '1.2.3.4',
 
        // In seconds. The timeout when calling CAPI/LAPI. Defaults to 1 sec.
        'api_timeout'=> 1,
@@ -184,8 +199,25 @@ $crowdSecStandaloneBouncerConfig = [
        */
        'bouncing_level' => 'normal_bouncing',
        
-       // Absolute path to store log files.
-       'log_directory_path' => __DIR__.'/.logs',
+       /** Select from 'bypass' (minimum remediation), 'captcha' or 'ban' (maximum remediation).
+       * Default to 'captcha'.
+       * 
+       * Handle unknown remediations as.
+       */
+       'fallback_remediation'=> 'captcha',
+       
+       /** Select from 'bypass' (minimum remediation),'captcha' or 'ban' (maximum remediation).
+       * Default to 'ban'.
+       * 
+       * Cap the remediation to the selected one.
+       */
+       'max_remediation_level'=> 'ban',
+       
+       /** If you use a CDN, a reverse proxy or a load balancer, set an array of IPs.
+       * 
+       * For other IPs, the bouncer will not trust the X-Forwarded-For header.
+       */
+       'trust_ip_forward_array' => [],
        
        // Select from 'phpfs' (File system cache), 'redis' or 'memcached'.
        'cache_system' => 'phpfs',
@@ -199,12 +231,12 @@ $crowdSecStandaloneBouncerConfig = [
        // Will be used only if you choose Memcached as cache_system
        'memcached_dsn' => 'memcached://localhost:11211',
        
-       /** If you use a CDN, a reverse proxy or a load balancer, set an array of IPs.
-       * 
-       * For other IPs, the bouncer will not trust the X-Forwarded-For header.
-       */
-       'trust_ip_forward_array' => [],
+       // Set the duration we keep in cache the fact that an IP is clean. In seconds. Defaults to 5.
+       'cache_expiration_for_clean_ip'=> '5',
 
+       // Optional. Set the duration we keep in cache the fact that an IP is bad. In seconds. Defaults to 20.
+       'cache_expiration_for_bad_ip'=> '20',
+       
        /** true to enable stream mode, false to enable the live mode. Default to false.
        *
        * By default, the `live mode` is enabled. The first time a stranger connects to your website, this mode 
@@ -218,40 +250,8 @@ $crowdSecStandaloneBouncerConfig = [
        */
        'stream_mode'=> false,
        
-       // true to enable verbose debug log.
-       'debug_mode' => false,
-       
-       // true to stop the process and display errors if any.
-       'display_errors' => false,
-       
        // true to hide CrowdSec mentions on ban and captcha walls.
        'hide_mentions' => false,
-       
-       /** Only for test or debug purpose. Default to empty.
-       * 
-       * If not empty, it will be used for all remediation and geolocation processes.
-       */ 
-       'forced_test_ip' => '1.2.3.4',
-       
-       /** Select from 'bypass' (minimum remediation),'captcha' or 'ban' (maximum remediation).
-       * Default to 'ban'.
-       * 
-       * Cap the remediation to the selected one.
-       */
-       'max_remediation_level'=> 'ban',
-
-       /** Select from 'bypass' (minimum remediation), 'captcha' or 'ban' (maximum remediation).
-       * Default to 'captcha'.
-       * 
-       * Handle unknown remediations as.
-       */
-       'fallback_remediation'=> 'captcha',
-
-       // Set the duration we keep in cache the fact that an IP is clean. In seconds. Defaults to 5.
-       'cache_expiration_for_clean_ip'=> '5',
-
-       // Optional. Set the duration we keep in cache the fact that an IP is bad. In seconds. Defaults to 20.
-       'cache_expiration_for_bad_ip'=> '20',
        
        // Settings for geolocation remediation (i.e. country based remediation).
        'geolocation' => [
