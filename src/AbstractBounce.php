@@ -124,7 +124,9 @@ abstract class AbstractBounce
         }
 
         try {
-            $this->getBouncerInstance();
+            if(!$this->bouncer){
+                throw new BouncerException('Bouncer must be instantiated to bounce an IP.');
+            }
             $ipToCheck = !empty($this->settings['forced_test_ip']) ? $this->settings['forced_test_ip'] : $ip;
             $remediation = $this->bouncer->getRemediationForIp($ipToCheck);
             $this->handleRemediation($remediation, $ipToCheck);

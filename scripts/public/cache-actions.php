@@ -7,11 +7,11 @@
 require_once __DIR__ . '../../../vendor/autoload.php';
 require_once __DIR__ . '/../auto-prepend/settings.php';
 
-use CrowdSecBouncer\StandAloneBounce;
+use CrowdSecBouncer\StandaloneBounce;
 
 if (isset($_GET['action']) && in_array($_GET['action'],['refresh', 'clear', 'prune', 'warm-up'])) {
     $action = $_GET['action'];
-    $bounce = new StandAloneBounce();
+    $bounce = new StandaloneBounce();
     $bounce->init($crowdSecStandaloneBouncerConfig);
     $bouncer = $bounce->getBouncerInstance();
     switch ($action) {

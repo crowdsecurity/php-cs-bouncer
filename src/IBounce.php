@@ -14,15 +14,27 @@ namespace CrowdSecBouncer;
  */
 interface IBounce
 {
+
+    /**
+     * Init the bouncer
+     */
+    public function init(array $configs, array $forcedConfigs = []): Bouncer;
     /**
      * Init the logger.
      */
     public function initLogger(): void;
 
     /**
-     * @return Bouncer get the bouncer instance
+     * Get the bouncer instance
      */
-    public function getBouncerInstance(): Bouncer;
+    public function getBouncerInstance(array $settings, bool $forceReload = false): Bouncer;
+
+    /**
+     * If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
+     * @param array $configs
+     * @return bool
+     */
+    public function safelyBounce(array $configs): bool;
 
     /**
      * @return string Ex: "X-Forwarded-For"

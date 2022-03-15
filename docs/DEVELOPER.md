@@ -355,7 +355,7 @@ You will find some php scripts in the `scripts` folder.
 
 ### Check IP script
 
-The `check-ip` script will get the remediation (`bypass`, `captcha` or `ban`) for some IP.
+The [`check-ip`](../scripts/check-ip.php) script will get the remediation (`bypass`, `captcha` or `ban`) for some IP.
 
 To run this script, you have to know your bouncer key `<BOUNCER_KEY>` and run
 ```bash
@@ -476,7 +476,7 @@ ddev exec php my-own-modules/crowdsec-php-lib/scripts/check-ip.php 1.2.3.4 <BOUN
 
 ### Clear cache script
 
-To clear your LAPI cache, you can use the `clear-php` script: 
+To clear your LAPI cache, you can use the [`clear-php`](../scripts/clear-cache.php) script: 
 
 ```bash
 ddev exec php my-own-modules/crowdsec-php-lib/scripts/clear-cache.php <BOUNCER_KEY>
@@ -486,7 +486,7 @@ ddev exec php my-own-modules/crowdsec-php-lib/scripts/clear-cache.php <BOUNCER_K
 
 This example demonstrates how the PHP Lib works with cache when you are using the live mode.
 
-Let's get started and follow the guide!
+We will use here the [`full-example-live-mode.php`](../scripts/full-example-live-mode.php).
 
 #### Set up the context
 

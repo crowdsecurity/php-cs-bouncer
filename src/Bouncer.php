@@ -63,7 +63,6 @@ class Bouncer
         $configuration = new Configuration();
         $processor = new Processor();
         $this->config = $processor->processConfiguration($configuration, [$config]);
-
         /** @var int */
         $index = array_search(
             $this->config['max_remediation_level'],

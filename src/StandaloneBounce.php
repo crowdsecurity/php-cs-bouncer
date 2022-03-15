@@ -21,7 +21,7 @@ use Symfony\Component\Cache\Exception\InvalidArgumentException;
  * @copyright Copyright (c) 2021+ CrowdSec
  * @license   MIT License
  */
-class StandAloneBounce extends AbstractBounce implements IBounce
+class StandaloneBounce extends AbstractBounce implements IBounce
 {
     /** @var AbstractAdapter */
     protected $cacheAdapter;
@@ -31,16 +31,32 @@ class StandAloneBounce extends AbstractBounce implements IBounce
      */
     protected $session_name;
 
-    public function init(array $crowdSecStandaloneBouncerConfig)
+    /**
+     * Initialize the bouncer
+     *
+     *
+     * @param array $configs
+     * @param array $forcedConfigs
+     * @return Bouncer
+     * @throws CacheException
+     * @throws ErrorException
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function init(array $configs, array $forcedConfigs = []): Bouncer
     {
         if (\PHP_SESSION_NONE === session_status()) {
             $this->session_name = session_name('crowdsec');
             session_start();
         }
-        $this->settings = $crowdSecStandaloneBouncerConfig;
+        $this->settings = $configs;
+        if (is_array($forcedConfigs)) {
+            $this->settings = array_merge($this->settings, $forcedConfigs);
+        }
         $this->setDebug($this->getBoolSettings('debug_mode'));
         $this->setDisplayErrors($this->getBoolSettings('display_errors'));
         $this->initLogger();
+        return $this->getBouncerInstance($this->settings);
+
     }
 
     /**
@@ -90,32 +106,23 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     }
 
     /**
-     * @return Bouncer get the bouncer instance
+     * Get the bouncer instance
      *
+     * @param array $settings
+     * @param bool $forceReload
+     * @return Bouncer
      * @throws CacheException
      * @throws ErrorException
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function getBouncerInstance(): Bouncer
+    public function getBouncerInstance(array $settings, bool $forceReload = false): Bouncer
     {
-        // Singleton for this function
-        if ($this->bouncer) {
+        // Singleton for this function (if no reload forcing)
+        if ($this->bouncer && !$forceReload) {
             return $this->bouncer;
         }
-
-        // Parse options.
-        if (empty($this->getStringSettings('api_url'))) {
-            throw new BouncerException('Bouncer enabled but no API URL provided');
-        }
-        if (empty($this->getStringSettings('api_key'))) {
-            throw new BouncerException('Bouncer enabled but no API key provided');
-        }
-        $isStreamMode = $this->getBoolSettings('stream_mode');
-        $cleanIpCacheDuration = (int) $this->getStringSettings('clean_ip_cache_duration');
-        $badIpCacheDuration = (int) $this->getStringSettings('bad_ip_cache_duration');
-        $fallbackRemediation = $this->getStringSettings('fallback_remediation');
         $bouncingLevel = $this->getStringSettings('bouncing_level');
-        $geolocation = $this->getArraySettings('geolocation');
+        $apiUserAgent = 'Standalone CrowdSec PHP Bouncer/'.Constants::VERSION;
 
         // Init Bouncer instance
         switch ($bouncingLevel) {
@@ -131,27 +138,41 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             default:
                 throw new BouncerException("Unknown $bouncingLevel");
         }
-
         // Instantiate the bouncer
         try {
             $this->cacheAdapter = $this->getCacheAdapterInstance();
         } catch (InvalidArgumentException $e) {
             throw new BouncerException($e->getMessage());
         }
-
-        $apiUserAgent = 'Standalone CrowdSec PHP Bouncer/'.Constants::VERSION;
-
+        // Instantiate bouncer
         $this->bouncer = new Bouncer($this->cacheAdapter, $this->logger);
+        // Validate settings
         $this->bouncer->configure([
+            // LAPI connection
             'api_key' => $this->getStringSettings('api_key'),
             'api_url' => $this->getStringSettings('api_url'),
             'api_user_agent' => $apiUserAgent,
-            'stream_mode' => $isStreamMode,
+            'api_timeout' => (int) $this->getStringSettings('api_timeout'),
+            // Debug
+            'debug_mode'=> $this->getBoolSettings('debug_mode'),
+            'log_directory_path'=>$this->getStringSettings('log_directory_path'),
+            'forced_test_ip'=>$this->getStringSettings('forced_test_ip'),
+            'display_errors' => $this->getBoolSettings('display_errors'),
+            // Bouncer
+            'bouncing_level' => $bouncingLevel,
+            'trust_ip_forward_array' => $this->getArraySettings('trust_ip_forward_array'),
+            'fallback_remediation' => $this->getStringSettings('fallback_remediation'),
             'max_remediation_level' => $maxRemediationLevel,
-            'fallback_remediation' => $fallbackRemediation,
-            'cache_expiration_for_clean_ip' => $cleanIpCacheDuration,
-            'cache_expiration_for_bad_ip' => $badIpCacheDuration,
-            'geolocation' => $geolocation,
+            // Cache settings
+            'stream_mode' => $this->getBoolSettings('stream_mode'),
+            'cache_system' => $this->getStringSettings('cache_system'),
+            'fs_cache_path' => $this->getStringSettings('fs_cache_path'),
+            'redis_dsn' => $this->getStringSettings('redis_dsn'),
+            'memcached_dsn' => $this->getStringSettings('memcached_dsn'),
+            'cache_expiration_for_clean_ip' => (int) $this->getStringSettings('clean_ip_cache_duration'),
+            'cache_expiration_for_bad_ip' => (int) $this->getStringSettings('bad_ip_cache_duration'),
+            // Geolocation
+            'geolocation' => $this->getArraySettings('geolocation'),
         ]);
 
         return $this->bouncer;
@@ -163,7 +184,8 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     }
 
     /**
-     * @return string Ex: "X-Forwarded-For"
+     * @param string $name Ex: "X-Forwarded-For"
+     * @return string|null
      */
     public function getHttpRequestHeader(string $name): ?string
     {
@@ -184,7 +206,8 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     }
 
     /**
-     * @return string The current IP, even if it's the IP of a proxy
+     * The current HTTP method
+     * @return string
      */
     public function getHttpMethod(): string
     {
@@ -261,7 +284,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     }
 
     /**
-     * @return [[string, string], ...] Returns IP ranges to trust as proxies as an array of comparables ip bounds
+     * @return array [[string, string], ...] Returns IP ranges to trust as proxies as an array of comparables ip bounds
      */
     public function getTrustForwardedIpBoundsList(): array
     {
@@ -358,17 +381,24 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     }
 
     /**
+     * If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
+     *
+     * @param array $configs
+     * @return bool
+     * @throws CacheException
+     * @throws ErrorException
      * @throws \Psr\Cache\InvalidArgumentException
-     * @throws Exception
      */
-    public function safelyBounce(): void
+    public function safelyBounce(array $configs): bool
     {
-        // If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
+        $result = false;
         try {
             set_error_handler(function ($errno, $errstr) {
                 throw new BouncerException("$errstr (Error level: $errno)");
             });
+            $this->init($configs);
             $this->run();
+            $result = true;
             restore_error_handler();
         } catch (Exception $e) {
             $this->logger->error('', [
@@ -387,6 +417,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
                 session_name($this->session_name);
             }
         }
+        return $result;
     }
 
     /**
