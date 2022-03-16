@@ -12,8 +12,8 @@ use CrowdSecBouncer\StandaloneBounce;
 if (isset($_GET['action']) && in_array($_GET['action'],['refresh', 'clear', 'prune', 'warm-up'])) {
     $action = $_GET['action'];
     $bounce = new StandaloneBounce();
-    $bounce->init($crowdSecStandaloneBouncerConfig);
-    $bouncer = $bounce->getBouncerInstance();
+    /** @var $crowdSecStandaloneBouncerConfig */
+    $bouncer = $bounce->init($crowdSecStandaloneBouncerConfig);
     switch ($action) {
         case 'refresh':
             $bouncer->refreshBlocklistCache();

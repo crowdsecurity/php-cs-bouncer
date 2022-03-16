@@ -99,13 +99,13 @@ should first instantiate your bouncer:
 
 ```php
 use \CrowdSecBouncer\StandaloneBounce
-$bouncer = new StandaloneBounce();
+$bounce = new StandaloneBounce();
 ```
 And then, you should initialize the bouncer by passing all the configuration array in a `init` method: 
 
 ```php
 $configs = [...] // @See below for configuration details
-$bouncer->init($configs)
+$bouncer = $bounce->init($configs)
 ```
 
 Finally, you can bounce by calling:
@@ -113,6 +113,17 @@ Finally, you can bounce by calling:
 ```php
 $bouncer->run();
 ```
+
+If you have implemented a `safelyBounce` method (like in [`StandaloneBounce`](../src/StandaloneBounce.php) class), 
+you can just do:
+
+```php
+use \CrowdSecBouncer\StandaloneBounce
+$bounce = new StandaloneBounce();
+$configs = [...] // Retrieve configs from somewhere (database, static file, etc)
+$bounce->safelyBounce($configs);
+```
+
 
 
 To go further and learn how to include this library in your
@@ -193,7 +204,7 @@ $crowdSecStandaloneBouncerConfig = [
      */
     'api_url'=> Constants::DEFAULT_LAPI_URL,
 
-    // In seconds. The timeout when calling CAPI/LAPI. Defaults to 1 sec.
+    // In seconds. The timeout when calling CAPI/LAPI. Must be greater or equal than 1. Defaults to 1 sec.
     'api_timeout'=> 1,
 
     // HTTP user agent used to call CAPI or LAPI. Default to this library name/current version.

@@ -32,7 +32,7 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('api_key')->isRequired()->end()
                 ->scalarNode('api_url')->defaultValue(Constants::DEFAULT_LAPI_URL)->end()
                 ->scalarNode('api_user_agent')->defaultValue(Constants::BASE_USER_AGENT)->end()
-                ->integerNode('api_timeout')->defaultValue(Constants::API_TIMEOUT)->end()
+                ->integerNode('api_timeout')->min(Constants::API_TIMEOUT)->defaultValue(Constants::API_TIMEOUT)->end()
                 // Debug
                 ->scalarNode('forced_test_ip')->defaultValue('')->end()
                 ->booleanNode('debug_mode')->defaultValue(false)->end()

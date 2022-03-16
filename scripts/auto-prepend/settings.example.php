@@ -15,7 +15,7 @@ $crowdSecStandaloneBouncerConfig = [
      */
     'api_url'=> Constants::DEFAULT_LAPI_URL,
 
-    // In seconds. The timeout when calling CAPI/LAPI. Defaults to 1 sec.
+    // In seconds. The timeout when calling CAPI/LAPI. Must be greater or equal than 1. Defaults to 1 sec.
     'api_timeout'=> 1,
 
     // HTTP user agent used to call CAPI or LAPI. Default to this library name/current version.
