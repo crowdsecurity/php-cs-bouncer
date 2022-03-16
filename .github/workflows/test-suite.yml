@@ -29,7 +29,7 @@ jobs:
         with:
           path: .ddev
           repository: julienloizelet/ddev-php
-          ref: "v1.6.3"
+          ref: "main"
 
       - name: Install DDEV
         env:
@@ -111,6 +111,20 @@ jobs:
           chmod +x test-init.sh
           ./test-init.sh
           chmod +x run-tests.sh
+
+      - name: Verify auto_prepend_file directive
+        run: |
+          cd ${{ github.workspace }}
+          cp .ddev/custom_files/phpinfo.php my-own-modules/crowdsec-php-lib/scripts/public/phpinfo.php
+          PREPENDVERIF=$(curl https://${{ env.PHP_VERSION_CODE }}.ddev.site/my-own-modules/crowdsec-php-lib/scripts/public/phpinfo.php | grep -o -E "auto_prepend_file=(.*)php(.*)" | sed 's/<\/tr>//g; s/<\/td>//g;' | tr '\n' '#')
+          if [[ $PREPENDVERIF == "auto_prepend_file=/var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/bounce.php#auto_prepend_file=/var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/bounce.php#" ]]
+          then
+              echo "AUTO PREPEND FILE OK"
+          else
+              echo "AUTO PREPEND FILE KO"
+              echo $PREPENDVERIF
+              exit 1
+          fi
             
       - name: Run Standalone Bouncer end-to-end test (live mode without geolocation)
         run: |
