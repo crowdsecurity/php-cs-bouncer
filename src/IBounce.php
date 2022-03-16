@@ -95,9 +95,4 @@ interface IBounce
      * Send HTTP response.
      */
     public function sendResponse(?string $body, int $statusCode = 200): void;
-
-    /**
-     * Check if the bouncer configuration is correct or not.
-     */
-    public function isConfigValid(): bool;
 }

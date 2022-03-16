@@ -90,6 +90,11 @@ $remediation = $bouncer->getRemediationForIp($requestedIp);
 echo "\nResult: $remediation\n\n"; // "ban", "captcha" or "bypass"
 ```
 
+#### Configurations
+
+Please see the below [Standalone settings](#standalone-settings) paragraph or look at the [Settings example file](../scripts/auto-prepend/settings.example.php) for a description of each available parameter that you can pass to the `configure` method.
+
+
 #### The `Standalone` example
 
 This library includes the [`StandaloneBounce`](../src/StandaloneBounce.php) class. You can see that class as a good 

@@ -329,13 +329,17 @@ class StandaloneBounce extends AbstractBounce implements IBounce
      */
     public function shouldBounceCurrentIp(): bool
     {
-        // Don't bounce favicon calls or when the config is invalid.
-        if ('/favicon.ico' === $_SERVER['REQUEST_URI'] || !$this->isConfigValid()) {
+        // Don't bounce favicon calls
+        if ('/favicon.ico' === $_SERVER['REQUEST_URI']) {
             return false;
         }
 
         $bouncingDisabled = (Constants::BOUNCING_LEVEL_DISABLED === $this->getStringSettings('bouncing_level'));
         if ($bouncingDisabled) {
+            $this->logger->debug('', [
+                'type' => 'SHOULD_NOT_BOUNCE',
+                'message' => Constants::BOUNCING_LEVEL_DISABLED,
+            ]);
             return false;
         }
 
@@ -409,46 +413,5 @@ class StandaloneBounce extends AbstractBounce implements IBounce
         }
 
         return $result;
-    }
-
-    /**
-     * @throws ErrorException
-     * @throws CacheException
-     */
-    public function isConfigValid(): bool
-    {
-        $issues = ['errors' => [], 'warnings' => []];
-
-        $bouncingLevel = $this->getStringSettings('bouncing_level');
-        $shouldBounce = (Constants::BOUNCING_LEVEL_DISABLED !== $bouncingLevel);
-
-        if ($shouldBounce) {
-            $apiUrl = $this->getStringSettings('api_url');
-            if (empty($apiUrl)) {
-                $issues['errors'][] = [
-                'type' => 'INCORRECT_API_URL',
-                'message' => 'Bouncer enabled but no API URL provided',
-            ];
-            }
-
-            $apiKey = $this->getStringSettings('api_key');
-            if (empty($apiKey)) {
-                $issues['errors'][] = [
-                'type' => 'INCORRECT_API_KEY',
-                'message' => 'Bouncer enabled but no API key provided',
-            ];
-            }
-
-            try {
-                $this->getCacheAdapterInstance();
-            } catch (BouncerException $e) {
-                $issues['errors'][] = [
-                'type' => 'CACHE_CONFIG_ERROR',
-                'message' => $e->getMessage(),
-            ];
-            }
-        }
-
-        return !\count($issues['errors']) && !\count($issues['warnings']);
     }
 }
