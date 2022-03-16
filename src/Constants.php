@@ -16,9 +16,6 @@ namespace CrowdSecBouncer;
  */
 class Constants
 {
-    /** @var string The URL of the CrowdSec Central API */
-    public const CAPI_URL = 'https://api.crowdsec.net/v2/';
-
     /** @var string The Default URL of the CrowdSec LAPI */
     public const DEFAULT_LAPI_URL = 'http://localhost:8080';
 

@@ -694,8 +694,10 @@ class ApiCache
     }
 
     /**
+     * @param string $cacheScope
      * @param $value
      *
+     * @return string
      * @throws InvalidArgumentException
      * @throws Exception
      */

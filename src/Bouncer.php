@@ -31,9 +31,6 @@ class Bouncer
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var array */
-    private $config = [];
-
     /** @var ApiCache */
     private $apiCache;
 
@@ -62,25 +59,25 @@ class Bouncer
         // Process input configuration.
         $configuration = new Configuration();
         $processor = new Processor();
-        $this->config = $processor->processConfiguration($configuration, [$config]);
+        $finalConfig = $processor->processConfiguration($configuration, [$config]);
         /** @var int */
         $index = array_search(
-            $this->config['max_remediation_level'],
+            $finalConfig['max_remediation_level'],
             Constants::ORDERED_REMEDIATIONS
         );
         $this->maxRemediationLevelIndex = $index;
 
         // Configure Api Cache.
         $this->apiCache->configure(
-            $this->config['stream_mode'],
-            $this->config['api_url'],
-            $this->config['api_timeout'],
-            $this->config['api_user_agent'],
-            $this->config['api_key'],
-            $this->config['cache_expiration_for_clean_ip'],
-            $this->config['cache_expiration_for_bad_ip'],
-            $this->config['fallback_remediation'],
-            $this->config['geolocation']
+            $finalConfig['stream_mode'],
+            $finalConfig['api_url'],
+            $finalConfig['api_timeout'],
+            $finalConfig['api_user_agent'],
+            $finalConfig['api_key'],
+            $finalConfig['cache_expiration_for_clean_ip'],
+            $finalConfig['cache_expiration_for_bad_ip'],
+            $finalConfig['fallback_remediation'],
+            $finalConfig['geolocation']
         );
     }
 

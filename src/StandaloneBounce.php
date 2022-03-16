@@ -92,10 +92,10 @@ class StandaloneBounce extends AbstractBounce implements IBounce
                 } catch (InvalidArgumentException $e) {
                     throw new BouncerException('Error when connecting to Redis.'.' Please fix the Redis DSN or select another cache technology.');
                 }
-
                 break;
+
             default:
-                throw new BouncerException('Unknown selected cache technology.');
+                throw new BouncerException("Unknown selected cache technology: $cacheSystem");
         }
 
         return $this->cacheAdapter;
