@@ -118,7 +118,7 @@ final class IpVerificationTest extends TestCase
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('ban', $cappedRemediation, 'The remediation for the banned IP with a too large range should now be "ban" as we are in live mode');
 
-        $this->logger->info('',['message' => 'set "IPV6 range banned" state']);
+        $this->logger->info('', ['message' => 'set "IPV6 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
         $this->watcherClient->addDecision(new \DateTime(), '24h', WatcherClient::HOURS24, TestHelpers::BAD_IPV6.'/'.TestHelpers::IPV6_RANGE, 'ban');
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
