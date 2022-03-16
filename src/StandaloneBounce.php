@@ -59,10 +59,10 @@ class StandaloneBounce extends AbstractBounce implements IBounce
      * @throws CacheException
      * @throws ErrorException
      */
-    private function getCacheAdapterInstance(): AbstractAdapter
+    private function getCacheAdapterInstance(bool $forceReload = false): AbstractAdapter
     {
         // Singleton for this function
-        if ($this->cacheAdapter) {
+        if ($this->cacheAdapter && !$forceReload) {
             return $this->cacheAdapter;
         }
 
@@ -132,9 +132,9 @@ class StandaloneBounce extends AbstractBounce implements IBounce
             default:
                 throw new BouncerException("Unknown $bouncingLevel");
         }
-        // Instantiate the bouncer
+        // Instantiate the cache system
         try {
-            $this->cacheAdapter = $this->getCacheAdapterInstance();
+            $this->cacheAdapter = $this->getCacheAdapterInstance($forceReload);
         } catch (InvalidArgumentException $e) {
             throw new BouncerException($e->getMessage());
         }
@@ -323,9 +323,6 @@ class StandaloneBounce extends AbstractBounce implements IBounce
 
     /**
      * If the current IP should be bounced or not, matching custom business rules.
-     *
-     * @throws CacheException
-     * @throws ErrorException
      */
     public function shouldBounceCurrentIp(): bool
     {
@@ -340,6 +337,7 @@ class StandaloneBounce extends AbstractBounce implements IBounce
                 'type' => 'SHOULD_NOT_BOUNCE',
                 'message' => Constants::BOUNCING_LEVEL_DISABLED,
             ]);
+
             return false;
         }
 
