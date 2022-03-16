@@ -72,6 +72,9 @@ jobs:
         with:
           path: my-own-modules/crowdsec-php-lib
 
+      - name: Validate composer.json
+        run: ddev composer validate --strict --working-dir ./my-own-modules/crowdsec-php-lib
+
       - name: Install CrowdSec lib dependencies
         run: |
           ddev composer update --working-dir ./my-own-modules/crowdsec-php-lib
@@ -93,7 +96,7 @@ jobs:
           ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
           ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/GeolocationTest.php
 
-      - name: Prepare END TO END tests
+      - name: Prepare Standalone Bouncer end-to-end tests
         run: |
           ddev create-watcher
           cd ${{ github.workspace }}/.ddev
@@ -108,12 +111,12 @@ jobs:
           ./test-init.sh
           chmod +x run-tests.sh
             
-      - name: Run End to end test (live mode without geolocation)
+      - name: Run Standalone Bouncer end-to-end test (live mode without geolocation)
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/1-live-mode.js"
 
-      - name: Run End to end test (live mode with geolocation)
+      - name: Run Standalone Bouncer end-to-end test (live mode with geolocation)
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib
           sed -i  's/\x27enabled\x27 => false/\x27enabled\x27 => true/g' scripts/auto-prepend/settings.php
@@ -121,7 +124,7 @@ jobs:
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/2-live-mode-with-geolocation.js"
 
-      - name: Run End to end test (stream mode without geolocation)
+      - name: Run Standalone Bouncer end-to-end test (stream mode without geolocation)
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib
           sed -i  's/\x27enabled\x27 => true/\x27enabled\x27 => false/g' scripts/auto-prepend/settings.php
@@ -130,7 +133,7 @@ jobs:
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/3-stream-mode.js"
 
-      - name: Run End to end test (standalone geolocation)
+      - name: Run Standalone Bouncer end-to-end test (standalone geolocation)
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/4-geolocation.js"
