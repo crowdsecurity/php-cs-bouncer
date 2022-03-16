@@ -227,12 +227,12 @@ ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080  /usr/bin/p
 #### Auto-prepend mode (standalone mode)
 
 Before using the bouncer in a standalone mode (i.e. with an auto-prepend directive), you should copy the
-`scripts/auto-prepend/settings.example.php` file to a `scripts/auto-prepend/settings.php` and edit it depending on
-your needs.
+[`scripts/auto-prepend/settings.example.php`](../scripts/auto-prepend/settings.example.php) file to a `scripts/auto-prepend/settings.
+php` and edit it depending on your needs.
 
 
 Then, to configure the Nginx service in order that it uses an auto-prepend directive pointing to the
-`scripts/auto-prepend/scripts/bounce-via-auto-prepend.php` script, please run the
+[`scripts/auto-prepend/bounce.php`](../scripts/auto-prepend/bounce.php) script, please run the
 following command from the `.ddev` folder:
 
 ```bash

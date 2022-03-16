@@ -4,7 +4,7 @@
  * It will act on the LAPI cache depending on the auto-prepend settings file and on the passed parameter
  *
  */
-require_once __DIR__ . '../../../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../auto-prepend/settings.php';
 
 use CrowdSecBouncer\StandaloneBounce;

@@ -160,7 +160,7 @@ Adding an `auto_prepend_file` directive can be done in different ways:
 
 You should add this line to a `.ini` file :
 
-    auto_prepend_file = /absolute/path/to/scripts/auto-prepend/scripts/bounce-via-auto-prepend.php
+    auto_prepend_file = /absolute/path/to/scripts/auto-prepend/bounce.php
 
 
 #### Nginx
@@ -174,7 +174,7 @@ location ~ \.php$ {
     ...
     ...
     ...
-    fastcgi_param PHP_VALUE "/absolute/path/to/scripts/auto-prepend/scripts/bounce-via-auto-prepend.php";
+    fastcgi_param PHP_VALUE "/absolute/path/to/scripts/auto-prepend/bounce.php";
 }
 ```
 
@@ -182,7 +182,7 @@ location ~ \.php$ {
 
 If you are using Apache, you should add this line to your `.htaccess` file:
 
-    php_value auto_prepend_file "/absolute/path/to/scripts/auto-prepend/scripts/bounce-via-auto-prepend.php"
+    php_value auto_prepend_file "/absolute/path/to/scripts/auto-prepend/bounce.php"
 
 
 #### Standalone settings
