@@ -15,6 +15,7 @@
   - [DDEV Usage](#ddev-usage)
     - [Add CrowdSec bouncer and watcher](#add-crowdsec-bouncer-and-watcher)
     - [Use composer to update or install the lib](#use-composer-to-update-or-install-the-lib)
+    - [Find IP of your docker services](#find-ip-of-your-docker-services)
     - [Unit test](#unit-test)
     - [Auto-prepend mode (standalone mode)](#auto-prepend-mode-standalone-mode)
     - [End-to-end tests](#end-to-end-tests)
