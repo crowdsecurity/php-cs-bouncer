@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2022-03-17
+
+### Changed
+- *Breaking change*: Refactor some logic of important methods (`init`, `run`, `safelyBounce`, `getBouncerInstance`)
+- *Breaking change*: Change the configurations' verification by using `symfony/config` logic whenever it is possible
+- *Breaking change*: Change scripts path, name and content (specifically auto-prepend-file' scripts and settings)
+- *Breaking change*: Change `IBounce` interface
+- *Breaking change*: Rename `StandAloneBounce` class by `StandaloneBounce`
+- Rewrite documentations
+
+### Fixed
+- Fix `api_timeout` configuration
+
+### Removed
+- Remove all unmaintained test and development docker files, sh scripts and associated documentation
+- Remove `StandaloneBounce::isConfigValid` method as all is already checked
+
 
 ## [0.16.0] - 2022-03-10
 ### Added
@@ -26,19 +43,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Add GitHub action for Release process
 - Add `CHANGELOG.md`
 ### Changed
-- Remove `composer.lock` file
 - Use `BouncerException` for some specific errors
 ### Fixed
 - Fix auto-prepend script: set `debug_mode` and `display_errors` values before bouncer init
 - Fix `gregwar/captcha` for PHP 8.1
 - Fix BouncerException arguments in `set_error_handler` method
 
+### Removed
+- Remove `composer.lock` file
+
+
 ## [0.14.0] - 2021-11-18
 ### Changed
+- *Breaking change*: Fix typo in constant name (`boucing`=> `bouncing`)
 - Allow older versions of symfony config and monolog
 - Split debug logic in 2 : debug and display
 - Redirect if captcha is resolved
-- Fix typo in constant name (`boucing`=> `bouncing`)
 - Update doc and scripts
 
 ## [0.13.3] - 2021-09-21
@@ -152,7 +172,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [0.4.1] - 2020-12-12
 ### Added
-- Use github flow
+- Use GitHub flow
 
 ## [0.4.0] - 2020-12-12
 ### Added
