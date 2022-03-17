@@ -21,7 +21,7 @@ use Symfony\Component\Cache\Exception\InvalidArgumentException;
  * @copyright Copyright (c) 2021+ CrowdSec
  * @license   MIT License
  */
-class StandAloneBounce extends AbstractBounce implements IBounce
+class StandaloneBounce extends AbstractBounce implements IBounce
 {
     /** @var AbstractAdapter */
     protected $cacheAdapter;
@@ -31,26 +31,38 @@ class StandAloneBounce extends AbstractBounce implements IBounce
      */
     protected $session_name;
 
-    public function init(array $crowdSecStandaloneBouncerConfig)
+    /**
+     * Initialize the bouncer.
+     *
+     * @throws CacheException
+     * @throws ErrorException
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function init(array $configs, array $forcedConfigs = []): Bouncer
     {
         if (\PHP_SESSION_NONE === session_status()) {
             $this->session_name = session_name('crowdsec');
             session_start();
         }
-        $this->settings = $crowdSecStandaloneBouncerConfig;
+        $this->settings = $configs;
+        if (\is_array($forcedConfigs)) {
+            $this->settings = array_merge($this->settings, $forcedConfigs);
+        }
         $this->setDebug($this->getBoolSettings('debug_mode'));
         $this->setDisplayErrors($this->getBoolSettings('display_errors'));
         $this->initLogger();
+
+        return $this->getBouncerInstance($this->settings);
     }
 
     /**
      * @throws CacheException
      * @throws ErrorException
      */
-    private function getCacheAdapterInstance(): AbstractAdapter
+    private function getCacheAdapterInstance(bool $forceReload = false): AbstractAdapter
     {
         // Singleton for this function
-        if ($this->cacheAdapter) {
+        if ($this->cacheAdapter && !$forceReload) {
             return $this->cacheAdapter;
         }
 
@@ -80,42 +92,31 @@ class StandAloneBounce extends AbstractBounce implements IBounce
                 } catch (InvalidArgumentException $e) {
                     throw new BouncerException('Error when connecting to Redis.'.' Please fix the Redis DSN or select another cache technology.');
                 }
-
                 break;
+
             default:
-                throw new BouncerException('Unknown selected cache technology.');
+                throw new BouncerException("Unknown selected cache technology: $cacheSystem");
         }
 
         return $this->cacheAdapter;
     }
 
     /**
-     * @return Bouncer get the bouncer instance
+     * Get the bouncer instance.
      *
      * @throws CacheException
      * @throws ErrorException
      * @throws \Psr\Cache\InvalidArgumentException
      */
-    public function getBouncerInstance(): Bouncer
+    public function getBouncerInstance(array $settings, bool $forceReload = false): Bouncer
     {
-        // Singleton for this function
-        if ($this->bouncer) {
+        // Singleton for this function (if no reload forcing)
+        if ($this->bouncer && !$forceReload) {
             return $this->bouncer;
         }
-
-        // Parse options.
-        if (empty($this->getStringSettings('api_url'))) {
-            throw new BouncerException('Bouncer enabled but no API URL provided');
-        }
-        if (empty($this->getStringSettings('api_key'))) {
-            throw new BouncerException('Bouncer enabled but no API key provided');
-        }
-        $isStreamMode = $this->getBoolSettings('stream_mode');
-        $cleanIpCacheDuration = (int) $this->getStringSettings('clean_ip_cache_duration');
-        $badIpCacheDuration = (int) $this->getStringSettings('bad_ip_cache_duration');
-        $fallbackRemediation = $this->getStringSettings('fallback_remediation');
         $bouncingLevel = $this->getStringSettings('bouncing_level');
-        $geolocation = $this->getArraySettings('geolocation');
+        $apiUserAgent = 'Standalone CrowdSec PHP Bouncer/'.Constants::VERSION;
+        $apiTimeout = $this->getIntegerSettings('api_timeout');
 
         // Init Bouncer instance
         switch ($bouncingLevel) {
@@ -131,27 +132,41 @@ class StandAloneBounce extends AbstractBounce implements IBounce
             default:
                 throw new BouncerException("Unknown $bouncingLevel");
         }
-
-        // Instantiate the bouncer
+        // Instantiate the cache system
         try {
-            $this->cacheAdapter = $this->getCacheAdapterInstance();
+            $this->cacheAdapter = $this->getCacheAdapterInstance($forceReload);
         } catch (InvalidArgumentException $e) {
             throw new BouncerException($e->getMessage());
         }
-
-        $apiUserAgent = 'Standalone CrowdSec PHP Bouncer/'.Constants::VERSION;
-
+        // Instantiate bouncer
         $this->bouncer = new Bouncer($this->cacheAdapter, $this->logger);
+        // Validate settings
         $this->bouncer->configure([
+            // LAPI connection
             'api_key' => $this->getStringSettings('api_key'),
             'api_url' => $this->getStringSettings('api_url'),
             'api_user_agent' => $apiUserAgent,
-            'stream_mode' => $isStreamMode,
+            'api_timeout' => $apiTimeout > 0 ? $apiTimeout : Constants::API_TIMEOUT,
+            // Debug
+            'debug_mode' => $this->getBoolSettings('debug_mode'),
+            'log_directory_path' => $this->getStringSettings('log_directory_path'),
+            'forced_test_ip' => $this->getStringSettings('forced_test_ip'),
+            'display_errors' => $this->getBoolSettings('display_errors'),
+            // Bouncer
+            'bouncing_level' => $bouncingLevel,
+            'trust_ip_forward_array' => $this->getArraySettings('trust_ip_forward_array'),
+            'fallback_remediation' => $this->getStringSettings('fallback_remediation'),
             'max_remediation_level' => $maxRemediationLevel,
-            'fallback_remediation' => $fallbackRemediation,
-            'cache_expiration_for_clean_ip' => $cleanIpCacheDuration,
-            'cache_expiration_for_bad_ip' => $badIpCacheDuration,
-            'geolocation' => $geolocation,
+            // Cache settings
+            'stream_mode' => $this->getBoolSettings('stream_mode'),
+            'cache_system' => $this->getStringSettings('cache_system'),
+            'fs_cache_path' => $this->getStringSettings('fs_cache_path'),
+            'redis_dsn' => $this->getStringSettings('redis_dsn'),
+            'memcached_dsn' => $this->getStringSettings('memcached_dsn'),
+            'cache_expiration_for_clean_ip' => $this->getIntegerSettings('clean_ip_cache_duration'),
+            'cache_expiration_for_bad_ip' => $this->getIntegerSettings('bad_ip_cache_duration'),
+            // Geolocation
+            'geolocation' => $this->getArraySettings('geolocation'),
         ]);
 
         return $this->bouncer;
@@ -163,7 +178,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     }
 
     /**
-     * @return string Ex: "X-Forwarded-For"
+     * @param string $name Ex: "X-Forwarded-For"
      */
     public function getHttpRequestHeader(string $name): ?string
     {
@@ -184,7 +199,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     }
 
     /**
-     * @return string The current IP, even if it's the IP of a proxy
+     * The current HTTP method.
      */
     public function getHttpMethod(): string
     {
@@ -261,7 +276,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     }
 
     /**
-     * @return [[string, string], ...] Returns IP ranges to trust as proxies as an array of comparables ip bounds
+     * @return array [[string, string], ...] Returns IP ranges to trust as proxies as an array of comparables ip bounds
      */
     public function getTrustForwardedIpBoundsList(): array
     {
@@ -308,19 +323,21 @@ class StandAloneBounce extends AbstractBounce implements IBounce
 
     /**
      * If the current IP should be bounced or not, matching custom business rules.
-     *
-     * @throws CacheException
-     * @throws ErrorException
      */
     public function shouldBounceCurrentIp(): bool
     {
-        // Don't bounce favicon calls or when the config is invalid.
-        if ('/favicon.ico' === $_SERVER['REQUEST_URI'] || !$this->isConfigValid()) {
+        // Don't bounce favicon calls
+        if ('/favicon.ico' === $_SERVER['REQUEST_URI']) {
             return false;
         }
 
         $bouncingDisabled = (Constants::BOUNCING_LEVEL_DISABLED === $this->getStringSettings('bouncing_level'));
         if ($bouncingDisabled) {
+            $this->logger->debug('', [
+                'type' => 'SHOULD_NOT_BOUNCE',
+                'message' => Constants::BOUNCING_LEVEL_DISABLED,
+            ]);
+
             return false;
         }
 
@@ -358,17 +375,22 @@ class StandAloneBounce extends AbstractBounce implements IBounce
     }
 
     /**
+     * If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
+     *
+     * @throws CacheException
+     * @throws ErrorException
      * @throws \Psr\Cache\InvalidArgumentException
-     * @throws Exception
      */
-    public function safelyBounce(): void
+    public function safelyBounce(array $configs): bool
     {
-        // If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
+        $result = false;
         try {
             set_error_handler(function ($errno, $errstr) {
                 throw new BouncerException("$errstr (Error level: $errno)");
             });
+            $this->init($configs);
             $this->run();
+            $result = true;
             restore_error_handler();
         } catch (Exception $e) {
             $this->logger->error('', [
@@ -387,46 +409,7 @@ class StandAloneBounce extends AbstractBounce implements IBounce
                 session_name($this->session_name);
             }
         }
-    }
 
-    /**
-     * @throws ErrorException
-     * @throws CacheException
-     */
-    public function isConfigValid(): bool
-    {
-        $issues = ['errors' => [], 'warnings' => []];
-
-        $bouncingLevel = $this->getStringSettings('bouncing_level');
-        $shouldBounce = (Constants::BOUNCING_LEVEL_DISABLED !== $bouncingLevel);
-
-        if ($shouldBounce) {
-            $apiUrl = $this->getStringSettings('api_url');
-            if (empty($apiUrl)) {
-                $issues['errors'][] = [
-                'type' => 'INCORRECT_API_URL',
-                'message' => 'Bouncer enabled but no API URL provided',
-            ];
-            }
-
-            $apiKey = $this->getStringSettings('api_key');
-            if (empty($apiKey)) {
-                $issues['errors'][] = [
-                'type' => 'INCORRECT_API_KEY',
-                'message' => 'Bouncer enabled but no API key provided',
-            ];
-            }
-
-            try {
-                $this->getCacheAdapterInstance();
-            } catch (BouncerException $e) {
-                $issues['errors'][] = [
-                'type' => 'CACHE_CONFIG_ERROR',
-                'message' => $e->getMessage(),
-            ];
-            }
-        }
-
-        return !\count($issues['errors']) && !\count($issues['warnings']);
+        return $result;
     }
 }

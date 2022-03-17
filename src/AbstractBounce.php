@@ -1,11 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace CrowdSecBouncer;
 
 require_once __DIR__.'/templates/captcha.php';
 require_once __DIR__.'/templates/access-forbidden.php';
 
-use ErrorException;
 use Exception;
 use IPLib\Factory;
 use Monolog\Formatter\LineFormatter;
@@ -13,7 +14,6 @@ use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Cache\Exception\CacheException;
 
 /**
  * The class that apply a bounce.
@@ -42,19 +42,24 @@ abstract class AbstractBounce
     /** @var Bouncer */
     protected $bouncer;
 
+    protected function getIntegerSettings(string $name): int
+    {
+        return !empty($this->settings[$name]) ? (int) $this->settings[$name] : 0;
+    }
+
     protected function getBoolSettings(string $name): bool
     {
-        return $this->settings[$name] ?? false;
+        return !empty($this->settings[$name]) && $this->settings[$name];
     }
 
     protected function getStringSettings(string $name): string
     {
-        return $this->settings[$name] ?? '';
+        return !empty($this->settings[$name]) ? (string) $this->settings[$name] : '';
     }
 
     protected function getArraySettings(string $name): array
     {
-        return $this->settings[$name] ?? [];
+        return !empty($this->settings[$name]) ? (array) $this->settings[$name] : [];
     }
 
     /**
@@ -124,7 +129,9 @@ abstract class AbstractBounce
         }
 
         try {
-            $this->getBouncerInstance();
+            if (!$this->bouncer) {
+                throw new BouncerException('Bouncer must be instantiated to bounce an IP.');
+            }
             $ipToCheck = !empty($this->settings['forced_test_ip']) ? $this->settings['forced_test_ip'] : $ip;
             $remediation = $this->bouncer->getRemediationForIp($ipToCheck);
             $this->handleRemediation($remediation, $ipToCheck);
@@ -198,9 +205,7 @@ abstract class AbstractBounce
     }
 
     /**
-     * @throws ErrorException
-     * @throws InvalidArgumentException
-     * @throws CacheException
+     * @return void
      */
     protected function handleCaptchaResolutionForm(string $ip)
     {
@@ -225,7 +230,9 @@ abstract class AbstractBounce
 
         // Handle a captcha resolution try
         if (null !== $this->getPostedVariable('phrase') && null !== $this->getSessionVariable('crowdsec_captcha_phrase_to_guess')) {
-            $this->getBouncerInstance();
+            if (!$this->bouncer) {
+                throw new BouncerException('Bouncer must be instantiated to check captcha.');
+            }
             if ($this->bouncer->checkCaptcha(
                 $this->getSessionVariable('crowdsec_captcha_phrase_to_guess'),
                 $this->getPostedVariable('phrase'),
@@ -247,9 +254,9 @@ abstract class AbstractBounce
     }
 
     /**
-     * @throws ErrorException
-     * @throws InvalidArgumentException
-     * @throws CacheException
+     * @param $ip
+     *
+     * @return void
      */
     protected function handleCaptchaRemediation($ip)
     {
@@ -274,9 +281,7 @@ abstract class AbstractBounce
     }
 
     /**
-     * @throws CacheException
-     * @throws ErrorException
-     * @throws InvalidArgumentException
+     * @return void
      */
     protected function handleRemediation(string $remediation, string $ip)
     {

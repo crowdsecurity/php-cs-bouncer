@@ -66,11 +66,16 @@ For a quick start, follow the below steps.
 
 #### DDEV installation
 
-Please follow the [official instructions](https://ddev.readthedocs.io/en/stable/#installation). On a Linux
-distribution, this should be as simple as
-
-    sudo apt-get install linuxbrew-wrapper
-    brew tap drud/ddev && brew install ddev
+This project is fully compatible with DDEV 1.18.2 and it is recommended to use this specific version.
+For the DDEV installation, please follow the [official instructions](https://ddev.readthedocs.io/en/stable/#installation).
+On a Linux distribution, you can run:
+```
+sudo apt-get -qq update
+sudo apt-get -qq -y install libnss3-tools
+curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh
+bash install_ddev.sh v1.18.2
+rm install_ddev.sh
+```
 
 
 #### Prepare DDEV PHP environment
@@ -165,6 +170,27 @@ Run:
 ddev composer update --working-dir ./my-own-modules/crowdsec-php-lib
 ```
 
+#### Find IP of your docker services
+
+In most cases, you will test to bounce your current IP. As we are running on a docker stack, this is the local host IP.
+
+To find it, just run: 
+
+```
+ddev find-ip
+```
+
+You will have to know also the IP of the `ddev-router` container as it acts as a proxy, and you should set it in the
+`trust_ip_forward_array` setting.
+
+To find this IP, just run:
+
+```
+ddev find-ip ddev-router
+```
+
+
+
 #### Unit test
 
 First, create a bouncer and keep the result key.
@@ -201,12 +227,12 @@ ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080  /usr/bin/p
 #### Auto-prepend mode (standalone mode)
 
 Before using the bouncer in a standalone mode (i.e. with an auto-prepend directive), you should copy the
-`examples/auto-prepend/settings.example.php` file to a `examples/auto-prepend/settings.php` and edit it depending on
-your needs.
+[`scripts/auto-prepend/settings.example.php`](../scripts/auto-prepend/settings.example.php) file to a `scripts/auto-prepend/settings.
+php` and edit it depending on your needs.
 
 
 Then, to configure the Nginx service in order that it uses an auto-prepend directive pointing to the
-`examples/auto-prepend/scripts/bounce-via-auto-prepend.php` script, please run the
+[`scripts/auto-prepend/bounce.php`](../scripts/auto-prepend/bounce.php) script, please run the
 following command from the `.ddev` folder:
 
 ```bash
@@ -219,7 +245,7 @@ be bounce.
 For example, you should try to browse the following url:
 
 ```
-https://phpXX.ddev.site/my-own-modules/crowdsec-php-lib/examples/auto-prepend/public/protected-page.php
+https://phpXX.ddev.site/my-own-modules/crowdsec-php-lib/scripts/public/protected-page.php
 ```
 
 #### End-to-end tests
@@ -304,7 +330,7 @@ ddev phpcbf ./my-own-modules/crowdsec-php-lib/vendor/bin/phpcs my-own-modules/cr
 
 We use a post-start DDEV hook to:
 - Create a bouncer
-- Set bouncer key, api url and other needed values in the `examples/auto-prepend/settings.php` file (useful to test
+- Set bouncer key, api url and other needed values in the `scripts/auto-prepend/settings.php` file (useful to test
   standalone mode).
 - Create a watcher that we use in end-to-end tests
 
@@ -323,17 +349,17 @@ ddev restart
 > - the cap remediation level
 > - how to get the logged events
 
-You will find some php scripts in the `examples` folder.
+You will find some php scripts in the `scripts` folder.
 
 **N.B** : If you are not using DDEV, you can replace all `ddev exec php ` by `php` and specify the right script paths.
 
 ### Check IP script
 
-The `check-ip` script will get the remediation (`bypass`, `captcha` or `ban`) for some IP.
+The [`check-ip`](../scripts/check-ip.php) script will get the remediation (`bypass`, `captcha` or `ban`) for some IP.
 
 To run this script, you have to know your bouncer key `<BOUNCER_KEY>` and run
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/examples/check-ip.php <IP> <BOUNCER_KEY>
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/check-ip.php <IP> <BOUNCER_KEY>
 ```
 
 As a reminder, your bouncer key is returned by the `ddev create-bouncer` command.
@@ -341,7 +367,7 @@ As a reminder, your bouncer key is returned by the `ddev create-bouncer` command
 For example, run the php script:
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/examples/check-ip.php 1.2.3.4 <BOUNCER_KEY>
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/check-ip.php 1.2.3.4 <BOUNCER_KEY>
 ```
 
 As your CrowdSec instance contains no decisions, you received the result "bypass".
@@ -355,7 +381,7 @@ ddev exec -s crowdsec cscli decisions add --range 1.2.3.4/30 --duration 4h --typ
 Now, if you run the php script against the `1.2.3.4` IP:
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/examples/check-ip.php 1.2.3.4 <BOUNCER_KEY>
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/check-ip.php 1.2.3.4 <BOUNCER_KEY>
 ```
 
 LAPI will advise you to ban this IP as it's within the 1.2.3.4/30 range.
@@ -380,7 +406,7 @@ $bouncer->configure([
 Now if you call one more time:
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/examples/check-ip.php 1.2.3.4 <BOUNCER_KEY>
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/check-ip.php 1.2.3.4 <BOUNCER_KEY>
 ```
 
 The library will cap the value to `captcha` level.
@@ -443,24 +469,24 @@ $cacheAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection('memcach
 You will still be able to verify IPs, but the cache system will be more efficient.
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/examples/check-ip.php 1.2.3.4 <BOUNCER_KEY>
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/check-ip.php 1.2.3.4 <BOUNCER_KEY>
 ```
 
 > Note: You can try more cache systems but we did not test them for now (Apcu, Filesystem, Doctrine, Couchbase, Pdo). The [full list is here](https://symfony.com/doc/current/components/cache.html#available-cache-adapters).
 
 ### Clear cache script
 
-To clear your LAPI cache, you can use the `clear-php` script: 
+To clear your LAPI cache, you can use the [`clear-php`](../scripts/clear-cache.php) script: 
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/examples/clear-cache.php <BOUNCER_KEY>
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/clear-cache.php <BOUNCER_KEY>
 ```
 
 ### Full Live mode example
 
 This example demonstrates how the PHP Lib works with cache when you are using the live mode.
 
-Let's get started and follow the guide!
+We will use here the [`full-example-live-mode.php`](../scripts/full-example-live-mode.php).
 
 #### Set up the context
 
@@ -482,7 +508,7 @@ Try with the `full-example-live-mode.php` file:
 
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/examples/live-mode/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 http://crowdsec:8080
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 http://crowdsec:8080
 ```
 
 #### Simulate LAPI down by using a bad url
@@ -491,7 +517,7 @@ If you run this script twice, LAPI will not be called, the cache system will rel
 You can this behaviour by testing with a bad LAPI url.
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/examples/live-mode/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 http://crowdsec:BAD
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 http://crowdsec:BAD
 ```
 
 As you can see, you can check the API event if LAPI is down. This is because of the caching system.
@@ -507,13 +533,13 @@ ddev exec -s crowdsec cscli decisions add --range 1.2.3.4/30 --duration 12h --ty
 Clear the cache:
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/examples/clear-cache.php <YOUR_BOUNCER_KEY>
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/clear-cache.php <YOUR_BOUNCER_KEY>
 ```
 
 One more time, get the remediation for the IP "1.2.3.4":
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/examples/live-mode/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 http://crowdsec:8080
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 http://crowdsec:8080
 ```
 
 This is a ban (and cache miss) as you can see in your terminal logs.

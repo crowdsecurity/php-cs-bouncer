@@ -2,7 +2,7 @@ const { PHP_URL } = process.env;
 
 const LAPI_URL_FROM_PHP = "http://crowdsec:8080";
 const PUBLIC_URL =
-    "/my-own-modules/crowdsec-php-lib/examples/auto-prepend/public/protected-page.php";
+    "/my-own-modules/crowdsec-php-lib/scripts/public/protected-page.php";
 const FORCED_TEST_IP =
     process.env.FORCED_TEST_IP !== "" ? process.env.FORCED_TEST_IP : null;
 const GEOLOC_ENABLED = process.env.GEOLOC_ENABLED === "true";

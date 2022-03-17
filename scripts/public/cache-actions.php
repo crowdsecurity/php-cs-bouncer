@@ -1,15 +1,19 @@
 <?php
+/**
+ * This script is aimed to be called directly in a browser
+ * It will act on the LAPI cache depending on the auto-prepend settings file and on the passed parameter
+ *
+ */
+require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../auto-prepend/settings.php';
 
-require_once __DIR__.'/../../../vendor/autoload.php';
-require_once __DIR__.'/../settings.php';
-
-use CrowdSecBouncer\StandAloneBounce;
+use CrowdSecBouncer\StandaloneBounce;
 
 if (isset($_GET['action']) && in_array($_GET['action'],['refresh', 'clear', 'prune', 'warm-up'])) {
     $action = $_GET['action'];
-    $bounce = new StandAloneBounce();
-    $bounce->init($crowdSecStandaloneBouncerConfig);
-    $bouncer = $bounce->getBouncerInstance();
+    $bounce = new StandaloneBounce();
+    /** @var $crowdSecStandaloneBouncerConfig */
+    $bouncer = $bounce->init($crowdSecStandaloneBouncerConfig);
     switch ($action) {
         case 'refresh':
             $bouncer->refreshBlocklistCache();

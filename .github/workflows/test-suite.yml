@@ -29,6 +29,7 @@ jobs:
         with:
           path: .ddev
           repository: julienloizelet/ddev-php
+          ref: "main"
 
       - name: Install DDEV
         env:
@@ -72,6 +73,9 @@ jobs:
         with:
           path: my-own-modules/crowdsec-php-lib
 
+      - name: Validate composer.json
+        run: ddev composer validate --strict --working-dir ./my-own-modules/crowdsec-php-lib
+
       - name: Install CrowdSec lib dependencies
         run: |
           ddev composer update --working-dir ./my-own-modules/crowdsec-php-lib
@@ -93,7 +97,7 @@ jobs:
           ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
           ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/GeolocationTest.php
 
-      - name: Prepare END TO END tests
+      - name: Prepare Standalone Bouncer end-to-end tests
         run: |
           ddev create-watcher
           cd ${{ github.workspace }}/.ddev
@@ -102,35 +106,49 @@ jobs:
           cp .ddev/custom_files/crowdsec-lib-settings.php crowdsec-lib-settings.php
           sed -i -e 's/REPLACE_API_KEY/${{ env.BOUNCER_KEY }}/g' crowdsec-lib-settings.php
           sed -i -e 's/REPLACE_PROXY_IP/${{ env.PROXY_IP }}/g' crowdsec-lib-settings.php
-          mv crowdsec-lib-settings.php my-own-modules/crowdsec-php-lib/examples/auto-prepend/settings.php
+          mv crowdsec-lib-settings.php my-own-modules/crowdsec-php-lib/scripts/auto-prepend/settings.php
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           chmod +x test-init.sh
           ./test-init.sh
           chmod +x run-tests.sh
+
+      - name: Verify auto_prepend_file directive
+        run: |
+          cd ${{ github.workspace }}
+          cp .ddev/custom_files/phpinfo.php my-own-modules/crowdsec-php-lib/scripts/public/phpinfo.php
+          PREPENDVERIF=$(curl https://${{ env.PHP_VERSION_CODE }}.ddev.site/my-own-modules/crowdsec-php-lib/scripts/public/phpinfo.php | grep -o -E "auto_prepend_file=(.*)php(.*)" | sed 's/<\/tr>//g; s/<\/td>//g;' | tr '\n' '#')
+          if [[ $PREPENDVERIF == "auto_prepend_file=/var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/bounce.php#auto_prepend_file=/var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/bounce.php#" ]]
+          then
+              echo "AUTO PREPEND FILE OK"
+          else
+              echo "AUTO PREPEND FILE KO"
+              echo $PREPENDVERIF
+              exit 1
+          fi
             
-      - name: Run End to end test (live mode without geolocation)
+      - name: Run Standalone Bouncer end-to-end test (live mode without geolocation)
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/1-live-mode.js"
 
-      - name: Run End to end test (live mode with geolocation)
+      - name: Run Standalone Bouncer end-to-end test (live mode with geolocation)
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib
-          sed -i  's/\x27enabled\x27 => false/\x27enabled\x27 => true/g' examples/auto-prepend/settings.php
-          sed -i  's/\x27forced_test_ip\x27 => \x27\x27/\x27forced_test_ip\x27 => \x27210.249.74.42\x27/g' examples/auto-prepend/settings.php
+          sed -i  's/\x27enabled\x27 => false/\x27enabled\x27 => true/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27forced_test_ip\x27 => \x27\x27/\x27forced_test_ip\x27 => \x27210.249.74.42\x27/g' scripts/auto-prepend/settings.php
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/2-live-mode-with-geolocation.js"
 
-      - name: Run End to end test (stream mode without geolocation)
+      - name: Run Standalone Bouncer end-to-end test (stream mode without geolocation)
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib
-          sed -i  's/\x27enabled\x27 => true/\x27enabled\x27 => false/g' examples/auto-prepend/settings.php
-          sed -i  's/\x27forced_test_ip\x27 => \x27210.249.74.42\x27/\x27forced_test_ip\x27 => \x27\x27/g' examples/auto-prepend/settings.php
-          sed -i  's/\x27stream_mode\x27 => false/\x27stream_mode\x27 => true/g' examples/auto-prepend/settings.php
+          sed -i  's/\x27enabled\x27 => true/\x27enabled\x27 => false/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27forced_test_ip\x27 => \x27210.249.74.42\x27/\x27forced_test_ip\x27 => \x27\x27/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27stream_mode\x27 => false/\x27stream_mode\x27 => true/g' scripts/auto-prepend/settings.php
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/3-stream-mode.js"
 
-      - name: Run End to end test (standalone geolocation)
+      - name: Run Standalone Bouncer end-to-end test (standalone geolocation)
         run: |
           cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/4-geolocation.js"
