@@ -253,6 +253,14 @@ https://phpXX.ddev.site/my-own-modules/crowdsec-php-lib/scripts/public/protected
 
 In auto-prepend mode, you can run some end-to-end tests.
 
+Before running the tests, you have to copy some testing scripts:
+
+```
+cd php-project-sources
+cp .ddev/custom_files/crowdsec/cache-actions.php my-own-modules/crowdsec-php-lib/scripts/public/cache-actions.php
+cp .ddev/custom_files/crowdsec/geolocation-test.php my-own-modules/crowdsec-php-lib/scripts/public/geolocation-test.php
+```
+
 We are using a Jest/Playwright Node.js stack to launch a suite of end-to-end tests.
 
 Tests code is in the `tests/end-to-end` folder. You should have to `chmod +x` the scripts you will find in  

@@ -21,5 +21,9 @@ scripts/auto-prepend/.logs
 scripts/auto-prepend/.cache
 scripts/**/*.log
 
+# Public scripts
+scripts/public/cache-actions.php
+scripts/public/geolocation-test.php
+
 # MaxMind databases
 *.mmdb
