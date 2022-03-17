@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+
+## [0.17.1] - 2022-03-17
+### Removed
+- Remove testing scripts for quality gate test
+
+
 ## [0.17.0] - 2022-03-17
 
 ### Changed
