@@ -46,17 +46,17 @@ class StandaloneBounce extends AbstractBounce implements IBounce
             session_start();
         }
         // Convert array of string to array of array with comparable IPs
-        if(is_array(($configs['trust_ip_forward_array']))){
+        if (\is_array(($configs['trust_ip_forward_array']))) {
             $forwardConfigs = $configs['trust_ip_forward_array'];
             $finalForwardConfigs = [];
-            foreach($forwardConfigs as $forwardConfig){
-                if(\is_string($forwardConfig)){
+            foreach ($forwardConfigs as $forwardConfig) {
+                if (\is_string($forwardConfig)) {
                     $parsedString = Factory::parseAddressString($forwardConfig, 3);
-                    if(!empty($parsedString)){
+                    if (!empty($parsedString)) {
                         $comparableValue = $parsedString->getComparableString();
                         $finalForwardConfigs[] = [$comparableValue, $comparableValue];
                     }
-                } elseif (\is_array($forwardConfig)){
+                } elseif (\is_array($forwardConfig)) {
                     $finalForwardConfigs[] = $forwardConfig;
                 }
             }
