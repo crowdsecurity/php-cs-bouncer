@@ -4,6 +4,7 @@ namespace CrowdSecBouncer;
 
 use ErrorException;
 use Exception;
+use IPLib\Factory;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
@@ -44,7 +45,25 @@ class StandaloneBounce extends AbstractBounce implements IBounce
             $this->session_name = session_name('crowdsec');
             session_start();
         }
+        // Convert array of string to array of array with comparable IPs
+        if (\is_array(($configs['trust_ip_forward_array']))) {
+            $forwardConfigs = $configs['trust_ip_forward_array'];
+            $finalForwardConfigs = [];
+            foreach ($forwardConfigs as $forwardConfig) {
+                if (\is_string($forwardConfig)) {
+                    $parsedString = Factory::parseAddressString($forwardConfig, 3);
+                    if (!empty($parsedString)) {
+                        $comparableValue = $parsedString->getComparableString();
+                        $finalForwardConfigs[] = [$comparableValue, $comparableValue];
+                    }
+                } elseif (\is_array($forwardConfig)) {
+                    $finalForwardConfigs[] = $forwardConfig;
+                }
+            }
+            $configs['trust_ip_forward_array'] = $finalForwardConfigs;
+        }
         $this->settings = $configs;
+
         if (\is_array($forcedConfigs)) {
             $this->settings = array_merge($this->settings, $forcedConfigs);
         }
@@ -384,14 +403,13 @@ class StandaloneBounce extends AbstractBounce implements IBounce
     public function safelyBounce(array $configs): bool
     {
         $result = false;
+        set_error_handler(function ($errno, $errstr) {
+            throw new BouncerException("$errstr (Error level: $errno)");
+        });
         try {
-            set_error_handler(function ($errno, $errstr) {
-                throw new BouncerException("$errstr (Error level: $errno)");
-            });
             $this->init($configs);
             $this->run();
             $result = true;
-            restore_error_handler();
         } catch (Exception $e) {
             $this->logger->error('', [
                 'type' => 'EXCEPTION_WHILE_BOUNCING',
@@ -409,6 +427,7 @@ class StandaloneBounce extends AbstractBounce implements IBounce
                 session_name($this->session_name);
             }
         }
+        restore_error_handler();
 
         return $result;
     }

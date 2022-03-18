@@ -161,6 +161,7 @@ abstract class AbstractBounce
 
             return false;
         }
+
         foreach ($this->getTrustForwardedIpBoundsList() as $comparableIpBounds) {
             if ($comparableAddress >= $comparableIpBounds[0] && $comparableAddress <= $comparableIpBounds[1]) {
                 return true;

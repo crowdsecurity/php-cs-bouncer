@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.18.0] - 2022-03-18
+### Changed
+- *Breaking change*: Change `trust_ip_forward_array` symfony configuration node to an array of array.
+
 ## [0.17.1] - 2022-03-17
 ### Removed
 - Remove testing scripts for quality gate test
