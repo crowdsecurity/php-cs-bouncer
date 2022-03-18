@@ -52,7 +52,9 @@ class Configuration implements ConfigurationInterface
                     ->defaultValue(Constants::REMEDIATION_CAPTCHA)
                 ->end()
                 ->arrayNode('trust_ip_forward_array')
-                    ->scalarPrototype()->end()
+                    ->arrayPrototype()
+                        ->scalarPrototype()->end()
+                    ->end()
                 ->end()
                 // Cache
                 ->booleanNode('stream_mode')->defaultValue(false)->end()
