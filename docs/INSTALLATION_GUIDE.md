@@ -30,11 +30,24 @@ Use `Composer` by simply adding `crowdsec/bouncer` as a dependency:
 
 This library can also be used on its own so that every browser access to a php script will be bounced.
 
-In order to use the standalone mode, you will have to : 
+In order to use the standalone mode, you will have to :
+
+- give the correct permission for the folder that contains the lib
 
 - copy the `scripts/auto-prepend/settings.example.php` to a `scripts/auto-prepend/settings.php` file
 
 - set an `auto_prepend_file` directive in your PHP setup.
+
+
+### Files permission
+
+The owner of the `/path/to/the/crowdsec-lib` should be your webserver owner (e.g. `www-data`).
+
+You can achieve it by running command like:
+
+```
+sudo chown www-data /path/to/the/crowdsec-lib
+```
 
 ### Settings file
 
