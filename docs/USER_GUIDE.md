@@ -14,6 +14,7 @@
 - [Usage](#usage)
   - [Create your own bouncer](#create-your-own-bouncer)
     - [Quick start](#quick-start)
+    - [Test your bouncer](#test-your-bouncer)
     - [Configurations](#configurations)
       - [LAPI Connection](#lapi-connection)
       - [Debug](#debug)
@@ -23,12 +24,6 @@
       - [Captcha and ban wall settings](#captcha-and-ban-wall-settings)
     - [The `Standalone` example](#the-standalone-example)
     - [Ready to use PHP bouncers](#ready-to-use-php-bouncers)
-  - [Auto Prepend File mode (standalone mode)](#auto-prepend-file-mode-standalone-mode)
-    - [PHP](#php)
-    - [Nginx](#nginx)
-    - [Apache](#apache)
-    - [Standalone settings](#standalone-settings)
-    - [Test the standalone bouncer](#test-the-standalone-bouncer)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

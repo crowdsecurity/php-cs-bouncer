@@ -11,6 +11,13 @@
 
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [Standalone mode installation](#standalone-mode-installation)
+  - [Files permission](#files-permission)
+  - [Settings file](#settings-file)
+  - [`auto_prepend_file` directive](#auto_prepend_file-directive)
+    - [`.ini` file](#ini-file)
+    - [Nginx](#nginx)
+    - [Apache](#apache)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
