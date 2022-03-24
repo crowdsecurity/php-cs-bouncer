@@ -30,7 +30,7 @@ class StandaloneBounce extends AbstractBounce implements IBounce
     /**
      * @var string
      */
-    protected $session_name;
+    const SESSION_NAME = 'crowdsec';
 
     /**
      * Initialize the bouncer.
@@ -41,10 +41,6 @@ class StandaloneBounce extends AbstractBounce implements IBounce
      */
     public function init(array $configs, array $forcedConfigs = []): Bouncer
     {
-        if (\PHP_SESSION_NONE === session_status()) {
-            $this->session_name = session_name('crowdsec');
-            session_start();
-        }
         // Convert array of string to array of array with comparable IPs
         if (\is_array(($configs['trust_ip_forward_array']))) {
             $forwardConfigs = $configs['trust_ip_forward_array'];
@@ -182,8 +178,8 @@ class StandaloneBounce extends AbstractBounce implements IBounce
             'fs_cache_path' => $this->getStringSettings('fs_cache_path'),
             'redis_dsn' => $this->getStringSettings('redis_dsn'),
             'memcached_dsn' => $this->getStringSettings('memcached_dsn'),
-            'cache_expiration_for_clean_ip' => $this->getIntegerSettings('clean_ip_cache_duration'),
-            'cache_expiration_for_bad_ip' => $this->getIntegerSettings('bad_ip_cache_duration'),
+            'clean_ip_cache_duration' => $this->getIntegerSettings('clean_ip_cache_duration'),
+            'bad_ip_cache_duration' => $this->getIntegerSettings('bad_ip_cache_duration'),
             // Geolocation
             'geolocation' => $this->getArraySettings('geolocation'),
         ]);
@@ -345,11 +341,15 @@ class StandaloneBounce extends AbstractBounce implements IBounce
      */
     public function shouldBounceCurrentIp(): bool
     {
-        // Don't bounce favicon calls
-        if ('/favicon.ico' === $_SERVER['REQUEST_URI']) {
+        $excludedURIs = $this->getArraySettings('excluded_uris');
+        if (\in_array($_SERVER['REQUEST_URI'], $excludedURIs)) {
+            $this->logger->debug('', [
+                'type' => 'SHOULD_NOT_BOUNCE',
+                'message' => 'This URI is excluded from bouncing: '.$_SERVER['REQUEST_URI'],
+            ]);
+
             return false;
         }
-
         $bouncingDisabled = (Constants::BOUNCING_LEVEL_DISABLED === $this->getStringSettings('bouncing_level'));
         if ($bouncingDisabled) {
             $this->logger->debug('', [
@@ -407,6 +407,10 @@ class StandaloneBounce extends AbstractBounce implements IBounce
             throw new BouncerException("$errstr (Error level: $errno)");
         });
         try {
+            if (\PHP_SESSION_NONE === session_status()) {
+                session_name(self::SESSION_NAME);
+                session_start();
+            }
             $this->init($configs);
             $this->run();
             $result = true;
@@ -420,11 +424,6 @@ class StandaloneBounce extends AbstractBounce implements IBounce
             ]);
             if ($this->displayErrors) {
                 throw $e;
-            }
-        } finally {
-            if (\PHP_SESSION_NONE !== session_status()) {
-                session_write_close();
-                session_name($this->session_name);
             }
         }
         restore_error_handler();

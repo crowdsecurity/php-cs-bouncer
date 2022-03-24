@@ -56,6 +56,9 @@ class Configuration implements ConfigurationInterface
                         ->scalarPrototype()->end()
                     ->end()
                 ->end()
+                ->arrayNode('excluded_uris')
+                    ->scalarPrototype()->end()
+                ->end()
                 // Cache
                 ->booleanNode('stream_mode')->defaultValue(false)->end()
                 ->enumNode('cache_system')
@@ -65,10 +68,10 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('fs_cache_path')->end()
                 ->scalarNode('redis_dsn')->end()
                 ->scalarNode('memcached_dsn')->end()
-                ->integerNode('cache_expiration_for_clean_ip')
+                ->integerNode('clean_ip_cache_duration')
                     ->defaultValue(Constants::CACHE_EXPIRATION_FOR_CLEAN_IP)
                 ->end()
-                ->integerNode('cache_expiration_for_bad_ip')
+                ->integerNode('bad_ip_cache_duration')
                     ->defaultValue(Constants::CACHE_EXPIRATION_FOR_BAD_IP)
                 ->end()
                 // Geolocation

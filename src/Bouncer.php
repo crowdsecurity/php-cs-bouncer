@@ -74,8 +74,8 @@ class Bouncer
             $finalConfig['api_timeout'],
             $finalConfig['api_user_agent'],
             $finalConfig['api_key'],
-            $finalConfig['cache_expiration_for_clean_ip'],
-            $finalConfig['cache_expiration_for_bad_ip'],
+            $finalConfig['clean_ip_cache_duration'],
+            $finalConfig['bad_ip_cache_duration'],
             $finalConfig['fallback_remediation'],
             $finalConfig['geolocation']
         );

@@ -8,6 +8,8 @@ require_once __DIR__ . '/settings.php';
 
 use CrowdSecBouncer\StandaloneBounce;
 
+
+
 $bounce = new StandaloneBounce();
 
 /** @var $crowdSecStandaloneBouncerConfig */
