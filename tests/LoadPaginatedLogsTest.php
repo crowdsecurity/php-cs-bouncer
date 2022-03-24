@@ -10,7 +10,7 @@ final class LoadPaginatedLogsTest extends TestCase
      */
     public function testCanLoad10FirstLogInputs(): void
     {
-        //...(0, 10)
+        // ...(0, 10)
         $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
@@ -19,7 +19,7 @@ final class LoadPaginatedLogsTest extends TestCase
      */
     public function testCanLoad10LastLogInputs(): void
     {
-        //...(-10)
+        // ...(-10)
         $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
@@ -28,7 +28,7 @@ final class LoadPaginatedLogsTest extends TestCase
      */
     public function testCanLoad5FirstLogInputs(): void
     {
-        //...(-10, 0)
+        // ...(-10, 0)
         $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
@@ -37,7 +37,7 @@ final class LoadPaginatedLogsTest extends TestCase
      */
     public function testCanLoadAllLogInputs(): void
     {
-        //...(0)
+        // ...(0)
         $this->markTestIncomplete('This test has not been implemented yet.');
     }
 
@@ -46,7 +46,7 @@ final class LoadPaginatedLogsTest extends TestCase
      */
     public function testCanLoadTheSecondLogInput(): void
     {
-        //...(0, 2)
+        // ...(0, 2)
         $this->markTestIncomplete('This test has not been implemented yet.');
     }
 }
