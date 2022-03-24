@@ -9,6 +9,7 @@ vendor
 super-linter.log
 .php-cs-fixer.cache
 .php-cs-fixer.php
+tools/php-cs-fixer/composer.lock
 
 # App
 /var/
