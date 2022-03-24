@@ -1,10 +1,5 @@
 name: Test suite
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - '**.md'
   pull_request:
     branches:
       - main
@@ -33,7 +28,7 @@ jobs:
 
       - name: Install DDEV
         env:
-          DDEV_VERSION: v1.18.2
+          DDEV_VERSION: v1.19.1
         run: |
           # @see https://ddev.readthedocs.io/en/stable/#installationupgrade-script-linux-and-macos-armarm64-and-amd64-architectures
           sudo apt-get -qq update

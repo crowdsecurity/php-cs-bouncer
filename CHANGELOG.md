@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.19.0] - 2022-03-24
+
+### Added
+
+- Add `excluded_uris` configuration to exclude some uris (was hardcoded to `/favicon.ico`)
+
+### Changed
+- Change the redirection after captcha resolution to `/` (was `$_SERVER['REQUEST_URI']'`)
+
+### Fixed
+- Fix Standalone bouncer session handling
+
+
 ## [0.18.0] - 2022-03-18
 ### Changed
 - *Breaking change*: Change `trust_ip_forward_array` symfony configuration node to an array of array.

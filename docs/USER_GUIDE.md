@@ -145,6 +145,8 @@ Here is the list of available settings:
 
 - `trust_ip_forward_array`:  If you use a CDN, a reverse proxy or a load balancer, set an array of IPs. For other IPs, the bouncer will not trust the X-Forwarded-For header.
 
+- `excluded_uris`: array of URIs that will not be bounced
+
 ##### Cache
 
 - `cache_system`: Select from `phpfs` (File system cache), `redis` or `memcached`.
@@ -156,9 +158,9 @@ Here is the list of available settings:
 
 - `memcached_dsn`: Will be used only if you choose Memcached as cache_system
 
-- `cache_expiration_for_clean_ip`: Set the duration we keep in cache the fact that an IP is clean. In seconds. Defaults to 5.
+- `clean_ip_cache_duration`: Set the duration we keep in cache the fact that an IP is clean. In seconds. Defaults to 5.
 
-- `cache_expiration_for_bad_ip`: Set the duration we keep in cache the fact that an IP is bad. In seconds. Defaults to 20.
+- `bad_ip_cache_duration`: Set the duration we keep in cache the fact that an IP is bad. In seconds. Defaults to 20.
 
 - `stream_mode`: true to enable stream mode, false to enable the live mode. Default to false. By default, the `live mode` is enabled. The first time a stranger connects to your website, this mode means that the IP will be checked directly by the CrowdSec API. The rest of your user’s browsing will be even more transparent thanks to the fully customizable cache system. But you can also activate the `stream mode`. This mode allows you to constantly feed the bouncer with the malicious IP list via a background task (CRON), making it to be even faster when checking the IP of your visitors. Besides, if your site has a lot of unique visitors at the same time, this will not influence the traffic to the API of your CrowdSec instance.
 
@@ -181,25 +183,45 @@ Here is the list of available settings:
 - Wording and css settings: 
 
   `theme_color_text_primary`
+
   `theme_color_text_secondary`
+
   `theme_color_text_button`
+
   `theme_color_text_error_message`
+
   `theme_color_background_page`
+
   `theme_color_background_container`
+
   `theme_color_background_button`
+
   `theme_color_background_button_hover`
+
   `theme_custom_css`
+
   `theme_text_captcha_wall_tab_title`
+
   `theme_text_captcha_wall_title`
+
   `theme_text_captcha_wall_subtitle`
+
   `theme_text_captcha_wall_refresh_image_link`
+
   `theme_text_captcha_wall_captcha_placeholder`
+
   `theme_text_captcha_wall_send_button`
+
   `theme_text_captcha_wall_error_message`
+
   `theme_text_captcha_wall_footer`
+
   `theme_text_ban_wall_tab_title`
+
   `theme_text_ban_wall_title`
+
   `theme_text_ban_wall_subtitle`
+
   `theme_text_ban_wall_footer`
 
 
