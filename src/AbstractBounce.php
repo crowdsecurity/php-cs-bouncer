@@ -266,13 +266,12 @@ abstract class AbstractBounce
 
         if (null === $this->getSessionVariable('crowdsec_captcha_has_to_be_resolved')) {
             // Set up the first captcha remediation.
-
             $this->storeNewCaptchaCoupleInSession();
             $this->setSessionVariable('crowdsec_captcha_has_to_be_resolved', true);
             $this->setSessionVariable('crowdsec_captcha_resolution_failed', false);
             $this->setSessionVariable('crowdsec_captcha_resolution_redirect', 'POST' === $this->getHttpMethod() &&
                                                                               !empty($_SERVER['HTTP_REFERER']) ?
-                $_SERVER['HTTP_REFERER'] : $_SERVER['REQUEST_URI']);
+                $_SERVER['HTTP_REFERER'] : '/');
         }
 
         // Display captcha page if this is required.
