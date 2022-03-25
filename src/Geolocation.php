@@ -76,14 +76,16 @@ class Geolocation
     {
         $result = $this->resultTemplate;
         $saveInSession = !empty($geolocConfig['save_in_session']);
-        if ($country = Session::getSessionVariable('crowdsec_geolocation_country')) {
-            $result['country'] = $country;
+        if($saveInSession){
+            if ($country = Session::getSessionVariable('crowdsec_geolocation_country')) {
+                $result['country'] = $country;
 
-            return $result;
-        } elseif ($notFoundError = Session::getSessionVariable('crowdsec_geolocation_not_found')) {
-            $result['not_found'] = $notFoundError;
+                return $result;
+            } elseif ($notFoundError = Session::getSessionVariable('crowdsec_geolocation_not_found')) {
+                $result['not_found'] = $notFoundError;
 
-            return $result;
+                return $result;
+            }
         }
         if (Constants::GEOLOCATION_TYPE_MAXMIND === $geolocConfig['type']) {
             $configPath = $geolocConfig[Constants::GEOLOCATION_TYPE_MAXMIND];
