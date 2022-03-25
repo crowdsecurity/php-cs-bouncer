@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+
+## [0.20.0] - 2022-03-31
+
+### Changed
+- Require a minimum of 1 for `clean_ip_cache_duration` and `bad_ip_cache_duration` settings
+- Do not use session for geolocation if `save_in_session` setting is not true.
+
 ## [0.19.0] - 2022-03-24
 
 ### Added

@@ -76,7 +76,7 @@ class Geolocation
     {
         $result = $this->resultTemplate;
         $saveInSession = !empty($geolocConfig['save_in_session']);
-        if($saveInSession){
+        if ($saveInSession) {
             if ($country = Session::getSessionVariable('crowdsec_geolocation_country')) {
                 $result['country'] = $country;
 
