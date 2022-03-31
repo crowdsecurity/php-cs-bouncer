@@ -69,10 +69,10 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('redis_dsn')->end()
                 ->scalarNode('memcached_dsn')->end()
                 ->integerNode('clean_ip_cache_duration')
-                    ->defaultValue(Constants::CACHE_EXPIRATION_FOR_CLEAN_IP)
+                    ->min(1)->defaultValue(Constants::CACHE_EXPIRATION_FOR_CLEAN_IP)
                 ->end()
                 ->integerNode('bad_ip_cache_duration')
-                    ->defaultValue(Constants::CACHE_EXPIRATION_FOR_BAD_IP)
+                    ->min(1)->defaultValue(Constants::CACHE_EXPIRATION_FOR_BAD_IP)
                 ->end()
                 // Geolocation
                 ->arrayNode('geolocation')

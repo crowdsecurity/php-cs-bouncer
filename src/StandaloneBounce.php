@@ -30,7 +30,7 @@ class StandaloneBounce extends AbstractBounce implements IBounce
     /**
      * @var string
      */
-    const SESSION_NAME = 'crowdsec';
+    public const SESSION_NAME = 'crowdsec';
 
     /**
      * Initialize the bouncer.
