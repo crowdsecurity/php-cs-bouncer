@@ -1,6 +1,6 @@
 name: Test suite
 on:
-  pull_request:
+  push:
     branches:
       - main
     paths-ignore:
@@ -113,6 +113,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           cp .ddev/custom_files/phpinfo.php my-own-modules/crowdsec-php-lib/scripts/public/phpinfo.php
+          curl -v https://${{ env.PHP_VERSION_CODE }}.ddev.site/my-own-modules/crowdsec-php-lib/scripts/public/phpinfo.php
           PREPENDVERIF=$(curl https://${{ env.PHP_VERSION_CODE }}.ddev.site/my-own-modules/crowdsec-php-lib/scripts/public/phpinfo.php | grep -o -E "auto_prepend_file=(.*)php(.*)" | sed 's/<\/tr>//g; s/<\/td>//g;' | tr '\n' '#')
           if [[ $PREPENDVERIF == "auto_prepend_file=/var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/bounce.php#auto_prepend_file=/var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/bounce.php#" ]]
           then
