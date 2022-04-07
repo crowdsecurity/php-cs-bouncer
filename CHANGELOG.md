@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.20.1] - 2022-04-07
+
+### Added
+- Handle old lib version (`< 0.14.0`) settings values retro-compatibility for Standalone bouncer
+### Fixed
+- Fix `AbstractBounce:displayCaptchaWall` function
+
 
 ## [0.20.0] - 2022-03-31
 
@@ -15,7 +22,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.19.0] - 2022-03-24
 
 ### Added
-
 - Add `excluded_uris` configuration to exclude some uris (was hardcoded to `/favicon.ico`)
 
 ### Changed

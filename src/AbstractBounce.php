@@ -175,8 +175,8 @@ abstract class AbstractBounce
     {
         $options = $this->getCaptchaWallOptions();
         $body = Bouncer::getCaptchaHtmlTemplate(
-            $this->getSessionVariable('crowdsec_captcha_resolution_failed'),
-            $this->getSessionVariable('crowdsec_captcha_inline_image'),
+            (bool) $this->getSessionVariable('crowdsec_captcha_resolution_failed'),
+            (string) $this->getSessionVariable('crowdsec_captcha_inline_image'),
             '',
             $options
         );

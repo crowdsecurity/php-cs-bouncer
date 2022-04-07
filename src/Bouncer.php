@@ -145,9 +145,11 @@ class Bouncer
      * Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.
      * The input $config should match the TemplateConfiguration input format.
      *
-     * @param array $config An array of template configuration parameters
-     *
-     * @return string The HTML compiled template
+     * @param bool $error
+     * @param string $captchaImageSrc
+     * @param string $captchaResolutionFormUrl
+     * @param array $config
+     * @return string
      */
     public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, string $captchaResolutionFormUrl, array $config): string
     {
