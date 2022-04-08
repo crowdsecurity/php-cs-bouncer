@@ -63,3 +63,9 @@ To get a robust library and not provide security bug unmaintained, we use [compo
 The oldest PHP version compatible with these libraries is PHP 7.2.x.
 
 
+### Memcached and PHP 8.x
+
+In order to use Memcached with a PHP 8.x set up, you must have an installed version of the memcached php extension > 3.1.5. To check what is your current version, you could run :
+
+`php -r "echo phpversion('memcached');"`
+

@@ -62,6 +62,7 @@ jobs:
           ddev --version
           ddev exec php -v
           ddev exec -s crowdsec crowdsec -version
+          ddev php -r "echo phpversion('memcached');"
 
       - name: Clone PHP lib Crowdsec files
         uses: actions/checkout@v2
