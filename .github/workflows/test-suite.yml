@@ -62,6 +62,7 @@ jobs:
           ddev --version
           ddev exec php -v
           ddev exec -s crowdsec crowdsec -version
+          ddev php -r "echo phpversion('memcached');"
 
       - name: Clone PHP lib Crowdsec files
         uses: actions/checkout@v2
@@ -87,9 +88,12 @@ jobs:
           tar -xf GeoLite2-City.tar.gz
           rm GeoLite2-Country.tar.gz GeoLite2-Country.tar.gz.sha256.txt GeoLite2-City.tar.gz GeoLite2-City.tar.gz.sha256.txt
 
-      - name: Run PHP UNIT tests
+      - name: Run PHP UNIT tests (IP verification)
         run: |
           ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
+
+      - name: Run PHP UNIT tests (Geolocation)
+        run: |
           ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/GeolocationTest.php
 
       - name: Prepare Standalone Bouncer end-to-end tests

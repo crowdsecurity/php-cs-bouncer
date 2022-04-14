@@ -6,7 +6,7 @@
 
 ![Version](https://img.shields.io/github/v/release/crowdsecurity/php-cs-bouncer?include_prereleases)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=crowdsecurity_php-cs-bouncer&metric=alert_status)](https://sonarcloud.io/dashboard?id=crowdsecurity_php-cs-bouncer)
-![Build Status](https://img.shields.io/github/workflow/status/crowdsecurity/php-cs-bouncer/tests/main)
+[![Test suite](https://github.com/crowdsecurity/php-cs-bouncer/actions/workflows/test-suite.yml/badge.svg)](https://github.com/crowdsecurity/php-cs-bouncer/actions/workflows/test-suite.yml)
 ![Licence](https://img.shields.io/github/license/crowdsecurity/php-cs-bouncer)
 
 

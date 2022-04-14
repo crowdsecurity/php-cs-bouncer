@@ -49,14 +49,7 @@ class TestHelpers
         $redisCacheAdapterDsn = getenv('REDIS_DSN');
         $redisClient = RedisAdapter::createConnection($redisCacheAdapterDsn);
         $redisAdapter = new RedisAdapter($redisClient);
-
-        // memcached version 3.1.5 is not ready for PHP 8.1
-        if (\PHP_VERSION_ID >= 80100 && version_compare(phpversion('memcached'), '3.1.5', '<=')) {
-            return [
-                'PhpFilesAdapter' => [$phpFilesAdapter],
-                'RedisAdapter' => [$redisAdapter],
-            ];
-        }
+        
         /** @var string */
         $memcachedCacheAdapterDsn = getenv('MEMCACHED_DSN');
         $memcachedAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedCacheAdapterDsn));
