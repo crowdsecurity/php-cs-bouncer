@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.21.0] - 2022-04-15
+
+### Changed
+- Change allowed versions of `symfony/cache` package
+
 ## [0.20.1] - 2022-04-07
 
 ### Added
