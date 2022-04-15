@@ -14,6 +14,7 @@
 - [Which PHP compatibility matrix?](#which-php-compatibility-matrix)
   - [Why not PHP 5.6?](#why-not-php-56)
   - [Why not 7.0.x nor 7.1.x ?](#why-not-70x-nor-71x-)
+  - [Memcached and PHP 8.x](#memcached-and-php-8x)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
