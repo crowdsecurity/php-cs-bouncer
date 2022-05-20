@@ -78,7 +78,7 @@ class Configuration implements ConfigurationInterface
                 ->arrayNode('geolocation')
                     ->addDefaultsIfNotSet()
                     ->children()
-                        ->booleanNode('save_in_session')
+                        ->booleanNode('save_in_cache')
                             ->defaultTrue()
                         ->end()
                         ->booleanNode('enabled')

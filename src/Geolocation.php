@@ -72,16 +72,19 @@ class Geolocation
      *
      * @throws Exception
      */
-    public function getCountryResult(array $geolocConfig, string $ip): array
+    public function getCountryResult(array $geolocConfig, string $ip, ApiCache $apiCache): array
     {
         $result = $this->resultTemplate;
-        $saveInSession = !empty($geolocConfig['save_in_session']);
+        $saveInSession = !empty($geolocConfig['save_in_cache']);
         if ($saveInSession) {
-            if ($country = Session::getSessionVariable('crowdsec_geolocation_country')) {
+            $cachedVariables =  $apiCache->getGeolocationVariables(
+                ['crowdsec_geolocation_country', 'crowdsec_geolocation_not_found'],$ip
+            );
+            if ($country = $cachedVariables['crowdsec_geolocation_country']) {
                 $result['country'] = $country;
 
                 return $result;
-            } elseif ($notFoundError = Session::getSessionVariable('crowdsec_geolocation_not_found')) {
+            } elseif ($notFoundError = $cachedVariables['crowdsec_geolocation_not_found']) {
                 $result['not_found'] = $notFoundError;
 
                 return $result;
@@ -96,18 +99,12 @@ class Geolocation
 
         if ($saveInSession) {
             if (!empty($result['country'])) {
-                Session::setSessionVariable('crowdsec_geolocation_country', $result['country']);
+                $apiCache->setGeolocationVariables(['crowdsec_geolocation_country' => $result['country']], $ip);
             } elseif (!empty($result['not_found'])) {
-                Session::setSessionVariable('crowdsec_geolocation_not_found', $result['not_found']);
+                $apiCache->setGeolocationVariables(['crowdsec_geolocation_not_found' => $result['not_found']], $ip);
             }
         }
 
         return $result;
-    }
-
-    public function clearGeolocationSessionContext()
-    {
-        Session::unsetSessionVariable('crowdsec_geolocation_country');
-        Session::unsetSessionVariable('crowdsec_geolocation_not_found');
     }
 }

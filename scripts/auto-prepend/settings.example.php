@@ -117,7 +117,7 @@ $crowdSecStandaloneBouncerConfig = [
          *
          * Setting true will avoid multiple call to the geolocalized system (e.g. maxmind database)
          */
-        'save_in_session' => true,
+        'save_in_cache' => true,
         // MaxMind settings
         'maxmind' => [
             /**Select from 'country' or 'city'. Default to 'country'

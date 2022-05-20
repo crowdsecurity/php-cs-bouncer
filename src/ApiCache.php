@@ -13,7 +13,6 @@ use IPLib\Range\Subnet;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
-use Symfony\Component\Cache\Adapter\FilesystemTagAwareAdapter;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapter;
@@ -85,6 +84,8 @@ class ApiCache
      * @var array|null
      */
     private $scopes;
+
+    public const CACHE_SEP = '_';
 
     /**
      * @param LoggerInterface      $logger      The logger to use
@@ -378,12 +379,13 @@ class ApiCache
         if (!isset($this->cacheKeys[$scope][$value])) {
             switch ($scope) {
                 case Constants::SCOPE_RANGE:
-                    $this->cacheKeys[$scope][$value] = Constants::SCOPE_IP.'_'.$value;
+                    $this->cacheKeys[$scope][$value] = Constants::SCOPE_IP. self::CACHE_SEP .$value;
                     break;
-                case Constants::CACHE_TAG_CAPTCHA . '_' . Constants::SCOPE_IP:
-                case Constants::SCOPE_COUNTRY:
                 case Constants::SCOPE_IP:
-                    $this->cacheKeys[$scope][$value] = $scope.'_'.$value;
+                case Constants::CACHE_TAG_GEO . self::CACHE_SEP . Constants::SCOPE_IP:
+                case Constants::CACHE_TAG_CAPTCHA . self::CACHE_SEP . Constants::SCOPE_IP:
+                case Constants::SCOPE_COUNTRY:
+                    $this->cacheKeys[$scope][$value] = $scope. self::CACHE_SEP .$value;
                     break;
                 default:
                     throw new BouncerException('Unknown scope:'.$scope);
@@ -755,7 +757,7 @@ class ApiCache
 
         // Handle Geolocation remediation
         if (!empty($this->geolocConfig['enabled'])) {
-            $countryResult = $this->geolocation->getCountryResult($this->geolocConfig, $ip);
+            $countryResult = $this->geolocation->getCountryResult($this->geolocConfig, $ip, $this);
             $countryToQuery = null;
             if (!empty($countryResult['country'])) {
                 $countryToQuery = $countryResult['country'];
@@ -862,7 +864,7 @@ class ApiCache
      */
     private function getCachedCaptchaVariables($ip)
     {
-        $cacheKey = $this->getCacheKey(Constants::CACHE_TAG_CAPTCHA . '_' . Constants::SCOPE_IP, $ip);
+        $cacheKey = $this->getCacheKey(Constants::CACHE_TAG_CAPTCHA . self::CACHE_SEP . Constants::SCOPE_IP, $ip);
         $cachedCaptchaVariables = [];
         if ($this->adapter->hasItem(base64_encode($cacheKey))) {
             $cachedCaptchaVariables = $this->adapter->getItem(base64_encode($cacheKey))->get();
@@ -871,7 +873,23 @@ class ApiCache
     }
 
     /**
-     * Retrieve captcha variable by name (set null if not already there)
+     * Get geolocation cached item data
+     * @param $ip
+     * @return array|mixed
+     * @throws InvalidArgumentException
+     */
+    private function getCachedGeolocationVariables($ip)
+    {
+        $cacheKey = $this->getCacheKey(Constants::CACHE_TAG_GEO . self::CACHE_SEP . Constants::SCOPE_IP, $ip);
+        $cachedCaptchaVariables = [];
+        if ($this->adapter->hasItem(base64_encode($cacheKey))) {
+            $cachedCaptchaVariables = $this->adapter->getItem(base64_encode($cacheKey))->get();
+        }
+        return $cachedCaptchaVariables;
+    }
+
+    /**
+     * Retrieve captcha variables by name (set null if not already there)
      *
      * @param $names
      * @param $ip
@@ -891,9 +909,30 @@ class ApiCache
         return $captchaVariables;
     }
 
+    /**
+     * Retrieve geolocation variables by name (set null if not already there)
+     *
+     * @param $names
+     * @param $ip
+     * @return array
+     * @throws InvalidArgumentException
+     */
+    public function getGeolocationVariables($names, $ip)
+    {
+        $cachedGeolocationVariables = $this->getCachedGeolocationVariables($ip);
+        $geolocationVariables = [];
+        foreach ($names as $name){
+            $geolocationVariables[$name] = null;
+            if(isset($cachedGeolocationVariables[$name])){
+                $geolocationVariables[$name] = $cachedGeolocationVariables[$name];
+            }
+        }
+        return $geolocationVariables;
+    }
+
 
     public function setCaptchaVariables(array $pairs, $ip){
-        $cacheKey = $this->getCacheKey(Constants::CACHE_TAG_CAPTCHA . '_' . Constants::SCOPE_IP, $ip);
+        $cacheKey = $this->getCacheKey(Constants::CACHE_TAG_CAPTCHA . self::CACHE_SEP . Constants::SCOPE_IP, $ip);
         $cachedCaptchaVariables = $this->getCachedCaptchaVariables($ip);
         foreach ($pairs as $name => $value){
             $cachedCaptchaVariables[$name] = $value;
@@ -905,9 +944,22 @@ class ApiCache
         $this->adapter->save($item);
     }
 
+    public function setGeolocationVariables(array $pairs, $ip){
+        $cacheKey = $this->getCacheKey(Constants::CACHE_TAG_GEO . self::CACHE_SEP . Constants::SCOPE_IP, $ip);
+        $cachedGeolocationVariables = $this->getCachedGeolocationVariables($ip);
+        foreach ($pairs as $name => $value){
+            $cachedGeolocationVariables[$name] = $value;
+        }
+        $item = $this->adapter->getItem(base64_encode($cacheKey));
+        $item->set($cachedGeolocationVariables);
+        $item->expiresAt(new DateTime('+1day'));
+        $item->tag(Constants::CACHE_TAG_GEO);
+        $this->adapter->save($item);
+    }
+
     public function unsetCaptchaVariables($pairs, $ip)
     {
-        $cacheKey = $this->getCacheKey(Constants::CACHE_TAG_CAPTCHA . '_' . Constants::SCOPE_IP, $ip);
+        $cacheKey = $this->getCacheKey(Constants::CACHE_TAG_CAPTCHA . self::CACHE_SEP . Constants::SCOPE_IP, $ip);
         $cachedCaptchaVariables = $this->getCachedCaptchaVariables($ip);
         foreach ($pairs as $name => $value){
             unset($cachedCaptchaVariables[$name]);
@@ -916,6 +968,20 @@ class ApiCache
         $item->set($cachedCaptchaVariables);
         $item->expiresAt(new DateTime('+1day'));
         $item->tag(Constants::CACHE_TAG_CAPTCHA);
+        $this->adapter->save($item);
+    }
+
+    public function unsetGeolocationVariables($pairs, $ip)
+    {
+        $cacheKey = $this->getCacheKey(Constants::CACHE_TAG_GEO . self::CACHE_SEP . Constants::SCOPE_IP, $ip);
+        $cachedGeolocationVariables = $this->getCachedGeolocationVariables($ip);
+        foreach ($pairs as $name => $value){
+            unset($cachedGeolocationVariables[$name]);
+        }
+        $item = $this->adapter->getItem(base64_encode($cacheKey));
+        $item->set($cachedGeolocationVariables);
+        $item->expiresAt(new DateTime('+1day'));
+        $item->tag(Constants::CACHE_TAG_GEO);
         $this->adapter->save($item);
     }
 

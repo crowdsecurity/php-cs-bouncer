@@ -10,8 +10,6 @@ use CrowdSecBouncer\Bouncer;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Cache\Adapter\AbstractAdapter;
-use Symfony\Component\Cache\PruneableInterface;
 
 final class IpVerificationTest extends TestCase
 {
