@@ -11,6 +11,8 @@ use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Exception\CacheException;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
+use Symfony\Component\Cache\Adapter\RedisTagAwareAdapter;
 
 /**
  * The class that apply a bounce.
@@ -26,11 +28,6 @@ class StandaloneBounce extends AbstractBounce implements IBounce
 {
     /** @var AbstractAdapter */
     protected $cacheAdapter;
-
-    /**
-     * @var string
-     */
-    public const SESSION_NAME = 'crowdsec';
 
     /**
      * Initialize the bouncer.
@@ -84,7 +81,8 @@ class StandaloneBounce extends AbstractBounce implements IBounce
         $cacheSystem = $this->getStringSettings('cache_system');
         switch ($cacheSystem) {
             case Constants::CACHE_SYSTEM_PHPFS:
-                $this->cacheAdapter = new PhpFilesAdapter('', 0, $this->getStringSettings('fs_cache_path'));
+                $this->cacheAdapter =
+                    new PhpFilesAdapter('', 0, $this->getStringSettings('fs_cache_path'));
                 break;
 
             case Constants::CACHE_SYSTEM_MEMCACHED:
@@ -93,7 +91,8 @@ class StandaloneBounce extends AbstractBounce implements IBounce
                     throw new BouncerException('The selected cache technology is Memcached.'.' Please set a Memcached DSN or select another cache technology.');
                 }
 
-                $this->cacheAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedDsn));
+                $this->cacheAdapter =
+                    new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedDsn));
                 break;
 
             case Constants::CACHE_SYSTEM_REDIS:
@@ -103,7 +102,7 @@ class StandaloneBounce extends AbstractBounce implements IBounce
                 }
 
                 try {
-                    $this->cacheAdapter = new RedisAdapter(RedisAdapter::createConnection($redisDsn));
+                    $this->cacheAdapter = new RedisAdapter((RedisAdapter::createConnection($redisDsn)));
                 } catch (InvalidArgumentException $e) {
                     throw new BouncerException('Error when connecting to Redis.'.' Please fix the Redis DSN or select another cache technology.');
                 }
@@ -299,29 +298,32 @@ class StandaloneBounce extends AbstractBounce implements IBounce
     }
 
     /**
-     * Return a session variable, null if not set.
+     * Return a captcha variable
      */
-    public function getSessionVariable(string $name)
+    public function getCaptchaVariables(array $names, $ip)
     {
-        return Session::getSessionVariable($name);
+        $apiCache = $this->bouncer->getApiCache();
+        return $apiCache->getCaptchaVariables($names, $ip);
     }
 
     /**
-     * Set a session variable.
+     * Set a captcha variable.
      */
-    public function setSessionVariable(string $name, $value): void
+    public function setCaptchaVariables(array $pairs, $ip): void
     {
-        Session::setSessionVariable($name, $value);
+        $apiCache = $this->bouncer->getApiCache();
+        $apiCache->setCaptchaVariables($pairs, $ip);
     }
 
     /**
-     * Unset a session variable, throw an error if this does not exist.
+     * Unset a captcha variable
      *
      * @return void;
      */
-    public function unsetSessionVariable(string $name): void
+    public function unsetCaptchaVariables(array $names, $ip): void
     {
-        Session::unsetSessionVariable($name);
+        $apiCache = $this->bouncer->getApiCache();
+        $apiCache->unsetCaptchaVariables($names, $ip);
     }
 
     /**
@@ -407,10 +409,6 @@ class StandaloneBounce extends AbstractBounce implements IBounce
             throw new BouncerException("$errstr (Error level: $errno)");
         });
         try {
-            if (\PHP_SESSION_NONE === session_status()) {
-                session_name(self::SESSION_NAME);
-                session_start();
-            }
             $this->init($configs);
             $this->run();
             $result = true;

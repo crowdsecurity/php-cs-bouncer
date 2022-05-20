@@ -40,7 +40,7 @@ final class IpVerificationTest extends TestCase
      * @dataProvider cacheAdapterProvider
      * @group ignore_
      */
-    public function testCanVerifyIpInLiveModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
+    public function testCanVerifyIpInLiveModeWithCacheSystem($cacheAdapter): void
     {
         // Init context
 
@@ -131,7 +131,7 @@ final class IpVerificationTest extends TestCase
      * @dataProvider cacheAdapterProvider
      * @group ignore_
      */
-    public function testCanVerifyIpInStreamModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
+    public function testCanVerifyIpInStreamModeWithCacheSystem($cacheAdapter): void
     {
         // Init context
 

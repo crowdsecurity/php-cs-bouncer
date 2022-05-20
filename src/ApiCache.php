@@ -14,6 +14,7 @@ use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\Adapter\FilesystemTagAwareAdapter;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\PruneableInterface;
 
@@ -94,8 +95,8 @@ class ApiCache
     {
         $this->logger = $logger;
         $this->apiClient = $apiClient ?: new ApiClient($logger);
-        $this->adapter = $adapter ?: new FilesystemAdapter();
         $this->geolocation = $geolocation ?: new Geolocation();
+        $this->adapter = $adapter ?: new FilesystemAdapter();
     }
 
     /**
@@ -166,6 +167,7 @@ class ApiCache
      *
      * @throws InvalidArgumentException
      * @throws Exception
+     * @throws \Psr\Cache\CacheException
      */
     private function addRemediationToCacheItem(string $cacheKey, string $type, int $expiration, int $decisionId): string
     {
@@ -196,6 +198,7 @@ class ApiCache
 
         $item->set($prioritizedRemediations);
         $item->expiresAt(new DateTime('@'.$maxLifetime));
+        //$item->tag(Constants::CACHE_TAG_REM);
 
         // Save the cache without committing it to the cache system.
         // Useful to improve performance when updating the cache.
@@ -211,6 +214,7 @@ class ApiCache
      *
      * @throws InvalidArgumentException
      * @throws Exception
+     * @throws \Psr\Cache\CacheException
      */
     private function removeDecisionFromRemediationItem(string $cacheKey, int $decisionId): bool
     {
@@ -242,6 +246,7 @@ class ApiCache
         $cacheContent = Remediation::sortRemediationByPriority($remediations);
         $item->expiresAt(new DateTime('@'.$maxLifetime));
         $item->set($cacheContent);
+        //$item->tag(Constants::CACHE_TAG_REM);
 
         // Save the cache without committing it to the cache system.
         // Useful to improve performance when updating the cache.
@@ -371,11 +376,12 @@ class ApiCache
         if (!isset($this->cacheKeys[$scope][$value])) {
             switch ($scope) {
                 case Constants::SCOPE_RANGE:
-                case Constants::SCOPE_IP:
-                    $this->cacheKeys[$scope][$value] = Constants::SCOPE_IP.':'.$value;
+                    $this->cacheKeys[$scope][$value] = Constants::SCOPE_IP.'_'.$value;
                     break;
+                case Constants::CACHE_TAG_CAPTCHA . '-' . Constants::SCOPE_IP:
                 case Constants::SCOPE_COUNTRY:
-                    $this->cacheKeys[$scope][$value] = Constants::SCOPE_COUNTRY.':'.$value;
+                case Constants::SCOPE_IP:
+                    $this->cacheKeys[$scope][$value] = $scope.'_'.$value;
                     break;
                 default:
                     throw new BouncerException('Unknown scope:'.$scope);
@@ -844,5 +850,70 @@ class ApiCache
         } finally {
             $this->unsetCustomErrorHandler();
         }
+    }
+
+    /**
+     * Get captcha cached item data
+     * @param $ip
+     * @return array|mixed
+     * @throws InvalidArgumentException
+     */
+    private function getCachedCaptchaVariables($ip)
+    {
+        $cacheKey = $this->getCacheKey(Constants::CACHE_TAG_CAPTCHA . '_' . Constants::SCOPE_IP, $ip);
+        $cachedCaptchaVariables = [];
+        if ($this->adapter->hasItem(base64_encode($cacheKey))) {
+            $cachedCaptchaVariables = $this->adapter->getItem(base64_encode($cacheKey))->get();
+        }
+        return $cachedCaptchaVariables;
+    }
+
+    /**
+     * Retrieve captcha variable by name (set null if not already there)
+     *
+     * @param $names
+     * @param $ip
+     * @return array
+     * @throws InvalidArgumentException
+     */
+    public function getCaptchaVariables($names, $ip)
+    {
+        $cachedCaptchaVariables = $this->getCachedCaptchaVariables($ip);
+        $captchaVariables = [];
+        foreach ($names as $name){
+            $captchaVariables[$name] = null;
+            if(isset($cachedCaptchaVariables[$name])){
+                $captchaVariables[$name] = $cachedCaptchaVariables[$name];
+            }
+        }
+        return $captchaVariables;
+    }
+
+
+    public function setCaptchaVariables(array $pairs, $ip){
+        $cacheKey = $this->getCacheKey(Constants::CACHE_TAG_CAPTCHA . '_' . Constants::SCOPE_IP, $ip);
+        $cachedCaptchaVariables = $this->getCachedCaptchaVariables($ip);
+        foreach ($pairs as $name => $value){
+            $cachedCaptchaVariables[$name] = $value;
+        }
+        $item = $this->adapter->getItem(base64_encode($cacheKey));
+        $item->set($cachedCaptchaVariables);
+        $item->expiresAt(new DateTime('+1day'));
+        //$item->tag(Constants::CACHE_TAG_CAPTCHA);
+        $this->adapter->save($item);
+    }
+
+    public function unsetCaptchaVariables($pairs, $ip)
+    {
+        $cacheKey = $this->getCacheKey(Constants::CACHE_TAG_CAPTCHA . '_' . Constants::SCOPE_IP, $ip);
+        $cachedCaptchaVariables = $this->getCachedCaptchaVariables($ip);
+        foreach ($pairs as $name => $value){
+            unset($cachedCaptchaVariables[$name]);
+        }
+        $item = $this->adapter->getItem(base64_encode($cacheKey));
+        $item->set($cachedCaptchaVariables);
+        $item->expiresAt(new DateTime('+1day'));
+        //$item->tag(Constants::CACHE_TAG_CAPTCHA);
+        $this->adapter->save($item);
     }
 }

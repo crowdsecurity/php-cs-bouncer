@@ -65,21 +65,21 @@ interface IBounce
     public function getTrustForwardedIpBoundsList(): array;
 
     /**
-     * Return a session variable, null if not set.
+     * Return a cached captcha variables
      */
-    public function getSessionVariable(string $name);
+    public function getCaptchaVariables(array $names, $ip);
 
     /**
-     * Set a session variable.
+     * Set a captcha variables in cache.
      */
-    public function setSessionVariable(string $name, $value): void;
+    public function setCaptchaVariables(array $pairs, $ip): void;
 
     /**
-     * Unset a session variable, throw an error if this does not exist.
+     * Unset a captcha variables
      *
      * @return void;
      */
-    public function unsetSessionVariable(string $name): void;
+    public function unsetCaptchaVariables(array $names, $ip): void;
 
     /**
      * Get the value of a posted field.

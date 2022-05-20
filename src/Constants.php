@@ -64,6 +64,15 @@ class Constants
     /** @var string The "MEMCACHED" cache system */
     public const CACHE_SYSTEM_MEMCACHED = 'memcached';
 
+    /** @var string Cache tag for remediation */
+    public const CACHE_TAG_REM = 'remediation';
+
+    /** @var string Cache tag for captcha flow */
+    public const CACHE_TAG_CAPTCHA = 'captcha';
+
+    /** @var string Cache tag for geolocation */
+    public const CACHE_TAG_GEO = 'geolocation';
+
     /** @var string The "MaxMind" geolocation type */
     public const GEOLOCATION_TYPE_MAXMIND = 'maxmind';
 

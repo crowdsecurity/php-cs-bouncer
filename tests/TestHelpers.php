@@ -44,7 +44,8 @@ class TestHelpers
     public static function cacheAdapterProvider(): array
     {
         // Init all adapters
-        $phpFilesAdapter = new PhpFilesAdapter('php_array_adapter_backup_cache', 0, self::PHP_FILES_CACHE_ADAPTER_DIR);
+        $phpFilesAdapter =
+            new PhpFilesAdapter('php_array_adapter_backup_cache', 0, self::PHP_FILES_CACHE_ADAPTER_DIR);
         /** @var string */
         $redisCacheAdapterDsn = getenv('REDIS_DSN');
         $redisClient = RedisAdapter::createConnection($redisCacheAdapterDsn);
@@ -52,7 +53,8 @@ class TestHelpers
         
         /** @var string */
         $memcachedCacheAdapterDsn = getenv('MEMCACHED_DSN');
-        $memcachedAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedCacheAdapterDsn));
+        $memcachedAdapter =
+            new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedCacheAdapterDsn));
 
         return [
             'PhpFilesAdapter' => [$phpFilesAdapter],
