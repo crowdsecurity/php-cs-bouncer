@@ -9,6 +9,7 @@ use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\Cache\Exception\CacheException;
 use Symfony\Component\Cache\Exception\InvalidArgumentException;
 use Symfony\Component\Cache\Adapter\TagAwareAdapter;
@@ -71,7 +72,7 @@ class StandaloneBounce extends AbstractBounce implements IBounce
      * @throws CacheException
      * @throws ErrorException
      */
-    private function getCacheAdapterInstance(bool $forceReload = false): AbstractAdapter
+    private function getCacheAdapterInstance(bool $forceReload = false): TagAwareAdapterInterface
     {
         // Singleton for this function
         if ($this->cacheAdapter && !$forceReload) {
@@ -81,8 +82,8 @@ class StandaloneBounce extends AbstractBounce implements IBounce
         $cacheSystem = $this->getStringSettings('cache_system');
         switch ($cacheSystem) {
             case Constants::CACHE_SYSTEM_PHPFS:
-                $this->cacheAdapter =
-                    new PhpFilesAdapter('', 0, $this->getStringSettings('fs_cache_path'));
+                $this->cacheAdapter = new TagAwareAdapter(
+                    new PhpFilesAdapter('', 0, $this->getStringSettings('fs_cache_path')));
                 break;
 
             case Constants::CACHE_SYSTEM_MEMCACHED:
@@ -91,8 +92,8 @@ class StandaloneBounce extends AbstractBounce implements IBounce
                     throw new BouncerException('The selected cache technology is Memcached.'.' Please set a Memcached DSN or select another cache technology.');
                 }
 
-                $this->cacheAdapter =
-                    new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedDsn));
+                $this->cacheAdapter = new TagAwareAdapter(
+                    new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedDsn)));
                 break;
 
             case Constants::CACHE_SYSTEM_REDIS:
@@ -102,7 +103,7 @@ class StandaloneBounce extends AbstractBounce implements IBounce
                 }
 
                 try {
-                    $this->cacheAdapter = new RedisAdapter((RedisAdapter::createConnection($redisDsn)));
+                    $this->cacheAdapter = new RedisTagAwareAdapter((RedisAdapter::createConnection($redisDsn)));
                 } catch (InvalidArgumentException $e) {
                     throw new BouncerException('Error when connecting to Redis.'.' Please fix the Redis DSN or select another cache technology.');
                 }

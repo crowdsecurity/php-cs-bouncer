@@ -13,9 +13,11 @@ use IPLib\Range\Subnet;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
-use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemTagAwareAdapter;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
+use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\Cache\PruneableInterface;
 
 /**
@@ -40,7 +42,7 @@ class ApiCache
      */
     private $apiClient;
 
-    /** @var AbstractAdapter */
+    /** @var TagAwareAdapterInterface */
     private $adapter;
 
     /**
@@ -90,13 +92,13 @@ class ApiCache
      * @param AbstractAdapter|null $adapter     The AbstractAdapter adapter to use
      * @param Geolocation|null     $geolocation The Geolocation helper to use
      */
-    public function __construct(LoggerInterface $logger, ApiClient $apiClient = null, AbstractAdapter $adapter =
+    public function __construct(LoggerInterface $logger, ApiClient $apiClient = null, TagAwareAdapterInterface $adapter =
     null, Geolocation $geolocation = null)
     {
         $this->logger = $logger;
         $this->apiClient = $apiClient ?: new ApiClient($logger);
         $this->geolocation = $geolocation ?: new Geolocation();
-        $this->adapter = $adapter ?: new FilesystemAdapter();
+        $this->adapter = $adapter ?: new TagAwareAdapter(new PhpFilesAdapter());
     }
 
     /**
@@ -198,7 +200,7 @@ class ApiCache
 
         $item->set($prioritizedRemediations);
         $item->expiresAt(new DateTime('@'.$maxLifetime));
-        //$item->tag(Constants::CACHE_TAG_REM);
+        $item->tag(Constants::CACHE_TAG_REM);
 
         // Save the cache without committing it to the cache system.
         // Useful to improve performance when updating the cache.
@@ -246,7 +248,7 @@ class ApiCache
         $cacheContent = Remediation::sortRemediationByPriority($remediations);
         $item->expiresAt(new DateTime('@'.$maxLifetime));
         $item->set($cacheContent);
-        //$item->tag(Constants::CACHE_TAG_REM);
+        $item->tag(Constants::CACHE_TAG_REM);
 
         // Save the cache without committing it to the cache system.
         // Useful to improve performance when updating the cache.
@@ -378,7 +380,7 @@ class ApiCache
                 case Constants::SCOPE_RANGE:
                     $this->cacheKeys[$scope][$value] = Constants::SCOPE_IP.'_'.$value;
                     break;
-                case Constants::CACHE_TAG_CAPTCHA . '-' . Constants::SCOPE_IP:
+                case Constants::CACHE_TAG_CAPTCHA . '_' . Constants::SCOPE_IP:
                 case Constants::SCOPE_COUNTRY:
                 case Constants::SCOPE_IP:
                     $this->cacheKeys[$scope][$value] = $scope.'_'.$value;
@@ -899,7 +901,7 @@ class ApiCache
         $item = $this->adapter->getItem(base64_encode($cacheKey));
         $item->set($cachedCaptchaVariables);
         $item->expiresAt(new DateTime('+1day'));
-        //$item->tag(Constants::CACHE_TAG_CAPTCHA);
+        $item->tag(Constants::CACHE_TAG_CAPTCHA);
         $this->adapter->save($item);
     }
 
@@ -913,7 +915,12 @@ class ApiCache
         $item = $this->adapter->getItem(base64_encode($cacheKey));
         $item->set($cachedCaptchaVariables);
         $item->expiresAt(new DateTime('+1day'));
-        //$item->tag(Constants::CACHE_TAG_CAPTCHA);
+        $item->tag(Constants::CACHE_TAG_CAPTCHA);
         $this->adapter->save($item);
+    }
+
+    public function getAdapter()
+    {
+        return $this->adapter;
     }
 }

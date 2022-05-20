@@ -14,6 +14,7 @@ use Monolog\Logger;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\Config\Definition\Processor;
 
 /**
@@ -37,7 +38,7 @@ class Bouncer
     /** @var int */
     private $maxRemediationLevelIndex = null;
 
-    public function __construct(AbstractAdapter $cacheAdapter = null, LoggerInterface $logger = null, ApiCache $apiCache = null)
+    public function __construct(TagAwareAdapterInterface $cacheAdapter = null, LoggerInterface $logger = null, ApiCache $apiCache = null)
     {
         if (!$logger) {
             $logger = new Logger('null');
@@ -269,5 +270,11 @@ class Bouncer
     public function testConnection()
     {
         $this->apiCache->testConnection();
+    }
+
+
+    public function getApiCache()
+    {
+        return $this->apiCache;
     }
 }
