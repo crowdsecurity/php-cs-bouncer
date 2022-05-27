@@ -4,6 +4,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use CrowdSecBouncer\Bouncer;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
@@ -12,7 +13,7 @@ use Monolog\Logger;
 
 // Init cache adapter
 
-$cacheAdapter = new PhpFilesAdapter('', 0, __DIR__ . '/.cache');
+$cacheAdapter = new TagAwareAdapter(new PhpFilesAdapter('', 0, __DIR__ . '/.cache'));
 
 // Parse argument
 

@@ -162,6 +162,12 @@ Here is the list of available settings:
 
 - `bad_ip_cache_duration`: Set the duration we keep in cache the fact that an IP is bad. In seconds. Defaults to 20.
 
+- `captcha_cache_duration`: Set the duration we keep in cache the captcha flow variables for an IP. In seconds. 
+  Defaults to 86400.. In seconds. Defaults to 20.
+
+- `geolocation_cache_duration`: Set the duration we keep in cache a geolocation result for an IP . In seconds. 
+  Defaults to 86400. Depends on the below `geolocation[save_result]` configuration.
+
 - `stream_mode`: true to enable stream mode, false to enable the live mode. Default to false. By default, the `live mode` is enabled. The first time a stranger connects to your website, this mode means that the IP will be checked directly by the CrowdSec API. The rest of your user’s browsing will be even more transparent thanks to the fully customizable cache system. But you can also activate the `stream mode`. This mode allows you to constantly feed the bouncer with the malicious IP list via a background task (CRON), making it to be even faster when checking the IP of your visitors. Besides, if your site has a lot of unique visitors at the same time, this will not influence the traffic to the API of your CrowdSec instance.
 
 ##### Geolocation
@@ -170,7 +176,7 @@ Here is the list of available settings:
 - `geolocation[enabled]`: true to enable remediation based on country. Default to false.
 - `geolocation[type]`:  Geolocation system. Only 'maxmind' is available for the moment. Default to `maxmind`
   
-- `geolocation[save_in_session]`: true to store the geolocalized country in session. Default to true. Setting true 
+- `geolocation[save_result]`: true to store the geolocalized country in cache. Default to true. Setting true 
   will avoid multiple call to the geolocalized system (e.g. maxmind database)
 - `geolocation[maxmind]`: MaxMind settings
 - `geolocation[maxmind][database_type]`: Select from `country` or `city`. Default to `country`. These are the two available MaxMind database types.
