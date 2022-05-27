@@ -174,7 +174,7 @@ abstract class AbstractBounce
     protected function displayCaptchaWall($ip)
     {
         $options = $this->getCaptchaWallOptions();
-        $captchaVariables = $this->getCaptchaVariables(
+        $captchaVariables = $this->getIpVariables(Constants::CACHE_TAG_CAPTCHA,
             ['crowdsec_captcha_resolution_failed', 'crowdsec_captcha_inline_image'], $ip);
         $body = Bouncer::getCaptchaHtmlTemplate(
             (bool) $captchaVariables['crowdsec_captcha_resolution_failed'],
@@ -197,7 +197,7 @@ abstract class AbstractBounce
      */
     protected function handleCaptchaResolutionForm(string $ip)
     {
-        $cachedCaptchaVariables = $this->getCaptchaVariables(
+        $cachedCaptchaVariables = $this->getIpVariables(Constants::CACHE_TAG_CAPTCHA,
             [
                 'crowdsec_captcha_has_to_be_resolved',
                 'crowdsec_captcha_phrase_to_guess',
@@ -223,7 +223,7 @@ abstract class AbstractBounce
                 'crowdsec_captcha_inline_image' => $captchaCouple['inlineImage'],
                 'crowdsec_captcha_resolution_failed' => false,
             ];
-            $this->setCaptchaVariables($captchaVariables, $ip);
+            $this->setIpVariables(Constants::CACHE_TAG_CAPTCHA, $captchaVariables, $ip);
 
             return;
         }
@@ -238,20 +238,20 @@ abstract class AbstractBounce
                 $this->getPostedVariable('phrase'),
                 $ip)) {
                 // User has correctly filled the captcha
-                $this->setCaptchaVariables(['crowdsec_captcha_has_to_be_resolved' => false], $ip);
+                $this->setIpVariables(Constants::CACHE_TAG_CAPTCHA, ['crowdsec_captcha_has_to_be_resolved' => false], $ip);
                 $unsetVariables = [
                     'crowdsec_captcha_phrase_to_guess',
                     'crowdsec_captcha_inline_image',
                     'crowdsec_captcha_resolution_failed',
                     'crowdsec_captcha_resolution_redirect'
                     ];
-                $this->unsetCaptchaVariables($unsetVariables, $ip);
+                $this->unsetIpVariables(Constants::CACHE_TAG_CAPTCHA,$unsetVariables, $ip);
                 $redirect = $cachedCaptchaVariables['crowdsec_captcha_resolution_redirect'] ?? '/';
                 header("Location: $redirect");
                 exit(0);
             } else {
                 // The user failed to resolve the captcha.
-                $this->setCaptchaVariables(['crowdsec_captcha_resolution_failed'=> true], $ip);
+                $this->setIpVariables(Constants::CACHE_TAG_CAPTCHA, ['crowdsec_captcha_resolution_failed'=> true], $ip);
             }
         }
     }
@@ -265,7 +265,7 @@ abstract class AbstractBounce
     {
         // Check captcha resolution form
         $this->handleCaptchaResolutionForm($ip);
-        $cachedCaptchaVariables = $this->getCaptchaVariables(['crowdsec_captcha_has_to_be_resolved'], $ip);
+        $cachedCaptchaVariables = $this->getIpVariables(Constants::CACHE_TAG_CAPTCHA,['crowdsec_captcha_has_to_be_resolved'], $ip);
         $mustResolve = false;
         if (null === $cachedCaptchaVariables['crowdsec_captcha_has_to_be_resolved']) {
             // Set up the first captcha remediation.
@@ -280,7 +280,7 @@ abstract class AbstractBounce
                                                           !empty($_SERVER['HTTP_REFERER'])
                                                             ? $_SERVER['HTTP_REFERER'] : '/'
             ];
-            $this->setCaptchaVariables($captchaVariables, $ip);
+            $this->setIpVariables(Constants::CACHE_TAG_CAPTCHA, $captchaVariables, $ip);
         }
 
         // Display captcha page if this is required.
@@ -304,5 +304,43 @@ abstract class AbstractBounce
             case Constants::REMEDIATION_BYPASS:
             default:
         }
+    }
+
+    /**
+     * Return cached variables associated to an IP
+     */
+    public function getIpVariables(string $keyPrefix, array $names, $ip)
+    {
+        if (!$this->bouncer) {
+            throw new BouncerException('Bouncer must be instantiated to get cache data.');
+        }
+        $apiCache = $this->bouncer->getApiCache();
+        return $apiCache->getIpVariables($keyPrefix, $names, $ip);
+    }
+
+    /**
+     * Set a ip variable.
+     */
+    public function setIpVariables(string $cacheTag, array $pairs, $ip): void
+    {
+        if (!$this->bouncer) {
+            throw new BouncerException('Bouncer must be instantiated to set cache data.');
+        }
+        $apiCache = $this->bouncer->getApiCache();
+        $apiCache->setIpVariables($cacheTag, $pairs, $ip);
+    }
+
+    /**
+     * Unset ip variables
+     *
+     * @return void;
+     */
+    public function unsetIpVariables(string $cacheTag, array $names, $ip): void
+    {
+        if (!$this->bouncer) {
+            throw new BouncerException('Bouncer must be instantiated to unset cache data.');
+        }
+        $apiCache = $this->bouncer->getApiCache();
+        $apiCache->unsetIpVariables($cacheTag, $names, $ip);
     }
 }

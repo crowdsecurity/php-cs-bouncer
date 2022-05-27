@@ -21,10 +21,10 @@ const runCacheAction = async (actionType = "refresh") => {
     await expect(page).toMatchTitle(`Cache action: ${actionType}`);
 };
 
-const runGeolocationTest = async (ip, saveInSession) => {
+const runGeolocationTest = async (ip, saveResult) => {
     let url = `/my-own-modules/crowdsec-php-lib/scripts/public/geolocation-test.php?ip=${ip}`;
-    if (saveInSession) {
-        url += `&session-save=1`;
+    if (saveResult) {
+        url += `&save-result=1`;
     }
     await goToPublicPage(`${url}`);
     await page.waitForLoadState("networkidle");

@@ -65,23 +65,6 @@ interface IBounce
     public function getTrustForwardedIpBoundsList(): array;
 
     /**
-     * Return a cached captcha variables
-     */
-    public function getCaptchaVariables(array $names, $ip);
-
-    /**
-     * Set a captcha variables in cache.
-     */
-    public function setCaptchaVariables(array $pairs, $ip): void;
-
-    /**
-     * Unset a captcha variables
-     *
-     * @return void;
-     */
-    public function unsetCaptchaVariables(array $names, $ip): void;
-
-    /**
      * Get the value of a posted field.
      */
     public function getPostedVariable(string $name): ?string;

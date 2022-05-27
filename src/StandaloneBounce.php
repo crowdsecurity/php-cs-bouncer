@@ -299,35 +299,6 @@ class StandaloneBounce extends AbstractBounce implements IBounce
     }
 
     /**
-     * Return a captcha variable
-     */
-    public function getCaptchaVariables(array $names, $ip)
-    {
-        $apiCache = $this->bouncer->getApiCache();
-        return $apiCache->getCaptchaVariables($names, $ip);
-    }
-
-    /**
-     * Set a captcha variable.
-     */
-    public function setCaptchaVariables(array $pairs, $ip): void
-    {
-        $apiCache = $this->bouncer->getApiCache();
-        $apiCache->setCaptchaVariables($pairs, $ip);
-    }
-
-    /**
-     * Unset a captcha variable
-     *
-     * @return void;
-     */
-    public function unsetCaptchaVariables(array $names, $ip): void
-    {
-        $apiCache = $this->bouncer->getApiCache();
-        $apiCache->unsetCaptchaVariables($names, $ip);
-    }
-
-    /**
      * Get the value of a posted field.
      */
     public function getPostedVariable(string $name): ?string

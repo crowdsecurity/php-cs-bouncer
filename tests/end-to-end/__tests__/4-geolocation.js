@@ -18,7 +18,7 @@ describe(`Geolocation standalone run`, () => {
         await expect(page).toMatchText(/Country: FR/);
     });
 
-    it("Should get FR and FR as it will be saved in session", async () => {
+    it("Should get FR and FR as it will be saved in cache", async () => {
         await runGeolocationTest(FRANCE_IP, true);
         await expect(page).toMatchText(/Country: FR/);
         await runGeolocationTest(JAPAN_IP, true);

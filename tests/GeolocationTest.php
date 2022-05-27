@@ -41,7 +41,7 @@ final class GeolocationTest extends TestCase
         }
 
         return [
-            'save_in_cache' => false,
+            'save_result' => false,
             'enabled' => true,
             'type' => 'maxmind',
             'maxmind' => [

@@ -91,8 +91,14 @@ $crowdSecStandaloneBouncerConfig = [
     // Set the duration we keep in cache the fact that an IP is clean. In seconds. Defaults to 5.
     'clean_ip_cache_duration'=> Constants::CACHE_EXPIRATION_FOR_CLEAN_IP,
 
-    // Optional. Set the duration we keep in cache the fact that an IP is bad. In seconds. Defaults to 20.
+    // Set the duration we keep in cache the fact that an IP is bad. In seconds. Defaults to 20.
     'bad_ip_cache_duration'=> Constants::CACHE_EXPIRATION_FOR_BAD_IP,
+
+    // Set the duration we keep in cache the captcha flow variables for an IP. In seconds. Defaults to 86400.
+    'captcha_cache_duration'=> Constants::CACHE_EXPIRATION_FOR_CAPTCHA,
+
+    // Set the duration we keep in cache a geolocation result for an IP . In seconds. Defaults to 86400.
+    'geolocation_cache_duration'=> Constants::CACHE_EXPIRATION_FOR_GEO,
 
     /** true to enable stream mode, false to enable the live mode. Default to false.
      *
@@ -117,7 +123,7 @@ $crowdSecStandaloneBouncerConfig = [
          *
          * Setting true will avoid multiple call to the geolocalized system (e.g. maxmind database)
          */
-        'save_in_cache' => true,
+        'save_result' => true,
         // MaxMind settings
         'maxmind' => [
             /**Select from 'country' or 'city'. Default to 'country'

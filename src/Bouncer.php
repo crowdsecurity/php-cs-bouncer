@@ -67,6 +67,12 @@ class Bouncer
             Constants::ORDERED_REMEDIATIONS
         );
         $this->maxRemediationLevelIndex = $index;
+        $cacheDurations = [
+            'clean_ip_cache_duration' => $finalConfig['clean_ip_cache_duration'],
+            'bad_ip_cache_duration' => $finalConfig['bad_ip_cache_duration'],
+            'captcha_cache_duration' => $finalConfig['captcha_cache_duration'],
+            'geolocation_cache_duration' => $finalConfig['geolocation_cache_duration']
+        ];
 
         // Configure Api Cache.
         $this->apiCache->configure(
@@ -75,8 +81,7 @@ class Bouncer
             $finalConfig['api_timeout'],
             $finalConfig['api_user_agent'],
             $finalConfig['api_key'],
-            $finalConfig['clean_ip_cache_duration'],
-            $finalConfig['bad_ip_cache_duration'],
+            $cacheDurations,
             $finalConfig['fallback_remediation'],
             $finalConfig['geolocation']
         );

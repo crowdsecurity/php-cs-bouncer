@@ -28,11 +28,17 @@ class Constants
     /** @var int The timeout when calling LAPI */
     public const API_TIMEOUT = 1;
 
-    /** @var int The duration we keep a clean IP in cache 5s */
+    /** @var int The duration we keep a clean IP in cache */
     public const CACHE_EXPIRATION_FOR_CLEAN_IP = 5;
 
-    /** @var int The duration we keep a bad IP in cache 20s */
+    /** @var int The duration we keep a bad IP in cache */
     public const CACHE_EXPIRATION_FOR_BAD_IP = 20;
+
+    /** @var int The duration we keep a captcha flow in cache */
+    public const CACHE_EXPIRATION_FOR_CAPTCHA = 86400;
+
+    /** @var int The duration we keep a geolocation result in cache */
+    public const CACHE_EXPIRATION_FOR_GEO = 86400;
 
     /** @var string The ban remediation */
     public const REMEDIATION_BAN = 'ban';
