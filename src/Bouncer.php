@@ -70,7 +70,7 @@ class Bouncer
             'clean_ip_cache_duration' => $finalConfig['clean_ip_cache_duration'],
             'bad_ip_cache_duration' => $finalConfig['bad_ip_cache_duration'],
             'captcha_cache_duration' => $finalConfig['captcha_cache_duration'],
-            'geolocation_cache_duration' => $finalConfig['geolocation_cache_duration']
+            'geolocation_cache_duration' => $finalConfig['geolocation_cache_duration'],
         ];
 
         // Configure Api Cache.
@@ -149,12 +149,6 @@ class Bouncer
     /**
      * Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.
      * The input $config should match the TemplateConfiguration input format.
-     *
-     * @param bool $error
-     * @param string $captchaImageSrc
-     * @param string $captchaResolutionFormUrl
-     * @param array $config
-     * @return string
      */
     public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, string $captchaResolutionFormUrl, array $config): string
     {
@@ -275,7 +269,6 @@ class Bouncer
     {
         $this->apiCache->testConnection();
     }
-
 
     public function getApiCache()
     {

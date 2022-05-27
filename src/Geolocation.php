@@ -77,8 +77,8 @@ class Geolocation
         $result = $this->resultTemplate;
         $saveInCache = !empty($geolocConfig['save_result']);
         if ($saveInCache) {
-            $cachedVariables =  $apiCache->getIpVariables(Constants::CACHE_TAG_GEO,
-                ['crowdsec_geolocation_country', 'crowdsec_geolocation_not_found'],$ip
+            $cachedVariables = $apiCache->getIpVariables(Constants::CACHE_TAG_GEO,
+                ['crowdsec_geolocation_country', 'crowdsec_geolocation_not_found'], $ip
             );
             if ($country = $cachedVariables['crowdsec_geolocation_country']) {
                 $result['country'] = $country;
@@ -99,9 +99,9 @@ class Geolocation
 
         if ($saveInCache) {
             if (!empty($result['country'])) {
-                $apiCache->setIpVariables(Constants::CACHE_TAG_GEO,['crowdsec_geolocation_country' => $result['country']], $ip);
+                $apiCache->setIpVariables(Constants::CACHE_TAG_GEO, ['crowdsec_geolocation_country' => $result['country']], $ip);
             } elseif (!empty($result['not_found'])) {
-                $apiCache->setIpVariables(Constants::CACHE_TAG_GEO,['crowdsec_geolocation_not_found' => $result['not_found']], $ip);
+                $apiCache->setIpVariables(Constants::CACHE_TAG_GEO, ['crowdsec_geolocation_not_found' => $result['not_found']], $ip);
             }
         }
 

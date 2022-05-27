@@ -60,14 +60,13 @@ final class IpVerificationTest extends TestCase
         $bouncer = new Bouncer(null, $this->logger, $apiCache);
         $bouncer->configure($bouncerConfig);
 
-        if(in_array($origCacheName, ['PhpFilesAdapter', 'MemcachedAdapter'])){
+        if (in_array($origCacheName, ['PhpFilesAdapter', 'MemcachedAdapter'])) {
             $this->assertEquals(
                 get_class($cacheAdapter),
                 'Symfony\Component\Cache\Adapter\TagAwareAdapter',
                 'Tested adapter should be correct'
             );
-        }
-        elseif($origCacheName == 'RedisAdapter'){
+        } elseif ('RedisAdapter' == $origCacheName) {
             $this->assertEquals(
                 get_class($cacheAdapter),
                 'Symfony\Component\Cache\Adapter\RedisTagAwareAdapter',
@@ -103,7 +102,7 @@ final class IpVerificationTest extends TestCase
         $this->assertEquals('bypass', $cleanRemediation2ndCall);
 
         // Prune cache
-        if ($origCacheName === 'PhpFilesAdapter') {
+        if ('PhpFilesAdapter' === $origCacheName) {
             $this->assertTrue($bouncer->pruneCache(), 'The cache should be prunable');
         }
 
@@ -168,14 +167,13 @@ final class IpVerificationTest extends TestCase
         $bouncer = new Bouncer(null, $this->logger, $apiCache);
         $bouncer->configure($bouncerConfig);
 
-        if(in_array($origCacheName, ['PhpFilesAdapter', 'MemcachedAdapter'])){
+        if (in_array($origCacheName, ['PhpFilesAdapter', 'MemcachedAdapter'])) {
             $this->assertEquals(
                 get_class($cacheAdapter),
                 'Symfony\Component\Cache\Adapter\TagAwareAdapter',
                 'Tested adapter should be correct'
             );
-        }
-        elseif($origCacheName == 'RedisAdapter'){
+        } elseif ('RedisAdapter' == $origCacheName) {
             $this->assertEquals(
                 get_class($cacheAdapter),
                 'Symfony\Component\Cache\Adapter\RedisTagAwareAdapter',
@@ -262,7 +260,6 @@ final class IpVerificationTest extends TestCase
         ];
         $bouncer = new Bouncer(null, $this->logger, $apiCache2);
         $bouncer->configure($bouncerConfig);
-
 
         // The cache should still be warmed up, even for a new instance
 

@@ -396,13 +396,13 @@ class ApiCache
         if (!isset($this->cacheKeys[$scope][$value])) {
             switch ($scope) {
                 case Constants::SCOPE_RANGE:
-                    $this->cacheKeys[$scope][$value] = Constants::SCOPE_IP. self::CACHE_SEP .$value;
+                    $this->cacheKeys[$scope][$value] = Constants::SCOPE_IP.self::CACHE_SEP.$value;
                     break;
                 case Constants::SCOPE_IP:
-                case Constants::CACHE_TAG_GEO . self::CACHE_SEP . Constants::SCOPE_IP:
-                case Constants::CACHE_TAG_CAPTCHA . self::CACHE_SEP . Constants::SCOPE_IP:
+                case Constants::CACHE_TAG_GEO.self::CACHE_SEP.Constants::SCOPE_IP:
+                case Constants::CACHE_TAG_CAPTCHA.self::CACHE_SEP.Constants::SCOPE_IP:
                 case Constants::SCOPE_COUNTRY:
-                    $this->cacheKeys[$scope][$value] = $scope. self::CACHE_SEP .$value;
+                    $this->cacheKeys[$scope][$value] = $scope.self::CACHE_SEP.$value;
                     break;
                 default:
                     throw new BouncerException('Unknown scope:'.$scope);
@@ -874,66 +874,64 @@ class ApiCache
     }
 
     /**
-     * Retrieve raw cache item for some IP and cache tag
+     * Retrieve raw cache item for some IP and cache tag.
      *
-     * @param string $cacheTag
-     * @param string $ip
      * @return array|mixed
+     *
      * @throws InvalidArgumentException
      */
     private function getIpCachedVariables(string $cacheTag, string $ip)
     {
-        $cacheKey = $this->getCacheKey($cacheTag. self::CACHE_SEP . Constants::SCOPE_IP, $ip);
+        $cacheKey = $this->getCacheKey($cacheTag.self::CACHE_SEP.Constants::SCOPE_IP, $ip);
         $cachedVariables = [];
         if ($this->adapter->hasItem(base64_encode($cacheKey))) {
             $cachedVariables = $this->adapter->getItem(base64_encode($cacheKey))->get();
         }
-        return $cachedVariables;
 
+        return $cachedVariables;
     }
 
     /**
      * Retrieved prepared cached variables associated to an Ip
-     * Set null if not already in cache
+     * Set null if not already in cache.
      *
      * @param $cacheTag
      * @param $names
      * @param $ip
+     *
      * @return array
      */
-    public function getIpVariables ($cacheTag, $names, $ip)
+    public function getIpVariables($cacheTag, $names, $ip)
     {
         $cachedVariables = $this->getIpCachedVariables($cacheTag, $ip);
         $variables = [];
-        foreach ($names as $name){
+        foreach ($names as $name) {
             $variables[$name] = null;
-            if(isset($cachedVariables[$name])){
+            if (isset($cachedVariables[$name])) {
                 $variables[$name] = $cachedVariables[$name];
             }
         }
-        return $variables;
 
+        return $variables;
     }
 
     /**
-     * Store variables in cache for some IP and cache tag
+     * Store variables in cache for some IP and cache tag.
      *
-     * @param string $cacheTag
-     * @param array $pairs
-     * @param string $ip
      * @return void
+     *
      * @throws InvalidArgumentException
      * @throws \Psr\Cache\CacheException
      * @throws Exception
      */
     public function setIpVariables(string $cacheTag, array $pairs, string $ip)
     {
-        $cacheKey = $this->getCacheKey($cacheTag. self::CACHE_SEP . Constants::SCOPE_IP, $ip);
+        $cacheKey = $this->getCacheKey($cacheTag.self::CACHE_SEP.Constants::SCOPE_IP, $ip);
         $cachedVariables = $this->getIpCachedVariables($cacheTag, $ip);
-        foreach ($pairs as $name => $value){
+        foreach ($pairs as $name => $value) {
             $cachedVariables[$name] = $value;
         }
-        $duration = ($cacheTag === Constants::CACHE_TAG_CAPTCHA)
+        $duration = (Constants::CACHE_TAG_CAPTCHA === $cacheTag)
             ? $this->cacheExpirationForCaptcha : $this->cacheExpirationForGeo;
         $item = $this->adapter->getItem(base64_encode($cacheKey));
         $item->set($cachedVariables);
@@ -943,23 +941,21 @@ class ApiCache
     }
 
     /**
-     * Unset cached variables for some IP and cache tag
+     * Unset cached variables for some IP and cache tag.
      *
-     * @param string $cacheTag
-     * @param array $pairs
-     * @param string $ip
      * @return void
+     *
      * @throws InvalidArgumentException
      * @throws \Psr\Cache\CacheException
      */
     public function unsetIpVariables(string $cacheTag, array $pairs, string $ip)
     {
-        $cacheKey = $this->getCacheKey($cacheTag. self::CACHE_SEP . Constants::SCOPE_IP, $ip);
+        $cacheKey = $this->getCacheKey($cacheTag.self::CACHE_SEP.Constants::SCOPE_IP, $ip);
         $cachedVariables = $this->getIpCachedVariables($cacheTag, $ip);
-        foreach ($pairs as $name => $value){
+        foreach ($pairs as $name => $value) {
             unset($cachedVariables[$name]);
         }
-        $duration = ($cacheTag === Constants::CACHE_TAG_CAPTCHA)
+        $duration = (Constants::CACHE_TAG_CAPTCHA === $cacheTag)
             ? $this->cacheExpirationForCaptcha : $this->cacheExpirationForGeo;
         $item = $this->adapter->getItem(base64_encode($cacheKey));
         $item->set($cachedVariables);
