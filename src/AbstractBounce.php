@@ -309,14 +309,14 @@ abstract class AbstractBounce
     /**
      * Return cached variables associated to an IP.
      */
-    public function getIpVariables(string $keyPrefix, array $names, $ip)
+    public function getIpVariables(string $cacheTag, array $names, $ip)
     {
         if (!$this->bouncer) {
             throw new BouncerException('Bouncer must be instantiated to get cache data.');
         }
         $apiCache = $this->bouncer->getApiCache();
 
-        return $apiCache->getIpVariables($keyPrefix, $names, $ip);
+        return $apiCache->getIpVariables($cacheTag, $names, $ip);
     }
 
     /**
