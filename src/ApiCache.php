@@ -159,7 +159,7 @@ class ApiCache
             'exp_clean_ips' => $this->cacheExpirationForCleanIp,
             'exp_bad_ips' => $this->cacheExpirationForBadIp,
             'exp_captcha_flow' => $this->cacheExpirationForCaptcha,
-            'exp_geolocation-result' => $this->cacheExpirationForGeo,
+            'exp_geolocation_result' => $this->cacheExpirationForGeo,
             'warmed_up' => ($this->warmedUp ? 'true' : 'false'),
             'geolocation' => $this->geolocConfig,
         ]);

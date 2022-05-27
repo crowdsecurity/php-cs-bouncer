@@ -180,6 +180,8 @@ class StandaloneBounce extends AbstractBounce implements IBounce
             'memcached_dsn' => $this->getStringSettings('memcached_dsn'),
             'clean_ip_cache_duration' => $this->getIntegerSettings('clean_ip_cache_duration'),
             'bad_ip_cache_duration' => $this->getIntegerSettings('bad_ip_cache_duration'),
+            'captcha_cache_duration' => $this->getIntegerSettings('captcha_cache_duration'),
+            'geolocation_cache_duration' => $this->getIntegerSettings('geolocation_cache_duration'),
             // Geolocation
             'geolocation' => $this->getArraySettings('geolocation'),
         ]);
