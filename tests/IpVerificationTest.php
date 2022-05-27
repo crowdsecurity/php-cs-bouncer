@@ -62,14 +62,14 @@ final class IpVerificationTest extends TestCase
 
         if (in_array($origCacheName, ['PhpFilesAdapter', 'MemcachedAdapter'])) {
             $this->assertEquals(
-                get_class($cacheAdapter),
                 'Symfony\Component\Cache\Adapter\TagAwareAdapter',
+                get_class($cacheAdapter),
                 'Tested adapter should be correct'
             );
         } elseif ('RedisAdapter' == $origCacheName) {
             $this->assertEquals(
-                get_class($cacheAdapter),
                 'Symfony\Component\Cache\Adapter\RedisTagAwareAdapter',
+                get_class($cacheAdapter),
                 'Tested adapter should be correct'
             );
         }
@@ -169,14 +169,14 @@ final class IpVerificationTest extends TestCase
 
         if (in_array($origCacheName, ['PhpFilesAdapter', 'MemcachedAdapter'])) {
             $this->assertEquals(
-                get_class($cacheAdapter),
                 'Symfony\Component\Cache\Adapter\TagAwareAdapter',
+                get_class($cacheAdapter),
                 'Tested adapter should be correct'
             );
         } elseif ('RedisAdapter' == $origCacheName) {
             $this->assertEquals(
-                get_class($cacheAdapter),
                 'Symfony\Component\Cache\Adapter\RedisTagAwareAdapter',
+                get_class($cacheAdapter),
                 'Tested adapter should be correct'
             );
         }
