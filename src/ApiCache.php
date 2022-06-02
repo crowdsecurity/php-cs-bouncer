@@ -503,6 +503,7 @@ class ApiCache
                     'decision' => $decision['id'],
                     'value' => $decision['value'],
                     ]);
+                    ++$count;
                 }
             } elseif (Constants::SCOPE_RANGE === $decision['scope']) {
                 $range = Subnet::parseString($decision['value']);
@@ -559,6 +560,7 @@ class ApiCache
                         'decision' => $decision['id'],
                         'value' => $decision['value'],
                     ]);
+                    ++$count;
                 }
             }
         }
