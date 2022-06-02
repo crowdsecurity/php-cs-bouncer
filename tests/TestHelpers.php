@@ -8,6 +8,8 @@ use Monolog\Logger;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
+use Symfony\Component\Cache\Adapter\RedisTagAwareAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Symfony\Component\Cache\Exception\CacheException;
 
 class TestHelpers
@@ -44,20 +46,23 @@ class TestHelpers
     public static function cacheAdapterProvider(): array
     {
         // Init all adapters
-        $phpFilesAdapter = new PhpFilesAdapter('php_array_adapter_backup_cache', 0, self::PHP_FILES_CACHE_ADAPTER_DIR);
+        $phpFilesAdapter = new TagAwareAdapter(
+            new PhpFilesAdapter('php_array_adapter_backup_cache', 0, self::PHP_FILES_CACHE_ADAPTER_DIR)
+        );
         /** @var string */
         $redisCacheAdapterDsn = getenv('REDIS_DSN');
         $redisClient = RedisAdapter::createConnection($redisCacheAdapterDsn);
-        $redisAdapter = new RedisAdapter($redisClient);
-        
+        $redisAdapter = new RedisTagAwareAdapter($redisClient);
+
         /** @var string */
         $memcachedCacheAdapterDsn = getenv('MEMCACHED_DSN');
-        $memcachedAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedCacheAdapterDsn));
+        $memcachedAdapter = new TagAwareAdapter(
+            new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedCacheAdapterDsn)));
 
         return [
-            'PhpFilesAdapter' => [$phpFilesAdapter],
-            'RedisAdapter' => [$redisAdapter],
-            'MemcachedAdapter' => [$memcachedAdapter],
+            'PhpFilesAdapter' => [$phpFilesAdapter, 'PhpFilesAdapter'],
+            'RedisAdapter' => [$redisAdapter, 'RedisAdapter'],
+            'MemcachedAdapter' => [$memcachedAdapter, 'MemcachedAdapter'],
         ];
     }
 

@@ -19,4 +19,4 @@ if(isset($crowdSecStandaloneBouncerConfig['bouncing_level']) && $crowdSecStandal
 
 $bouncer = $bounce->init($crowdSecStandaloneBouncerConfig);
 $bouncer->refreshBlocklistCache();
-echo 'Cache has been refreshed';
+echo 'Cache has been refreshed'.PHP_EOL;

@@ -10,8 +10,6 @@ use CrowdSecBouncer\Bouncer;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Cache\Adapter\AbstractAdapter;
-use Symfony\Component\Cache\PruneableInterface;
 
 final class IpVerificationTest extends TestCase
 {
@@ -40,7 +38,7 @@ final class IpVerificationTest extends TestCase
      * @dataProvider cacheAdapterProvider
      * @group ignore_
      */
-    public function testCanVerifyIpInLiveModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
+    public function testCanVerifyIpInLiveModeWithCacheSystem($cacheAdapter, $origCacheName): void
     {
         // Init context
 
@@ -61,6 +59,20 @@ final class IpVerificationTest extends TestCase
         ];
         $bouncer = new Bouncer(null, $this->logger, $apiCache);
         $bouncer->configure($bouncerConfig);
+
+        if (in_array($origCacheName, ['PhpFilesAdapter', 'MemcachedAdapter'])) {
+            $this->assertEquals(
+                'Symfony\Component\Cache\Adapter\TagAwareAdapter',
+                get_class($cacheAdapter),
+                'Tested adapter should be correct'
+            );
+        } elseif ('RedisAdapter' == $origCacheName) {
+            $this->assertEquals(
+                'Symfony\Component\Cache\Adapter\RedisTagAwareAdapter',
+                get_class($cacheAdapter),
+                'Tested adapter should be correct'
+            );
+        }
 
         // At the end of test, we should have exactly 3 "cache miss")
         /** @var MockObject $apiClientMock */
@@ -90,7 +102,7 @@ final class IpVerificationTest extends TestCase
         $this->assertEquals('bypass', $cleanRemediation2ndCall);
 
         // Prune cache
-        if ($cacheAdapter instanceof PruneableInterface) {
+        if ('PhpFilesAdapter' === $origCacheName) {
             $this->assertTrue($bouncer->pruneCache(), 'The cache should be prunable');
         }
 
@@ -131,7 +143,7 @@ final class IpVerificationTest extends TestCase
      * @dataProvider cacheAdapterProvider
      * @group ignore_
      */
-    public function testCanVerifyIpInStreamModeWithCacheSystem(AbstractAdapter $cacheAdapter): void
+    public function testCanVerifyIpInStreamModeWithCacheSystem($cacheAdapter, $origCacheName): void
     {
         // Init context
 
@@ -145,15 +157,29 @@ final class IpVerificationTest extends TestCase
             ->setConstructorArgs([$this->logger])
             ->enableProxyingToOriginalMethods()
             ->getMock();
-        $apiCache = new ApiCache($this->logger, $apiClientMock);
+        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter);
 
         $bouncerConfig = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'stream_mode' => true,
         ];
-        $bouncer = new Bouncer($cacheAdapter, $this->logger, $apiCache);
+        $bouncer = new Bouncer(null, $this->logger, $apiCache);
         $bouncer->configure($bouncerConfig);
+
+        if (in_array($origCacheName, ['PhpFilesAdapter', 'MemcachedAdapter'])) {
+            $this->assertEquals(
+                'Symfony\Component\Cache\Adapter\TagAwareAdapter',
+                get_class($cacheAdapter),
+                'Tested adapter should be correct'
+            );
+        } elseif ('RedisAdapter' == $origCacheName) {
+            $this->assertEquals(
+                'Symfony\Component\Cache\Adapter\RedisTagAwareAdapter',
+                get_class($cacheAdapter),
+                'Tested adapter should be correct'
+            );
+        }
 
         // As we are in stream mode, no live call should be done to the API.
 
@@ -225,14 +251,14 @@ final class IpVerificationTest extends TestCase
             ->setConstructorArgs([$this->logger])
             ->enableProxyingToOriginalMethods()
             ->getMock();
-        $apiCache2 = new ApiCache($this->logger, $apiClientMock2);
+        $apiCache2 = new ApiCache($this->logger, $apiClientMock2, $cacheAdapter);
 
         $bouncerConfig = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'stream_mode' => true,
         ];
-        $bouncer = new Bouncer($cacheAdapter, $this->logger, $apiCache2);
+        $bouncer = new Bouncer(null, $this->logger, $apiCache2);
         $bouncer->configure($bouncerConfig);
 
         // The cache should still be warmed up, even for a new instance

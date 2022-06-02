@@ -5,16 +5,18 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use CrowdSecBouncer\Bouncer;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
+use Symfony\Component\Cache\Adapter\RedisTagAwareAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 
 // Configure paths
 $logPath = __DIR__.'/.crowdsec.log';
 $cachePath = __DIR__ . '/.cache';
 
 // Instantiate the "PhpFilesAdapter" cache adapter
-$cacheAdapter = new Symfony\Component\Cache\Adapter\PhpFilesAdapter('', 0, $cachePath);
-// Or Redis: $cacheAdapter = new RedisAdapter(RedisAdapter::createConnection('redis://your-redis-host:6379'));
-// Or Memcached: $cacheAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection('memcached://your-memcached-host:11211'));
-
+$cacheAdapter = new TagAwareAdapter(new Symfony\Component\Cache\Adapter\PhpFilesAdapter('', 0, $cachePath));
+// 0Or Redis: $cacheAdapter = new RedisTagAwareAdapter(RedisAdapter::createConnection('redis://your-redis-host:6379'));
+// Or Memcached: $cacheAdapter = new TagAwareAdapter(new MemcachedAdapter(MemcachedAdapter::createConnection
+//('memcached://your-memcached-host:11211')));
 // Parse argument
 
 $bouncerKey = $argv[1];

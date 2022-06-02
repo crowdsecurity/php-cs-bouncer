@@ -18,10 +18,15 @@ describe(`Geolocation standalone run`, () => {
         await expect(page).toMatchText(/Country: FR/);
     });
 
-    it("Should get FR and FR as it will be saved in session", async () => {
+    it("Should call the database as we did not save result", async () => {
+        await runGeolocationTest(FRANCE_IP, false, true);
+        await expect(page).toMatchText(/Error message: The file/);
+    });
+
+    it("Should not call the GeoIp database as result is saved in cache", async () => {
         await runGeolocationTest(FRANCE_IP, true);
         await expect(page).toMatchText(/Country: FR/);
-        await runGeolocationTest(JAPAN_IP, true);
+        await runGeolocationTest(FRANCE_IP, true, true);
         await expect(page).toMatchText(/Country: FR/);
     });
 });

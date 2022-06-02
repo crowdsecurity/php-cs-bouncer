@@ -10,6 +10,7 @@ use CrowdSecBouncer\Bouncer;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 
 final class GeolocationTest extends TestCase
 {
@@ -40,7 +41,7 @@ final class GeolocationTest extends TestCase
         }
 
         return [
-            'save_in_session' => false,
+            'save_result' => false,
             'enabled' => true,
             'type' => 'maxmind',
             'maxmind' => [
@@ -63,8 +64,8 @@ final class GeolocationTest extends TestCase
     {
         $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
         // Init context
-        $cacheAdapter = new PhpFilesAdapter('php_array_adapter_backup_cache', 0,
-            TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR);
+        $cacheAdapter = new TagAwareAdapter(new PhpFilesAdapter('php_array_adapter_backup_cache', 0,
+            TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR));
         $this->watcherClient->setInitialState();
         $cacheAdapter->clear();
         // Init bouncer
@@ -140,8 +141,8 @@ final class GeolocationTest extends TestCase
     {
         $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
         // Init context
-        $cacheAdapter = new PhpFilesAdapter('php_array_adapter_backup_cache', 0,
-            TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR);
+        $cacheAdapter = new TagAwareAdapter(new PhpFilesAdapter('php_array_adapter_backup_cache', 0,
+            TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR));
         $this->watcherClient->setInitialState();
         $cacheAdapter->clear();
         // Init bouncer
@@ -169,7 +170,7 @@ final class GeolocationTest extends TestCase
         $this->assertEquals(
             'captcha',
             $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
-            'Should captcha a clean IP coming from a bad country (capctha)'
+            'Should captcha a clean IP coming from a bad country (captcha)'
         );
 
         // Add and remove decision

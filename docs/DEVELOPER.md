@@ -177,7 +177,7 @@ In most cases, you will test to bounce your current IP. As we are running on a d
 
 To find it, just run: 
 
-```
+```bash
 ddev find-ip
 ```
 
@@ -186,7 +186,7 @@ You will have to know also the IP of the `ddev-router` container as it acts as a
 
 To find this IP, just run:
 
-```
+```bash
 ddev find-ip ddev-router
 ```
 
@@ -436,7 +436,7 @@ use CrowdSecBouncer\Bouncer;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 
 // Init cache adapter
-$cacheAdapter = new PhpFilesAdapter('', 0, __DIR__.'/.cache');
+$cacheAdapter = new TagAwareAdapter(new PhpFilesAdapter('', 0, __DIR__.'/.cache'));
 
 ...
 ```
@@ -453,7 +453,7 @@ use Symfony\Component\Cache\Adapter\RedisAdapter;
 
 // Init cache adapter
 
-$cacheAdapter = new RedisAdapter(RedisAdapter::createConnection('redis://redis:6379'));
+$cacheAdapter = new RedisTagAwareAdapter(RedisAdapter::createConnection('redis://redis:6379'));
 
 ...
 ```
@@ -470,7 +470,8 @@ use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 
 // Init cache adapter
 
-$cacheAdapter = new MemcachedAdapter(MemcachedAdapter::createConnection('memcached://memcached:11211'));
+$cacheAdapter =
+new TagAwareAdapter(new MemcachedAdapter(MemcachedAdapter::createConnection('memcached://memcached:11211')));
 
 ...
 ```

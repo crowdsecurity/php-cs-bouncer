@@ -5,6 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.22.0] - 2022-06-02
+
+### Added
+- Add configurations for captcha and geolocation variables cache duration
+### Changed
+- *Breaking change*: Use cache instead of session to store captcha and geolocation variables
+- *Breaking change*: Use symfony cache tag adapter
+- Change `geolocation/save_in_session` setting into `geolocation/save_result`
+### Fixed
+- Fix deleted decision count during cache update
+
 ## [0.21.0] - 2022-04-15
 
 ### Changed
