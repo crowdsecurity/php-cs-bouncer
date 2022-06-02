@@ -24,6 +24,8 @@
       - [PHP Mess Detector](#php-mess-detector)
       - [PHPCS and PHPCBF](#phpcs-and-phpcbf)
     - [Generate CrowdSec tools and settings on start](#generate-crowdsec-tools-and-settings-on-start)
+    - [Redis debug](#redis-debug)
+    - [Memcached debug](#memcached-debug)
 - [Quick start guide](#quick-start-guide)
   - [Check IP script](#check-ip-script)
     - [Cap remediation level](#cap-remediation-level)
