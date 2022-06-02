@@ -349,6 +349,51 @@ cp .ddev/config_overrides/config.crowdsec.yaml .ddev/config.crowdsec.yaml
 ddev restart
 ```   
 
+#### Redis debug
+
+You should enter the `Redis` container:
+
+```bash
+ddev exec -s redis redis-cli
+```
+
+Then, you could play with the `redis-cli` command line tool:
+
+- Display keys and databases: `INFO keyspace`
+
+- Display stored keys:  `KEYS *`
+
+- Display key value:    `GET [key]`
+
+- Remove a key: `DEL [key]`
+
+#### Memcached debug
+
+@see https://lzone.de/cheat-sheet/memcached
+
+First, find the IP of the `Memcached` container:
+
+```bash
+ddev find-ip memcached
+```
+
+Then, you could use `telnet` to interact with memcached:
+
+```
+telnet <MEMCACHED_IP> 11211
+```
+
+- `stats`
+
+- `stats items`: The first number after `items` is the slab id. Request a cache dump for each slab id, with a limit for
+the max number of keys to dump:
+
+- `stats cachedump 2 100`
+
+- `get <mykey>` : Read a value
+
+- `delete <mykey>`: Delete a key
+
 
 ## Quick start guide
 
