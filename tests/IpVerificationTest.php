@@ -60,18 +60,30 @@ final class IpVerificationTest extends TestCase
         $bouncer = new Bouncer(null, $this->logger, $apiCache);
         $bouncer->configure($bouncerConfig);
 
-        if (in_array($origCacheName, ['PhpFilesAdapter', 'MemcachedAdapter'])) {
-            $this->assertEquals(
-                'Symfony\Component\Cache\Adapter\TagAwareAdapter',
-                get_class($cacheAdapter),
-                'Tested adapter should be correct'
-            );
-        } elseif ('RedisAdapter' == $origCacheName) {
-            $this->assertEquals(
-                'Symfony\Component\Cache\Adapter\RedisTagAwareAdapter',
-                get_class($cacheAdapter),
-                'Tested adapter should be correct'
-            );
+        switch ($origCacheName) {
+            case 'PhpFilesAdapter':
+                $this->assertEquals(
+                    'Symfony\Component\Cache\Adapter\TagAwareAdapter',
+                    get_class($cacheAdapter),
+                    'Tested adapter should be correct'
+                );
+                break;
+            case 'MemcachedAdapter':
+                $this->assertEquals(
+                    'CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter',
+                    get_class($cacheAdapter),
+                    'Tested adapter should be correct'
+                );
+                break;
+            case 'RedisAdapter':
+                $this->assertEquals(
+                    'Symfony\Component\Cache\Adapter\RedisTagAwareAdapter',
+                    get_class($cacheAdapter),
+                    'Tested adapter should be correct'
+                );
+                break;
+            default:
+                break;
         }
 
         // At the end of test, we should have exactly 3 "cache miss")
@@ -167,20 +179,31 @@ final class IpVerificationTest extends TestCase
         $bouncer = new Bouncer(null, $this->logger, $apiCache);
         $bouncer->configure($bouncerConfig);
 
-        if (in_array($origCacheName, ['PhpFilesAdapter', 'MemcachedAdapter'])) {
-            $this->assertEquals(
-                'Symfony\Component\Cache\Adapter\TagAwareAdapter',
-                get_class($cacheAdapter),
-                'Tested adapter should be correct'
-            );
-        } elseif ('RedisAdapter' == $origCacheName) {
-            $this->assertEquals(
-                'Symfony\Component\Cache\Adapter\RedisTagAwareAdapter',
-                get_class($cacheAdapter),
-                'Tested adapter should be correct'
-            );
+        switch ($origCacheName) {
+            case 'PhpFilesAdapter':
+                $this->assertEquals(
+                    'Symfony\Component\Cache\Adapter\TagAwareAdapter',
+                    get_class($cacheAdapter),
+                    'Tested adapter should be correct'
+                );
+                break;
+            case 'MemcachedAdapter':
+                $this->assertEquals(
+                    'CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter',
+                    get_class($cacheAdapter),
+                    'Tested adapter should be correct'
+                );
+                break;
+            case 'RedisAdapter':
+                $this->assertEquals(
+                    'Symfony\Component\Cache\Adapter\RedisTagAwareAdapter',
+                    get_class($cacheAdapter),
+                    'Tested adapter should be correct'
+                );
+                break;
+            default:
+                break;
         }
-
         // As we are in stream mode, no live call should be done to the API.
 
         /** @var MockObject $apiClientMock */
@@ -269,7 +292,7 @@ final class IpVerificationTest extends TestCase
         $this->assertEquals(
             'ban',
             $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP),
-            'The cache warm up should be stored across each instanciation'
+            'The cache warm up should be stored across each instantiation'
         );
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" + "IPV6 range banned" state']);

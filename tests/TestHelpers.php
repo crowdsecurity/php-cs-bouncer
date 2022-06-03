@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -56,7 +57,7 @@ class TestHelpers
 
         /** @var string */
         $memcachedCacheAdapterDsn = getenv('MEMCACHED_DSN');
-        $memcachedAdapter = new TagAwareAdapter(
+        $memcachedAdapter = new MemcachedTagAwareAdapter(
             new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedCacheAdapterDsn)));
 
         return [
