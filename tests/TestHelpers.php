@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
-use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Adapter\RedisTagAwareAdapter;

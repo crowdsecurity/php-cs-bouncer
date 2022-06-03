@@ -2,12 +2,12 @@
 
 namespace CrowdSecBouncer;
 
+use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use ErrorException;
 use Exception;
 use IPLib\Factory;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
-use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Adapter\RedisTagAwareAdapter;

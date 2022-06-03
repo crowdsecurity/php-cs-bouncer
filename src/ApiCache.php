@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
+use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use DateTime;
 use Exception;
 use IPLib\Address\AddressInterface;
@@ -17,7 +18,6 @@ use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\Cache\PruneableInterface;
-use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 
 /**
  * The cache mechanism to store every decision from LAPI/CAPI. Symfony Cache component powered.
