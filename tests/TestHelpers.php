@@ -6,6 +6,7 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
+use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
 use Symfony\Component\Cache\Adapter\RedisTagAwareAdapter;
@@ -56,7 +57,7 @@ class TestHelpers
 
         /** @var string */
         $memcachedCacheAdapterDsn = getenv('MEMCACHED_DSN');
-        $memcachedAdapter = new TagAwareAdapter(
+        $memcachedAdapter = new MemcachedTagAwareAdapter(
             new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedCacheAdapterDsn)));
 
         return [

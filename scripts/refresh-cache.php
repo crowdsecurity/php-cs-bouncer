@@ -14,7 +14,7 @@ $cachePath = __DIR__ . '/.cache';
 
 // Instantiate the "PhpFilesAdapter" cache adapter
 $cacheAdapter = new TagAwareAdapter(new Symfony\Component\Cache\Adapter\PhpFilesAdapter('', 0, $cachePath));
-// 0Or Redis: $cacheAdapter = new RedisTagAwareAdapter(RedisAdapter::createConnection('redis://your-redis-host:6379'));
+// Or Redis: $cacheAdapter = new RedisTagAwareAdapter(RedisAdapter::createConnection('redis://your-redis-host:6379'));
 // Or Memcached: $cacheAdapter = new TagAwareAdapter(new MemcachedAdapter(MemcachedAdapter::createConnection
 //('memcached://your-memcached-host:11211')));
 // Parse argument

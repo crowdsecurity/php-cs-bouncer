@@ -13,11 +13,11 @@ use IPLib\Range\Subnet;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
-use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\Cache\PruneableInterface;
+use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 
 /**
  * The cache mechanism to store every decision from LAPI/CAPI. Symfony Cache component powered.
@@ -826,7 +826,7 @@ class ApiCache
      */
     private function setCustomErrorHandler(): void
     {
-        if ($this->adapter instanceof MemcachedAdapter) {
+        if ($this->adapter instanceof MemcachedTagAwareAdapter) {
             set_error_handler(function ($errno, $errstr) {
                 throw new BouncerException("Error when connecting to Memcached. (Error level: $errno) Please fix the Memcached DSN or select another cache technology. Original message was: $errstr");
             });
@@ -838,7 +838,7 @@ class ApiCache
      * */
     private function unsetCustomErrorHandler(): void
     {
-        if ($this->adapter instanceof MemcachedAdapter) {
+        if ($this->adapter instanceof MemcachedTagAwareAdapter) {
             restore_error_handler();
         }
     }
