@@ -82,7 +82,11 @@ class Bouncer
             $finalConfig['api_key'],
             $cacheDurations,
             $finalConfig['fallback_remediation'],
-            $finalConfig['geolocation']
+            $finalConfig['geolocation'],
+            $finalConfig['cert_path'],
+            $finalConfig['key_path'],
+            $finalConfig['ca_path'],
+            $finalConfig['validate_cert']
         );
     }
 

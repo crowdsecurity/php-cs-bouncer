@@ -135,7 +135,11 @@ class ApiCache
         string $apiKey,
         array $cacheDurations,
         string $fallbackRemediation,
-        array $geolocConfig = []
+        array $geolocConfig = [],
+        string $cert = "",
+        string $key = "",
+        string $ca = "",
+        bool $validateCert = true
     ): void {
         $this->streamMode = $streamMode;
         $this->cacheExpirationForCleanIp =
@@ -163,7 +167,7 @@ class ApiCache
             'warmed_up' => ($this->warmedUp ? 'true' : 'false'),
             'geolocation' => $this->geolocConfig,
         ]);
-        $this->apiClient->configure($apiUrl, $timeout, $userAgent, $apiKey);
+        $this->apiClient->configure($apiUrl, $timeout, $userAgent, $apiKey, $cert, $key, $ca, $validateCert);
     }
 
     /**

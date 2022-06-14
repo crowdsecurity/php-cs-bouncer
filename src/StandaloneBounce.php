@@ -161,6 +161,10 @@ class StandaloneBounce extends AbstractBounce implements IBounce
             // LAPI connection
             'api_key' => $this->getStringSettings('api_key'),
             'api_url' => $this->getStringSettings('api_url'),
+            'cert_path' => $this->getStringSettings('cert_path'),
+            'key_path' => $this->getStringSettings('key_path'),
+            'ca_path' => $this->getStringSettings('ca_path'),
+            'validateCert' => $this->getBoolSettings('validate_cert'),
             'api_user_agent' => $apiUserAgent,
             'api_timeout' => $apiTimeout > 0 ? $apiTimeout : Constants::API_TIMEOUT,
             // Debug

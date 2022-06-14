@@ -35,13 +35,16 @@ class ApiClient
     /**
      * Configure this instance.
      */
-    public function configure(string $baseUri, int $timeout, string $userAgent, string $apiKey): void
+    public function configure(string $baseUri, int $timeout, string $userAgent, string $apiKey, string $cert = "", string $key = "", string $ca = "", bool $validateCert = true): void
     {
-        $this->restClient->configure($baseUri, [
+        $headers = [
             'User-Agent' => $userAgent,
-            'X-Api-Key' => $apiKey,
-            'Accept' => 'application/json',
-        ], $timeout);
+            'X-API-Key' => $apiKey,
+        ];
+        if ($apiKey !== "") {
+            $headers['X-Api-Key'] = $apiKey;
+        }
+        $this->restClient->configure($baseUri, $headers, $timeout, $cert, $key, $ca);
         $this->logger->debug('', [
             'type' => 'API_CLIENT_INIT',
             'user_agent' => $userAgent,

@@ -29,7 +29,11 @@ class Configuration implements ConfigurationInterface
         $rootNode
             ->children()
                 // LAPI Connection
-                ->scalarNode('api_key')->isRequired()->end()
+                ->scalarNode('api_key')->end()
+                ->scalarNode('cert_path')->defaultValue('')->end()
+                ->scalarNode('key_path')->defaultValue('')->end()
+                ->scalarNode('ca_path')->defaultValue('')->end()
+                ->booleanNode('validate_cert')->defaultValue(true)->end()
                 ->scalarNode('api_url')->defaultValue(Constants::DEFAULT_LAPI_URL)->end()
                 ->scalarNode('api_user_agent')->defaultValue(Constants::BASE_USER_AGENT)->end()
                 ->integerNode('api_timeout')->min(Constants::API_TIMEOUT)->defaultValue(Constants::API_TIMEOUT)->end()

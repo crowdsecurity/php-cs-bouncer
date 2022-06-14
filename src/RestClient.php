@@ -38,11 +38,15 @@ class RestClient
     /**
      * Configure this instance.
      */
-    public function configure(string $baseUri, array $headers, int $timeout): void
+    public function configure(string $baseUri, array $headers, int $timeout, string $cert, string $key, string $ca, bool $validateCert = true): void
     {
         $this->baseUri = $baseUri;
         $this->headerString = $this->convertHeadersToString($headers);
         $this->timeout = $timeout;
+        $this->cert = $cert;
+        $this->key = $key;
+        $this->ca = $ca;
+        $this->validateCert = $validateCert;
 
         $this->logger->debug('', [
             'type' => 'REST_CLIENT_INIT',
@@ -89,9 +93,27 @@ class RestClient
                 'ignore_errors' => true,
             ],
         ];
+
         if ($bodyParams) {
             $config['http']['content'] = json_encode($bodyParams);
         }
+
+        if ($this->cert && $this->key) {
+            $config['ssl'] = [
+                'verify_peer' => true,
+                'local_cert' => $this->cert,
+                'local_key' => $this->key,
+            ];
+        }
+
+        if ($this->ca) {
+            $config['ssl']['cafile'] = $this->ca;
+        }
+
+        if ($this->validateCert === false) {
+            $config['ssl']['verify_peer'] = false;
+        }
+
         $context = stream_context_create($config);
 
         $this->logger->debug('', [
