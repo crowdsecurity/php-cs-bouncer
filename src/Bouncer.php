@@ -2,8 +2,8 @@
 
 namespace CrowdSecBouncer;
 
-require_once __DIR__.'/templates/captcha.php';
-require_once __DIR__.'/templates/access-forbidden.php';
+require_once __DIR__ . '/templates/captcha.php';
+require_once __DIR__ . '/templates/access-forbidden.php';
 
 use CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder;
 use Gregwar\Captcha\PhraseBuilder;
@@ -35,10 +35,13 @@ class Bouncer
     private $apiCache;
 
     /** @var int */
-    private $maxRemediationLevelIndex = null;
+    private $maxRemediationLevelIndex = 0;
 
-    public function __construct(TagAwareAdapterInterface $cacheAdapter = null, LoggerInterface $logger = null, ApiCache $apiCache = null)
-    {
+    public function __construct(
+        TagAwareAdapterInterface $cacheAdapter = null,
+        LoggerInterface $logger = null,
+        ApiCache $apiCache = null
+    ) {
         if (!$logger) {
             $logger = new Logger('null');
             $logger->pushHandler(new NullHandler());
@@ -150,8 +153,12 @@ class Bouncer
      * Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.
      * The input $config should match the TemplateConfiguration input format.
      */
-    public static function getCaptchaHtmlTemplate(bool $error, string $captchaImageSrc, string $captchaResolutionFormUrl, array $config): string
-    {
+    public static function getCaptchaHtmlTemplate(
+        bool $error,
+        string $captchaImageSrc,
+        string $captchaResolutionFormUrl,
+        array $config
+    ): string {
         // Process template configuration.
         $configuration = new TemplateConfiguration();
         $processor = new Processor();
@@ -224,7 +231,8 @@ class Bouncer
     /**
      * Build a captcha couple.
      *
-     * @return array an array composed of two items, a "phrase" string representing the phrase and a "inlineImage" representing the image data
+     * @return array an array composed of two items, a "phrase" string representing the phrase and a "inlineImage"
+     *     representing the image data
      */
     public static function buildCaptchaCouple(): array
     {
@@ -241,8 +249,8 @@ class Bouncer
      * We are permissive with the user (0 is interpreted as "o" and 1 in interpreted as "l").
      *
      * @param string $expected The expected phrase
-     * @param string $try      The phrase to check (the user input)
-     * @param string $ip       The IP of the use (for logging purpose)
+     * @param string $try The phrase to check (the user input)
+     * @param string $ip The IP of the use (for logging purpose)
      *
      * @return bool If the captcha input was correct or not
      */
@@ -270,7 +278,7 @@ class Bouncer
         $this->apiCache->testConnection();
     }
 
-    public function getApiCache()
+    public function getApiCache(): ApiCache
     {
         return $this->apiCache;
     }

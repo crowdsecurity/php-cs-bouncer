@@ -1,8 +1,8 @@
 <?php
 
 declare(strict_types=1);
-require __DIR__.'/TestHelpers.php';
-require __DIR__.'/WatcherClient.php';
+
+namespace CrowdSecBouncer\Tests\Integration;
 
 use CrowdSecBouncer\ApiCache;
 use CrowdSecBouncer\ApiClient;
@@ -36,7 +36,6 @@ final class IpVerificationTest extends TestCase
      * @group integration
      * @covers \Bouncer
      * @dataProvider cacheAdapterProvider
-     * @group ignore_
      */
     public function testCanVerifyIpInLiveModeWithCacheSystem($cacheAdapter, $origCacheName): void
     {
@@ -153,7 +152,6 @@ final class IpVerificationTest extends TestCase
      * @group integration
      * @covers \Bouncer
      * @dataProvider cacheAdapterProvider
-     * @group ignore_
      */
     public function testCanVerifyIpInStreamModeWithCacheSystem($cacheAdapter, $origCacheName): void
     {

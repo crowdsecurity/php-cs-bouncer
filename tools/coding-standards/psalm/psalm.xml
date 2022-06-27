@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="5"
+    resolveFromConfigFile="true"
+    autoloader="../../../vendor/autoload.php"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+>
+    <projectFiles>
+        <directory name="../../../src" />
+        <ignoreFiles>
+            <directory name="../../../vendor" />
+            <directory name="../../../src/Fixes" />
+        </ignoreFiles>
+    </projectFiles>
+    <issueHandlers>
+        <InvalidThrow>
+            <errorLevel type="suppress">
+                <referencedClass name="Psr\Cache\InvalidArgumentException"/>
+                <referencedClass name="Psr\Cache\CacheException"/>
+            </errorLevel>
+        </InvalidThrow>
+        <UndefinedDocblockClass>
+            <errorLevel type="suppress">
+                <referencedClass name="Predis\ClientInterface"/>
+            </errorLevel>
+        </UndefinedDocblockClass>
+        <UndefinedInterfaceMethod>
+            <errorLevel type="info">
+                <referencedMethod name="Symfony\Component\Cache\Adapter\TagAwareAdapterInterface::delete"/>
+            </errorLevel>
+        </UndefinedInterfaceMethod>
+        <PossiblyUndefinedMethod>
+            <errorLevel type="suppress">
+                <referencedMethod name="Symfony\Component\Config\Definition\Builder\NodeDefinition::scalarNode"/>
+                <referencedMethod name="Symfony\Component\Config\Definition\Builder\NodeDefinition::children"/>
+            </errorLevel>
+        </PossiblyUndefinedMethod>
+    </issueHandlers>
+</psalm>

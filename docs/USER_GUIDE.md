@@ -42,7 +42,7 @@ Please note that first and foremost a CrowdSec agent must be installed on a serv
 
 ## Features
 
-- CrowdSec LAPI Support (CAPI not supported yet)
+- CrowdSec LAPI Support
   - Handle IP, IP ranges and Country scoped decisions
   - Clear, prune and refresh the LAPI cache
   - `Live mode` or `Stream mode`
@@ -73,7 +73,8 @@ On the other hand, all texts are also fully customizable. This will allow you, f
 
 ### Create your own bouncer
 
-You can use this library to develop your own PHP application bouncer.
+You can use this library to develop your own PHP application bouncer. Any custom bouncer should extend the 
+[`AbstractBounce`](../src/AbstractBounce.php) class.
 
 #### Quick start
 
@@ -234,8 +235,7 @@ Here is the list of available settings:
 #### The `Standalone` example
 
 This library includes the [`StandaloneBounce`](../src/StandaloneBounce.php) class. You can see that class as a good 
-example for creating your own bouncer. This class extends [`AbstractBounce`](../src/AbstractBounce.php) and 
-implements [IBounce](../src/IBounce.php). All bouncers should do the same. In order to add the bounce logic, you 
+example for creating your own bouncer. This class extends [`AbstractBounce`](../src/AbstractBounce.php). All bouncers should do the same. In order to add the bounce logic, you 
 should first instantiate your bouncer:
 
 ```php

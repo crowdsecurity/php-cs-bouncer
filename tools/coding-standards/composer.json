@@ -1,0 +1,22 @@
+{
+  "require": {
+    "php":">=7.4",
+    "friendsofphp/php-cs-fixer": "@stable",
+    "phpstan/phpstan": "@stable",
+    "phpmd/phpmd": "@stable",
+    "squizlabs/php_codesniffer": "@stable",
+    "vimeo/psalm": "@stable",
+    "phpunit/phpunit": "@stable",
+    "phpunit/php-code-coverage" : "@stable"
+  },
+  "autoload": {
+    "psr-4": {
+      "CrowdSec\\CapiClient\\": "../../src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "CrowdSec\\CapiClient\\Tests\\": "../../tests/"
+    }
+  }
+}

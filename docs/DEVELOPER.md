@@ -86,18 +86,18 @@ rm install_ddev.sh
 The final structure of the project will look like below.
 
 ```
-php-project-sources
+php-project-sources (choose the name you want for this folder)
 │   
 │ (your php project sources; could be a simple index.php file)    
 │
-└───.ddev
+└───.ddev (do not change this folder name)
 │   │   
 │   │ (Cloned sources of a PHP specific ddev repo)
 │   
-└───my-own-modules
-    │   
+└───my-own-modules (do not change this folder name)
     │
-    └───crowdsec-php-lib
+    │
+    └───crowdsec-php-lib (do not change this folder name)
        │   
        │ (Clone of this repo)
          
@@ -295,30 +295,42 @@ yarn global add cross-env
 
 #### Coding standards
 
+We set up some coding standards tools that you will find in the `tools/coding-standards` folder.
+In order to use these, you will need to work with a PHP version >= 7.4 and run first:
+
+```
+ddev composer update --working-dir=./my-own-modules/crowdsec-php-lib/tools/coding-standards
+```
+
 ##### PHPCS Fixer
 
 We are using the [PHP Coding Standards Fixer](https://cs.symfony.com/)
 
 With ddev, you can do the following:
 
-```bash
-ddev composer update --working-dir=./my-own-modules/crowdsec-php-lib/tools/php-cs-fixer
-```
-And then:
 
 ```bash
-ddev phpcsfixer my-own-modules/crowdsec-php-lib tools/php-cs-fixer
+ddev phpcsfixer my-own-modules/crowdsec-php-lib/tools/coding-standards/php-cs-fixer ../
 
 ```
 
-**N.B**: to use PHPCS Fixer, you will need to work with a PHP version >= 7.4.
+##### PHPSTAN
+
+To use the [PHPSTAN](https://github.com/phpstan/phpstan) tool, you can run:
+
+
+```bash
+ddev phpstan /var/www/html/my-own-modules/crowdsec-php-lib/tools/coding-standards phpstan/phpstan.neon /var/www/html/my-own-modules/crowdsec-php-lib/src
+
+```
+
 
 ##### PHP Mess Detector
 
 To use the [PHPMD](https://github.com/phpmd/phpmd) tool, you can run:
 
 ```bash
-ddev phpmd ./my-own-modules/crowdsec-php-lib tools/phpmd/rulesets.xml src
+ddev phpmd ./my-own-modules/crowdsec-php-lib/tools/coding-standards phpmd/rulesets.xml ../../src
 
 ```
 
@@ -327,14 +339,48 @@ ddev phpmd ./my-own-modules/crowdsec-php-lib tools/phpmd/rulesets.xml src
 To use [PHP Code Sniffer](https://github.com/squizlabs/PHP_CodeSniffer) tools, you can run:
 
 ```bash
-ddev phpcs ./my-own-modules/crowdsec-php-lib/vendor/bin/phpcs my-own-modules/crowdsec-php-lib/src
+ddev phpcs ./my-own-modules/crowdsec-php-lib/tools/coding-standards my-own-modules/crowdsec-php-lib/src PSR12
 ```
 
 and:
 
 ```bash
-ddev phpcbf ./my-own-modules/crowdsec-php-lib/vendor/bin/phpcs my-own-modules/crowdsec-php-lib/src
+ddev phpcbf  ./my-own-modules/crowdsec-php-lib/tools/coding-standards my-own-modules/crowdsec-php-lib/src PSR12
 ```
+
+
+##### PSALM
+
+To use [PSALM](https://github.com/vimeo/psalm) tools, you can run:
+
+```bash
+ddev psalm ./my-own-modules/crowdsec-php-lib/tools/coding-standards ./my-own-modules/crowdsec-php-lib/tools/coding-standards/psalm
+```
+
+##### PHP Unit Code coverage
+
+In order to generate a code coverage report, you have to:
+
+
+- Enable `xdebug`:
+```bash
+ddev xdebug
+```
+
+To generate a html report, you can run:
+```bash
+ddev php -dxdebug.mode=coverage ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml
+```
+
+You should find the main report file `dashboard.html` in `tools/coding-standards/phpunit/code-coverage` folder.
+
+
+If you want to generate a text report in the same folder:
+
+```bash
+ddev php -dxdebug.mode=coverage ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/code-coverage/report.txt
+```
+
 
 
 #### Generate CrowdSec tools and settings on start

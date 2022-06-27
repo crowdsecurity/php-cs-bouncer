@@ -12,7 +12,7 @@ super-linter.log
 tools/php-cs-fixer/composer.lock
 
 # App
-/var/
+var/
 .bouncer-key
 .cache
 

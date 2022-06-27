@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace CrowdSecBouncer\Tests\Integration;
+
 use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
@@ -72,11 +74,11 @@ class TestHelpers
         return [
             'country database' => [[
                 'database_type' => 'country',
-                'database_path' => __DIR__.'/GeoLite2-Country.mmdb',
+                'database_path' => __DIR__.'/../GeoLite2-Country.mmdb',
             ]],
             'city database' => [[
                 'database_type' => 'city',
-                'database_path' => __DIR__.'/GeoLite2-City.mmdb',
+                'database_path' => __DIR__.'/../GeoLite2-City.mmdb',
             ]],
         ];
     }

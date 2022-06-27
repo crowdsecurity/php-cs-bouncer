@@ -90,11 +90,11 @@ jobs:
 
       - name: Run PHP UNIT tests (IP verification)
         run: |
-          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
+          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/IpVerificationTest.php
 
       - name: Run PHP UNIT tests (Geolocation)
         run: |
-          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/GeolocationTest.php
+          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/GeolocationTest.php
 
       - name: Prepare Standalone Bouncer end-to-end tests
         run: |
