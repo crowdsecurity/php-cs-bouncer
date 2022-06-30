@@ -363,6 +363,15 @@ ddev psalm ./my-own-modules/crowdsec-php-lib/tools/coding-standards ./my-own-mod
 
 In order to generate a code coverage report, you have to:
 
+- Remove the old php unit version used to test on old php version:
+```bash
+ddev composer install --no-dev --working-dir ./my-own-modules/crowdsec-php-lib
+```
+
+- Update composer dependency in the coding-standards folder:
+```bash
+ddev composer update --working-dir=./my-own-modules/crowdsec-php-lib/tools/coding-standards
+```
 
 - Enable `xdebug`:
 ```bash
@@ -371,8 +380,8 @@ ddev xdebug
 
 To generate a html report, you can run:
 ```bash
-ddev exec "export BOUNCER_KEY=your-bouncer-key; export LAPI_URL=http://crowdsec:8080; export
-MEMCACHED_DSN=memcached://memcached:11211; export REDIS_DSN=redis://redis:6379; export XDEBUG_MODE=coverage;php ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml"
+ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080
+MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php  ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml
 
 ```
 
@@ -382,9 +391,8 @@ You should find the main report file `dashboard.html` in `tools/coding-standards
 If you want to generate a text report in the same folder:
 
 ```bash
-ddev exec "export BOUNCER_KEY=your-bouncer-key; export LAPI_URL=http://crowdsec:8080; export
-MEMCACHED_DSN=memcached://memcached:11211; export REDIS_DSN=redis://redis:6379; export XDEBUG_MODE=coverage;php .
-/my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/code-coverage/report.txt" 
+ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080
+MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php  ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/code-coverage/report.txt 
 ```
 
 

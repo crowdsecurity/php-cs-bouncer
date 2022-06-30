@@ -10,10 +10,7 @@
     "phpunit/php-code-coverage" : "@stable"
   },
   "autoload": {
-    "files": ["../../vendor/autoload.php"],
-    "psr-4": {
-      "CrowdSecBouncer\\": "../../src/"
-    }
+    "files": ["../../vendor/autoload.php"]
   },
   "autoload-dev": {
     "psr-4": {
