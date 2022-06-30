@@ -1,6 +1,6 @@
 # Composer
 vendor
-/composer.lock
+composer.lock
 
 # Systems
 .DS_Store

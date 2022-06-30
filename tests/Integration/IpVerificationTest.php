@@ -34,7 +34,6 @@ final class IpVerificationTest extends TestCase
 
     /**
      * @group integration
-     * @covers \Bouncer
      * @dataProvider cacheAdapterProvider
      */
     public function testCanVerifyIpInLiveModeWithCacheSystem($cacheAdapter, $origCacheName): void
@@ -150,7 +149,6 @@ final class IpVerificationTest extends TestCase
 
     /**
      * @group integration
-     * @covers \Bouncer
      * @dataProvider cacheAdapterProvider
      */
     public function testCanVerifyIpInStreamModeWithCacheSystem($cacheAdapter, $origCacheName): void

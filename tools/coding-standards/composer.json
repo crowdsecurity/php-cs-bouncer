@@ -6,17 +6,18 @@
     "phpmd/phpmd": "@stable",
     "squizlabs/php_codesniffer": "@stable",
     "vimeo/psalm": "@stable",
-    "phpunit/phpunit": "@stable",
+    "phpunit/phpunit": "^9.3",
     "phpunit/php-code-coverage" : "@stable"
   },
   "autoload": {
+    "files": ["../../vendor/autoload.php"],
     "psr-4": {
-      "CrowdSec\\CapiClient\\": "../../src/"
+      "CrowdSecBouncer\\": "../../src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "CrowdSec\\CapiClient\\Tests\\": "../../tests/"
+      "CrowdSecBouncer\\Tests\\": "../../tests/"
     }
   }
 }

@@ -69,14 +69,14 @@ For a quick start, follow the below steps.
 
 #### DDEV installation
 
-This project is fully compatible with DDEV 1.19.1, and it is recommended to use this specific version.
+This project is fully compatible with DDEV 1.19.3, and it is recommended to use this specific version.
 For the DDEV installation, please follow the [official instructions](https://ddev.readthedocs.io/en/stable/#installation).
 On a Linux distribution, you can run:
 ```
 sudo apt-get -qq update
 sudo apt-get -qq -y install libnss3-tools
 curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh
-bash install_ddev.sh v1.19.1
+bash install_ddev.sh v1.19.3
 rm install_ddev.sh
 ```
 
@@ -212,7 +212,9 @@ Finally, run
 
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
+ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 
+REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors 
+--exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/IpVerificationTest.php
 ```
 
 For geolocation Unit Test, you should first put 2 free MaxMind databases in the `tests` folder : `GeoLite2-City.mmdb`
@@ -222,7 +224,7 @@ and`GeoLite2-Country.mmdb`. You can download these databases by creating a maxmi
 Then, you can run:
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/GeolocationTest.php
+ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/GeolocationTest.php
 
 ```
 
@@ -369,7 +371,9 @@ ddev xdebug
 
 To generate a html report, you can run:
 ```bash
-ddev php -dxdebug.mode=coverage ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml
+ddev exec "export BOUNCER_KEY=your-bouncer-key; export LAPI_URL=http://crowdsec:8080; export
+MEMCACHED_DSN=memcached://memcached:11211; export REDIS_DSN=redis://redis:6379; export XDEBUG_MODE=coverage;php ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml"
+
 ```
 
 You should find the main report file `dashboard.html` in `tools/coding-standards/phpunit/code-coverage` folder.
@@ -378,7 +382,9 @@ You should find the main report file `dashboard.html` in `tools/coding-standards
 If you want to generate a text report in the same folder:
 
 ```bash
-ddev php -dxdebug.mode=coverage ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/code-coverage/report.txt
+ddev exec "export BOUNCER_KEY=your-bouncer-key; export LAPI_URL=http://crowdsec:8080; export
+MEMCACHED_DSN=memcached://memcached:11211; export REDIS_DSN=redis://redis:6379; export XDEBUG_MODE=coverage;php .
+/my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/code-coverage/report.txt" 
 ```
 
 

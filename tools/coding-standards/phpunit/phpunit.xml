@@ -15,12 +15,11 @@
          testdox="true">
     <testsuites>
         <testsuite name="default">
-            <directory>../../../tests/Unit</directory>
+            <directory>../../../tests/Integration</directory>
         </testsuite>
     </testsuites>
 
-    <coverage cacheDirectory=".phpunit.cache/code-coverage"
-              processUncoveredFiles="true">
+    <coverage cacheDirectory=".phpunit.cache/code-coverage" processUncoveredFiles="true">
         <include>
             <directory suffix=".php">../../../src</directory>
         </include>
