@@ -1,6 +1,6 @@
 # Composer
 vendor
-/composer.lock
+composer.lock
 
 # Systems
 .DS_Store
@@ -12,7 +12,7 @@ super-linter.log
 tools/php-cs-fixer/composer.lock
 
 # App
-/var/
+var/
 .bouncer-key
 .cache
 

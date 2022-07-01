@@ -1,8 +1,7 @@
 <?php
 
 declare(strict_types=1);
-require __DIR__.'/TestHelpers.php';
-require __DIR__.'/WatcherClient.php';
+namespace CrowdSecBouncer\Tests\Integration;
 
 use CrowdSecBouncer\ApiCache;
 use CrowdSecBouncer\ApiClient;

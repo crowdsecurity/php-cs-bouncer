@@ -25,7 +25,7 @@
 ## Requirements
 
 - PHP >= 7.2
-- required php extensions : `ext-curl`, `ext-gd`
+- required php extensions : `ext-json`, `ext-gd`
 
 ## Installation
 

@@ -69,14 +69,14 @@ For a quick start, follow the below steps.
 
 #### DDEV installation
 
-This project is fully compatible with DDEV 1.19.1, and it is recommended to use this specific version.
+This project is fully compatible with DDEV 1.19.3, and it is recommended to use this specific version.
 For the DDEV installation, please follow the [official instructions](https://ddev.readthedocs.io/en/stable/#installation).
 On a Linux distribution, you can run:
 ```
 sudo apt-get -qq update
 sudo apt-get -qq -y install libnss3-tools
 curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh
-bash install_ddev.sh v1.19.1
+bash install_ddev.sh v1.19.3
 rm install_ddev.sh
 ```
 
@@ -86,18 +86,18 @@ rm install_ddev.sh
 The final structure of the project will look like below.
 
 ```
-php-project-sources
+php-project-sources (choose the name you want for this folder)
 │   
 │ (your php project sources; could be a simple index.php file)    
 │
-└───.ddev
+└───.ddev (do not change this folder name)
 │   │   
 │   │ (Cloned sources of a PHP specific ddev repo)
 │   
-└───my-own-modules
-    │   
+└───my-own-modules (do not change this folder name)
     │
-    └───crowdsec-php-lib
+    │
+    └───crowdsec-php-lib (do not change this folder name)
        │   
        │ (Clone of this repo)
          
@@ -212,7 +212,7 @@ Finally, run
 
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/IpVerificationTest.php
+ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/IpVerificationTest.php
 ```
 
 For geolocation Unit Test, you should first put 2 free MaxMind databases in the `tests` folder : `GeoLite2-City.mmdb`
@@ -222,7 +222,7 @@ and`GeoLite2-Country.mmdb`. You can download these databases by creating a maxmi
 Then, you can run:
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/GeolocationTest.php
+ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/GeolocationTest.php
 
 ```
 
@@ -295,30 +295,42 @@ yarn global add cross-env
 
 #### Coding standards
 
+We set up some coding standards tools that you will find in the `tools/coding-standards` folder.
+In order to use these, you will need to work with a PHP version >= 7.4 and run first:
+
+```
+ddev composer update --working-dir=./my-own-modules/crowdsec-php-lib/tools/coding-standards
+```
+
 ##### PHPCS Fixer
 
 We are using the [PHP Coding Standards Fixer](https://cs.symfony.com/)
 
 With ddev, you can do the following:
 
-```bash
-ddev composer update --working-dir=./my-own-modules/crowdsec-php-lib/tools/php-cs-fixer
-```
-And then:
 
 ```bash
-ddev phpcsfixer my-own-modules/crowdsec-php-lib tools/php-cs-fixer
+ddev phpcsfixer my-own-modules/crowdsec-php-lib/tools/coding-standards/php-cs-fixer ../
 
 ```
 
-**N.B**: to use PHPCS Fixer, you will need to work with a PHP version >= 7.4.
+##### PHPSTAN
+
+To use the [PHPSTAN](https://github.com/phpstan/phpstan) tool, you can run:
+
+
+```bash
+ddev phpstan /var/www/html/my-own-modules/crowdsec-php-lib/tools/coding-standards phpstan/phpstan.neon /var/www/html/my-own-modules/crowdsec-php-lib/src
+
+```
+
 
 ##### PHP Mess Detector
 
 To use the [PHPMD](https://github.com/phpmd/phpmd) tool, you can run:
 
 ```bash
-ddev phpmd ./my-own-modules/crowdsec-php-lib tools/phpmd/rulesets.xml src
+ddev phpmd ./my-own-modules/crowdsec-php-lib/tools/coding-standards phpmd/rulesets.xml ../../src
 
 ```
 
@@ -327,14 +339,50 @@ ddev phpmd ./my-own-modules/crowdsec-php-lib tools/phpmd/rulesets.xml src
 To use [PHP Code Sniffer](https://github.com/squizlabs/PHP_CodeSniffer) tools, you can run:
 
 ```bash
-ddev phpcs ./my-own-modules/crowdsec-php-lib/vendor/bin/phpcs my-own-modules/crowdsec-php-lib/src
+ddev phpcs ./my-own-modules/crowdsec-php-lib/tools/coding-standards my-own-modules/crowdsec-php-lib/src PSR12
 ```
 
 and:
 
 ```bash
-ddev phpcbf ./my-own-modules/crowdsec-php-lib/vendor/bin/phpcs my-own-modules/crowdsec-php-lib/src
+ddev phpcbf  ./my-own-modules/crowdsec-php-lib/tools/coding-standards my-own-modules/crowdsec-php-lib/src PSR12
 ```
+
+
+##### PSALM
+
+To use [PSALM](https://github.com/vimeo/psalm) tools, you can run:
+
+```bash
+ddev psalm ./my-own-modules/crowdsec-php-lib/tools/coding-standards ./my-own-modules/crowdsec-php-lib/tools/coding-standards/psalm
+```
+
+##### PHP Unit Code coverage
+
+In order to generate a code coverage report, you have to:
+
+- Enable `xdebug`:
+```bash
+ddev xdebug
+```
+
+To generate a html report, you can run:
+```bash
+ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080
+MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php  ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml
+
+```
+
+You should find the main report file `dashboard.html` in `tools/coding-standards/phpunit/code-coverage` folder.
+
+
+If you want to generate a text report in the same folder:
+
+```bash
+ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080
+MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php  ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/code-coverage/report.txt 
+```
+
 
 
 #### Generate CrowdSec tools and settings on start

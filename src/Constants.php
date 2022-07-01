@@ -23,7 +23,7 @@ class Constants
     public const VERSION = 'v0.22.1';
 
     /** @var string The user agent used to send request to LAPI */
-    public const BASE_USER_AGENT = 'PHP CrowdSec Bouncer/'.self::VERSION;
+    public const BASE_USER_AGENT = 'PHP CrowdSec Bouncer/' . self::VERSION;
 
     /** @var int The timeout when calling LAPI */
     public const API_TIMEOUT = 1;

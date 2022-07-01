@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+namespace CrowdSecBouncer\Tests\Integration;
+
+
 use CrowdSecBouncer\Constants;
 use CrowdSecBouncer\RestClient;
 use Psr\Log\LoggerInterface;
@@ -53,7 +56,7 @@ class WatcherClient
     {
         $this->logger->info('', ['message' => 'Set initial state']);
         $this->deleteAllDecisions();
-        $now = new DateTime();
+        $now = new \DateTime();
         $this->addDecision($now, '12h', '+12 hours', TestHelpers::BAD_IP, 'captcha');
         $this->addDecision($now, '24h', self::HOURS24, TestHelpers::BAD_IP.'/'.TestHelpers::IP_RANGE, 'ban');
         $this->addDecision($now, '24h', '+24 hours', TestHelpers::JAPAN, 'captcha', Constants::SCOPE_COUNTRY);
@@ -64,7 +67,7 @@ class WatcherClient
     {
         $this->logger->info('', ['message' => 'Set "second" state']);
         $this->deleteAllDecisions();
-        $now = new DateTime();
+        $now = new \DateTime();
         $this->addDecision($now, '36h', '+36 hours', TestHelpers::NEWLY_BAD_IP, 'ban');
         $this->addDecision($now, '48h', '+48 hours', TestHelpers::NEWLY_BAD_IP.'/'.TestHelpers::IP_RANGE, 'captcha');
         $this->addDecision($now, '24h', self::HOURS24, TestHelpers::JAPAN, 'captcha', Constants::SCOPE_COUNTRY);
@@ -111,7 +114,8 @@ class WatcherClient
         return (Constants::SCOPE_IP === $scope && 2 === count(explode('/', $value))) ? Constants::SCOPE_RANGE : $scope;
     }
 
-    public function addDecision(DateTime $now, string $durationString, string $dateTimeDurationString, string $value, string $type, string $scope = Constants::SCOPE_IP)
+    public function addDecision(\DateTime $now, string $durationString, string $dateTimeDurationString, string
+    $value, string $type, string $scope = Constants::SCOPE_IP)
     {
         $stopAt = (clone $now)->modify($dateTimeDurationString)->format('Y-m-d\TH:i:s.000\Z');
         $startAt = $now->format('Y-m-d\TH:i:s.000\Z');
