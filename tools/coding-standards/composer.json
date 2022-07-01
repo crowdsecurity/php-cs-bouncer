@@ -7,14 +7,18 @@
     "squizlabs/php_codesniffer": "@stable",
     "vimeo/psalm": "@stable",
     "phpunit/phpunit": "^9.3",
-    "phpunit/php-code-coverage" : "@stable"
+    "phpunit/php-code-coverage" : "@stable",
+    "crowdsec/bouncer": "@dev"
   },
   "autoload": {
-    "files": ["../../vendor/autoload.php"]
-  },
-  "autoload-dev": {
     "psr-4": {
       "CrowdSecBouncer\\Tests\\": "../../tests/"
+    }
+  },
+  "repositories": {
+    "crowdsec-bouncer-lib": {
+      "type": "path",
+      "url": "../../"
     }
   }
 }

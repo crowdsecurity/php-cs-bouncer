@@ -212,9 +212,7 @@ Finally, run
 
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 
-REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors 
---exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/IpVerificationTest.php
+ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/IpVerificationTest.php
 ```
 
 For geolocation Unit Test, you should first put 2 free MaxMind databases in the `tests` folder : `GeoLite2-City.mmdb`
@@ -362,16 +360,6 @@ ddev psalm ./my-own-modules/crowdsec-php-lib/tools/coding-standards ./my-own-mod
 ##### PHP Unit Code coverage
 
 In order to generate a code coverage report, you have to:
-
-- Remove the old php unit version used to test on old php version:
-```bash
-ddev composer install --no-dev --working-dir ./my-own-modules/crowdsec-php-lib
-```
-
-- Update composer dependency in the coding-standards folder:
-```bash
-ddev composer update --working-dir=./my-own-modules/crowdsec-php-lib/tools/coding-standards
-```
 
 - Enable `xdebug`:
 ```bash
