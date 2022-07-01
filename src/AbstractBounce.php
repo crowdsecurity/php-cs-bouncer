@@ -44,7 +44,7 @@ abstract class AbstractBounce implements IBounce
 
     protected function getIntegerSettings(string $name): int
     {
-        return !empty($this->settings[$name]) ? (int) $this->settings[$name] : 0;
+        return !empty($this->settings[$name]) ? (int)$this->settings[$name] : 0;
     }
 
     protected function getBoolSettings(string $name): bool
@@ -54,12 +54,12 @@ abstract class AbstractBounce implements IBounce
 
     protected function getStringSettings(string $name): string
     {
-        return !empty($this->settings[$name]) ? (string) $this->settings[$name] : '';
+        return !empty($this->settings[$name]) ? (string)$this->settings[$name] : '';
     }
 
     protected function getArraySettings(string $name): array
     {
-        return !empty($this->settings[$name]) ? (array) $this->settings[$name] : [];
+        return !empty($this->settings[$name]) ? (array)$this->settings[$name] : [];
     }
 
     /**
@@ -112,34 +112,55 @@ abstract class AbstractBounce implements IBounce
     }
 
     /**
+     * Decide if we use forward (default behavior) or if it depends on test settings
+     *
+     * @param $settings
+     * @return bool
+     */
+    protected function shouldUseForward($settings)
+    {
+        return empty($settings['forced_test_never_use_forwarded']);
+    }
+
+    /**
      * @throws Exception|InvalidArgumentException
      */
     protected function bounceCurrentIp(): void
     {
-        $ip = $this->getRemoteIp();
-        // X-Forwarded-For override
-        $XForwardedForHeader = $this->getHttpRequestHeader('X-Forwarded-For');
-        if (null !== $XForwardedForHeader) {
-            $ipList = array_map('trim', array_values(array_filter(explode(',', $XForwardedForHeader))));
-            $forwardedIp = end($ipList);
-            if ($this->shouldTrustXforwardedFor($ip)) {
-                $ip = $forwardedIp;
-            } else {
-                $this->logger->warning('', [
-                'type' => 'NON_AUTHORIZED_X_FORWARDED_FOR_USAGE',
-                'original_ip' => $ip,
-                'x_forwarded_for_ip' => $forwardedIp,
-                ]);
-            }
-        }
-
         try {
             if (!$this->bouncer) {
                 throw new BouncerException('Bouncer must be instantiated to bounce an IP.');
             }
-            $ipToCheck = !empty($this->settings['forced_test_ip']) ? $this->settings['forced_test_ip'] : $ip;
-            $remediation = $this->bouncer->getRemediationForIp($ipToCheck);
-            $this->handleRemediation($remediation, $ipToCheck);
+            // Retrieve the current IP (even if it is a proxy IP) or a testing IP
+            $ip = !empty($this->settings['forced_test_ip']) ? $this->settings['forced_test_ip'] : $this->getRemoteIp();
+            if ($this->shouldUseForward($this->settings)) {
+                // Retrieve the forwarded IP (testing one or real)
+                if (!empty($this->settings['forced_test_forwarded_ip'])) {
+                    $forwardedIp = $this->settings['forced_test_forwarded_ip'];
+                } elseif ($XForwardedForHeader = $this->getHttpRequestHeader('X-Forwarded-For')) {
+                    $ipList = array_map('trim', array_values(array_filter(explode(',', $XForwardedForHeader))));
+                    $forwardedIp = end($ipList);
+                }
+                if (isset($forwardedIp)) {
+                    if ($this->shouldTrustXforwardedFor($ip)) {
+                        $this->logger->debug('', [
+                            'type' => 'AUTHORIZED_X_FORWARDED_FOR_USAGE',
+                            'original_ip' => $ip,
+                        ]);
+                        $ip = $forwardedIp;
+                    } else {
+                        $this->logger->warning('', [
+                            'type' => 'NON_AUTHORIZED_X_FORWARDED_FOR_USAGE',
+                            'original_ip' => $ip,
+                            'x_forwarded_for_ip' => $forwardedIp ?? 'undefined',
+                        ]);
+                    }
+                } else {
+                    $this->logger->debug('', ['type' => 'X_FORWARDED_FOR_NOT_FOUND']);
+                }
+            }
+            $remediation = $this->bouncer->getRemediationForIp($ip);
+            $this->handleRemediation($remediation, $ip);
         } catch (Exception $e) {
             $this->logger->warning('', [
                 'type' => 'UNKNOWN_EXCEPTION_WHILE_BOUNCING',
@@ -185,8 +206,8 @@ abstract class AbstractBounce implements IBounce
             $ip
         );
         $body = Bouncer::getCaptchaHtmlTemplate(
-            (bool) $captchaVariables['crowdsec_captcha_resolution_failed'],
-            (string) $captchaVariables['crowdsec_captcha_inline_image'],
+            (bool)$captchaVariables['crowdsec_captcha_resolution_failed'],
+            (string)$captchaVariables['crowdsec_captcha_inline_image'],
             '',
             $options
         );
@@ -225,7 +246,7 @@ abstract class AbstractBounce implements IBounce
         }
 
         // Handle image refresh.
-        if (null !== $this->getPostedVariable('refresh') && (int) $this->getPostedVariable('refresh')) {
+        if (null !== $this->getPostedVariable('refresh') && (int)$this->getPostedVariable('refresh')) {
             // Generate new captcha image for the user
             $captchaCouple = Bouncer::buildCaptchaCouple();
             $captchaVariables = [
@@ -248,7 +269,7 @@ abstract class AbstractBounce implements IBounce
             }
             if (
                 $this->bouncer->checkCaptcha(
-                    (string) $cachedCaptchaVariables['crowdsec_captcha_phrase_to_guess'],
+                    (string)$cachedCaptchaVariables['crowdsec_captcha_phrase_to_guess'],
                     $this->getPostedVariable('phrase'),
                     $ip
                 )
@@ -264,7 +285,7 @@ abstract class AbstractBounce implements IBounce
                     'crowdsec_captcha_inline_image',
                     'crowdsec_captcha_resolution_failed',
                     'crowdsec_captcha_resolution_redirect',
-                    ];
+                ];
                 $this->unsetIpVariables(Constants::CACHE_TAG_CAPTCHA, $unsetVariables, $ip);
                 $redirect = $cachedCaptchaVariables['crowdsec_captcha_resolution_redirect'] ?? '/';
                 header("Location: $redirect");
@@ -306,7 +327,7 @@ abstract class AbstractBounce implements IBounce
                 'crowdsec_captcha_resolution_failed' => false,
                 'crowdsec_captcha_resolution_redirect' => 'POST' === $this->getHttpMethod() &&
                                                           !empty($_SERVER['HTTP_REFERER'])
-                                                            ? $_SERVER['HTTP_REFERER'] : '/',
+                    ? $_SERVER['HTTP_REFERER'] : '/',
             ];
             $this->setIpVariables(Constants::CACHE_TAG_CAPTCHA, $captchaVariables, $ip);
         }

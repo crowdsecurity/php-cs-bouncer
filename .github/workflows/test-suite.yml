@@ -17,6 +17,11 @@ jobs:
     name: Test suite
     runs-on: ubuntu-latest
     if: ${{ !contains(github.event.head_commit.message, 'chore(') }}
+    env:
+      EXTENSION_PATH: "my-own-modules/crowdsec-php-lib"
+      JP_TEST_IP: "210.249.74.42"
+      IPV6_TEST_IP: "2001:0db8:0000:85a3:0000:0000:ac1f:8001"
+      IPV6_TEST_PROXY_IP: "2345:0425:2CA1:0000:0000:0567:5673:23b5"
 
     steps:
       - name: Clone DDEV files
@@ -70,18 +75,18 @@ jobs:
           path: my-own-modules/crowdsec-php-lib
 
       - name: Validate composer.json
-        run: ddev composer validate --strict --working-dir ./my-own-modules/crowdsec-php-lib
+        run: ddev composer validate --strict --working-dir ./${{env.EXTENSION_PATH}}
 
       - name: Install CrowdSec lib dependencies
         run: |
-          ddev composer update --working-dir ./my-own-modules/crowdsec-php-lib
+          ddev composer update --working-dir ./${{env.EXTENSION_PATH}}
 
       - name: Prepare PHP UNIT tests
         run: |
           ddev create-watcher PhpUnitTestMachine PhpUnitTestMachinePassword
-          ddev maxmind-download DEFAULT GeoLite2-City /var/www/html/my-own-modules/crowdsec-php-lib/tests
-          ddev maxmind-download DEFAULT GeoLite2-Country /var/www/html/my-own-modules/crowdsec-php-lib/tests
-          cd my-own-modules/crowdsec-php-lib/tests
+          ddev maxmind-download DEFAULT GeoLite2-City /var/www/html/${{env.EXTENSION_PATH}}/tests
+          ddev maxmind-download DEFAULT GeoLite2-Country /var/www/html/${{env.EXTENSION_PATH}}/tests
+          cd ${{env.EXTENSION_PATH}}/tests
           sha256sum -c GeoLite2-Country.tar.gz.sha256.txt
           sha256sum -c GeoLite2-City.tar.gz.sha256.txt
           tar -xf GeoLite2-Country.tar.gz
@@ -90,11 +95,11 @@ jobs:
 
       - name: Run PHP UNIT tests (IP verification)
         run: |
-          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/IpVerificationTest.php
+          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/IpVerificationTest.php
 
       - name: Run PHP UNIT tests (Geolocation)
         run: |
-          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/GeolocationTest.php
+          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} LAPI_URL=http://crowdsec:8080  /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/GeolocationTest.php
 
       - name: Prepare Standalone Bouncer end-to-end tests
         run: |
@@ -102,13 +107,15 @@ jobs:
           cd ${{ github.workspace }}/.ddev
           ddev nginx-config custom_files/crowdsec-prepend-nginx-site.conf
           cd ${{ github.workspace }}
-          cp .ddev/custom_files/crowdsec/cache-actions.php my-own-modules/crowdsec-php-lib/scripts/public/cache-actions.php
-          cp .ddev/custom_files/crowdsec/geolocation-test.php my-own-modules/crowdsec-php-lib/scripts/public/geolocation-test.php
-          cp .ddev/custom_files/crowdsec-lib-settings.php crowdsec-lib-settings.php
+          cp ${{env.EXTENSION_PATH}}/tests/end-to-end/php-scripts/cache-actions.php.dist ${{env.EXTENSION_PATH}}/scripts/public/cache-actions.php
+          cp ${{env.EXTENSION_PATH}}/tests/end-to-end/php-scripts/geolocation-test.php.dist ${{env.EXTENSION_PATH}}/scripts/public/geolocation-test.php
+          cp ${{env.EXTENSION_PATH}}/tests/end-to-end/settings/base.php.dist crowdsec-lib-settings.php
           sed -i -e 's/REPLACE_API_KEY/${{ env.BOUNCER_KEY }}/g' crowdsec-lib-settings.php
           sed -i -e 's/REPLACE_PROXY_IP/${{ env.PROXY_IP }}/g' crowdsec-lib-settings.php
-          mv crowdsec-lib-settings.php my-own-modules/crowdsec-php-lib/scripts/auto-prepend/settings.php
-          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
+          sed -i -e 's/REPLACE_FORCED_IP//g' crowdsec-lib-settings.php
+          sed -i -e 's/REPLACE_FORCED_FORWARDED_IP//g' crowdsec-lib-settings.php
+          mv crowdsec-lib-settings.php ${{env.EXTENSION_PATH}}/scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
           chmod +x test-init.sh
           ./test-init.sh
           chmod +x run-tests.sh
@@ -116,10 +123,10 @@ jobs:
       - name: Verify auto_prepend_file directive
         run: |
           cd ${{ github.workspace }}
-          cp .ddev/custom_files/phpinfo.php my-own-modules/crowdsec-php-lib/scripts/public/phpinfo.php
-          curl -v https://${{ env.PHP_VERSION_CODE }}.ddev.site/my-own-modules/crowdsec-php-lib/scripts/public/phpinfo.php
-          PREPENDVERIF=$(curl https://${{ env.PHP_VERSION_CODE }}.ddev.site/my-own-modules/crowdsec-php-lib/scripts/public/phpinfo.php | grep -o -E "auto_prepend_file=(.*)php(.*)" | sed 's/<\/tr>//g; s/<\/td>//g;' | tr '\n' '#')
-          if [[ $PREPENDVERIF == "auto_prepend_file=/var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/bounce.php#auto_prepend_file=/var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/bounce.php#" ]]
+          cp .ddev/custom_files/phpinfo.php ${{env.EXTENSION_PATH}}/scripts/public/phpinfo.php
+          curl -v https://${{ env.PHP_VERSION_CODE }}.ddev.site/${{env.EXTENSION_PATH}}/scripts/public/phpinfo.php
+          PREPENDVERIF=$(curl https://${{ env.PHP_VERSION_CODE }}.ddev.site/${{env.EXTENSION_PATH}}/scripts/public/phpinfo.php | grep -o -E "auto_prepend_file=(.*)php(.*)" | sed 's/<\/tr>//g; s/<\/td>//g;' | tr '\n' '#')
+          if [[ $PREPENDVERIF == "auto_prepend_file=/var/www/html/${{env.EXTENSION_PATH}}/scripts/auto-prepend/bounce.php#auto_prepend_file=/var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/bounce.php#" ]]
           then
               echo "AUTO PREPEND FILE OK"
           else
@@ -130,27 +137,42 @@ jobs:
             
       - name: Run Standalone Bouncer end-to-end test (live mode without geolocation)
         run: |
-          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
+          cat scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/1-live-mode.js"
 
       - name: Run Standalone Bouncer end-to-end test (live mode with geolocation)
         run: |
-          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
           sed -i  's/\x27enabled\x27 => false/\x27enabled\x27 => true/g' scripts/auto-prepend/settings.php
-          sed -i  's/\x27forced_test_ip\x27 => \x27\x27/\x27forced_test_ip\x27 => \x27210.249.74.42\x27/g' scripts/auto-prepend/settings.php
-          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
+          sed -i  's/\x27forced_test_forwarded_ip\x27 => \x27\x27/\x27forced_test_forwarded_ip\x27 => \x27${{env.JP_TEST_IP}}\x27/g' scripts/auto-prepend/settings.php
+          cat scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/2-live-mode-with-geolocation.js"
 
       - name: Run Standalone Bouncer end-to-end test (stream mode without geolocation)
         run: |
-          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
           sed -i  's/\x27enabled\x27 => true/\x27enabled\x27 => false/g' scripts/auto-prepend/settings.php
-          sed -i  's/\x27forced_test_ip\x27 => \x27210.249.74.42\x27/\x27forced_test_ip\x27 => \x27\x27/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27forced_test_forwarded_ip\x27 => \x27${{env.JP_TEST_IP}}\x27/\x27forced_test_forwarded_ip\x27 => \x27\x27/g' scripts/auto-prepend/settings.php
           sed -i  's/\x27stream_mode\x27 => false/\x27stream_mode\x27 => true/g' scripts/auto-prepend/settings.php
-          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
+          cat scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/3-stream-mode.js"
 
       - name: Run Standalone Bouncer end-to-end test (standalone geolocation)
         run: |
-          cd ${{ github.workspace }}/my-own-modules/crowdsec-php-lib/tests/end-to-end/__scripts__
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/4-geolocation.js"
+
+      - name: Run Standalone Bouncer end-to-end test (live mode with IPv6)
+        run: |
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
+          sed -i  's/\x27forced_test_forwarded_ip\x27 => \x27\x27/\x27forced_test_forwarded_ip\x27 => \x27${{env.IPV6_TEST_IP}}\x27/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27forced_test_ip\x27 => \x27\x27/\x27forced_test_ip\x27 => \x27${{env.IPV6_TEST_PROXY_IP}}\x27/g' scripts/auto-prepend/settings.php
+          sed -i -e 's/${{ env.PROXY_IP }}/${{env.IPV6_TEST_PROXY_IP}}/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27stream_mode\x27 => true/\x27stream_mode\x27 => false/g' scripts/auto-prepend/settings.php
+          cat scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
+          ./run-tests.sh ci "./__tests__/1-live-mode.js"

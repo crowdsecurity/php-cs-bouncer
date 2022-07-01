@@ -124,20 +124,25 @@ module.exports.addDecision = async (
     await auth();
     let finalScope = "Country";
     if (["Ip", "Range"].includes(scope)) {
-        let startIp;
-        let endIp;
-        if (value.split("/").length === 2) {
-            [startIp, endIp] = cidrToRange(value);
-        } else {
-            startIp = value;
-            endIp = value;
+        // IPv6
+        if(value.includes(":")){
+            // @TODO Handle IP range for Ipv6
+            finalScope = "Ip";
+        } else{
+            let startIp;
+            let endIp;
+            if (value.split("/").length === 2) {
+                [startIp, endIp] = cidrToRange(value);
+            } else {
+                startIp = value;
+                endIp = value;
+            }
+            const startLongIp = ip2long(startIp);
+            const endLongIp = ip2long(endIp);
+            const isRange = startLongIp !== endLongIp;
+            finalScope = isRange ? "Range" : "Ip";
         }
-        const startLongIp = ip2long(startIp);
-        const endLongIp = ip2long(endIp);
-        const isRange = startLongIp !== endLongIp;
-        finalScope = isRange ? "Range" : "Ip";
     }
-
     const scenario = `add ${remediation} with scope/value ${scope}/${value} for ${durationInSeconds} seconds for e2e tests`;
 
     const startAt = new Date();

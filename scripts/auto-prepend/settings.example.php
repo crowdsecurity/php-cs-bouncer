@@ -35,9 +35,21 @@ $crowdSecStandaloneBouncerConfig = [
 
     /** Only for test or debug purpose. Default to empty.
      *
-     * If not empty, it will be used for all remediation and geolocation processes.
+     * If not empty, it will be used instead of the real remote ip.
      */
     'forced_test_ip' => '',
+
+    /** Only for test or debug purpose. Default to empty.
+     *
+     * If not empty, it will be used instead of the real forwarded ip.
+     */
+    'forced_test_forwarded_ip' => '',
+
+    /** Only for test or debug purpose. Default to false.
+     *
+     * Set to true if you never want to use the x-forwarded-for mechanism.
+     */
+    'forced_test_never_use_forwarded' => false,
 
     /** Select from 'bouncing_disabled', 'normal_bouncing' or 'flex_bouncing'.
      *

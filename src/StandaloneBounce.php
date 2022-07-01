@@ -169,6 +169,8 @@ class StandaloneBounce extends AbstractBounce
             'debug_mode' => $this->getBoolSettings('debug_mode'),
             'log_directory_path' => $this->getStringSettings('log_directory_path'),
             'forced_test_ip' => $this->getStringSettings('forced_test_ip'),
+            'forced_test_forwarded_ip' => $this->getStringSettings('forced_test_forwarded_ip'),
+            'forced_test_never_use_forwarded' => $this->getBoolSettings('forced_test_never_use_forwarded'),
             'display_errors' => $this->getBoolSettings('display_errors'),
             // Bouncer
             'bouncing_level' => $bouncingLevel,

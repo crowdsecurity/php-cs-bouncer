@@ -3,8 +3,8 @@ const { PHP_URL } = process.env;
 const LAPI_URL_FROM_PHP = "http://crowdsec:8080";
 const PUBLIC_URL =
     "/my-own-modules/crowdsec-php-lib/scripts/public/protected-page.php";
-const FORCED_TEST_IP =
-    process.env.FORCED_TEST_IP !== "" ? process.env.FORCED_TEST_IP : null;
+const FORCED_TEST_FORWARDED_IP =
+    process.env.FORCED_TEST_FORWARDED_IP !== "" ? process.env.FORCED_TEST_FORWARDED_IP : null;
 const GEOLOC_ENABLED = process.env.GEOLOC_ENABLED === "true";
 const STREAM_MODE = process.env.STREAM_MODE === "true";
 const GEOLOC_BAD_COUNTRY = "JP";
@@ -24,7 +24,7 @@ module.exports = {
     BOUNCER_KEY,
     CURRENT_IP,
     DEBUG,
-    FORCED_TEST_IP,
+    FORCED_TEST_FORWARDED_IP,
     LAPI_URL_FROM_PHP,
     LAPI_URL_FROM_PLAYWRIGHT,
     PROXY_IP,
