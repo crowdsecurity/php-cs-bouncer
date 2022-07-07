@@ -35,6 +35,7 @@ class Configuration implements ConfigurationInterface
                 ->integerNode('api_timeout')->min(Constants::API_TIMEOUT)->defaultValue(Constants::API_TIMEOUT)->end()
                 // Debug
                 ->scalarNode('forced_test_ip')->defaultValue('')->end()
+                ->scalarNode('forced_test_forwarded_ip')->defaultValue('')->end()
                 ->booleanNode('debug_mode')->defaultValue(false)->end()
                 ->scalarNode('log_directory_path')->end()
                 ->booleanNode('display_errors')->defaultValue(false)->end()

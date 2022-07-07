@@ -134,7 +134,12 @@ Here is the list of available settings:
 
 - `display_errors`: true to stop the process and display errors on browser if any.
 
-- `forced_test_ip`: Only for test or debug purpose. Default to empty. If not empty, it will be used for all remediation and geolocation processes.
+- `forced_test_ip`: Only for test or debug purpose. Default to empty. If not empty, it will be used instead of the 
+  real remote ip.
+
+- `forced_test_forwarded_ip`: Only for test or debug purpose. Default to empty. If not empty, it will be used 
+  instead of the real forwarded ip. If set to `no_forward`, the x-forwarded-for mechanism will not be used at all.
+
 ##### Bouncer behavior
 
 - `bouncing_level`:  Select from `bouncing_disabled`, `normal_bouncing` or `flex_bouncing`. Choose if you want to apply CrowdSec directives (Normal bouncing) or be more permissive (Flex bouncing). With the `Flex mode`, it is impossible to accidentally block access to your site to people who don’t deserve it. This mode makes it possible to never ban an IP but only to offer a Captcha, in the worst-case scenario.
