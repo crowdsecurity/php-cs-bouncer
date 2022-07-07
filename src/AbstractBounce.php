@@ -66,7 +66,9 @@ abstract class AbstractBounce implements IBounce
     /**
      * Run a bounce.
      *
-     * @throws Exception|InvalidArgumentException|CacheException
+     * @return void
+     * @throws CacheException
+     * @throws InvalidArgumentException
      */
     public function run(): void
     {
