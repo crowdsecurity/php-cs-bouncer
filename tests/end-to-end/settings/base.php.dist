@@ -15,7 +15,6 @@ $crowdSecStandaloneBouncerConfig = [
     'fs_cache_path' => __DIR__.'/.cache',
     'forced_test_ip' => 'REPLACE_FORCED_IP',
     'forced_test_forwarded_ip' => 'REPLACE_FORCED_FORWARDED_IP',
-    'forced_test_never_use_forwarded' => false,
     // Bouncer
     'bouncing_level' => Constants::BOUNCING_LEVEL_NORMAL,
     'stream_mode' => false,

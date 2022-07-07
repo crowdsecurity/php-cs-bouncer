@@ -12,6 +12,7 @@ use IPLib\Factory;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Logger;
+use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
@@ -65,7 +66,7 @@ abstract class AbstractBounce implements IBounce
     /**
      * Run a bounce.
      *
-     * @throws Exception|InvalidArgumentException
+     * @throws Exception|InvalidArgumentException|CacheException
      */
     public function run(): void
     {
@@ -112,18 +113,55 @@ abstract class AbstractBounce implements IBounce
     }
 
     /**
-     * Decide if we use forward (default behavior) or if it depends on test settings
+     * Handle X-Forwarded-For HTTP header to retrieve the IP to bounce
      *
-     * @param $settings
-     * @return bool
+     * @param $ip
+     * @return false|mixed
      */
-    protected function shouldUseForward($settings)
+    protected function handleForwardedFor($ip)
     {
-        return empty($settings['forced_test_never_use_forwarded']);
+        if (empty($this->settings['forced_test_forwarded_ip'])) {
+            $XForwardedForHeader = $this->getHttpRequestHeader('X-Forwarded-For');
+            if (null !== $XForwardedForHeader) {
+                $ipList = array_map('trim', array_values(array_filter(explode(',', $XForwardedForHeader))));
+                $forwardedIp = end($ipList);
+                if ($this->shouldTrustXforwardedFor($ip)) {
+                    $ip = $forwardedIp;
+                } else {
+                    $this->logger->warning('', [
+                        'type' => 'NON_AUTHORIZED_X_FORWARDED_FOR_USAGE',
+                        'original_ip' => $ip,
+                        'x_forwarded_for_ip' => $forwardedIp,
+                    ]);
+                }
+            }
+        } else if ($this->settings['forced_test_forwarded_ip'] === Constants::X_FORWARDED_DISABLED) {
+            $this->logger->debug('', [
+                'type' => 'DISABLED_X_FORWARDED_FOR_USAGE',
+                'original_ip' => $ip,
+            ]);
+        } else {
+            $forwardedIp = $this->settings['forced_test_forwarded_ip'];
+            if ($this->shouldTrustXforwardedFor($ip)) {
+                $ip = $forwardedIp;
+            } else {
+                $this->logger->warning('', [
+                    'type' => 'NON_AUTHORIZED_TEST_X_FORWARDED_FOR_USAGE',
+                    'original_ip' => $ip,
+                    'x_forwarded_for_ip_for_test' => $forwardedIp,
+                ]);
+            }
+        }
+
+        return $ip;
     }
 
     /**
-     * @throws Exception|InvalidArgumentException
+     * Bounce process
+     *
+     * @return void
+     * @throws InvalidArgumentException|CacheException
+     * @throws Exception
      */
     protected function bounceCurrentIp(): void
     {
@@ -133,38 +171,13 @@ abstract class AbstractBounce implements IBounce
             }
             // Retrieve the current IP (even if it is a proxy IP) or a testing IP
             $ip = !empty($this->settings['forced_test_ip']) ? $this->settings['forced_test_ip'] : $this->getRemoteIp();
-            if ($this->shouldUseForward($this->settings)) {
-                // Retrieve the forwarded IP (testing one or real)
-                if (!empty($this->settings['forced_test_forwarded_ip'])) {
-                    $forwardedIp = $this->settings['forced_test_forwarded_ip'];
-                } elseif ($XForwardedForHeader = $this->getHttpRequestHeader('X-Forwarded-For')) {
-                    $ipList = array_map('trim', array_values(array_filter(explode(',', $XForwardedForHeader))));
-                    $forwardedIp = end($ipList);
-                }
-                if (isset($forwardedIp)) {
-                    if ($this->shouldTrustXforwardedFor($ip)) {
-                        $this->logger->debug('', [
-                            'type' => 'AUTHORIZED_X_FORWARDED_FOR_USAGE',
-                            'original_ip' => $ip,
-                        ]);
-                        $ip = $forwardedIp;
-                    } else {
-                        $this->logger->warning('', [
-                            'type' => 'NON_AUTHORIZED_X_FORWARDED_FOR_USAGE',
-                            'original_ip' => $ip,
-                            'x_forwarded_for_ip' => $forwardedIp ?? 'undefined',
-                        ]);
-                    }
-                } else {
-                    $this->logger->debug('', ['type' => 'X_FORWARDED_FOR_NOT_FOUND']);
-                }
-            }
+            $ip = $this->handleForwardedFor($ip);
             $remediation = $this->bouncer->getRemediationForIp($ip);
             $this->handleRemediation($remediation, $ip);
         } catch (Exception $e) {
             $this->logger->warning('', [
                 'type' => 'UNKNOWN_EXCEPTION_WHILE_BOUNCING',
-                'ip' => $ip,
+                'ip' => $ip ?? '',
                 'message' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'file' => $e->getFile(),
@@ -197,6 +210,9 @@ abstract class AbstractBounce implements IBounce
         return false;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     protected function displayCaptchaWall(string $ip): void
     {
         $options = $this->getCaptchaWallOptions();
@@ -222,7 +238,10 @@ abstract class AbstractBounce implements IBounce
     }
 
     /**
+     * @param string $ip
      * @return void
+     * @throws InvalidArgumentException
+     * @throws CacheException
      */
     protected function handleCaptchaResolutionForm(string $ip)
     {
@@ -305,6 +324,8 @@ abstract class AbstractBounce implements IBounce
      * @param string $ip
      *
      * @return void
+     * @throws InvalidArgumentException
+     * @throws CacheException
      */
     protected function handleCaptchaRemediation(string $ip)
     {
@@ -344,6 +365,8 @@ abstract class AbstractBounce implements IBounce
      * @param string $remediation
      * @param string $ip
      * @return void
+     * @throws InvalidArgumentException
+     * @throws CacheException
      */
     protected function handleRemediation(string $remediation, string $ip)
     {
@@ -368,7 +391,7 @@ abstract class AbstractBounce implements IBounce
      * @return array
      * @throws InvalidArgumentException
      */
-    public function getIpVariables(string $cacheTag, array $names, string $ip)
+    public function getIpVariables(string $cacheTag, array $names, string $ip): array
     {
         if (!$this->bouncer) {
             throw new BouncerException('Bouncer must be instantiated to get cache data.');
@@ -386,7 +409,7 @@ abstract class AbstractBounce implements IBounce
      * @param string $ip
      * @return void
      * @throws InvalidArgumentException
-     * @throws \Psr\Cache\CacheException
+     * @throws CacheException
      */
     public function setIpVariables(string $cacheTag, array $pairs, string $ip): void
     {
@@ -405,7 +428,7 @@ abstract class AbstractBounce implements IBounce
      * @param string $ip
      * @return void
      * @throws InvalidArgumentException
-     * @throws \Psr\Cache\CacheException
+     * @throws CacheException
      */
     public function unsetIpVariables(string $cacheTag, array $names, string $ip): void
     {

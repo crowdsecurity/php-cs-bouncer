@@ -96,4 +96,7 @@ class Constants
 
     /** @var string The Maxmind "City" database type */
     public const MAXMIND_CITY = 'city';
+
+    /** @var string The "disabled" bouncing level */
+    public const X_FORWARDED_DISABLED = 'no_forward';
 }
