@@ -398,7 +398,9 @@ class ApiCache
     /**
      * Cache key convention.
      *
-     * @throws Exception
+     * @param string $scope
+     * @param string $value
+     * @return string
      */
     private function getCacheKey(string $scope, string $value): string
     {
@@ -638,7 +640,7 @@ class ApiCache
      *
      * @return array "count": number of decisions added, "errors": decisions not added
      *
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|\Psr\Cache\CacheException
      */
     public function warmUp(): array
     {
@@ -968,7 +970,7 @@ class ApiCache
      * @return array
      * @throws InvalidArgumentException
      */
-    public function getIpVariables($cacheTag, $names, $ip): array
+    public function getIpVariables(string $cacheTag, array $names, string $ip): array
     {
         $cachedVariables = $this->getIpCachedVariables($cacheTag, $ip);
         $variables = [];
@@ -998,13 +1000,7 @@ class ApiCache
         foreach ($pairs as $name => $value) {
             $cachedVariables[$name] = $value;
         }
-        $duration = (Constants::CACHE_TAG_CAPTCHA === $cacheTag)
-            ? $this->cacheExpirationForCaptcha : $this->cacheExpirationForGeo;
-        $item = $this->adapter->getItem(base64_encode($cacheKey));
-        $item->set($cachedVariables);
-        $item->expiresAt(new DateTime("+$duration seconds"));
-        $item->tag($cacheTag);
-        $this->adapter->save($item);
+        $this->saveCacheItem($cacheTag, $cacheKey, $cachedVariables);
     }
 
     /**
@@ -1024,6 +1020,19 @@ class ApiCache
         foreach ($pairs as $name => $value) {
             unset($cachedVariables[$name]);
         }
+        $this->saveCacheItem($cacheTag, $cacheKey, $cachedVariables);
+    }
+
+    /**
+     * @param string $cacheTag
+     * @param string $cacheKey
+     * @param $cachedVariables
+     * @return void
+     * @throws InvalidArgumentException
+     * @throws \Psr\Cache\CacheException
+     */
+    protected function saveCacheItem(string $cacheTag, string $cacheKey, $cachedVariables): void
+    {
         $duration = (Constants::CACHE_TAG_CAPTCHA === $cacheTag)
             ? $this->cacheExpirationForCaptcha : $this->cacheExpirationForGeo;
         $item = $this->adapter->getItem(base64_encode($cacheKey));

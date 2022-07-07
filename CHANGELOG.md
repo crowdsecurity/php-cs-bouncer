@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.23.0] - 2022-07-07
+
+### Added
+- Add test configuration to mock IPs and proxy behavior
+
 ## [0.22.1] - 2022-06-03
 
 ### Fixed
