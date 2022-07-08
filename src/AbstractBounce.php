@@ -123,20 +123,12 @@ abstract class AbstractBounce implements IBounce
      */
     protected function handleForwardedFor(string $ip, array $configs): string
     {
+        $forwardedIp = null;
         if (empty($configs['forced_test_forwarded_ip'])) {
             $XForwardedForHeader = $this->getHttpRequestHeader('X-Forwarded-For');
             if (null !== $XForwardedForHeader) {
                 $ipList = array_map('trim', array_values(array_filter(explode(',', $XForwardedForHeader))));
                 $forwardedIp = end($ipList);
-                if (is_string($forwardedIp) && $this->shouldTrustXforwardedFor($ip)) {
-                    $ip = $forwardedIp;
-                } else {
-                    $this->logger->warning('', [
-                        'type' => 'NON_AUTHORIZED_X_FORWARDED_FOR_USAGE',
-                        'original_ip' => $ip,
-                        'x_forwarded_for_ip' => is_string($forwardedIp) ? $forwardedIp : 'type not as expected',
-                    ]);
-                }
             }
         } else if ($configs['forced_test_forwarded_ip'] === Constants::X_FORWARDED_DISABLED) {
             $this->logger->debug('', [
@@ -144,18 +136,18 @@ abstract class AbstractBounce implements IBounce
                 'original_ip' => $ip,
             ]);
         } else {
-            $forwardedIp = $configs['forced_test_forwarded_ip'];
-            if ($this->shouldTrustXforwardedFor($ip)) {
-                $ip = (string) $forwardedIp;
-            } else {
-                $this->logger->warning('', [
-                    'type' => 'NON_AUTHORIZED_TEST_X_FORWARDED_FOR_USAGE',
-                    'original_ip' => $ip,
-                    'x_forwarded_for_ip_for_test' => $forwardedIp,
-                ]);
-            }
+            $forwardedIp = (string) $configs['forced_test_forwarded_ip'];
         }
 
+        if (is_string($forwardedIp) && $this->shouldTrustXforwardedFor($ip)) {
+            $ip = $forwardedIp;
+        } else {
+            $this->logger->warning('', [
+                'type' => 'NON_AUTHORIZED_X_FORWARDED_FOR_USAGE',
+                'original_ip' => $ip,
+                'x_forwarded_for_ip' => is_string($forwardedIp) ? $forwardedIp : 'type not as expected',
+            ]);
+        }
         return $ip;
     }
 
