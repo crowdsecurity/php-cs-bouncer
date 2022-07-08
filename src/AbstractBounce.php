@@ -117,35 +117,36 @@ abstract class AbstractBounce implements IBounce
     /**
      * Handle X-Forwarded-For HTTP header to retrieve the IP to bounce
      *
-     * @param $ip
-     * @return false|mixed
+     * @param string $ip
+     * @param array $configs
+     * @return string
      */
-    protected function handleForwardedFor($ip)
+    protected function handleForwardedFor(string $ip, array $configs): string
     {
-        if (empty($this->settings['forced_test_forwarded_ip'])) {
+        if (empty($configs['forced_test_forwarded_ip'])) {
             $XForwardedForHeader = $this->getHttpRequestHeader('X-Forwarded-For');
             if (null !== $XForwardedForHeader) {
                 $ipList = array_map('trim', array_values(array_filter(explode(',', $XForwardedForHeader))));
                 $forwardedIp = end($ipList);
-                if ($this->shouldTrustXforwardedFor($ip)) {
+                if (is_string($forwardedIp) && $this->shouldTrustXforwardedFor($ip)) {
                     $ip = $forwardedIp;
                 } else {
                     $this->logger->warning('', [
                         'type' => 'NON_AUTHORIZED_X_FORWARDED_FOR_USAGE',
                         'original_ip' => $ip,
-                        'x_forwarded_for_ip' => $forwardedIp,
+                        'x_forwarded_for_ip' => is_string($forwardedIp) ? $forwardedIp : 'type not as expected',
                     ]);
                 }
             }
-        } else if ($this->settings['forced_test_forwarded_ip'] === Constants::X_FORWARDED_DISABLED) {
+        } else if ($configs['forced_test_forwarded_ip'] === Constants::X_FORWARDED_DISABLED) {
             $this->logger->debug('', [
                 'type' => 'DISABLED_X_FORWARDED_FOR_USAGE',
                 'original_ip' => $ip,
             ]);
         } else {
-            $forwardedIp = $this->settings['forced_test_forwarded_ip'];
+            $forwardedIp = $configs['forced_test_forwarded_ip'];
             if ($this->shouldTrustXforwardedFor($ip)) {
-                $ip = $forwardedIp;
+                $ip = (string) $forwardedIp;
             } else {
                 $this->logger->warning('', [
                     'type' => 'NON_AUTHORIZED_TEST_X_FORWARDED_FOR_USAGE',
@@ -171,9 +172,10 @@ abstract class AbstractBounce implements IBounce
             if (!$this->bouncer) {
                 throw new BouncerException('Bouncer must be instantiated to bounce an IP.');
             }
+            $configs = $this->bouncer->getConfigs();
             // Retrieve the current IP (even if it is a proxy IP) or a testing IP
-            $ip = !empty($this->settings['forced_test_ip']) ? $this->settings['forced_test_ip'] : $this->getRemoteIp();
-            $ip = $this->handleForwardedFor($ip);
+            $ip = !empty($configs['forced_test_ip']) ? $configs['forced_test_ip'] : $this->getRemoteIp();
+            $ip = $this->handleForwardedFor($ip, $configs);
             $remediation = $this->bouncer->getRemediationForIp($ip);
             $this->handleRemediation($remediation, $ip);
         } catch (Exception $e) {
