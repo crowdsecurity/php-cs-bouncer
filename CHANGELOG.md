@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.24.0] - 2022-07-08
+
+### Added
+- Add a `configs` attribute to Bouncer class
+
 ## [0.23.0] - 2022-07-07
 
 ### Added

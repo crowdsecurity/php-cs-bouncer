@@ -132,6 +132,7 @@ class StandaloneBounce extends AbstractBounce
         if ($this->bouncer && !$forceReload) {
             return $this->bouncer;
         }
+        $this->settings = array_merge($this->settings, $settings);
         $bouncingLevel = $this->getStringSettings('bouncing_level');
         $apiUserAgent = 'Standalone CrowdSec PHP Bouncer/' . Constants::VERSION;
         $apiTimeout = $this->getIntegerSettings('api_timeout');
