@@ -286,6 +286,7 @@ class ApiCache
 
     /**
      * Parse "duration" entries returned from API to a number of seconds.
+     * @throws BouncerException
      */
     private static function parseDurationToSeconds(string $duration): int
     {
@@ -317,6 +318,7 @@ class ApiCache
     /**
      * Format a remediation item of a cache item.
      * This format use a minimal amount of data allowing less cache data consumption.
+     * @throws BouncerException
      */
     private function formatRemediationFromDecision(?array $decision): array
     {
@@ -364,6 +366,7 @@ class ApiCache
      * Update the cached remediation of the specified cacheKey from these new decisions.
      *
      * @throws InvalidArgumentException|\Psr\Cache\CacheException
+     * @throws BouncerException
      */
     private function saveRemediationsForCacheKey(array $decisions, string $cacheKey): string
     {
@@ -401,6 +404,7 @@ class ApiCache
      * @param string $scope
      * @param string $value
      * @return string
+     * @throws BouncerException
      */
     private function getCacheKey(string $scope, string $value): string
     {
@@ -615,7 +619,7 @@ class ApiCache
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|BouncerException
      */
     public function clear(): bool
     {
@@ -640,7 +644,7 @@ class ApiCache
      *
      * @return array "count": number of decisions added, "errors": decisions not added
      *
-     * @throws InvalidArgumentException|\Psr\Cache\CacheException
+     * @throws InvalidArgumentException|\Psr\Cache\CacheException|BouncerException
      */
     public function warmUp(): array
     {
@@ -682,7 +686,7 @@ class ApiCache
      *
      * @return array number of deleted and new decisions, and errors when processing decisions
      *
-     * @throws InvalidArgumentException|\Psr\Cache\CacheException
+     * @throws InvalidArgumentException|\Psr\Cache\CacheException|BouncerException
      */
     public function pullUpdates(): array
     {
@@ -782,7 +786,7 @@ class ApiCache
      *
      * @return string
      * @throws InvalidArgumentException
-     * @throws \Psr\Cache\CacheException
+     * @throws \Psr\Cache\CacheException|BouncerException
      */
     private function handleCacheRemediation(string $cacheScope, string $value): string
     {
@@ -870,6 +874,7 @@ class ApiCache
 
     /**
      * Prune the cache (only when using PHP File System cache).
+     * @throws BouncerException
      */
     public function prune(): bool
     {
@@ -886,6 +891,7 @@ class ApiCache
     /**
      * When Memcached connection fail, it throws an unhandled warning.
      * To catch this warning as a clean exception we have to temporarily change the error handler.
+     * @throws BouncerException
      */
     private function setCustomErrorHandler(): void
     {
@@ -946,7 +952,7 @@ class ApiCache
      *
      * @return array|mixed
      *
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|BouncerException
      */
     private function getIpCachedVariables(string $cacheTag, string $ip)
     {
@@ -968,7 +974,7 @@ class ApiCache
      * @param string $ip
      *
      * @return array
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|BouncerException
      */
     public function getIpVariables(string $cacheTag, array $names, string $ip): array
     {
@@ -1011,7 +1017,7 @@ class ApiCache
      * @param string $ip
      * @return void
      * @throws InvalidArgumentException
-     * @throws \Psr\Cache\CacheException
+     * @throws \Psr\Cache\CacheException|BouncerException
      */
     public function unsetIpVariables(string $cacheTag, array $pairs, string $ip)
     {

@@ -135,7 +135,7 @@ class Bouncer
      *
      * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
      *
-     * @throws InvalidArgumentException|\Psr\Cache\CacheException
+     * @throws InvalidArgumentException|\Psr\Cache\CacheException|BouncerException
      */
     public function getRemediationForIp(string $ip): string
     {
@@ -196,7 +196,7 @@ class Bouncer
      *
      * @return array "count": number of decisions added, "errors": decisions not added
      *
-     * @throws InvalidArgumentException|\Psr\Cache\CacheException
+     * @throws InvalidArgumentException|\Psr\Cache\CacheException|BouncerException
      */
     public function warmBlocklistCacheUp(): array
     {
@@ -209,7 +209,7 @@ class Bouncer
      *
      * @return array Number of deleted and new decisions, and errors when processing decisions
      *
-     * @throws InvalidArgumentException|\Psr\Cache\CacheException
+     * @throws InvalidArgumentException|\Psr\Cache\CacheException|BouncerException
      */
     public function refreshBlocklistCache(): array
     {
@@ -221,7 +221,7 @@ class Bouncer
      *
      * @return bool If the cache has been successfully cleared or not
      *
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|BouncerException
      */
     public function clearCache(): bool
     {
@@ -232,6 +232,7 @@ class Bouncer
      * This method prune the cache: it removes all the expired cache items.
      *
      * @return bool If the cache has been successfully pruned or not
+     * @throws BouncerException
      */
     public function pruneCache(): bool
     {

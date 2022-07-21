@@ -20,6 +20,7 @@ class Configuration implements ConfigurationInterface
 {
     /**
      * {@inheritdoc}
+     * @throws \InvalidArgumentException
      */
     public function getConfigTreeBuilder(): TreeBuilder
     {
