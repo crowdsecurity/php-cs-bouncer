@@ -50,14 +50,15 @@ an empty array.
 
 ### Why not PHP 5.6?
 
-Because this PHP version is no more supported since December 2018 (not even a security fix!).
+Because this PHP version is no more supported since December 2018 (not even a security fix).
 Also, a lot of libraries are no more compatible with this version.
 We don't want to use an older version of these libraries because Composer can only install one version of each extension/package.
 So, being compatible with this old PHP version means to be not compatible with projects using a new version of these libraries.
 
 ### Why not 7.0.x nor 7.1.x ?
 
-These PHP versions are not anymore maintained for security fixes since 2019! We encourage you a lot to upgrade your PHP version. You can view the [full list of PHP versions lifecycle](https://www.php.net/supported-versions.php).
+These PHP versions are not anymore maintained for security fixes since 2019. We encourage you a lot to upgrade your 
+PHP version. You can view the [full list of PHP versions lifecycle](https://www.php.net/supported-versions.php).
 
 To get a robust library and not provide security bug unmaintained, we use [components](https://packagist.org/packages/symfony/cache#v3.4.47) under [LTS versioning](https://symfony.com/releases/3.4).
 
