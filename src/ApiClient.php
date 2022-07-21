@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace CrowdSecBouncer;
 
 use Psr\Log\LoggerInterface;
+use CrowdSecBouncer\RestClient\FileGetContents;
+use CrowdSecBouncer\RestClient\Curl;
 
 /**
- * The LAPI/CAPI REST Client. This is used to retrieve decisions.
+ * The LAPI REST Client. This is used to retrieve decisions.
  *
  * @author    CrowdSec team
  *
@@ -26,10 +28,11 @@ class ApiClient
      */
     private $restClient;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, array $settings = [])
     {
         $this->logger = $logger;
-        $this->restClient = new RestClient($this->logger);
+        $useCurl = !empty($settings['use_curl']);
+        $this->restClient = $useCurl ? new Curl($this->logger) : new FileGetContents($this->logger);
     }
 
     /**

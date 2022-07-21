@@ -40,10 +40,17 @@ class Bouncer
     /** @var array */
     private $configs = [];
 
+    /**
+     * @param TagAwareAdapterInterface|null $cacheAdapter
+     * @param LoggerInterface|null $logger
+     * @param ApiCache|null $apiCache
+     * @param array $settings
+     */
     public function __construct(
         TagAwareAdapterInterface $cacheAdapter = null,
         LoggerInterface          $logger = null,
-        ApiCache                 $apiCache = null
+        ApiCache                 $apiCache = null,
+        array $settings = []
     )
     {
         if (!$logger) {
@@ -51,7 +58,7 @@ class Bouncer
             $logger->pushHandler(new NullHandler());
         }
         $this->logger = $logger;
-        $this->apiCache = $apiCache ?: new ApiCache($logger, new ApiClient($logger), $cacheAdapter);
+        $this->apiCache = $apiCache ?: new ApiCache($logger, new ApiClient($logger, $settings), $cacheAdapter);
     }
 
     /**
