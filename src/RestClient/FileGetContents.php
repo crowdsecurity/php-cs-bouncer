@@ -2,11 +2,10 @@
 
 namespace CrowdSecBouncer\RestClient;
 
-
 use CrowdSecBouncer\BouncerException;
 
-class FileGetContents extends ClientAbstract {
-
+class FileGetContents extends ClientAbstract
+{
     /** @var string|null */
     private $headerString = null;
 
@@ -41,16 +40,8 @@ class FileGetContents extends ClientAbstract {
     }
 
     /**
-     *
      * Send an HTTP request using the file_get_contents and parse its JSON result if any.
      *
-     * @param string $endpoint
-     * @param array|null $queryParams
-     * @param array|null $bodyParams
-     * @param string $method
-     * @param array|null $headers
-     * @param int|null $timeout
-     * @return array|null
      * @throws BouncerException
      */
     public function request(
@@ -106,6 +97,4 @@ class FileGetContents extends ClientAbstract {
 
         return json_decode($response, true);
     }
-
-
 }

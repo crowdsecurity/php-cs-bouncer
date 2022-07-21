@@ -18,7 +18,6 @@ use Psr\Log\LoggerInterface;
  */
 abstract class ClientAbstract
 {
-
     /** @var int|null */
     protected $timeout = null;
 
@@ -40,15 +39,6 @@ abstract class ClientAbstract
 
     /**
      * Send an HTTP request and parse its JSON result if any.
-     *
-     * @param string $endpoint
-     * @param array|null $queryParams
-     * @param array|null $bodyParams
-     * @param string $method
-     * @param array|null $headers
-     * @param int|null $timeout
-     * @return array|null
      */
-    abstract public function request(string $endpoint, array $queryParams = null, array $bodyParams = null, string
-    $method = 'GET', array $headers = null, int $timeout = null): ?array;
+    abstract public function request(string $endpoint, array $queryParams = null, array $bodyParams = null, string $method = 'GET', array $headers = null, int $timeout = null): ?array;
 }

@@ -1,4 +1,6 @@
-<?php /** @noinspection PhpComposerExtensionStubsInspection */
+<?php
+
+/** @noinspection PhpComposerExtensionStubsInspection */
 
 namespace CrowdSecBouncer\RestClient;
 
@@ -6,7 +8,6 @@ use CrowdSecBouncer\BouncerException;
 
 class Curl extends ClientAbstract
 {
-
     private $headers = [];
 
     /**
@@ -29,22 +30,15 @@ class Curl extends ClientAbstract
     /**
      * Send an HTTP request using cURL and parse its JSON result if any.
      *
-     * @param string $endpoint
-     * @param array|null $queryParams
-     * @param array|null $bodyParams
-     * @param string $method
-     * @param array|null $headers
-     * @param int|null $timeout
-     * @return array|null
      * @throws BouncerException
      */
     public function request(
         string $endpoint,
-        array  $queryParams = null,
-        array  $bodyParams = null,
+        array $queryParams = null,
+        array $bodyParams = null,
         string $method = 'GET',
         array $headers = null,
-        int    $timeout = null): ?array
+        int $timeout = null): ?array
     {
         if (!$this->baseUri) {
             throw new BouncerException('Base URI is required.');
@@ -52,7 +46,7 @@ class Curl extends ClientAbstract
 
         $handle = curl_init();
 
-        $curlOptions = $this->createOptions($endpoint, $queryParams, $bodyParams, $method, $headers?:$this->headers);
+        $curlOptions = $this->createOptions($endpoint, $queryParams, $bodyParams, $method, $headers ?: $this->headers);
 
         curl_setopt_array($handle, $curlOptions);
 
@@ -81,32 +75,27 @@ class Curl extends ClientAbstract
      * Retrieve Curl options.
      *
      * @param $endpoint
-     * @param array|null $queryParams
-     * @param array|null $bodyParams
-     * @param string $method
-     * @param array|null $headers
-     * @return array
+     *
      * @throws BouncerException
      */
     private function createOptions($endpoint,
                                    ?array $queryParams,
                                    ?array $bodyParams,
                                    string $method, ?array $headers
-    ): array
-    {
+    ): array {
         $url = $this->baseUri . $endpoint;
         if (!isset($headers['User-Agent'])) {
             throw new BouncerException('User agent is required');
         }
-        $options = array(
+        $options = [
             \CURLOPT_HEADER => false,
             \CURLOPT_RETURNTRANSFER => true,
             \CURLOPT_USERAGENT => $headers['User-Agent'],
-        );
+        ];
 
-        $options[\CURLOPT_HTTPHEADER] = array();
+        $options[\CURLOPT_HTTPHEADER] = [];
         foreach ($headers as $key => $values) {
-            foreach (\is_array($values) ? $values : array($values) as $value) {
+            foreach (\is_array($values) ? $values : [$values] as $value) {
                 $options[\CURLOPT_HTTPHEADER][] = sprintf('%s:%s', $key, $value);
             }
         }
