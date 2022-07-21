@@ -40,5 +40,12 @@ abstract class ClientAbstract
     /**
      * Send an HTTP request and parse its JSON result if any.
      */
-    abstract public function request(string $endpoint, array $queryParams = null, array $bodyParams = null, string $method = 'GET', array $headers = null, int $timeout = null): ?array;
+    abstract public function request(
+        string $endpoint,
+        array $queryParams = null,
+        array $bodyParams = null,
+        string $method = 'GET',
+        array $headers = null,
+        int $timeout = null
+    ): ?array;
 }

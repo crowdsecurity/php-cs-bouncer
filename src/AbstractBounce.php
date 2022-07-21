@@ -130,7 +130,7 @@ abstract class AbstractBounce implements IBounce
                 $ipList = array_map('trim', array_values(array_filter(explode(',', $XForwardedForHeader))));
                 $forwardedIp = end($ipList);
             }
-        } else if ($configs['forced_test_forwarded_ip'] === Constants::X_FORWARDED_DISABLED) {
+        } elseif ($configs['forced_test_forwarded_ip'] === Constants::X_FORWARDED_DISABLED) {
             $this->logger->debug('', [
                 'type' => 'DISABLED_X_FORWARDED_FOR_USAGE',
                 'original_ip' => $ip,

@@ -38,8 +38,8 @@ class Curl extends ClientAbstract
         array $bodyParams = null,
         string $method = 'GET',
         array $headers = null,
-        int $timeout = null): ?array
-    {
+        int $timeout = null
+    ): ?array {
         if (!$this->baseUri) {
             throw new BouncerException('Base URI is required.');
         }
@@ -78,10 +78,12 @@ class Curl extends ClientAbstract
      *
      * @throws BouncerException
      */
-    private function createOptions($endpoint,
-                                   ?array $queryParams,
-                                   ?array $bodyParams,
-                                   string $method, ?array $headers
+    private function createOptions(
+        $endpoint,
+        ?array $queryParams,
+        ?array $bodyParams,
+        string $method,
+        ?array $headers
     ): array {
         $url = $this->baseUri . $endpoint;
         if (!isset($headers['User-Agent'])) {

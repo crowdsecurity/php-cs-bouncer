@@ -48,11 +48,10 @@ class Bouncer
      */
     public function __construct(
         TagAwareAdapterInterface $cacheAdapter = null,
-        LoggerInterface          $logger = null,
-        ApiCache                 $apiCache = null,
+        LoggerInterface $logger = null,
+        ApiCache $apiCache = null,
         array $settings = []
-    )
-    {
+    ) {
         if (!$logger) {
             $logger = new Logger('null');
             $logger->pushHandler(new NullHandler());
@@ -175,12 +174,11 @@ class Bouncer
      * The input $config should match the TemplateConfiguration input format.
      */
     public static function getCaptchaHtmlTemplate(
-        bool   $error,
+        bool $error,
         string $captchaImageSrc,
         string $captchaResolutionFormUrl,
-        array  $config
-    ): string
-    {
+        array $config
+    ): string {
         // Process template configuration.
         $configuration = new TemplateConfiguration();
         $processor = new Processor();
