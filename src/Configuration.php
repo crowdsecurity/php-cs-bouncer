@@ -33,6 +33,7 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('api_url')->defaultValue(Constants::DEFAULT_LAPI_URL)->end()
                 ->scalarNode('api_user_agent')->defaultValue(Constants::BASE_USER_AGENT)->end()
                 ->integerNode('api_timeout')->min(Constants::API_TIMEOUT)->defaultValue(Constants::API_TIMEOUT)->end()
+                ->booleanNode('use_curl')->defaultValue(false)->end()
                 // Debug
                 ->scalarNode('forced_test_ip')->defaultValue('')->end()
                 ->scalarNode('forced_test_forwarded_ip')->defaultValue('')->end()

@@ -8,6 +8,7 @@ $crowdSecStandaloneBouncerConfig = [
     'api_key' => 'REPLACE_API_KEY',
     'api_timeout'=> 1,
     'api_user_agent'=> 'CrowdSec PHP Library/test',
+    'use_curl' => false,
     // Debug/Test
     'debug_mode' => true,
     'display_errors' => true,

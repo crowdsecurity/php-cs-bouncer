@@ -158,7 +158,7 @@ class StandaloneBounce extends AbstractBounce
             throw new BouncerException($e->getMessage());
         }
         // Instantiate bouncer
-        $this->bouncer = new Bouncer($this->cacheAdapter, $this->logger);
+        $this->bouncer = new Bouncer($this->cacheAdapter, $this->logger, null, $this->settings);
         // Validate settings
         $this->bouncer->configure([
             // LAPI connection
@@ -166,6 +166,7 @@ class StandaloneBounce extends AbstractBounce
             'api_url' => $this->getStringSettings('api_url'),
             'api_user_agent' => $apiUserAgent,
             'api_timeout' => $apiTimeout > 0 ? $apiTimeout : Constants::API_TIMEOUT,
+            'use_curl' => $this->getBoolSettings('use_curl'),
             // Debug
             'debug_mode' => $this->getBoolSettings('debug_mode'),
             'log_directory_path' => $this->getStringSettings('log_directory_path'),
