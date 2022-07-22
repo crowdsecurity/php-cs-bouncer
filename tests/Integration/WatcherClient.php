@@ -6,7 +6,8 @@ namespace CrowdSecBouncer\Tests\Integration;
 
 
 use CrowdSecBouncer\Constants;
-use CrowdSecBouncer\RestClient;
+use CrowdSecBouncer\RestClient\FileGetContents;
+use CrowdSecBouncer\RestClient\Curl;
 use Psr\Log\LoggerInterface;
 
 class WatcherClient
@@ -28,9 +29,12 @@ class WatcherClient
     /** @var string */
     private $token;
 
-    public function __construct(LoggerInterface $logger)
+    private $settings = [];
+
+    public function __construct(LoggerInterface $logger, array $settings= [] )
     {
         $this->logger = $logger;
+        $this->settings = $settings;
     }
 
     /**
@@ -41,14 +45,16 @@ class WatcherClient
         // Create Watcher Client.
         /** @var string */
         $apiUrl = getenv('LAPI_URL');
+        $useCurl = !empty($this->settings['use_curl']);
         $this->baseHeaders = [
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
             'User-Agent' => Constants::BASE_USER_AGENT,
         ];
-        $this->watcherClient = new RestClient($this->logger);
+        $this->watcherClient = $useCurl ? new Curl($this->logger) : new FileGetContents
+        ($this->logger);
         $this->watcherClient->configure($apiUrl, $this->baseHeaders, 2);
-        $this->logger->info('', ['message' => 'Watcher client initialized']);
+        $this->logger->info('', ['message' => 'Watcher client initialized', 'use_curl' => $useCurl]);
     }
 
     /** Set the initial watcher state */

@@ -2,38 +2,14 @@
 
 declare(strict_types=1);
 
-namespace CrowdSecBouncer;
+namespace CrowdSecBouncer\RestClient;
 
-use Psr\Log\LoggerInterface;
+use CrowdSecBouncer\BouncerException;
 
-/**
- * The low level REST Client.
- *
- * @author    CrowdSec team
- *
- * @see      https://crowdsec.net CrowdSec Official Website
- *
- * @copyright Copyright (c) 2020+ CrowdSec
- * @license   MIT License
- */
-class RestClient
+class FileGetContents extends ClientAbstract
 {
     /** @var string|null */
     private $headerString = null;
-
-    /** @var int|null */
-    private $timeout = null;
-
-    /** @var string|null */
-    private $baseUri = null;
-
-    /** @var LoggerInterface */
-    private $logger;
-
-    public function __construct(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
-    }
 
     /**
      * Configure this instance.
@@ -46,6 +22,7 @@ class RestClient
 
         $this->logger->debug('', [
             'type' => 'REST_CLIENT_INIT',
+            'request_handler' => 'file_get_contents',
             'base_uri' => $this->baseUri,
             'timeout' => $this->timeout,
         ]);
@@ -67,7 +44,7 @@ class RestClient
     /**
      * Send an HTTP request using the file_get_contents and parse its JSON result if any.
      *
-     * @throws BouncerException when the response status is not 2xx
+     * @throws BouncerException
      */
     public function request(
         string $endpoint,

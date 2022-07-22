@@ -19,11 +19,13 @@ final class IpVerificationTest extends TestCase
     /** @var LoggerInterface */
     private $logger;
 
+    private $useCurl = false;
+
     protected function setUp(): void
     {
         $this->logger = TestHelpers::createLogger();
-
-        $this->watcherClient = new WatcherClient($this->logger);
+        $this->useCurl = getenv('USE_CURL');
+        $this->watcherClient = new WatcherClient($this->logger, ['use_curl' => $this->useCurl]);
         $this->watcherClient->configure();
     }
 
@@ -47,7 +49,7 @@ final class IpVerificationTest extends TestCase
 
         /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger])
+            ->setConstructorArgs([$this->logger, ['use_curl' => $this->useCurl]])
             ->enableProxyingToOriginalMethods()
             ->getMock();
         $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter);
@@ -162,7 +164,7 @@ final class IpVerificationTest extends TestCase
 
         /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger])
+            ->setConstructorArgs([$this->logger, ['use_curl' => $this->useCurl]])
             ->enableProxyingToOriginalMethods()
             ->getMock();
         $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter);
@@ -267,7 +269,7 @@ final class IpVerificationTest extends TestCase
 
         /** @var ApiClient */
         $apiClientMock2 = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger])
+            ->setConstructorArgs([$this->logger,['use_curl' => $this->useCurl]])
             ->enableProxyingToOriginalMethods()
             ->getMock();
         $apiCache2 = new ApiCache($this->logger, $apiClientMock2, $cacheAdapter);

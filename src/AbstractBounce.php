@@ -130,7 +130,7 @@ abstract class AbstractBounce implements IBounce
                 $ipList = array_map('trim', array_values(array_filter(explode(',', $XForwardedForHeader))));
                 $forwardedIp = end($ipList);
             }
-        } else if ($configs['forced_test_forwarded_ip'] === Constants::X_FORWARDED_DISABLED) {
+        } elseif ($configs['forced_test_forwarded_ip'] === Constants::X_FORWARDED_DISABLED) {
             $this->logger->debug('', [
                 'type' => 'DISABLED_X_FORWARDED_FOR_USAGE',
                 'original_ip' => $ip,
@@ -207,7 +207,7 @@ abstract class AbstractBounce implements IBounce
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|BouncerException
      */
     protected function displayCaptchaWall(string $ip): void
     {
@@ -237,7 +237,7 @@ abstract class AbstractBounce implements IBounce
      * @param string $ip
      * @return void
      * @throws InvalidArgumentException
-     * @throws CacheException
+     * @throws CacheException|BouncerException
      */
     protected function handleCaptchaResolutionForm(string $ip)
     {
@@ -321,7 +321,7 @@ abstract class AbstractBounce implements IBounce
      *
      * @return void
      * @throws InvalidArgumentException
-     * @throws CacheException
+     * @throws CacheException|BouncerException
      */
     protected function handleCaptchaRemediation(string $ip)
     {
@@ -362,7 +362,7 @@ abstract class AbstractBounce implements IBounce
      * @param string $ip
      * @return void
      * @throws InvalidArgumentException
-     * @throws CacheException
+     * @throws CacheException|BouncerException
      */
     protected function handleRemediation(string $remediation, string $ip)
     {
@@ -385,7 +385,7 @@ abstract class AbstractBounce implements IBounce
      * @param array $names
      * @param string $ip
      * @return array
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|BouncerException
      */
     public function getIpVariables(string $cacheTag, array $names, string $ip): array
     {
@@ -405,7 +405,7 @@ abstract class AbstractBounce implements IBounce
      * @param string $ip
      * @return void
      * @throws InvalidArgumentException
-     * @throws CacheException
+     * @throws CacheException|BouncerException
      */
     public function setIpVariables(string $cacheTag, array $pairs, string $ip): void
     {
@@ -424,7 +424,7 @@ abstract class AbstractBounce implements IBounce
      * @param string $ip
      * @return void
      * @throws InvalidArgumentException
-     * @throws CacheException
+     * @throws CacheException|BouncerException
      */
     public function unsetIpVariables(string $cacheTag, array $names, string $ip): void
     {

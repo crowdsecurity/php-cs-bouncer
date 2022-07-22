@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace CrowdSecBouncer;
 
 use Psr\Log\LoggerInterface;
+use CrowdSecBouncer\RestClient\FileGetContents;
+use CrowdSecBouncer\RestClient\Curl;
+use CrowdSecBouncer\RestClient\ClientAbstract;
 
 /**
- * The LAPI/CAPI REST Client. This is used to retrieve decisions.
+ * The LAPI REST Client. This is used to retrieve decisions.
  *
  * @author    CrowdSec team
  *
@@ -22,14 +25,15 @@ class ApiClient
     private $logger;
 
     /**
-     * @var RestClient
+     * @var ClientAbstract
      */
     private $restClient;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, array $settings = [])
     {
         $this->logger = $logger;
-        $this->restClient = new RestClient($this->logger);
+        $useCurl = !empty($settings['use_curl']);
+        $this->restClient = $useCurl ? new Curl($this->logger) : new FileGetContents($this->logger);
     }
 
     /**
@@ -50,6 +54,7 @@ class ApiClient
 
     /**
      * Request decisions using the specified $filter array.
+     * @throws BouncerException
      */
     public function getFilteredDecisions(array $filter): array
     {
@@ -59,6 +64,7 @@ class ApiClient
     /**
      * Request decisions using the stream mode. When the $startup flag is used, all the decisions are returned.
      * Else only the decisions updates (add or remove) from the last stream call are returned.
+     * @throws BouncerException
      */
     public function getStreamedDecisions(
         bool $startup = false,

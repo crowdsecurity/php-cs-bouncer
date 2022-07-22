@@ -18,6 +18,13 @@ $crowdSecStandaloneBouncerConfig = [
     // In seconds. The timeout when calling LAPI. Must be greater or equal than 1. Defaults to 1 sec.
     'api_timeout'=> 1,
 
+    /**
+     * By default, the lib call the REST LAPI using file_get_contents method (allow_url_fopen is required).
+     * Set 'use_curl' to true in order to use cURL request instead (curl is in then required)
+     *
+     */
+    'use_curl' => false,
+
     // HTTP user agent used to call LAPI. Default to this library name/current version.
     'api_user_agent'=> 'CrowdSec PHP Library/x.x.x',
 

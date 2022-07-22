@@ -40,18 +40,24 @@ class Bouncer
     /** @var array */
     private $configs = [];
 
+    /**
+     * @param TagAwareAdapterInterface|null $cacheAdapter
+     * @param LoggerInterface|null $logger
+     * @param ApiCache|null $apiCache
+     * @param array $settings
+     */
     public function __construct(
         TagAwareAdapterInterface $cacheAdapter = null,
-        LoggerInterface          $logger = null,
-        ApiCache                 $apiCache = null
-    )
-    {
+        LoggerInterface $logger = null,
+        ApiCache $apiCache = null,
+        array $settings = []
+    ) {
         if (!$logger) {
             $logger = new Logger('null');
             $logger->pushHandler(new NullHandler());
         }
         $this->logger = $logger;
-        $this->apiCache = $apiCache ?: new ApiCache($logger, new ApiClient($logger), $cacheAdapter);
+        $this->apiCache = $apiCache ?: new ApiCache($logger, new ApiClient($logger, $settings), $cacheAdapter);
     }
 
     /**
@@ -129,7 +135,7 @@ class Bouncer
      *
      * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
      *
-     * @throws InvalidArgumentException|\Psr\Cache\CacheException
+     * @throws InvalidArgumentException|\Psr\Cache\CacheException|BouncerException
      */
     public function getRemediationForIp(string $ip): string
     {
@@ -168,12 +174,11 @@ class Bouncer
      * The input $config should match the TemplateConfiguration input format.
      */
     public static function getCaptchaHtmlTemplate(
-        bool   $error,
+        bool $error,
         string $captchaImageSrc,
         string $captchaResolutionFormUrl,
-        array  $config
-    ): string
-    {
+        array $config
+    ): string {
         // Process template configuration.
         $configuration = new TemplateConfiguration();
         $processor = new Processor();
@@ -191,7 +196,7 @@ class Bouncer
      *
      * @return array "count": number of decisions added, "errors": decisions not added
      *
-     * @throws InvalidArgumentException|\Psr\Cache\CacheException
+     * @throws InvalidArgumentException|\Psr\Cache\CacheException|BouncerException
      */
     public function warmBlocklistCacheUp(): array
     {
@@ -204,7 +209,7 @@ class Bouncer
      *
      * @return array Number of deleted and new decisions, and errors when processing decisions
      *
-     * @throws InvalidArgumentException|\Psr\Cache\CacheException
+     * @throws InvalidArgumentException|\Psr\Cache\CacheException|BouncerException
      */
     public function refreshBlocklistCache(): array
     {
@@ -216,7 +221,7 @@ class Bouncer
      *
      * @return bool If the cache has been successfully cleared or not
      *
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|BouncerException
      */
     public function clearCache(): bool
     {
@@ -227,6 +232,7 @@ class Bouncer
      * This method prune the cache: it removes all the expired cache items.
      *
      * @return bool If the cache has been successfully pruned or not
+     * @throws BouncerException
      */
     public function pruneCache(): bool
     {

@@ -21,7 +21,7 @@ return $config
     ->setRiskyAllowed(true)
     ->setFinder(
         PhpCsFixer\Finder::create()
-            ->in(__DIR__ . '/../../../src')
+            ->in(__DIR__ . '/../../../src')->exclude(['templates'])
             ->in(__DIR__ . '/../../../tests/Integration')->depth(1)
     )
 ;

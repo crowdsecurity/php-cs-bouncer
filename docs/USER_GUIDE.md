@@ -125,6 +125,8 @@ Here is the list of available settings:
 
 - `api_timeout`: In seconds. The timeout when calling LAPI. Must be greater or equal than 1. Defaults to 1 sec.
 - `api_user_agent`: HTTP user agent used to call CLAPI. Default to this library name/current version.
+- `use_curl`: By default, this lib call the REST LAPI using `file_get_contents` method (`allow_url_fopen` is required).
+  You can set `use_curl` to `true` in order to use `cURL` request instead (`curl` is in then required)
 
 ##### Debug
 - `debug_mode`:true to enable verbose debug log.

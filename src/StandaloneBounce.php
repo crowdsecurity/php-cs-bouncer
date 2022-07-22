@@ -35,7 +35,7 @@ class StandaloneBounce extends AbstractBounce
      *
      * @throws CacheException
      * @throws ErrorException
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws \Psr\Cache\InvalidArgumentException|BouncerException
      */
     public function init(array $configs, array $forcedConfigs = []): Bouncer
     {
@@ -68,7 +68,7 @@ class StandaloneBounce extends AbstractBounce
 
     /**
      * @throws CacheException
-     * @throws ErrorException
+     * @throws ErrorException|BouncerException
      */
     private function getCacheAdapterInstance(bool $forceReload = false): TagAwareAdapterInterface
     {
@@ -124,7 +124,7 @@ class StandaloneBounce extends AbstractBounce
      *
      * @throws CacheException
      * @throws ErrorException
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws \Psr\Cache\InvalidArgumentException|BouncerException
      */
     public function getBouncerInstance(array $settings, bool $forceReload = false): Bouncer
     {
@@ -152,13 +152,9 @@ class StandaloneBounce extends AbstractBounce
                 throw new BouncerException("Unknown $bouncingLevel");
         }
         // Instantiate the cache system
-        try {
-            $this->cacheAdapter = $this->getCacheAdapterInstance($forceReload);
-        } catch (InvalidArgumentException $e) {
-            throw new BouncerException($e->getMessage());
-        }
+        $this->cacheAdapter = $this->getCacheAdapterInstance($forceReload);
         // Instantiate bouncer
-        $this->bouncer = new Bouncer($this->cacheAdapter, $this->logger);
+        $this->bouncer = new Bouncer($this->cacheAdapter, $this->logger, null, $this->settings);
         // Validate settings
         $this->bouncer->configure([
             // LAPI connection
@@ -166,6 +162,7 @@ class StandaloneBounce extends AbstractBounce
             'api_url' => $this->getStringSettings('api_url'),
             'api_user_agent' => $apiUserAgent,
             'api_timeout' => $apiTimeout > 0 ? $apiTimeout : Constants::API_TIMEOUT,
+            'use_curl' => $this->getBoolSettings('use_curl'),
             // Debug
             'debug_mode' => $this->getBoolSettings('debug_mode'),
             'log_directory_path' => $this->getStringSettings('log_directory_path'),
@@ -430,6 +427,7 @@ class StandaloneBounce extends AbstractBounce
 
     /**
      * Send HTTP response.
+     * @throws BouncerException
      */
     public function sendResponse(?string $body, int $statusCode = 200): void
     {
@@ -461,8 +459,12 @@ class StandaloneBounce extends AbstractBounce
     /**
      * If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
      *
+     * @param array $configs
+     * @return bool
+     * @throws BouncerException
      * @throws CacheException
      * @throws ErrorException
+     * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      */
     public function safelyBounce(array $configs): bool
