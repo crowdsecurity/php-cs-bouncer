@@ -25,7 +25,7 @@ abstract class ClientAbstract
     /** @var string|null */
     protected $baseUri = null;
 
-    /** @var array  */
+    /** @var array */
     protected $headers = [];
 
     /** @var LoggerInterface */

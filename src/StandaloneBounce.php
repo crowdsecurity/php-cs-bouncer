@@ -2,18 +2,10 @@
 
 namespace CrowdSecBouncer;
 
-use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use ErrorException;
 use Exception;
 use IPLib\Factory;
-use Symfony\Component\Cache\Adapter\MemcachedAdapter;
-use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
-use Symfony\Component\Cache\Adapter\RedisAdapter;
-use Symfony\Component\Cache\Adapter\RedisTagAwareAdapter;
-use Symfony\Component\Cache\Adapter\TagAwareAdapter;
-use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\Cache\Exception\CacheException;
-use Symfony\Component\Cache\Exception\InvalidArgumentException;
 
 /**
  * The class that apply a bounce in standalone mode.
@@ -374,13 +366,15 @@ class StandaloneBounce extends AbstractBounce
             $this->run();
             $result = true;
         } catch (Exception $e) {
-            $this->logger->error('', [
-                'type' => 'EXCEPTION_WHILE_BOUNCING',
-                'message' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
+            if ($this->logger) {
+                $this->logger->error('', [
+                    'type' => 'EXCEPTION_WHILE_BOUNCING',
+                    'message' => $e->getMessage(),
+                    'code' => $e->getCode(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
+            }
             if ($this->displayErrors) {
                 throw $e;
             }

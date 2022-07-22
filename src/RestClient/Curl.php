@@ -10,8 +10,6 @@ use CrowdSecBouncer\BouncerException;
 
 class Curl extends ClientAbstract
 {
-
-
     /**
      * Send an HTTP request using cURL and parse its JSON result if any.
      *

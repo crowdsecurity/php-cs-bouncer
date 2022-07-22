@@ -13,8 +13,6 @@ use IPLib\Factory;
 use IPLib\Range\Subnet;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
-use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\Cache\PruneableInterface;
 
@@ -97,10 +95,11 @@ class ApiCache
     public const CACHE_SEP = '_';
 
     /**
+     * @param array $configs
      * @param LoggerInterface $logger The logger to use
      * @param ApiClient|null $apiClient The APIClient instance to use
      * @param TagAwareAdapterInterface|null $adapter The AbstractAdapter adapter to use
-     * @param Geolocation|null $geolocation The Geolocation helper to use
+     * @throws InvalidArgumentException
      */
     public function __construct(
         array $configs,
@@ -113,20 +112,22 @@ class ApiCache
         $this->geolocation = new Geolocation();
         $this->adapter = $adapter;
         $cacheDurations = [
-            'clean_ip_cache_duration' => $configs['clean_ip_cache_duration']??Constants::CACHE_EXPIRATION_FOR_CLEAN_IP,
-            'bad_ip_cache_duration' => $configs['bad_ip_cache_duration']??Constants::CACHE_EXPIRATION_FOR_BAD_IP,
-            'captcha_cache_duration' => $configs['captcha_cache_duration']??Constants::CACHE_EXPIRATION_FOR_CAPTCHA,
-            'geolocation_cache_duration' => $configs['geolocation_cache_duration']??Constants::CACHE_EXPIRATION_FOR_GEO,
+            'clean_ip_cache_duration' =>
+                $configs['clean_ip_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CLEAN_IP,
+            'bad_ip_cache_duration' => $configs['bad_ip_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_BAD_IP,
+            'captcha_cache_duration' => $configs['captcha_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA,
+            'geolocation_cache_duration' =>
+                $configs['geolocation_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_GEO,
         ];
 
-        $streamMode = $configs['stream_mode']??false;
+        $streamMode = $configs['stream_mode'] ?? false;
         $this->streamMode = $streamMode;
         $this->cacheExpirationForCleanIp = $cacheDurations['clean_ip_cache_duration'];
         $this->cacheExpirationForBadIp = $cacheDurations['bad_ip_cache_duration'];
         $this->cacheExpirationForCaptcha = $cacheDurations['captcha_cache_duration'];
         $this->cacheExpirationForGeo = $cacheDurations['geolocation_cache_duration'];
-        $this->fallbackRemediation = $configs['fallback_remediation']??Constants::REMEDIATION_BYPASS;
-        $this->geolocConfig = $configs['geolocation']??[];
+        $this->fallbackRemediation = $configs['fallback_remediation'] ?? Constants::REMEDIATION_BYPASS;
+        $this->geolocConfig = $configs['geolocation'] ?? [];
         $cacheConfigItem = $this->adapter->getItem('cacheConfig');
         $cacheConfig = $cacheConfigItem->get();
         $this->warmedUp = (\is_array($cacheConfig) && isset($cacheConfig['warmed_up'])
@@ -142,8 +143,6 @@ class ApiCache
             'warmed_up' => ($this->warmedUp ? 'true' : 'false'),
             'geolocation' => $this->geolocConfig,
         ]);
-
-
     }
 
     /**

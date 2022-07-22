@@ -56,9 +56,10 @@ class Bouncer
      * @param LoggerInterface|null $logger
      * @throws BouncerException
      * @throws CacheException
-     * @throws ErrorException
+     * @throws ErrorException|InvalidArgumentException
      */
-    public function __construct(array $configs, LoggerInterface $logger = null) {
+    public function __construct(array $configs, LoggerInterface $logger = null)
+    {
         if (!$logger) {
             $logger = new Logger('null');
             $logger->pushHandler(new NullHandler());
@@ -69,7 +70,7 @@ class Bouncer
         $this->apiCache = new ApiCache(
             $this->configs,
             $logger,
-            new ApiClient($this->configs,$logger),
+            new ApiClient($this->configs, $logger),
             $this->cacheAdapter
         );
     }
