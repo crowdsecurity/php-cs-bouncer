@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.25.0] - 2022-07-22
+
+### Added
+- Add a `use_curl` setting to make LAPI rest requests with `cURL` instead of `file_get_contents`
+
 ## [0.24.0] - 2022-07-08
 
 ### Added
