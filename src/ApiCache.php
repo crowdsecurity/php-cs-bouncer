@@ -114,24 +114,20 @@ class ApiCache
         $this->geolocation = $geolocation ?: new Geolocation();
         $this->adapter = $adapter ?: new TagAwareAdapter(new PhpFilesAdapter());
         $cacheDurations = [
-            'clean_ip_cache_duration' => $configs['clean_ip_cache_duration'],
-            'bad_ip_cache_duration' => $configs['bad_ip_cache_duration'],
-            'captcha_cache_duration' => $configs['captcha_cache_duration'],
-            'geolocation_cache_duration' => $configs['geolocation_cache_duration'],
+            'clean_ip_cache_duration' => $configs['clean_ip_cache_duration']??Constants::CACHE_EXPIRATION_FOR_CLEAN_IP,
+            'bad_ip_cache_duration' => $configs['bad_ip_cache_duration']??Constants::CACHE_EXPIRATION_FOR_BAD_IP,
+            'captcha_cache_duration' => $configs['captcha_cache_duration']??Constants::CACHE_EXPIRATION_FOR_CAPTCHA,
+            'geolocation_cache_duration' => $configs['geolocation_cache_duration']??Constants::CACHE_EXPIRATION_FOR_GEO,
         ];
 
-        $streamMode = $configs['stream_mode'];
+        $streamMode = $configs['stream_mode']??false;
         $this->streamMode = $streamMode;
-        $this->cacheExpirationForCleanIp =
-            $cacheDurations['clean_ip_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CLEAN_IP;
-        $this->cacheExpirationForBadIp =
-            $cacheDurations['bad_ip_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_BAD_IP;
-        $this->cacheExpirationForCaptcha =
-            $cacheDurations['captcha_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
-        $this->cacheExpirationForGeo =
-            $cacheDurations['geolocation_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_GEO;
-        $this->fallbackRemediation = $configs['fallback_remediation'];
-        $this->geolocConfig = $configs['geolocation'];
+        $this->cacheExpirationForCleanIp = $cacheDurations['clean_ip_cache_duration'];
+        $this->cacheExpirationForBadIp = $cacheDurations['bad_ip_cache_duration'];
+        $this->cacheExpirationForCaptcha = $cacheDurations['captcha_cache_duration'];
+        $this->cacheExpirationForGeo = $cacheDurations['geolocation_cache_duration'];
+        $this->fallbackRemediation = $configs['fallback_remediation']??Constants::REMEDIATION_BYPASS;
+        $this->geolocConfig = $configs['geolocation']??[];
         $cacheConfigItem = $this->adapter->getItem('cacheConfig');
         $cacheConfig = $cacheConfigItem->get();
         $this->warmedUp = (\is_array($cacheConfig) && isset($cacheConfig['warmed_up'])

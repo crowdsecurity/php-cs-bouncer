@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\RestClient;
 
+use CrowdSecBouncer\Constants;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -34,7 +35,7 @@ abstract class ClientAbstract
     {
         $this->logger = $logger;
         $this->baseUri = $configs['api_url'];
-        $this->timeout = $configs['api_timeout'];
+        $this->timeout = $configs['api_timeout'] ?? Constants::API_TIMEOUT;
         $this->headers = $configs['headers'];
 
         $this->logger->debug('', [

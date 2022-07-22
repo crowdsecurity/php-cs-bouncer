@@ -7,6 +7,7 @@ namespace CrowdSecBouncer\Tests\Integration;
 use CrowdSecBouncer\ApiCache;
 use CrowdSecBouncer\ApiClient;
 use CrowdSecBouncer\Bouncer;
+use CrowdSecBouncer\Constants;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -19,14 +20,14 @@ final class IpVerificationTest extends TestCase
     /** @var LoggerInterface */
     private $logger;
 
-    private $useCurl = false;
+    /** @var bool  */
+    private $useCurl;
 
     protected function setUp(): void
     {
         $this->logger = TestHelpers::createLogger();
-        $this->useCurl = getenv('USE_CURL');
+        $this->useCurl = (bool) getenv('USE_CURL');
         $this->watcherClient = new WatcherClient($this->logger, ['use_curl' => $this->useCurl]);
-        $this->watcherClient->configure();
     }
 
     public function cacheAdapterProvider(): array
@@ -46,19 +47,21 @@ final class IpVerificationTest extends TestCase
         $cacheAdapter->clear();
 
         // Init bouncer
+        $bouncerConfigs = [
+            'api_key' => TestHelpers::getBouncerKey(),
+            'api_url' => TestHelpers::getLapiUrl(),
+            'use_curl' => $this->useCurl,
+            'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
+        ];
 
         /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger, ['use_curl' => $this->useCurl]])
+            ->setConstructorArgs([$this->logger, $bouncerConfigs])
             ->enableProxyingToOriginalMethods()
             ->getMock();
-        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter);
-        $bouncerConfig = [
-            'api_key' => TestHelpers::getBouncerKey(),
-            'api_url' => TestHelpers::getLapiUrl(),
-        ];
-        $bouncer = new Bouncer(null, $this->logger, $apiCache);
-        $bouncer->configure($bouncerConfig);
+        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter, null, $bouncerConfigs);
+
+        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
 
         switch ($origCacheName) {
             case 'PhpFilesAdapter':
@@ -127,13 +130,13 @@ final class IpVerificationTest extends TestCase
         $this->assertEquals('ban', $remediation3rdCall);
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
-        $bouncerConfig['max_remediation_level'] = 'captcha';
-        $bouncer->configure($bouncerConfig);
+        $bouncerConfigs['max_remediation_level'] = 'captcha';
+        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
         // Reset the max remediation level to its origin state
-        unset($bouncerConfig['max_remediation_level']);
-        $bouncer->configure($bouncerConfig);
+        unset($bouncerConfigs['max_remediation_level']);
+        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
@@ -161,21 +164,23 @@ final class IpVerificationTest extends TestCase
         $cacheAdapter->clear();
 
         // Init bouncer
+        $bouncerConfigs = [
+            'api_key' => TestHelpers::getBouncerKey(),
+            'api_url' => TestHelpers::getLapiUrl(),
+            'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
+            'stream_mode' => true,
+            'use_curl' => $this->useCurl
+        ];
 
         /** @var ApiClient */
         $apiClientMock = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger, ['use_curl' => $this->useCurl]])
+            ->setConstructorArgs([$this->logger, $bouncerConfigs])
             ->enableProxyingToOriginalMethods()
             ->getMock();
-        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter);
 
-        $bouncerConfig = [
-            'api_key' => TestHelpers::getBouncerKey(),
-            'api_url' => TestHelpers::getLapiUrl(),
-            'stream_mode' => true,
-        ];
-        $bouncer = new Bouncer(null, $this->logger, $apiCache);
-        $bouncer->configure($bouncerConfig);
+        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter, null, $bouncerConfigs);
+
+        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
 
         switch ($origCacheName) {
             case 'PhpFilesAdapter':
@@ -221,13 +226,12 @@ final class IpVerificationTest extends TestCase
         );
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
-        $bouncerConfig['max_remediation_level'] = 'captcha';
-        $bouncer->configure($bouncerConfig);
+        $bouncerConfigs['max_remediation_level'] = 'captcha';
+        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
-        unset($bouncerConfig['max_remediation_level']);
-        $bouncer->configure($bouncerConfig);
-
+        unset($bouncerConfigs['max_remediation_level']);
+        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
         $this->assertEquals(
             'bypass',
             $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP),
@@ -266,21 +270,24 @@ final class IpVerificationTest extends TestCase
         );
 
         // Setup an new instance.
-
-        /** @var ApiClient */
-        $apiClientMock2 = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger,['use_curl' => $this->useCurl]])
-            ->enableProxyingToOriginalMethods()
-            ->getMock();
-        $apiCache2 = new ApiCache($this->logger, $apiClientMock2, $cacheAdapter);
-
-        $bouncerConfig = [
+        $bouncerConfigs = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'stream_mode' => true,
+            'use_curl' => $this->useCurl,
+            'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
         ];
-        $bouncer = new Bouncer(null, $this->logger, $apiCache2);
-        $bouncer->configure($bouncerConfig);
+
+        /** @var ApiClient */
+        $apiClientMock2 = $this->getMockBuilder(ApiClient::class)
+            ->setConstructorArgs([$this->logger,$bouncerConfigs])
+            ->enableProxyingToOriginalMethods()
+            ->getMock();
+        $apiCache2 = new ApiCache($this->logger, $apiClientMock2, $cacheAdapter, null, $bouncerConfigs);
+
+
+        $bouncer = new Bouncer(null, $this->logger, $apiCache2, $bouncerConfigs);
+
 
         // The cache should still be warmed up, even for a new instance
 

@@ -58,10 +58,13 @@ class Bouncer
         }
         $this->logger = $logger;
         $this->configure($configs);
-        $this->apiCache = $apiCache ?: new ApiCache($logger, new ApiClient($logger, $this->configs), $cacheAdapter,
-            null, $this->configs);
-
-
+        $this->apiCache = $apiCache ?: new ApiCache(
+            $logger,
+            new ApiClient($logger, $this->configs),
+            $cacheAdapter,
+            null,
+            $this->configs
+        );
     }
 
     /**
@@ -81,7 +84,7 @@ class Bouncer
      *
      * @throws InvalidArgumentException
      */
-    public function configure(array $config): void
+    private function configure(array $config): void
     {
         // Process and validate input configuration.
         $configuration = new Configuration();

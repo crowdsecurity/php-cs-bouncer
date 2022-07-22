@@ -40,7 +40,6 @@ class ApiClient
             'Accept' => 'application/json',
         ];
 
-
         $this->restClient = $useCurl ? new Curl($this->logger, $configs) : new FileGetContents($this->logger, $configs);
         $this->logger->debug('', [
             'type' => 'API_CLIENT_INIT',
