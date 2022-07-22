@@ -2,6 +2,8 @@
 
 /** @noinspection PhpComposerExtensionStubsInspection */
 
+declare(strict_types=1);
+
 namespace CrowdSecBouncer\RestClient;
 
 use CrowdSecBouncer\BouncerException;
@@ -126,8 +128,6 @@ class Curl extends ClientAbstract
         if ($this->timeout > 0) {
             $options[\CURLOPT_TIMEOUT] = $this->timeout;
         }
-
-        // $options[CURLOPT_VERBOSE] = true;
 
         return $options;
     }
