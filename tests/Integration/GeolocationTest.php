@@ -78,14 +78,8 @@ final class GeolocationTest extends TestCase
             'use_curl' => $this->useCurl,
             'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
         ];
-        /** @var ApiClient */
-        $apiClientMock = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger, $bouncerConfigs])
-            ->enableProxyingToOriginalMethods()
-            ->getMock();
-        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter, null, $bouncerConfigs);
 
-        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
 
         $this->assertEquals(
             'captcha',
@@ -102,8 +96,7 @@ final class GeolocationTest extends TestCase
         // Disable Geolocation feature
         $geolocationConfig['enabled'] = false;
         $bouncerConfigs['geolocation'] = $geolocationConfig;
-        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter, null, $bouncerConfigs);
-        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
         $cacheAdapter->clear();
 
         $this->assertEquals(
@@ -116,8 +109,7 @@ final class GeolocationTest extends TestCase
         $this->watcherClient->setSecondState();
         $geolocationConfig['enabled'] = true;
         $bouncerConfigs['geolocation'] = $geolocationConfig;
-        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter, null, $bouncerConfigs);
-        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
         $cacheAdapter->clear();
 
         $this->assertEquals(
@@ -158,14 +150,8 @@ final class GeolocationTest extends TestCase
             'use_curl' => $this->useCurl,
             'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
         ];
-        /** @var ApiClient */
-        $apiClientMock = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger, $bouncerConfigs])
-            ->enableProxyingToOriginalMethods()
-            ->getMock();
-        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter, null, $bouncerConfigs);
 
-        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
 
         // Warm BlockList cache up
         $bouncer->refreshBlocklistCache();

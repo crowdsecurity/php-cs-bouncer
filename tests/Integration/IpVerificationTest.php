@@ -54,14 +54,8 @@ final class IpVerificationTest extends TestCase
             'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
         ];
 
-        /** @var ApiClient */
-        $apiClientMock = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger, $bouncerConfigs])
-            ->enableProxyingToOriginalMethods()
-            ->getMock();
-        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter, null, $bouncerConfigs);
 
-        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
 
         switch ($origCacheName) {
             case 'PhpFilesAdapter':
@@ -88,10 +82,6 @@ final class IpVerificationTest extends TestCase
             default:
                 break;
         }
-
-        // At the end of test, we should have exactly 3 "cache miss")
-        /** @var MockObject $apiClientMock */
-        $apiClientMock->expects($this->exactly(4))->method('getFilteredDecisions');
 
         $this->assertEquals(
             'ban',
@@ -131,12 +121,12 @@ final class IpVerificationTest extends TestCase
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
         $bouncerConfigs['max_remediation_level'] = 'captcha';
-        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
         // Reset the max remediation level to its origin state
         unset($bouncerConfigs['max_remediation_level']);
-        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
@@ -172,15 +162,7 @@ final class IpVerificationTest extends TestCase
             'use_curl' => $this->useCurl
         ];
 
-        /** @var ApiClient */
-        $apiClientMock = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger, $bouncerConfigs])
-            ->enableProxyingToOriginalMethods()
-            ->getMock();
-
-        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter, null, $bouncerConfigs);
-
-        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
 
         switch ($origCacheName) {
             case 'PhpFilesAdapter':
@@ -208,10 +190,6 @@ final class IpVerificationTest extends TestCase
                 break;
         }
         // As we are in stream mode, no live call should be done to the API.
-
-        /** @var MockObject $apiClientMock */
-        $apiClientMock->expects($this->exactly(0))->method('getFilteredDecisions');
-
         // Warm BlockList cache up
 
         $bouncer->refreshBlocklistCache();
@@ -227,11 +205,11 @@ final class IpVerificationTest extends TestCase
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
         $bouncerConfigs['max_remediation_level'] = 'captcha';
-        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
         unset($bouncerConfigs['max_remediation_level']);
-        $bouncer = new Bouncer(null, $this->logger, $apiCache, $bouncerConfigs);
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
         $this->assertEquals(
             'bypass',
             $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP),
@@ -254,8 +232,6 @@ final class IpVerificationTest extends TestCase
         $this->logger->debug('', ['message' => 'Refresh 2nd time the cache. Nothing should append.']);
         $bouncer->refreshBlocklistCache();
 
-        $this->logger->debug('', ['message' => 'Refresh 3rd time the cache. Nothing should append.']);
-        $bouncer->refreshBlocklistCache();
 
         $this->assertEquals(
             'ban',
@@ -278,21 +254,7 @@ final class IpVerificationTest extends TestCase
             'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
         ];
 
-        /** @var ApiClient */
-        $apiClientMock2 = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger,$bouncerConfigs])
-            ->enableProxyingToOriginalMethods()
-            ->getMock();
-        $apiCache2 = new ApiCache($this->logger, $apiClientMock2, $cacheAdapter, null, $bouncerConfigs);
-
-
-        $bouncer = new Bouncer(null, $this->logger, $apiCache2, $bouncerConfigs);
-
-
-        // The cache should still be warmed up, even for a new instance
-
-        /** @var MockObject $apiClientMock2 */
-        $apiClientMock2->expects($this->exactly(0))->method('getFilteredDecisions');
+        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
 
         $this->assertEquals(
             'ban',

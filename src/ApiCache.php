@@ -106,12 +106,11 @@ class ApiCache
         LoggerInterface $logger,
         ApiClient $apiClient = null,
         TagAwareAdapterInterface $adapter = null,
-        Geolocation $geolocation = null,
         array $configs = []
     ) {
         $this->logger = $logger;
         $this->apiClient = $apiClient ?: new ApiClient($logger, $configs);
-        $this->geolocation = $geolocation ?: new Geolocation();
+        $this->geolocation = new Geolocation();
         $this->adapter = $adapter ?: new TagAwareAdapter(new PhpFilesAdapter());
         $cacheDurations = [
             'clean_ip_cache_duration' => $configs['clean_ip_cache_duration']??Constants::CACHE_EXPIRATION_FOR_CLEAN_IP,
@@ -1026,5 +1025,11 @@ class ApiCache
         $item->expiresAt(new DateTime("+$duration seconds"));
         $item->tag($cacheTag);
         $this->adapter->save($item);
+    }
+
+
+    public function getClient(): ApiClient
+    {
+        return $this->apiClient;
     }
 }

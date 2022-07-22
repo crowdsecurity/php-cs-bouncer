@@ -47,9 +47,8 @@ class Bouncer
      * @param array $settings
      */
     public function __construct(
-        TagAwareAdapterInterface $cacheAdapter = null,
+        TagAwareAdapterInterface $cacheAdapter,
         LoggerInterface $logger = null,
-        ApiCache $apiCache = null,
         array $configs = []
     ) {
         if (!$logger) {
@@ -58,11 +57,10 @@ class Bouncer
         }
         $this->logger = $logger;
         $this->configure($configs);
-        $this->apiCache = $apiCache ?: new ApiCache(
+        $this->apiCache = new ApiCache(
             $logger,
             new ApiClient($logger, $this->configs),
             $cacheAdapter,
-            null,
             $this->configs
         );
     }

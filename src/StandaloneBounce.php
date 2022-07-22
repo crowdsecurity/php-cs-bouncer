@@ -138,12 +138,10 @@ class StandaloneBounce extends AbstractBounce
         $this->settings['api_user_agent'] = $apiUserAgent;
         $bouncerConfigs = $this->prepareBouncerConfigs($this->settings);
 
-
-
         // Instantiate the cache system
         $this->cacheAdapter = $this->getCacheAdapterInstance($forceReload);
         // Instantiate bouncer
-        $this->bouncer = new Bouncer($this->cacheAdapter, $this->logger, null, $bouncerConfigs);
+        $this->bouncer = new Bouncer($this->cacheAdapter, $this->logger, $bouncerConfigs);
 
         return $this->bouncer;
     }
