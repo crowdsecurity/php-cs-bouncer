@@ -29,7 +29,7 @@ class ApiClient
      */
     private $restClient;
 
-    public function __construct(LoggerInterface $logger, array $configs = [])
+    public function __construct(array $configs, LoggerInterface $logger)
     {
         $this->logger = $logger;
         $useCurl = !empty($configs['use_curl']);

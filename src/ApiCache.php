@@ -103,15 +103,15 @@ class ApiCache
      * @param Geolocation|null $geolocation The Geolocation helper to use
      */
     public function __construct(
+        array $configs,
         LoggerInterface $logger,
-        ApiClient $apiClient = null,
-        TagAwareAdapterInterface $adapter = null,
-        array $configs = []
+        ApiClient $apiClient,
+        TagAwareAdapterInterface $adapter
     ) {
         $this->logger = $logger;
-        $this->apiClient = $apiClient ?: new ApiClient($logger, $configs);
+        $this->apiClient = $apiClient;
         $this->geolocation = new Geolocation();
-        $this->adapter = $adapter ?: new TagAwareAdapter(new PhpFilesAdapter());
+        $this->adapter = $adapter;
         $cacheDurations = [
             'clean_ip_cache_duration' => $configs['clean_ip_cache_duration']??Constants::CACHE_EXPIRATION_FOR_CLEAN_IP,
             'bad_ip_cache_duration' => $configs['bad_ip_cache_duration']??Constants::CACHE_EXPIRATION_FOR_BAD_IP,

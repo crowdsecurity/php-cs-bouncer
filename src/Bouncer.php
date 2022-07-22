@@ -6,6 +6,8 @@ require_once __DIR__ . '/templates/captcha.php';
 require_once __DIR__ . '/templates/access-forbidden.php';
 
 use CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder;
+use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
+use ErrorException;
 use Gregwar\Captcha\PhraseBuilder;
 use IPLib\Factory;
 use IPLib\ParseStringFlag;
@@ -13,7 +15,13 @@ use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Cache\Adapter\MemcachedAdapter;
+use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
+use Symfony\Component\Cache\Adapter\RedisAdapter;
+use Symfony\Component\Cache\Adapter\RedisTagAwareAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
+use Symfony\Component\Cache\Exception\CacheException;
 use Symfony\Component\Config\Definition\Processor;
 
 /**
@@ -34,6 +42,9 @@ class Bouncer
     /** @var ApiCache */
     private $apiCache;
 
+    /** @var  TagAwareAdapterInterface */
+    private $cacheAdapter;
+
     /** @var int */
     private $maxRemediationLevelIndex = 0;
 
@@ -41,28 +52,72 @@ class Bouncer
     private $configs = [];
 
     /**
-     * @param TagAwareAdapterInterface|null $cacheAdapter
+     * @param array $configs
      * @param LoggerInterface|null $logger
-     * @param ApiCache|null $apiCache
-     * @param array $settings
+     * @throws BouncerException
+     * @throws CacheException
+     * @throws ErrorException
      */
-    public function __construct(
-        TagAwareAdapterInterface $cacheAdapter,
-        LoggerInterface $logger = null,
-        array $configs = []
-    ) {
+    public function __construct(array $configs, LoggerInterface $logger = null) {
         if (!$logger) {
             $logger = new Logger('null');
             $logger->pushHandler(new NullHandler());
         }
         $this->logger = $logger;
         $this->configure($configs);
+        $this->configureCacheAdapter();
         $this->apiCache = new ApiCache(
+            $this->configs,
             $logger,
-            new ApiClient($logger, $this->configs),
-            $cacheAdapter,
-            $this->configs
+            new ApiClient($this->configs,$logger),
+            $this->cacheAdapter
         );
+    }
+
+    /**
+     * @throws CacheException
+     * @throws ErrorException|BouncerException
+     */
+    private function configureCacheAdapter(): void
+    {
+        $cacheSystem = $this->getConfig('cache_system');
+        switch ($cacheSystem) {
+            case Constants::CACHE_SYSTEM_PHPFS:
+                $this->cacheAdapter = new TagAwareAdapter(
+                    new PhpFilesAdapter('', 0, $this->getConfig('fs_cache_path'))
+                );
+                break;
+
+            case Constants::CACHE_SYSTEM_MEMCACHED:
+                $memcachedDsn = $this->getConfig('memcached_dsn');
+                if (empty($memcachedDsn)) {
+                    throw new BouncerException('The selected cache technology is Memcached.' .
+                                               ' Please set a Memcached DSN or select another cache technology.');
+                }
+
+                $this->cacheAdapter = new MemcachedTagAwareAdapter(
+                    new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedDsn))
+                );
+                break;
+
+            case Constants::CACHE_SYSTEM_REDIS:
+                $redisDsn = $this->getConfig('redis_dsn');
+                if (empty($redisDsn)) {
+                    throw new BouncerException('The selected cache technology is Redis.' .
+                                               ' Please set a Redis DSN or select another cache technology.');
+                }
+
+                try {
+                    $this->cacheAdapter = new RedisTagAwareAdapter((RedisAdapter::createConnection($redisDsn)));
+                } catch (InvalidArgumentException $e) {
+                    throw new BouncerException('Error when connecting to Redis.' .
+                                               ' Please fix the Redis DSN or select another cache technology.');
+                }
+                break;
+
+            default:
+                throw new BouncerException("Unknown selected cache technology: $cacheSystem");
+        }
     }
 
     /**
@@ -76,11 +131,19 @@ class Bouncer
     }
 
     /**
+     * Retrieve Bouncer configuration by name
+     *
+     */
+    public function getConfig($name)
+    {
+        return $this->configs[$name];
+    }
+
+    /**
      * Configure this instance.
      *
      * @param array $config An array with all configuration parameters
      *
-     * @throws InvalidArgumentException
      */
     private function configure(array $config): void
     {
@@ -289,5 +352,10 @@ class Bouncer
     public function getApiCache(): ApiCache
     {
         return $this->apiCache;
+    }
+
+    public function getCacheAdapter(): TagAwareAdapterInterface
+    {
+        return $this->cacheAdapter;
     }
 }

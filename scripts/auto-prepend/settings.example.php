@@ -25,9 +25,6 @@ $crowdSecStandaloneBouncerConfig = [
      */
     'use_curl' => false,
 
-    // HTTP user agent used to call LAPI. Default to this library name/current version.
-    'api_user_agent'=> 'CrowdSec PHP Library/x.x.x',
-
     // true to enable verbose debug log.
     'debug_mode' => false,
 

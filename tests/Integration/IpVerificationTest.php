@@ -30,21 +30,19 @@ final class IpVerificationTest extends TestCase
         $this->watcherClient = new WatcherClient($this->logger, ['use_curl' => $this->useCurl]);
     }
 
-    public function cacheAdapterProvider(): array
+    public function cacheAdapterConfigProvider(): array
     {
-        return TestHelpers::cacheAdapterProvider();
+        return TestHelpers::cacheAdapterConfigProvider();
     }
 
     /**
      * @group integration
-     * @dataProvider cacheAdapterProvider
+     * @dataProvider cacheAdapterConfigProvider
      */
-    public function testCanVerifyIpInLiveModeWithCacheSystem($cacheAdapter, $origCacheName): void
+    public function testCanVerifyIpInLiveModeWithCacheSystem($cacheAdapterName, $origCacheName): void
     {
         // Init context
-
         $this->watcherClient->setInitialState();
-        $cacheAdapter->clear();
 
         // Init bouncer
         $bouncerConfigs = [
@@ -52,10 +50,17 @@ final class IpVerificationTest extends TestCase
             'api_url' => TestHelpers::getLapiUrl(),
             'use_curl' => $this->useCurl,
             'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
+            'cache_system' => $cacheAdapterName,
+            'redis_dsn' => getenv('REDIS_DSN'),
+            'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
+            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
 
+        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
 
-        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
+        // Test cache adapter
+        $cacheAdapter = $bouncer->getCacheAdapter();
+        $cacheAdapter->clear();
 
         switch ($origCacheName) {
             case 'PhpFilesAdapter':
@@ -121,12 +126,12 @@ final class IpVerificationTest extends TestCase
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
         $bouncerConfigs['max_remediation_level'] = 'captcha';
-        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
+        $bouncer = new Bouncer( $bouncerConfigs, $this->logger);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
         // Reset the max remediation level to its origin state
         unset($bouncerConfigs['max_remediation_level']);
-        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
+        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
@@ -144,25 +149,29 @@ final class IpVerificationTest extends TestCase
 
     /**
      * @group integration
-     * @dataProvider cacheAdapterProvider
+     * @dataProvider cacheAdapterConfigProvider
      */
-    public function testCanVerifyIpInStreamModeWithCacheSystem($cacheAdapter, $origCacheName): void
+    public function testCanVerifyIpInStreamModeWithCacheSystem($cacheAdapterName, $origCacheName): void
     {
         // Init context
-
         $this->watcherClient->setInitialState();
-        $cacheAdapter->clear();
-
         // Init bouncer
         $bouncerConfigs = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
             'stream_mode' => true,
-            'use_curl' => $this->useCurl
+            'use_curl' => $this->useCurl,
+            'cache_system' => $cacheAdapterName,
+            'redis_dsn' => getenv('REDIS_DSN'),
+            'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
+            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
 
-        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
+        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+        // Test cache adapter
+        $cacheAdapter = $bouncer->getCacheAdapter();
+        $cacheAdapter->clear();
 
         switch ($origCacheName) {
             case 'PhpFilesAdapter':
@@ -205,11 +214,11 @@ final class IpVerificationTest extends TestCase
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
         $bouncerConfigs['max_remediation_level'] = 'captcha';
-        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
+        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
         unset($bouncerConfigs['max_remediation_level']);
-        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
+        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
         $this->assertEquals(
             'bypass',
             $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP),
@@ -252,9 +261,13 @@ final class IpVerificationTest extends TestCase
             'stream_mode' => true,
             'use_curl' => $this->useCurl,
             'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
+            'cache_system' => $cacheAdapterName,
+            'redis_dsn' => getenv('REDIS_DSN'),
+            'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
+            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
 
-        $bouncer = new Bouncer($cacheAdapter, $this->logger, $bouncerConfigs);
+        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
 
         $this->assertEquals(
             'ban',

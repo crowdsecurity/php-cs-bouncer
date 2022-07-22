@@ -63,13 +63,15 @@ abstract class AbstractBounce implements IBounce
         return !empty($this->settings[$name]) ? (array)$this->settings[$name] : [];
     }
 
-
-    protected function prepareBouncerConfigs(array $settings)
+    /**
+     * @throws BouncerException
+     */
+    protected function prepareBouncerConfigs(): array
     {
         $bouncingLevel = $this->getStringSettings('bouncing_level');
         $apiTimeout = $this->getIntegerSettings('api_timeout');
 
-        // Init Bouncer instance
+        // Compute max remediation level
         switch ($bouncingLevel) {
             case Constants::BOUNCING_LEVEL_DISABLED:
                 $maxRemediationLevel = Constants::REMEDIATION_BYPASS;

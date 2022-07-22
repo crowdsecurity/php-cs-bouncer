@@ -27,9 +27,6 @@ use Symfony\Component\Cache\Exception\InvalidArgumentException;
  */
 class StandaloneBounce extends AbstractBounce
 {
-    /** @var TagAwareAdapterInterface|null */
-    protected $cacheAdapter;
-
     /**
      * Initialize the bouncer.
      *
@@ -56,67 +53,13 @@ class StandaloneBounce extends AbstractBounce
             }
             $configs['trust_ip_forward_array'] = $finalForwardConfigs;
         }
-        $this->settings = $configs;
+        $this->settings = array_merge($configs, $forcedConfigs);
 
-        $this->settings = array_merge($this->settings, $forcedConfigs);
         $this->setDebug($this->getBoolSettings('debug_mode'));
         $this->setDisplayErrors($this->getBoolSettings('display_errors'));
         $this->initLogger();
 
         return $this->getBouncerInstance($this->settings);
-    }
-
-    /**
-     * @throws CacheException
-     * @throws ErrorException|BouncerException
-     */
-    private function getCacheAdapterInstance(bool $forceReload = false): TagAwareAdapterInterface
-    {
-        // Singleton for this function
-        if ($this->cacheAdapter && !$forceReload) {
-            return $this->cacheAdapter;
-        }
-
-        $cacheSystem = $this->getStringSettings('cache_system');
-        switch ($cacheSystem) {
-            case Constants::CACHE_SYSTEM_PHPFS:
-                $this->cacheAdapter = new TagAwareAdapter(
-                    new PhpFilesAdapter('', 0, $this->getStringSettings('fs_cache_path'))
-                );
-                break;
-
-            case Constants::CACHE_SYSTEM_MEMCACHED:
-                $memcachedDsn = $this->getStringSettings('memcached_dsn');
-                if (empty($memcachedDsn)) {
-                    throw new BouncerException('The selected cache technology is Memcached.' .
-                                               ' Please set a Memcached DSN or select another cache technology.');
-                }
-
-                $this->cacheAdapter = new MemcachedTagAwareAdapter(
-                    new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedDsn))
-                );
-                break;
-
-            case Constants::CACHE_SYSTEM_REDIS:
-                $redisDsn = $this->getStringSettings('redis_dsn');
-                if (empty($redisDsn)) {
-                    throw new BouncerException('The selected cache technology is Redis.' .
-                                               ' Please set a Redis DSN or select another cache technology.');
-                }
-
-                try {
-                    $this->cacheAdapter = new RedisTagAwareAdapter((RedisAdapter::createConnection($redisDsn)));
-                } catch (InvalidArgumentException $e) {
-                    throw new BouncerException('Error when connecting to Redis.' .
-                                               ' Please fix the Redis DSN or select another cache technology.');
-                }
-                break;
-
-            default:
-                throw new BouncerException("Unknown selected cache technology: $cacheSystem");
-        }
-
-        return $this->cacheAdapter;
     }
 
     /**
@@ -136,12 +79,10 @@ class StandaloneBounce extends AbstractBounce
         $apiUserAgent = 'Standalone CrowdSec PHP Bouncer/' . Constants::VERSION;
 
         $this->settings['api_user_agent'] = $apiUserAgent;
-        $bouncerConfigs = $this->prepareBouncerConfigs($this->settings);
+        $bouncerConfigs = $this->prepareBouncerConfigs();
 
-        // Instantiate the cache system
-        $this->cacheAdapter = $this->getCacheAdapterInstance($forceReload);
         // Instantiate bouncer
-        $this->bouncer = new Bouncer($this->cacheAdapter, $this->logger, $bouncerConfigs);
+        $this->bouncer = new Bouncer($bouncerConfigs, $this->logger);
 
         return $this->bouncer;
     }
