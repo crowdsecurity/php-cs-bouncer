@@ -63,6 +63,60 @@ abstract class AbstractBounce implements IBounce
         return !empty($this->settings[$name]) ? (array)$this->settings[$name] : [];
     }
 
+
+    protected function prepareBouncerConfigs(array $settings)
+    {
+        $bouncingLevel = $this->getStringSettings('bouncing_level');
+        $apiTimeout = $this->getIntegerSettings('api_timeout');
+
+        // Init Bouncer instance
+        switch ($bouncingLevel) {
+            case Constants::BOUNCING_LEVEL_DISABLED:
+                $maxRemediationLevel = Constants::REMEDIATION_BYPASS;
+                break;
+            case Constants::BOUNCING_LEVEL_FLEX:
+                $maxRemediationLevel = Constants::REMEDIATION_CAPTCHA;
+                break;
+            case Constants::BOUNCING_LEVEL_NORMAL:
+                $maxRemediationLevel = Constants::REMEDIATION_BAN;
+                break;
+            default:
+                throw new BouncerException("Unknown $bouncingLevel");
+        }
+
+        return [
+            // LAPI connection
+            'api_key' => $this->getStringSettings('api_key'),
+            'api_url' => $this->getStringSettings('api_url'),
+            'api_user_agent' => $this->getStringSettings('api_user_agent'),
+            'api_timeout' => $apiTimeout > 0 ? $apiTimeout : Constants::API_TIMEOUT,
+            'use_curl' => $this->getBoolSettings('use_curl'),
+            // Debug
+            'debug_mode' => $this->getBoolSettings('debug_mode'),
+            'log_directory_path' => $this->getStringSettings('log_directory_path'),
+            'forced_test_ip' => $this->getStringSettings('forced_test_ip'),
+            'forced_test_forwarded_ip' => $this->getStringSettings('forced_test_forwarded_ip'),
+            'display_errors' => $this->getBoolSettings('display_errors'),
+            // Bouncer
+            'bouncing_level' => $bouncingLevel,
+            'trust_ip_forward_array' => $this->getArraySettings('trust_ip_forward_array'),
+            'fallback_remediation' => $this->getStringSettings('fallback_remediation'),
+            'max_remediation_level' => $maxRemediationLevel,
+            // Cache settings
+            'stream_mode' => $this->getBoolSettings('stream_mode'),
+            'cache_system' => $this->getStringSettings('cache_system'),
+            'fs_cache_path' => $this->getStringSettings('fs_cache_path'),
+            'redis_dsn' => $this->getStringSettings('redis_dsn'),
+            'memcached_dsn' => $this->getStringSettings('memcached_dsn'),
+            'clean_ip_cache_duration' => $this->getIntegerSettings('clean_ip_cache_duration'),
+            'bad_ip_cache_duration' => $this->getIntegerSettings('bad_ip_cache_duration'),
+            'captcha_cache_duration' => $this->getIntegerSettings('captcha_cache_duration'),
+            'geolocation_cache_duration' => $this->getIntegerSettings('geolocation_cache_duration'),
+            // Geolocation
+            'geolocation' => $this->getArraySettings('geolocation'),
+        ];
+    }
+
     /**
      * Run a bounce.
      *

@@ -10,24 +10,7 @@ use CrowdSecBouncer\BouncerException;
 
 class Curl extends ClientAbstract
 {
-    private $headers = [];
 
-    /**
-     * Configure this instance.
-     */
-    public function configure(string $baseUri, array $headers, int $timeout): void
-    {
-        $this->baseUri = $baseUri;
-        $this->timeout = $timeout;
-        $this->headers = $headers;
-
-        $this->logger->debug('', [
-            'type' => 'REST_CLIENT_INIT',
-            'request_handler' => 'cURL',
-            'base_uri' => $this->baseUri,
-            'timeout' => $this->timeout,
-        ]);
-    }
 
     /**
      * Send an HTTP request using cURL and parse its JSON result if any.

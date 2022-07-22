@@ -24,18 +24,26 @@ abstract class ClientAbstract
     /** @var string|null */
     protected $baseUri = null;
 
+    /** @var array  */
+    protected $headers = [];
+
     /** @var LoggerInterface */
     protected $logger;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, array $configs = [])
     {
         $this->logger = $logger;
-    }
+        $this->baseUri = $configs['api_url'];
+        $this->timeout = $configs['api_timeout'];
+        $this->headers = $configs['headers'];
 
-    /**
-     * Configure this instance.
-     */
-    abstract public function configure(string $baseUri, array $headers, int $timeout): void;
+        $this->logger->debug('', [
+            'type' => 'REST_CLIENT_INIT',
+            'request_handler' => get_class($this),
+            'base_uri' => $this->baseUri,
+            'timeout' => $this->timeout,
+        ]);
+    }
 
     /**
      * Send an HTTP request and parse its JSON result if any.

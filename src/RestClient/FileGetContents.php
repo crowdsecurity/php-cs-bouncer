@@ -5,27 +5,17 @@ declare(strict_types=1);
 namespace CrowdSecBouncer\RestClient;
 
 use CrowdSecBouncer\BouncerException;
+use Psr\Log\LoggerInterface;
 
 class FileGetContents extends ClientAbstract
 {
     /** @var string|null */
     private $headerString = null;
 
-    /**
-     * Configure this instance.
-     */
-    public function configure(string $baseUri, array $headers, int $timeout): void
+    public function __construct(LoggerInterface $logger, array $configs = [])
     {
-        $this->baseUri = $baseUri;
-        $this->headerString = $this->convertHeadersToString($headers);
-        $this->timeout = $timeout;
-
-        $this->logger->debug('', [
-            'type' => 'REST_CLIENT_INIT',
-            'request_handler' => 'file_get_contents',
-            'base_uri' => $this->baseUri,
-            'timeout' => $this->timeout,
-        ]);
+        parent::__construct($logger, $configs);
+        $this->headerString = $this->convertHeadersToString($this->headers);
     }
 
     /**

@@ -29,23 +29,19 @@ class ApiClient
      */
     private $restClient;
 
-    public function __construct(LoggerInterface $logger, array $settings = [])
+    public function __construct(LoggerInterface $logger, array $configs = [])
     {
         $this->logger = $logger;
-        $useCurl = !empty($settings['use_curl']);
-        $this->restClient = $useCurl ? new Curl($this->logger) : new FileGetContents($this->logger);
-    }
-
-    /**
-     * Configure this instance.
-     */
-    public function configure(string $baseUri, int $timeout, string $userAgent, string $apiKey): void
-    {
-        $this->restClient->configure($baseUri, [
-            'User-Agent' => $userAgent,
-            'X-Api-Key' => $apiKey,
+        $useCurl = !empty($configs['use_curl']);
+        $userAgent = $configs['api_user_agent'];
+        $configs['headers'] = [
+            'User-Agent' => $configs['api_user_agent'],
+            'X-Api-Key' => $configs['api_key'],
             'Accept' => 'application/json',
-        ], $timeout);
+        ];
+
+
+        $this->restClient = $useCurl ? new Curl($this->logger, $configs) : new FileGetContents($this->logger, $configs);
         $this->logger->debug('', [
             'type' => 'API_CLIENT_INIT',
             'user_agent' => $userAgent,

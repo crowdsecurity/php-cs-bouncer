@@ -50,14 +50,18 @@ class Bouncer
         TagAwareAdapterInterface $cacheAdapter = null,
         LoggerInterface $logger = null,
         ApiCache $apiCache = null,
-        array $settings = []
+        array $configs = []
     ) {
         if (!$logger) {
             $logger = new Logger('null');
             $logger->pushHandler(new NullHandler());
         }
         $this->logger = $logger;
-        $this->apiCache = $apiCache ?: new ApiCache($logger, new ApiClient($logger, $settings), $cacheAdapter);
+        $this->configure($configs);
+        $this->apiCache = $apiCache ?: new ApiCache($logger, new ApiClient($logger, $this->configs), $cacheAdapter,
+            null, $this->configs);
+
+
     }
 
     /**
@@ -89,24 +93,6 @@ class Bouncer
             Constants::ORDERED_REMEDIATIONS
         );
         $this->maxRemediationLevelIndex = $index;
-        $cacheDurations = [
-            'clean_ip_cache_duration' => $this->configs['clean_ip_cache_duration'],
-            'bad_ip_cache_duration' => $this->configs['bad_ip_cache_duration'],
-            'captcha_cache_duration' => $this->configs['captcha_cache_duration'],
-            'geolocation_cache_duration' => $this->configs['geolocation_cache_duration'],
-        ];
-
-        // Configure Api Cache.
-        $this->apiCache->configure(
-            $this->configs['stream_mode'],
-            $this->configs['api_url'],
-            $this->configs['api_timeout'],
-            $this->configs['api_user_agent'],
-            $this->configs['api_key'],
-            $cacheDurations,
-            $this->configs['fallback_remediation'],
-            $this->configs['geolocation']
-        );
     }
 
     /**

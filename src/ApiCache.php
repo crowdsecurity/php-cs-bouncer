@@ -49,30 +49,30 @@ class ApiCache
     private $geolocation;
 
     /** @var bool */
-    private $streamMode = false;
+    private $streamMode;
 
     /**
      * @var int
      */
-    private $cacheExpirationForCleanIp = 0;
+    private $cacheExpirationForCleanIp;
 
     /**
      * @var int
      */
-    private $cacheExpirationForBadIp = 0;
+    private $cacheExpirationForBadIp;
 
     /**
      * @var int
      */
-    private $cacheExpirationForCaptcha = 0;
+    private $cacheExpirationForCaptcha;
 
     /**
      * @var int
      */
-    private $cacheExpirationForGeo = 0;
+    private $cacheExpirationForGeo;
 
     /** @var bool */
-    private $warmedUp = false;
+    private $warmedUp;
 
     /**
      * @var string
@@ -106,38 +106,21 @@ class ApiCache
         LoggerInterface $logger,
         ApiClient $apiClient = null,
         TagAwareAdapterInterface $adapter = null,
-        Geolocation $geolocation = null
+        Geolocation $geolocation = null,
+        array $configs = []
     ) {
         $this->logger = $logger;
-        $this->apiClient = $apiClient ?: new ApiClient($logger);
+        $this->apiClient = $apiClient ?: new ApiClient($logger, $configs);
         $this->geolocation = $geolocation ?: new Geolocation();
         $this->adapter = $adapter ?: new TagAwareAdapter(new PhpFilesAdapter());
-    }
+        $cacheDurations = [
+            'clean_ip_cache_duration' => $configs['clean_ip_cache_duration'],
+            'bad_ip_cache_duration' => $configs['bad_ip_cache_duration'],
+            'captcha_cache_duration' => $configs['captcha_cache_duration'],
+            'geolocation_cache_duration' => $configs['geolocation_cache_duration'],
+        ];
 
-    /**
-     * Configure this instance.
-     *
-     * @param bool $streamMode If we use the stream mode (else we use the live mode)
-     * @param string $apiUrl The URL of the LAPI
-     * @param int $timeout The timeout well calling LAPI
-     * @param string $userAgent The user agent to use when calling LAPI
-     * @param string $apiKey The Bouncer API Key to use to connect LAPI
-     * @param array $cacheDurations The durations for some cache items (clean IP, bad, Ip, etc)
-     * @param string $fallbackRemediation The remediation to use when the remediation sent by LAPI is not supported by
-     *                                          this library
-     *
-     * @throws InvalidArgumentException
-     */
-    public function configure(
-        bool $streamMode,
-        string $apiUrl,
-        int $timeout,
-        string $userAgent,
-        string $apiKey,
-        array $cacheDurations,
-        string $fallbackRemediation,
-        array $geolocConfig = []
-    ): void {
+        $streamMode = $configs['stream_mode'];
         $this->streamMode = $streamMode;
         $this->cacheExpirationForCleanIp =
             $cacheDurations['clean_ip_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CLEAN_IP;
@@ -147,8 +130,8 @@ class ApiCache
             $cacheDurations['captcha_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
         $this->cacheExpirationForGeo =
             $cacheDurations['geolocation_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_GEO;
-        $this->fallbackRemediation = $fallbackRemediation;
-        $this->geolocConfig = $geolocConfig;
+        $this->fallbackRemediation = $configs['fallback_remediation'];
+        $this->geolocConfig = $configs['geolocation'];
         $cacheConfigItem = $this->adapter->getItem('cacheConfig');
         $cacheConfig = $cacheConfigItem->get();
         $this->warmedUp = (\is_array($cacheConfig) && isset($cacheConfig['warmed_up'])
@@ -164,7 +147,8 @@ class ApiCache
             'warmed_up' => ($this->warmedUp ? 'true' : 'false'),
             'geolocation' => $this->geolocConfig,
         ]);
-        $this->apiClient->configure($apiUrl, $timeout, $userAgent, $apiKey);
+
+
     }
 
     /**
