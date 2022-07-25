@@ -7,8 +7,6 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
-use Symfony\Component\Cache\Adapter\RedisTagAwareAdapter;
-use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 
 // Parse arguments
 $bouncerApiKey = $argv[1]; // required
@@ -22,14 +20,7 @@ if (!$bouncerApiKey || !$requestedIp) {
 echo "\nVerify $requestedIp with $apiUrl...\n";
 
 // Configure paths
-$logPath = __DIR__.'/../crowdsec.log';
-$cachePath = __DIR__ . '/../.cache';
-
-// Instantiate the "PhpFilesAdapter" cache adapter
-$cacheAdapter = new TagAwareAdapter(new Symfony\Component\Cache\Adapter\PhpFilesAdapter('', 0, $cachePath));
-// 0Or Redis: $cacheAdapter = new RedisTagAwareAdapter(RedisAdapter::createConnection('redis://your-redis-host:6379'));
-// Or Memcached: $cacheAdapter = new TagAwareAdapter(new MemcachedAdapter(MemcachedAdapter::createConnection
-//('memcached://your-memcached-host:11211')));
+$logPath = __DIR__.'/crowdsec.log';
 
 // Instantiate the Stream logger with info level(optional)
 $logger = new Logger('example');
@@ -44,17 +35,19 @@ $fileHandler = new RotatingFileHandler($logPath, 0, Logger::WARNING);
 $logger->pushHandler($fileHandler);
 
 // Instantiate the bouncer
-$bouncer = new Bouncer($cacheAdapter, $logger);
-$bouncer->configure([
+$configs = [
     'api_key' => $bouncerApiKey,
     'api_url' => $apiUrl,
     'api_user_agent' => 'MyCMS CrowdSec Bouncer/1.0.0',
     'api_timeout' => 1,
     'stream_mode' => false,
     'max_remediation_level' => 'ban',
-    'cache_expiration_for_clean_ip' => 300,
-    'cache_expiration_for_bad_ip' => 30,
-]);
+    'clean_ip_cache_duration' => 300,
+    'bad_ip_cache_duration' => 30,
+    'fs_cache_path' => __DIR__ . '/../.cache'
+];
+$bouncer = new Bouncer($configs, $logger);
+
 
 // Ask remediation to LAPI
 $remediation = $bouncer->getRemediationForIp($requestedIp);

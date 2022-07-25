@@ -7,8 +7,6 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
-use Symfony\Component\Cache\Adapter\RedisTagAwareAdapter;
-use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 
 
 
@@ -25,13 +23,6 @@ echo "\nClear the cache...\n";
 
 // Configure paths
 $logPath = __DIR__.'/.crowdsec.log';
-$cachePath = __DIR__ . '/.cache';
-
-// Instantiate the "PhpFilesAdapter" cache adapter
-$cacheAdapter = new TagAwareAdapter(new Symfony\Component\Cache\Adapter\PhpFilesAdapter('', 0, $cachePath));
-// 0Or Redis: $cacheAdapter = new RedisTagAwareAdapter(RedisAdapter::createConnection('redis://your-redis-host:6379'));
-// Or Memcached: $cacheAdapter = new TagAwareAdapter(new MemcachedAdapter(MemcachedAdapter::createConnection
-//('memcached://your-memcached-host:11211')));
 
 // Instantiate the Stream logger with info level(optional)
 $logger = new Logger('example');
@@ -46,8 +37,12 @@ $fileHandler = new RotatingFileHandler($logPath, 0, Logger::WARNING);
 $logger->pushHandler($fileHandler);
 
 // Instantiate the bouncer
-$bouncer = new Bouncer($cacheAdapter, $logger);
-$bouncer->configure(['api_key' => $bouncerApiKey, 'api_url' => $apiUrl]);
+$configs = [
+    'api_key' => $bouncerApiKey,
+    'api_url' => 'http://crowdsec:8080',
+    'fs_cache_path' => __DIR__ . '/.cache',
+];
+$bouncer = new Bouncer($configs, $logger);
 
 // Clear the cache.
 $bouncer->clearCache();
