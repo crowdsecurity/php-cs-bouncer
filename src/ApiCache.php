@@ -6,6 +6,7 @@ namespace CrowdSecBouncer;
 
 use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use DateTime;
+use ErrorException;
 use Exception;
 use IPLib\Address\AddressInterface;
 use IPLib\Address\Type;
@@ -13,7 +14,13 @@ use IPLib\Factory;
 use IPLib\Range\Subnet;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Cache\Adapter\MemcachedAdapter;
+use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
+use Symfony\Component\Cache\Adapter\RedisAdapter;
+use Symfony\Component\Cache\Adapter\RedisTagAwareAdapter;
+use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
+use Symfony\Component\Cache\Exception\CacheException;
 use Symfony\Component\Cache\PruneableInterface;
 
 /**
@@ -40,6 +47,9 @@ class ApiCache
 
     /** @var TagAwareAdapterInterface */
     private $adapter;
+
+    /** @var array  */
+    private $configs;
 
     /**
      * @var Geolocation
@@ -96,38 +106,32 @@ class ApiCache
 
     /**
      * @param array $configs
-     * @param LoggerInterface $logger The logger to use
-     * @param ApiClient|null $apiClient The APIClient instance to use
-     * @param TagAwareAdapterInterface|null $adapter The AbstractAdapter adapter to use
+     * @param LoggerInterface $logger
+     * @throws BouncerException
+     * @throws CacheException
+     * @throws ErrorException
      * @throws InvalidArgumentException
      */
     public function __construct(
         array $configs,
-        LoggerInterface $logger,
-        ApiClient $apiClient,
-        TagAwareAdapterInterface $adapter
+        LoggerInterface $logger
     ) {
         $this->logger = $logger;
-        $this->apiClient = $apiClient;
+        $this->configs = $configs;
+        $this->apiClient = new ApiClient($this->configs, $logger);
         $this->geolocation = new Geolocation();
-        $this->adapter = $adapter;
-        $cacheDurations = [
-            'clean_ip_cache_duration' =>
-                $configs['clean_ip_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CLEAN_IP,
-            'bad_ip_cache_duration' => $configs['bad_ip_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_BAD_IP,
-            'captcha_cache_duration' => $configs['captcha_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA,
-            'geolocation_cache_duration' =>
-                $configs['geolocation_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_GEO,
-        ];
+        $this->configureAdapter();
 
         $streamMode = $configs['stream_mode'] ?? false;
         $this->streamMode = $streamMode;
-        $this->cacheExpirationForCleanIp = $cacheDurations['clean_ip_cache_duration'];
-        $this->cacheExpirationForBadIp = $cacheDurations['bad_ip_cache_duration'];
-        $this->cacheExpirationForCaptcha = $cacheDurations['captcha_cache_duration'];
-        $this->cacheExpirationForGeo = $cacheDurations['geolocation_cache_duration'];
+        $this->cacheExpirationForCleanIp = $configs['clean_ip_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CLEAN_IP;
+        $this->cacheExpirationForBadIp = $configs['bad_ip_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_BAD_IP;
+        $this->cacheExpirationForCaptcha = $configs['captcha_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
+        $this->cacheExpirationForGeo = $configs['geolocation_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_GEO;
         $this->fallbackRemediation = $configs['fallback_remediation'] ?? Constants::REMEDIATION_BYPASS;
         $this->geolocConfig = $configs['geolocation'] ?? [];
+
+
         $cacheConfigItem = $this->adapter->getItem('cacheConfig');
         $cacheConfig = $cacheConfigItem->get();
         $this->warmedUp = (\is_array($cacheConfig) && isset($cacheConfig['warmed_up'])
@@ -136,6 +140,7 @@ class ApiCache
             'type' => 'API_CACHE_INIT',
             'adapter' => \get_class($this->adapter),
             'mode' => ($streamMode ? 'stream' : 'live'),
+            'fallback_remediation' => $this->fallbackRemediation,
             'exp_clean_ips' => $this->cacheExpirationForCleanIp,
             'exp_bad_ips' => $this->cacheExpirationForBadIp,
             'exp_captcha_flow' => $this->cacheExpirationForCaptcha,
@@ -144,6 +149,53 @@ class ApiCache
             'geolocation' => $this->geolocConfig,
         ]);
     }
+
+    /**
+     * @throws CacheException
+     * @throws ErrorException|BouncerException
+     */
+    private function configureAdapter(): void
+    {
+        $cacheSystem = $this->configs['cache_system']??Constants::CACHE_SYSTEM_PHPFS;
+        switch ($cacheSystem) {
+            case Constants::CACHE_SYSTEM_PHPFS:
+                $this->adapter = new TagAwareAdapter(
+                    new PhpFilesAdapter('', 0, $this->configs['fs_cache_path'])
+                );
+                break;
+
+            case Constants::CACHE_SYSTEM_MEMCACHED:
+                $memcachedDsn = $this->configs['memcached_dsn'];
+                if (empty($memcachedDsn)) {
+                    throw new BouncerException('The selected cache technology is Memcached.' .
+                                               ' Please set a Memcached DSN or select another cache technology.');
+                }
+
+                $this->adapter = new MemcachedTagAwareAdapter(
+                    new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedDsn))
+                );
+                break;
+
+            case Constants::CACHE_SYSTEM_REDIS:
+                $redisDsn = $this->configs['redis_dsn'];
+                if (empty($redisDsn)) {
+                    throw new BouncerException('The selected cache technology is Redis.' .
+                                               ' Please set a Redis DSN or select another cache technology.');
+                }
+
+                try {
+                    $this->adapter = new RedisTagAwareAdapter((RedisAdapter::createConnection($redisDsn)));
+                } catch (InvalidArgumentException $e) {
+                    throw new BouncerException('Error when connecting to Redis.' .
+                                               ' Please fix the Redis DSN or select another cache technology.');
+                }
+                break;
+
+            default:
+                throw new BouncerException("Unknown selected cache technology: $cacheSystem");
+        }
+    }
+
 
     /**
      * @return array
@@ -1030,5 +1082,10 @@ class ApiCache
     public function getClient(): ApiClient
     {
         return $this->apiClient;
+    }
+
+    public function getAdapter(): TagAwareAdapterInterface
+    {
+        return $this->adapter;
     }
 }

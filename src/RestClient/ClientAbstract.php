@@ -40,7 +40,6 @@ abstract class ClientAbstract
 
         $this->logger->debug('', [
             'type' => 'REST_CLIENT_INIT',
-            'request_handler' => get_class($this),
             'base_uri' => $this->baseUri,
             'timeout' => $this->timeout,
         ]);

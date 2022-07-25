@@ -23,6 +23,8 @@ class ApiClient
 {
     /** @var LoggerInterface */
     private $logger;
+    /** @var array  */
+    private $configs;
 
     /**
      * @var ClientAbstract
@@ -32,18 +34,22 @@ class ApiClient
     public function __construct(array $configs, LoggerInterface $logger)
     {
         $this->logger = $logger;
-        $useCurl = !empty($configs['use_curl']);
-        $userAgent = $configs['api_user_agent'];
-        $configs['headers'] = [
-            'User-Agent' => $configs['api_user_agent'],
-            'X-Api-Key' => $configs['api_key'],
+        $this->configs = $configs;
+        $useCurl = !empty($this->configs['use_curl']);
+        $userAgent = $this->configs['api_user_agent'];
+        $this->configs['headers'] = [
+            'User-Agent' => $this->configs['api_user_agent'],
+            'X-Api-Key' => $this->configs['api_key'],
             'Accept' => 'application/json',
         ];
 
-        $this->restClient = $useCurl ? new Curl($this->logger, $configs) : new FileGetContents($this->logger, $configs);
+        $this->restClient = $useCurl ?
+            new Curl($this->logger, $this->configs) :
+            new FileGetContents($this->logger, $this->configs);
         $this->logger->debug('', [
             'type' => 'API_CLIENT_INIT',
             'user_agent' => $userAgent,
+            'rest_client' => \get_class($this->restClient)
         ]);
     }
 
@@ -70,5 +76,11 @@ class ApiClient
             '/v1/decisions/stream',
             ['startup' => $startup ? 'true' : 'false', 'scopes' => implode(',', $scopes)]
         );
+    }
+
+
+    public function getRestClient(): ClientAbstract
+    {
+        return $this->restClient;
     }
 }

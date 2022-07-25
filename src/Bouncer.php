@@ -6,7 +6,6 @@ require_once __DIR__ . '/templates/captcha.php';
 require_once __DIR__ . '/templates/access-forbidden.php';
 
 use CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder;
-use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use ErrorException;
 use Gregwar\Captcha\PhraseBuilder;
 use IPLib\Factory;
@@ -15,11 +14,6 @@ use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Cache\Adapter\MemcachedAdapter;
-use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
-use Symfony\Component\Cache\Adapter\RedisAdapter;
-use Symfony\Component\Cache\Adapter\RedisTagAwareAdapter;
-use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\Cache\Exception\CacheException;
 use Symfony\Component\Config\Definition\Processor;
@@ -42,11 +36,8 @@ class Bouncer
     /** @var ApiCache */
     private $apiCache;
 
-    /** @var  TagAwareAdapterInterface */
-    private $cacheAdapter;
-
     /** @var int */
-    private $maxRemediationLevelIndex = 0;
+    private $maxRemediationLevelIndex;
 
     /** @var array */
     private $configs = [];
@@ -66,60 +57,26 @@ class Bouncer
         }
         $this->logger = $logger;
         $this->configure($configs);
-        $this->configureCacheAdapter();
+        /** @var int */
+        $index = array_search(
+            $this->configs['max_remediation_level'],
+            Constants::ORDERED_REMEDIATIONS
+        );
+        $this->maxRemediationLevelIndex = $index;
+
         $this->apiCache = new ApiCache(
             $this->configs,
-            $logger,
-            new ApiClient($this->configs, $logger),
-            $this->cacheAdapter
+            $logger
         );
+
+        $this->logger->debug('', [
+            'type' => 'BOUNCER_INIT',
+            'logger' => \get_class($this->logger),
+            'max_remediation_level' => $this->maxRemediationLevelIndex,
+            'configs' => $this->configs
+        ]);
     }
 
-    /**
-     * @throws CacheException
-     * @throws ErrorException|BouncerException
-     */
-    private function configureCacheAdapter(): void
-    {
-        $cacheSystem = $this->getConfig('cache_system');
-        switch ($cacheSystem) {
-            case Constants::CACHE_SYSTEM_PHPFS:
-                $this->cacheAdapter = new TagAwareAdapter(
-                    new PhpFilesAdapter('', 0, $this->getConfig('fs_cache_path'))
-                );
-                break;
-
-            case Constants::CACHE_SYSTEM_MEMCACHED:
-                $memcachedDsn = $this->getConfig('memcached_dsn');
-                if (empty($memcachedDsn)) {
-                    throw new BouncerException('The selected cache technology is Memcached.' .
-                                               ' Please set a Memcached DSN or select another cache technology.');
-                }
-
-                $this->cacheAdapter = new MemcachedTagAwareAdapter(
-                    new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedDsn))
-                );
-                break;
-
-            case Constants::CACHE_SYSTEM_REDIS:
-                $redisDsn = $this->getConfig('redis_dsn');
-                if (empty($redisDsn)) {
-                    throw new BouncerException('The selected cache technology is Redis.' .
-                                               ' Please set a Redis DSN or select another cache technology.');
-                }
-
-                try {
-                    $this->cacheAdapter = new RedisTagAwareAdapter((RedisAdapter::createConnection($redisDsn)));
-                } catch (InvalidArgumentException $e) {
-                    throw new BouncerException('Error when connecting to Redis.' .
-                                               ' Please fix the Redis DSN or select another cache technology.');
-                }
-                break;
-
-            default:
-                throw new BouncerException("Unknown selected cache technology: $cacheSystem");
-        }
-    }
 
     /**
      * Retrieve Bouncer configurations
@@ -152,12 +109,6 @@ class Bouncer
         $configuration = new Configuration();
         $processor = new Processor();
         $this->configs = $processor->processConfiguration($configuration, [$config]);
-        /** @var int */
-        $index = array_search(
-            $this->configs['max_remediation_level'],
-            Constants::ORDERED_REMEDIATIONS
-        );
-        $this->maxRemediationLevelIndex = $index;
     }
 
     /**
@@ -357,6 +308,16 @@ class Bouncer
 
     public function getCacheAdapter(): TagAwareAdapterInterface
     {
-        return $this->cacheAdapter;
+        return $this->getApiCache()->getAdapter();
+    }
+
+    public function getClient()
+    {
+        return $this->getApiCache()->getClient();
+    }
+
+    public function getRestClient()
+    {
+        return $this->getClient()->getRestClient();
     }
 }
