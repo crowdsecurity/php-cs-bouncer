@@ -47,10 +47,6 @@ class StandaloneBounce extends AbstractBounce
         }
         $this->settings = array_merge($configs, $forcedConfigs);
 
-        $this->setDebug($this->getBoolSettings('debug_mode'));
-        $this->setDisplayErrors($this->getBoolSettings('display_errors'));
-        $this->initLogger();
-
         return $this->getBouncerInstance($this->settings);
     }
 
@@ -362,8 +358,14 @@ class StandaloneBounce extends AbstractBounce
             throw new BouncerException("$errstr (Error level: $errno)");
         });
         try {
-            $this->init($configs);
-            $this->run();
+            $this->settings = $configs;
+            $this->setDebug($this->getBoolSettings('debug_mode'));
+            $this->setDisplayErrors($this->getBoolSettings('display_errors'));
+            $this->initLogger();
+            if ($this->shouldBounceCurrentIp()) {
+                $this->init($configs);
+                $this->run();
+            }
             $result = true;
         } catch (Exception $e) {
             if ($this->logger) {

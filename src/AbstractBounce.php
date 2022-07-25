@@ -125,9 +125,7 @@ abstract class AbstractBounce implements IBounce
      */
     public function run(): void
     {
-        if ($this->shouldBounceCurrentIp()) {
-            $this->bounceCurrentIp();
-        }
+        $this->bounceCurrentIp();
     }
 
     public function setDebug(bool $debug): void
@@ -208,34 +206,21 @@ abstract class AbstractBounce implements IBounce
      * Bounce process
      *
      * @return void
-     * @throws InvalidArgumentException|CacheException
-     * @throws Exception
+     * @throws BouncerException
+     * @throws CacheException
+     * @throws InvalidArgumentException
      */
     protected function bounceCurrentIp(): void
     {
-        try {
-            if (!$this->bouncer) {
-                throw new BouncerException('Bouncer must be instantiated to bounce an IP.');
-            }
-            $configs = $this->bouncer->getConfigs();
-            // Retrieve the current IP (even if it is a proxy IP) or a testing IP
-            $ip = !empty($configs['forced_test_ip']) ? $configs['forced_test_ip'] : $this->getRemoteIp();
-            $ip = $this->handleForwardedFor($ip, $configs);
-            $remediation = $this->bouncer->getRemediationForIp($ip);
-            $this->handleRemediation($remediation, $ip);
-        } catch (Exception $e) {
-            $this->logger->warning('', [
-                'type' => 'UNKNOWN_EXCEPTION_WHILE_BOUNCING',
-                'ip' => $ip ?? '',
-                'message' => $e->getMessage(),
-                'code' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            if ($this->displayErrors) {
-                throw $e;
-            }
+        if (!$this->bouncer) {
+            throw new BouncerException('Bouncer must be instantiated to bounce an IP.');
         }
+        $configs = $this->bouncer->getConfigs();
+        // Retrieve the current IP (even if it is a proxy IP) or a testing IP
+        $ip = !empty($configs['forced_test_ip']) ? $configs['forced_test_ip'] : $this->getRemoteIp();
+        $ip = $this->handleForwardedFor($ip, $configs);
+        $remediation = $this->bouncer->getRemediationForIp($ip);
+        $this->handleRemediation($remediation, $ip);
     }
 
     protected function shouldTrustXforwardedFor(string $ip): bool
