@@ -27,7 +27,7 @@ final class GeolocationTest extends TestCase
         $this->logger = TestHelpers::createLogger();
 
         $this->useCurl = (bool) getenv('USE_CURL');
-        $this->watcherClient = new WatcherClient($this->logger, ['use_curl' => $this->useCurl]);
+        $this->watcherClient = new WatcherClient(['use_curl' => $this->useCurl], $this->logger);
     }
 
     public function maxmindConfigProvider(): array

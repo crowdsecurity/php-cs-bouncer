@@ -23,7 +23,7 @@ class ApiClient
 {
     /** @var LoggerInterface */
     private $logger;
-    /** @var array  */
+    /** @var array */
     private $configs;
 
     /**
@@ -31,11 +31,19 @@ class ApiClient
      */
     private $restClient;
 
+    /**
+     * @param array $configs
+     * @param LoggerInterface $logger
+     * @throws BouncerException
+     */
     public function __construct(array $configs, LoggerInterface $logger)
     {
         $this->logger = $logger;
         $this->configs = $configs;
         $useCurl = !empty($this->configs['use_curl']);
+        if (empty($this->configs['api_user_agent'])) {
+            throw new BouncerException('User agent is required');
+        }
         $userAgent = $this->configs['api_user_agent'];
         $this->configs['headers'] = [
             'User-Agent' => $this->configs['api_user_agent'],
@@ -44,8 +52,9 @@ class ApiClient
         ];
 
         $this->restClient = $useCurl ?
-            new Curl($this->logger, $this->configs) :
-            new FileGetContents($this->logger, $this->configs);
+            new Curl($this->configs, $this->logger) :
+            new FileGetContents($this->configs, $this->logger);
+
         $this->logger->debug('', [
             'type' => 'API_CLIENT_INIT',
             'user_agent' => $userAgent,
@@ -68,16 +77,16 @@ class ApiClient
      * @throws BouncerException
      */
     public function getStreamedDecisions(
-        bool $startup = false,
+        bool  $startup = false,
         array $scopes = [Constants::SCOPE_IP, Constants::SCOPE_RANGE]
-    ): array {
+    ): array
+    {
         /** @var array */
         return $this->restClient->request(
             '/v1/decisions/stream',
             ['startup' => $startup ? 'true' : 'false', 'scopes' => implode(',', $scopes)]
         );
     }
-
 
     public function getRestClient(): ClientAbstract
     {

@@ -23,10 +23,6 @@ class Curl extends ClientAbstract
         array $headers = null,
         int $timeout = null
     ): ?array {
-        if (!$this->baseUri) {
-            throw new BouncerException('Base URI is required.');
-        }
-
         $handle = curl_init();
 
         $curlOptions = $this->createOptions($endpoint, $queryParams, $bodyParams, $method, $headers ?: $this->headers);
@@ -58,8 +54,11 @@ class Curl extends ClientAbstract
      * Retrieve Curl options.
      *
      * @param $endpoint
-     *
-     * @throws BouncerException
+     * @param array|null $queryParams
+     * @param array|null $bodyParams
+     * @param string $method
+     * @param array|null $headers
+     * @return array
      */
     private function createOptions(
         $endpoint,
@@ -69,9 +68,7 @@ class Curl extends ClientAbstract
         ?array $headers
     ): array {
         $url = $this->baseUri . $endpoint;
-        if (!isset($headers['User-Agent'])) {
-            throw new BouncerException('User agent is required');
-        }
+
         $options = [
             \CURLOPT_HEADER => false,
             \CURLOPT_RETURNTRANSFER => true,

@@ -10,11 +10,11 @@ use Psr\Log\LoggerInterface;
 class FileGetContents extends ClientAbstract
 {
     /** @var string|null */
-    private $headerString = null;
+    private $headerString;
 
-    public function __construct(LoggerInterface $logger, array $configs = [])
+    public function __construct(array $configs, LoggerInterface $logger)
     {
-        parent::__construct($logger, $configs);
+        parent::__construct($configs, $logger);
         $this->headerString = $this->convertHeadersToString($this->headers);
     }
 
@@ -44,9 +44,6 @@ class FileGetContents extends ClientAbstract
         array $headers = null,
         int $timeout = null
     ): ?array {
-        if (!$this->baseUri) {
-            throw new BouncerException('Base URI is required.');
-        }
         if ($queryParams) {
             $endpoint .= '?' . http_build_query($queryParams);
         }

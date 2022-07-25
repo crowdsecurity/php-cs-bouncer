@@ -31,7 +31,7 @@ class WatcherClient
 
     private $configs;
 
-    public function __construct(LoggerInterface $logger, array $configs= [] )
+    public function __construct(array $configs, LoggerInterface $logger)
     {
         $this->logger = $logger;
         $this->configs = $configs;
@@ -46,7 +46,8 @@ class WatcherClient
         $this->configs['api_timeout'] = 2;
 
         $useCurl = !empty($this->configs['use_curl']);
-        $this->watcherClient = $useCurl ? new Curl($this->logger, $this->configs) : new FileGetContents($this->logger, $this->configs);
+        $this->watcherClient = $useCurl ? new Curl($this->configs, $this->logger) : new FileGetContents(
+            $this->configs, $this->logger);
         $this->logger->info('', ['message' => 'Watcher client initialized', 'use_curl' => $useCurl]);
     }
 
