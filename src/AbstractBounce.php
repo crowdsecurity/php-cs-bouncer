@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
-require_once __DIR__ . '/templates/captcha.php';
-require_once __DIR__ . '/templates/access-forbidden.php';
-
 use Exception;
 use IPLib\Factory;
 use Monolog\Formatter\LineFormatter;

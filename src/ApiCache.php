@@ -124,9 +124,11 @@ class ApiCache
 
         $streamMode = $configs['stream_mode'] ?? false;
         $this->streamMode = $streamMode;
-        $this->cacheExpirationForCleanIp = $configs['clean_ip_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CLEAN_IP;
+        $this->cacheExpirationForCleanIp =
+            $configs['clean_ip_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CLEAN_IP;
         $this->cacheExpirationForBadIp = $configs['bad_ip_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_BAD_IP;
-        $this->cacheExpirationForCaptcha = $configs['captcha_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
+        $this->cacheExpirationForCaptcha =
+            $configs['captcha_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
         $this->cacheExpirationForGeo = $configs['geolocation_cache_duration'] ?? Constants::CACHE_EXPIRATION_FOR_GEO;
         $this->fallbackRemediation = $configs['fallback_remediation'] ?? Constants::REMEDIATION_BYPASS;
         $this->geolocConfig = $configs['geolocation'] ?? [];
@@ -156,7 +158,7 @@ class ApiCache
      */
     private function configureAdapter(): void
     {
-        $cacheSystem = $this->configs['cache_system']??Constants::CACHE_SYSTEM_PHPFS;
+        $cacheSystem = $this->configs['cache_system'] ?? Constants::CACHE_SYSTEM_PHPFS;
         switch ($cacheSystem) {
             case Constants::CACHE_SYSTEM_PHPFS:
                 $this->adapter = new TagAwareAdapter(

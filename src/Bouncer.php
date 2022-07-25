@@ -6,6 +6,7 @@ require_once __DIR__ . '/templates/captcha.php';
 require_once __DIR__ . '/templates/access-forbidden.php';
 
 use CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder;
+use CrowdSecBouncer\RestClient\ClientAbstract;
 use ErrorException;
 use Gregwar\Captcha\PhraseBuilder;
 use IPLib\Factory;
@@ -311,12 +312,12 @@ class Bouncer
         return $this->getApiCache()->getAdapter();
     }
 
-    public function getClient()
+    public function getClient(): ApiClient
     {
         return $this->getApiCache()->getClient();
     }
 
-    public function getRestClient()
+    public function getRestClient(): ClientAbstract
     {
         return $this->getClient()->getRestClient();
     }
