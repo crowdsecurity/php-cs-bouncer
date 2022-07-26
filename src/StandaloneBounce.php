@@ -75,9 +75,9 @@ class StandaloneBounce extends AbstractBounce
         return $this->bouncer;
     }
 
-    public function initLogger(): void
+    public function initLogger(array $configs): void
     {
-        $this->initLoggerHelper($this->getStringSettings('log_directory_path'), 'php_standalone_bouncer');
+        $this->initLoggerHelper($configs, 'php_standalone_bouncer');
     }
 
     /**
@@ -359,9 +359,7 @@ class StandaloneBounce extends AbstractBounce
         });
         try {
             $this->settings = $configs;
-            $this->setDebug($this->getBoolSettings('debug_mode'));
-            $this->setDisplayErrors($this->getBoolSettings('display_errors'));
-            $this->initLogger();
+            $this->initLogger($configs);
             if ($this->shouldBounceCurrentIp()) {
                 $this->init($configs);
                 $this->run();
@@ -377,7 +375,7 @@ class StandaloneBounce extends AbstractBounce
                     'line' => $e->getLine(),
                 ]);
             }
-            if ($this->displayErrors) {
+            if (!empty($configs['display_errors'])) {
                 throw $e;
             }
         }

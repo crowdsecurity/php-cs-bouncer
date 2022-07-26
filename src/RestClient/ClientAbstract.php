@@ -32,7 +32,7 @@ abstract class ClientAbstract
     /** @var LoggerInterface */
     protected $logger;
 
-    /** @var array  */
+    /** @var array */
     protected $configs;
 
     /**
@@ -59,7 +59,7 @@ abstract class ClientAbstract
             'type' => 'REST_CLIENT_INIT',
             'base_uri' => $this->baseUri,
             'timeout' => $this->timeout,
-            'user_agent' => $this->headers['User-Agent']
+            'user_agent' => $this->headers['User-Agent'],
         ]);
     }
 
@@ -68,10 +68,10 @@ abstract class ClientAbstract
      */
     abstract public function request(
         string $endpoint,
-        array  $queryParams = null,
-        array  $bodyParams = null,
+        array $queryParams = null,
+        array $bodyParams = null,
         string $method = 'GET',
-        array  $headers = null,
-        int    $timeout = null
+        array $headers = null,
+        int $timeout = null
     ): ?array;
 }

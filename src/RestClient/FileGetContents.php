@@ -76,7 +76,7 @@ class FileGetContents extends ClientAbstract
         $parts = explode(' ', $http_response_header[0]);
         $status = 0;
         if (\count($parts) > 1) {
-            $status = (int) ($parts[1]);
+            $status = (int) $parts[1];
         }
 
         if ($status < 200 || $status >= 300) {

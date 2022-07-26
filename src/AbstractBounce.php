@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
-use Exception;
 use IPLib\Factory;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\RotatingFileHandler;
@@ -27,12 +26,6 @@ abstract class AbstractBounce implements IBounce
 {
     /** @var array */
     protected $settings = [];
-
-    /** @var bool */
-    protected $debug = false;
-
-    /** @var bool */
-    protected $displayErrors = false;
 
     /** @var LoggerInterface */
     protected $logger;
@@ -121,29 +114,19 @@ abstract class AbstractBounce implements IBounce
      *
      * @return void
      * @throws CacheException
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|BouncerException
      */
     public function run(): void
     {
         $this->bounceCurrentIp();
     }
 
-    public function setDebug(bool $debug): void
-    {
-        $this->debug = $debug;
-    }
-
-    public function setDisplayErrors(bool $displayErrors): void
-    {
-        $this->displayErrors = $displayErrors;
-    }
-
     /**
-     * @param string $logDirectoryPath
+     * @param array $configs
      * @param string $loggerName
      * @return void
      */
-    protected function initLoggerHelper(string $logDirectoryPath, string $loggerName): void
+    protected function initLoggerHelper(array $configs, string $loggerName): void
     {
         // Singleton for this function
         if ($this->logger) {
@@ -151,14 +134,15 @@ abstract class AbstractBounce implements IBounce
         }
 
         $this->logger = new Logger($loggerName);
-        $logPath = $logDirectoryPath . '/prod.log';
+        $logDir = $configs['log_directory_path']??__DIR__.'/.logs';
+        $logPath = $logDir . '/prod.log';
         $fileHandler = new RotatingFileHandler($logPath, 0, Logger::INFO);
         $fileHandler->setFormatter(new LineFormatter("%datetime%|%level%|%context%\n"));
         $this->logger->pushHandler($fileHandler);
 
         // Set custom readable logger when debug=true
-        if ($this->debug) {
-            $debugLogPath = $logDirectoryPath . '/debug.log';
+        if (!empty($configs['debug_mode'])) {
+            $debugLogPath = $logDir . '/debug.log';
             $debugFileHandler = new RotatingFileHandler($debugLogPath, 0, Logger::DEBUG);
             $debugFileHandler->setFormatter(new LineFormatter("%datetime%|%level%|%context%\n"));
             $this->logger->pushHandler($debugFileHandler);
