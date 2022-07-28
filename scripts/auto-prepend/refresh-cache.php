@@ -16,7 +16,7 @@ if(isset($crowdSecStandaloneBouncerConfig['bouncing_level']) && $crowdSecStandal
 }elseif($crowdSecStandaloneBouncerConfig['bouncing_level'] === 'flex_boucing'){
     $crowdSecStandaloneBouncerConfig['bouncing_level'] = 'flex_bouncing';
 }
-
+$bounce->initLogger($crowdSecStandaloneBouncerConfig);
 $bouncer = $bounce->init($crowdSecStandaloneBouncerConfig);
 $bouncer->refreshBlocklistCache();
 echo 'Cache has been refreshed'.PHP_EOL;

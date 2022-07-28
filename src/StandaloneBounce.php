@@ -363,8 +363,8 @@ class StandaloneBounce extends AbstractBounce
             if ($this->shouldBounceCurrentIp()) {
                 $this->init($configs);
                 $this->run();
+                $result = true;
             }
-            $result = true;
         } catch (Exception $e) {
             if ($this->logger) {
                 $this->logger->error('', [

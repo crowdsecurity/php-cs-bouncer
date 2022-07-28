@@ -30,6 +30,7 @@ if (isset($_GET['ip'])) {
     $bounce = new StandaloneBounce();
     /** @var $crowdSecStandaloneBouncerConfig */
     $finalConfig = array_merge($crowdSecStandaloneBouncerConfig, ['geolocation' => $geolocConfig]);
+    $bounce->initLogger($finalConfig);
     $bouncer = $bounce->init($finalConfig);
     $apiCache = $bouncer->getApiCache();
 
