@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - *Breaking change*: Modify all constructors (`Bouncer`, `ApiCache`, `ApiClient`, `RestClient`) to use only 
   configurations and logger as parameters
 - Use `shouldBounceCurrentIp` method of Standalone before bouncer instantiation
-- Modify logger constructor
+- *Breaking change*: Modify `initLogger` method
 
 ## [0.25.0] - 2022-07-22
 
