@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
-use CrowdSecBouncer\ApiCache;
-use CrowdSecBouncer\ApiClient;
 use CrowdSecBouncer\Bouncer;
 use CrowdSecBouncer\Constants;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -49,7 +46,7 @@ final class IpVerificationTest extends TestCase
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'use_curl' => $this->useCurl,
-            'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
+            'api_user_agent' => TestHelpers::UNIT_TEST_AGENT_PREFIX . '/' . Constants::BASE_USER_AGENT,
             'cache_system' => $cacheAdapterName,
             'redis_dsn' => getenv('REDIS_DSN'),
             'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
@@ -159,7 +156,7 @@ final class IpVerificationTest extends TestCase
         $bouncerConfigs = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
-            'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
+            'api_user_agent' => TestHelpers::UNIT_TEST_AGENT_PREFIX . '/' . Constants::BASE_USER_AGENT,
             'stream_mode' => true,
             'use_curl' => $this->useCurl,
             'cache_system' => $cacheAdapterName,
@@ -260,7 +257,7 @@ final class IpVerificationTest extends TestCase
             'api_url' => TestHelpers::getLapiUrl(),
             'stream_mode' => true,
             'use_curl' => $this->useCurl,
-            'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
+            'api_user_agent' => TestHelpers::UNIT_TEST_AGENT_PREFIX . '/' . Constants::BASE_USER_AGENT,
             'cache_system' => $cacheAdapterName,
             'redis_dsn' => getenv('REDIS_DSN'),
             'memcached_dsn' =>  getenv('MEMCACHED_DSN'),

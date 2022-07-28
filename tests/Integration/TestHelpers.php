@@ -28,6 +28,7 @@ class TestHelpers
     public const JAPAN = 'JP';
     public const IP_JAPAN = '210.249.74.42';
     public const IP_FRANCE = '78.119.253.85';
+    public const UNIT_TEST_AGENT_PREFIX = 'Unit test';
 
     public const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__.'/../var/phpFiles.cache';
 
