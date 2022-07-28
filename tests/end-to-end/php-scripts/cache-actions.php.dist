@@ -13,6 +13,7 @@ if (isset($_GET['action']) && in_array($_GET['action'],['refresh', 'clear', 'pru
     $action = $_GET['action'];
     $bounce = new StandaloneBounce();
     /** @var $crowdSecStandaloneBouncerConfig */
+    $bounce->initLogger($crowdSecStandaloneBouncerConfig);
     $bouncer = $bounce->init($crowdSecStandaloneBouncerConfig);
     switch ($action) {
         case 'refresh':

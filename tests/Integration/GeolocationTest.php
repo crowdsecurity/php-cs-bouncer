@@ -6,6 +6,7 @@ namespace CrowdSecBouncer\Tests\Integration;
 use CrowdSecBouncer\ApiCache;
 use CrowdSecBouncer\ApiClient;
 use CrowdSecBouncer\Bouncer;
+use CrowdSecBouncer\Constants;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
@@ -18,13 +19,15 @@ final class GeolocationTest extends TestCase
 
     /** @var LoggerInterface */
     private $logger;
+    /** @var bool  */
+    private $useCurl;
 
     protected function setUp(): void
     {
         $this->logger = TestHelpers::createLogger();
 
-        $this->watcherClient = new WatcherClient($this->logger);
-        $this->watcherClient->configure();
+        $this->useCurl = (bool) getenv('USE_CURL');
+        $this->watcherClient = new WatcherClient(['use_curl' => $this->useCurl], $this->logger);
     }
 
     public function maxmindConfigProvider(): array
@@ -61,26 +64,25 @@ final class GeolocationTest extends TestCase
      */
     public function testCanVerifyIpAndCountryWithMaxmindInLiveMode(array $maxmindConfig): void
     {
-        $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
         // Init context
-        $cacheAdapter = new TagAwareAdapter(new PhpFilesAdapter('php_array_adapter_backup_cache', 0,
-            TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR));
         $this->watcherClient->setInitialState();
-        $cacheAdapter->clear();
+
         // Init bouncer
-        /** @var ApiClient */
-        $apiClientMock = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger])
-            ->enableProxyingToOriginalMethods()
-            ->getMock();
-        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter);
-        $bouncerConfig = [
+        $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
+        $bouncerConfigs = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'geolocation' => $geolocationConfig,
+            'use_curl' => $this->useCurl,
+            'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
+            'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
+            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
-        $bouncer = new Bouncer(null, $this->logger, $apiCache);
-        $bouncer->configure($bouncerConfig);
+
+        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+
+        $cacheAdapter = $bouncer->getCacheAdapter();
+        $cacheAdapter->clear();
 
         $this->assertEquals(
             'captcha',
@@ -96,9 +98,8 @@ final class GeolocationTest extends TestCase
 
         // Disable Geolocation feature
         $geolocationConfig['enabled'] = false;
-        $bouncerConfig['geolocation'] = $geolocationConfig;
-        $bouncer = new Bouncer(null, $this->logger, $apiCache);
-        $bouncer->configure($bouncerConfig);
+        $bouncerConfigs['geolocation'] = $geolocationConfig;
+        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
         $cacheAdapter->clear();
 
         $this->assertEquals(
@@ -110,9 +111,8 @@ final class GeolocationTest extends TestCase
         // Enable again geolocation and change testing conditions
         $this->watcherClient->setSecondState();
         $geolocationConfig['enabled'] = true;
-        $bouncerConfig['geolocation'] = $geolocationConfig;
-        $bouncer = new Bouncer(null, $this->logger, $apiCache);
-        $bouncer->configure($bouncerConfig);
+        $bouncerConfigs['geolocation'] = $geolocationConfig;
+        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
         $cacheAdapter->clear();
 
         $this->assertEquals(
@@ -138,27 +138,24 @@ final class GeolocationTest extends TestCase
      */
     public function testCanVerifyIpAndCountryWithMaxmindInStreamMode(array $maxmindConfig): void
     {
-        $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
         // Init context
-        $cacheAdapter = new TagAwareAdapter(new PhpFilesAdapter('php_array_adapter_backup_cache', 0,
-            TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR));
         $this->watcherClient->setInitialState();
-        $cacheAdapter->clear();
         // Init bouncer
-        /** @var ApiClient */
-        $apiClientMock = $this->getMockBuilder(ApiClient::class)
-            ->setConstructorArgs([$this->logger])
-            ->enableProxyingToOriginalMethods()
-            ->getMock();
-        $apiCache = new ApiCache($this->logger, $apiClientMock, $cacheAdapter);
-        $bouncerConfig = [
+        $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
+        $bouncerConfigs = [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'stream_mode' => true,
             'geolocation' => $geolocationConfig,
+            'use_curl' => $this->useCurl,
+            'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
+            'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
+            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
-        $bouncer = new Bouncer(null, $this->logger, $apiCache);
-        $bouncer->configure($bouncerConfig);
+
+        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+        $cacheAdapter = $bouncer->getCacheAdapter();
+        $cacheAdapter->clear();
 
         // Warm BlockList cache up
         $bouncer->refreshBlocklistCache();

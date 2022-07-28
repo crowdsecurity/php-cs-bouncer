@@ -502,12 +502,12 @@ Fortunately, this library allows you to cap the remediation to a certain level.
 Let's add the `max_remediation_level` configuration with `captcha` value:
 
 ```php
-$bouncer->configure([
+$configs = [
     'api_key' => $bouncerKey,
     'api_url' => 'http://crowdsec:8080',
-    'max_remediation_level' => 'captcha' // <== ADD THIS LINE!
-    ]
-);
+    'fs_cache_path' => __DIR__ . '/.cache'
+    'max_remediation_level' => 'captcha' // <== ADD THIS LINE
+    ];
 ```
 
 Now if you call one more time:
@@ -526,52 +526,33 @@ Now update the `check-ip.php`script to replace the `PhpFilesAdapter` with the `R
 Replace:
 
 ```php
-<?php
-
-require __DIR__ . '/vendor/autoload.php';
-
-use CrowdSecBouncer\Bouncer;
-use Symfony\Component\Cache\Adapter\RedisAdapter;
-
-// Init cache adapter
-$cacheAdapter = new TagAwareAdapter(new PhpFilesAdapter('', 0, __DIR__.'/.cache'));
-
-...
+$configs = [
+    'api_key' => $bouncerKey,
+    'api_url' => 'http://crowdsec:8080',
+    'fs_cache_path' => __DIR__ . '/.cache',
+];
 ```
 
 with:
 
 ```php
-<?php
-
-require __DIR__ . '/vendor/autoload.php';
-
-use CrowdSecBouncer\Bouncer;
-use Symfony\Component\Cache\Adapter\RedisAdapter;
-
-// Init cache adapter
-
-$cacheAdapter = new RedisTagAwareAdapter(RedisAdapter::createConnection('redis://redis:6379'));
-
-...
+$configs = [
+    'api_key' => $bouncerKey,
+    'api_url' => 'http://crowdsec:8080',
+    'cache_system' => 'redis',
+    'redis_dsn' => 'redis://redis:6379'
+];
 ```
 
 Or, if `Memcached` is more adapted than `Redis` to your needs:
 
 ```php
-<?php
-
-require __DIR__ . '/vendor/autoload.php';
-
-use CrowdSecBouncer\Bouncer;
-use Symfony\Component\Cache\Adapter\MemcachedAdapter;
-
-// Init cache adapter
-
-$cacheAdapter =
-new TagAwareAdapter(new MemcachedAdapter(MemcachedAdapter::createConnection('memcached://memcached:11211')));
-
-...
+$configs = [
+    'api_key' => $bouncerKey,
+    'api_url' => 'http://crowdsec:8080',
+    'cache_system' => 'memcached',
+    'memcached_dsn' => 'memcached://memcached:11211'
+];
 ```
 
 You will still be able to verify IPs, but the cache system will be more efficient.
@@ -579,8 +560,6 @@ You will still be able to verify IPs, but the cache system will be more efficien
 ```bash
 ddev exec php my-own-modules/crowdsec-php-lib/scripts/check-ip.php 1.2.3.4 <BOUNCER_KEY>
 ```
-
-> Note: You can try more cache systems but we did not test them for now (Apcu, Filesystem, Doctrine, Couchbase, Pdo). The [full list is here](https://symfony.com/doc/current/components/cache.html#available-cache-adapters).
 
 ### Clear cache script
 

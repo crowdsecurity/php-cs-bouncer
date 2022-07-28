@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\RestClient;
 
+use CrowdSecBouncer\BouncerException;
+use CrowdSecBouncer\Constants;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -18,24 +20,48 @@ use Psr\Log\LoggerInterface;
  */
 abstract class ClientAbstract
 {
-    /** @var int|null */
+    /** @var int|mixed|null */
     protected $timeout = null;
 
-    /** @var string|null */
+    /** @var mixed|null */
     protected $baseUri = null;
+
+    /** @var array */
+    protected $headers = [];
 
     /** @var LoggerInterface */
     protected $logger;
 
-    public function __construct(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
-    }
+    /** @var array */
+    protected $configs;
 
     /**
-     * Configure this instance.
+     * @throws BouncerException
      */
-    abstract public function configure(string $baseUri, array $headers, int $timeout): void;
+    public function __construct(array $configs, LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+        $this->configs = $configs;
+        if (empty($this->configs['api_url'])) {
+            throw new BouncerException('Api url is required');
+        }
+        $this->baseUri = $this->configs['api_url'];
+        $this->timeout = $this->configs['api_timeout'] ?? Constants::API_TIMEOUT;
+        if (empty($this->configs['headers'])) {
+            throw new BouncerException('Headers are required');
+        }
+        $this->headers = $this->configs['headers'];
+        if (empty($this->headers['User-Agent'])) {
+            throw new BouncerException('User-Agent header required');
+        }
+
+        $this->logger->debug('', [
+            'type' => 'REST_CLIENT_INIT',
+            'base_uri' => $this->baseUri,
+            'timeout' => $this->timeout,
+            'user_agent' => $this->headers['User-Agent'],
+        ]);
+    }
 
     /**
      * Send an HTTP request and parse its JSON result if any.

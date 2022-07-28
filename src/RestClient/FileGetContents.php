@@ -5,27 +5,17 @@ declare(strict_types=1);
 namespace CrowdSecBouncer\RestClient;
 
 use CrowdSecBouncer\BouncerException;
+use Psr\Log\LoggerInterface;
 
 class FileGetContents extends ClientAbstract
 {
     /** @var string|null */
-    private $headerString = null;
+    private $headerString;
 
-    /**
-     * Configure this instance.
-     */
-    public function configure(string $baseUri, array $headers, int $timeout): void
+    public function __construct(array $configs, LoggerInterface $logger)
     {
-        $this->baseUri = $baseUri;
-        $this->headerString = $this->convertHeadersToString($headers);
-        $this->timeout = $timeout;
-
-        $this->logger->debug('', [
-            'type' => 'REST_CLIENT_INIT',
-            'request_handler' => 'file_get_contents',
-            'base_uri' => $this->baseUri,
-            'timeout' => $this->timeout,
-        ]);
+        parent::__construct($configs, $logger);
+        $this->headerString = $this->convertHeadersToString($this->headers);
     }
 
     /**
@@ -54,9 +44,6 @@ class FileGetContents extends ClientAbstract
         array $headers = null,
         int $timeout = null
     ): ?array {
-        if (!$this->baseUri) {
-            throw new BouncerException('Base URI is required.');
-        }
         if ($queryParams) {
             $endpoint .= '?' . http_build_query($queryParams);
         }
@@ -89,7 +76,7 @@ class FileGetContents extends ClientAbstract
         $parts = explode(' ', $http_response_header[0]);
         $status = 0;
         if (\count($parts) > 1) {
-            $status = (int) ($parts[1]);
+            $status = (int) $parts[1];
         }
 
         if ($status < 200 || $status >= 300) {

@@ -24,36 +24,30 @@ class WatcherClient
     private $watcherClient;
 
     /** @var array<string> */
-    private $baseHeaders = null;
+    private $baseHeaders;
 
     /** @var string */
     private $token;
 
-    private $settings = [];
+    private $configs;
 
-    public function __construct(LoggerInterface $logger, array $settings= [] )
+    public function __construct(array $configs, LoggerInterface $logger)
     {
         $this->logger = $logger;
-        $this->settings = $settings;
-    }
-
-    /**
-     * Configure this instance.
-     */
-    public function configure(): void
-    {
-        // Create Watcher Client.
-        /** @var string */
-        $apiUrl = getenv('LAPI_URL');
-        $useCurl = !empty($this->settings['use_curl']);
+        $this->configs = $configs;
         $this->baseHeaders = [
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
             'User-Agent' => Constants::BASE_USER_AGENT,
         ];
-        $this->watcherClient = $useCurl ? new Curl($this->logger) : new FileGetContents
-        ($this->logger);
-        $this->watcherClient->configure($apiUrl, $this->baseHeaders, 2);
+        $this->configs['headers'] = $this->baseHeaders;
+        $apiUrl = getenv('LAPI_URL');
+        $this->configs['api_url'] = $apiUrl;
+        $this->configs['api_timeout'] = 2;
+
+        $useCurl = !empty($this->configs['use_curl']);
+        $this->watcherClient = $useCurl ? new Curl($this->configs, $this->logger) : new FileGetContents(
+            $this->configs, $this->logger);
         $this->logger->info('', ['message' => 'Watcher client initialized', 'use_curl' => $useCurl]);
     }
 

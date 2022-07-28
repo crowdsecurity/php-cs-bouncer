@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
+use CrowdSecBouncer\Constants;
 use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
@@ -27,6 +28,7 @@ class TestHelpers
     public const JAPAN = 'JP';
     public const IP_JAPAN = '210.249.74.42';
     public const IP_FRANCE = '78.119.253.85';
+    public const UNIT_TEST_AGENT_PREFIX = 'Unit test';
 
     public const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__.'/../var/phpFiles.cache';
 
@@ -46,28 +48,16 @@ class TestHelpers
      * @throws ErrorException
      * @throws CacheException
      */
-    public static function cacheAdapterProvider(): array
+    public static function cacheAdapterConfigProvider(): array
     {
-        // Init all adapters
-        $phpFilesAdapter = new TagAwareAdapter(
-            new PhpFilesAdapter('php_array_adapter_backup_cache', 0, self::PHP_FILES_CACHE_ADAPTER_DIR)
-        );
-        /** @var string */
-        $redisCacheAdapterDsn = getenv('REDIS_DSN');
-        $redisClient = RedisAdapter::createConnection($redisCacheAdapterDsn);
-        $redisAdapter = new RedisTagAwareAdapter($redisClient);
-
-        /** @var string */
-        $memcachedCacheAdapterDsn = getenv('MEMCACHED_DSN');
-        $memcachedAdapter = new MemcachedTagAwareAdapter(
-            new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedCacheAdapterDsn)));
 
         return [
-            'PhpFilesAdapter' => [$phpFilesAdapter, 'PhpFilesAdapter'],
-            'RedisAdapter' => [$redisAdapter, 'RedisAdapter'],
-            'MemcachedAdapter' => [$memcachedAdapter, 'MemcachedAdapter'],
+            'PhpFilesAdapter' => [Constants::CACHE_SYSTEM_PHPFS, 'PhpFilesAdapter'],
+            'RedisAdapter' => [Constants::CACHE_SYSTEM_REDIS, 'RedisAdapter'],
+            'MemcachedAdapter' => [Constants::CACHE_SYSTEM_MEMCACHED, 'MemcachedAdapter'],
         ];
     }
+
 
     public static function maxmindConfigProvider(): array
     {

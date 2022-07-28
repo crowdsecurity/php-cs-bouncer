@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.26.0] - 2022-07-28
+
+### Changed
+- *Breaking change*: Modify all constructors (`Bouncer`, `ApiCache`, `ApiClient`, `RestClient`) to use only 
+  configurations and logger as parameters
+- Use `shouldBounceCurrentIp` method of Standalone before bouncer instantiation
+- Modify logger constructor
+
 ## [0.25.0] - 2022-07-22
 
 ### Added

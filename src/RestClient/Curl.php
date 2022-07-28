@@ -10,25 +10,6 @@ use CrowdSecBouncer\BouncerException;
 
 class Curl extends ClientAbstract
 {
-    private $headers = [];
-
-    /**
-     * Configure this instance.
-     */
-    public function configure(string $baseUri, array $headers, int $timeout): void
-    {
-        $this->baseUri = $baseUri;
-        $this->timeout = $timeout;
-        $this->headers = $headers;
-
-        $this->logger->debug('', [
-            'type' => 'REST_CLIENT_INIT',
-            'request_handler' => 'cURL',
-            'base_uri' => $this->baseUri,
-            'timeout' => $this->timeout,
-        ]);
-    }
-
     /**
      * Send an HTTP request using cURL and parse its JSON result if any.
      *
@@ -42,10 +23,6 @@ class Curl extends ClientAbstract
         array $headers = null,
         int $timeout = null
     ): ?array {
-        if (!$this->baseUri) {
-            throw new BouncerException('Base URI is required.');
-        }
-
         $handle = curl_init();
 
         $curlOptions = $this->createOptions($endpoint, $queryParams, $bodyParams, $method, $headers ?: $this->headers);
@@ -76,21 +53,16 @@ class Curl extends ClientAbstract
     /**
      * Retrieve Curl options.
      *
-     * @param $endpoint
-     *
-     * @throws BouncerException
      */
     private function createOptions(
-        $endpoint,
+        string $endpoint,
         ?array $queryParams,
         ?array $bodyParams,
         string $method,
         ?array $headers
     ): array {
         $url = $this->baseUri . $endpoint;
-        if (!isset($headers['User-Agent'])) {
-            throw new BouncerException('User agent is required');
-        }
+
         $options = [
             \CURLOPT_HEADER => false,
             \CURLOPT_RETURNTRANSFER => true,

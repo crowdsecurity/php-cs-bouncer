@@ -2,6 +2,7 @@
 
 namespace CrowdSecBouncer;
 
+use InvalidArgumentException;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
@@ -20,7 +21,7 @@ class Configuration implements ConfigurationInterface
 {
     /**
      * {@inheritdoc}
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function getConfigTreeBuilder(): TreeBuilder
     {

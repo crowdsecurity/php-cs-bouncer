@@ -6,6 +6,8 @@ require_once __DIR__ . '/templates/captcha.php';
 require_once __DIR__ . '/templates/access-forbidden.php';
 
 use CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder;
+use CrowdSecBouncer\RestClient\ClientAbstract;
+use ErrorException;
 use Gregwar\Captcha\PhraseBuilder;
 use IPLib\Factory;
 use IPLib\ParseStringFlag;
@@ -14,6 +16,7 @@ use Monolog\Logger;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
+use Symfony\Component\Cache\Exception\CacheException;
 use Symfony\Component\Config\Definition\Processor;
 
 /**
@@ -35,30 +38,46 @@ class Bouncer
     private $apiCache;
 
     /** @var int */
-    private $maxRemediationLevelIndex = 0;
+    private $maxRemediationLevelIndex;
 
     /** @var array */
     private $configs = [];
 
     /**
-     * @param TagAwareAdapterInterface|null $cacheAdapter
+     * @param array $configs
      * @param LoggerInterface|null $logger
-     * @param ApiCache|null $apiCache
-     * @param array $settings
+     * @throws BouncerException
+     * @throws CacheException
+     * @throws ErrorException|InvalidArgumentException
      */
-    public function __construct(
-        TagAwareAdapterInterface $cacheAdapter = null,
-        LoggerInterface $logger = null,
-        ApiCache $apiCache = null,
-        array $settings = []
-    ) {
+    public function __construct(array $configs, LoggerInterface $logger = null)
+    {
         if (!$logger) {
             $logger = new Logger('null');
             $logger->pushHandler(new NullHandler());
         }
         $this->logger = $logger;
-        $this->apiCache = $apiCache ?: new ApiCache($logger, new ApiClient($logger, $settings), $cacheAdapter);
+        $this->configure($configs);
+        /** @var int */
+        $index = array_search(
+            $this->configs['max_remediation_level'],
+            Constants::ORDERED_REMEDIATIONS
+        );
+        $this->maxRemediationLevelIndex = $index;
+
+        $this->apiCache = new ApiCache(
+            $this->configs,
+            $logger
+        );
+
+        $this->logger->debug('', [
+            'type' => 'BOUNCER_INIT',
+            'logger' => \get_class($this->logger),
+            'max_remediation_level' => $this->maxRemediationLevelIndex,
+            'configs' => $this->configs
+        ]);
     }
+
 
     /**
      * Retrieve Bouncer configurations
@@ -71,42 +90,26 @@ class Bouncer
     }
 
     /**
+     * Retrieve Bouncer configuration by name
+     *
+     */
+    public function getConfig($name)
+    {
+        return $this->configs[$name];
+    }
+
+    /**
      * Configure this instance.
      *
      * @param array $config An array with all configuration parameters
      *
-     * @throws InvalidArgumentException
      */
-    public function configure(array $config): void
+    private function configure(array $config): void
     {
         // Process and validate input configuration.
         $configuration = new Configuration();
         $processor = new Processor();
         $this->configs = $processor->processConfiguration($configuration, [$config]);
-        /** @var int */
-        $index = array_search(
-            $this->configs['max_remediation_level'],
-            Constants::ORDERED_REMEDIATIONS
-        );
-        $this->maxRemediationLevelIndex = $index;
-        $cacheDurations = [
-            'clean_ip_cache_duration' => $this->configs['clean_ip_cache_duration'],
-            'bad_ip_cache_duration' => $this->configs['bad_ip_cache_duration'],
-            'captcha_cache_duration' => $this->configs['captcha_cache_duration'],
-            'geolocation_cache_duration' => $this->configs['geolocation_cache_duration'],
-        ];
-
-        // Configure Api Cache.
-        $this->apiCache->configure(
-            $this->configs['stream_mode'],
-            $this->configs['api_url'],
-            $this->configs['api_timeout'],
-            $this->configs['api_user_agent'],
-            $this->configs['api_key'],
-            $cacheDurations,
-            $this->configs['fallback_remediation'],
-            $this->configs['geolocation']
-        );
     }
 
     /**
@@ -302,5 +305,20 @@ class Bouncer
     public function getApiCache(): ApiCache
     {
         return $this->apiCache;
+    }
+
+    public function getCacheAdapter(): TagAwareAdapterInterface
+    {
+        return $this->getApiCache()->getAdapter();
+    }
+
+    public function getClient(): ApiClient
+    {
+        return $this->getApiCache()->getClient();
+    }
+
+    public function getRestClient(): ClientAbstract
+    {
+        return $this->getClient()->getRestClient();
     }
 }
