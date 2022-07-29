@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+
+## [0.27.0] - 2022-07-29
+
+### Changed
+- *Breaking change*: Modify `getBouncerInstance` and `init` signatures
+
+### Fixed
+- Fix wrongly formatted range scoped decision retrieving
+- Fix cache updated decisions count
+
 ## [0.26.0] - 2022-07-28
 
 ### Changed
