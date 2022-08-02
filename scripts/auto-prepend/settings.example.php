@@ -27,6 +27,8 @@ $crowdSecStandaloneBouncerConfig = [
 
     // true to enable verbose debug log.
     'debug_mode' => false,
+    // true to disable prod log
+    'disable_prod_log' => false,
 
     /** Absolute path to store log files.
      *
