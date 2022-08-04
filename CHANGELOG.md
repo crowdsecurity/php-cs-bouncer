@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.28.0] - 2022-08-04
+
+### Changed
+- *Breaking change*: Rename `ClientAbstract` class to `AbstractClient`
+- Hide `api_key` in log.
+
+### Added
+- Add `disable_prod_log` configuration 
+
 
 ## [0.27.0] - 2022-07-29
 
