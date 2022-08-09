@@ -75,10 +75,11 @@ abstract class AbstractBounce implements IBounce
             default:
                 throw new BouncerException("Unknown $bouncingLevel");
         }
+        $authType = $this->getStringSettings('auth_type');
 
         return [
             // LAPI connection
-            'auth_type' => $this->getStringSettings('auth_type'),
+            'auth_type' => $authType?:Constants::AUTH_KEY,
             'tls_bouncer_cert_path' => $this->getStringSettings('tls_bouncer_cert_path'),
             'tls_bouncer_key_path' => $this->getStringSettings('tls_bouncer_key_path'),
             'tls_verify_peer' => $this->getBoolSettings('tls_verify_peer'),
