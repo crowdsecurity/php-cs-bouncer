@@ -61,8 +61,8 @@ class FileGetContents extends AbstractClient
             $verifyPeer = $this->configs['tls_verify_peer']??true;
             $config['ssl'] = [
                 'verify_peer' => $verifyPeer,
-                'local_cert' => $this->configs['tls_bouncer_cert_path']??'',
-                'local_pk' => $this->configs['tls_bouncer_key_path']??'',
+                'local_cert' => $this->configs['tls_cert_path']??'',
+                'local_pk' => $this->configs['tls_key_path']??'',
             ];
             if($verifyPeer){
                 $config['ssl']['cafile'] = $this->configs['tls_ca_cert_path']??'';

@@ -15,7 +15,7 @@ $crowdSecStandaloneBouncerConfig = [
      *
      * Only required if you choose tls as "auth_type"
      */
-    'tls_bouncer_cert_path' => '',
+    'tls_cert_path' => '',
 
     /** Absolute path to the bouncer key.
      *

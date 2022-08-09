@@ -80,9 +80,9 @@ class Curl extends AbstractClient
             $verifyPeer = $this->configs['tls_verify_peer'] ?? true;
             $options[\CURLOPT_SSL_VERIFYPEER] = $verifyPeer;
             //   The --cert option
-            $options[\CURLOPT_SSLCERT] = $this->configs['tls_bouncer_cert_path'] ?? '';
+            $options[\CURLOPT_SSLCERT] = $this->configs['tls_cert_path'] ?? '';
             // The --key option
-            $options[\CURLOPT_SSLKEY] = $this->configs['tls_bouncer_key_path'] ?? '';
+            $options[\CURLOPT_SSLKEY] = $this->configs['tls_key_path'] ?? '';
             if ($verifyPeer) {
                 // The --cacert option
                 $options[\CURLOPT_CAINFO] = $this->configs['tls_ca_cert_path'] ?? '';

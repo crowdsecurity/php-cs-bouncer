@@ -44,6 +44,13 @@ class WatcherClient
         $apiUrl = getenv('LAPI_URL');
         $this->configs['api_url'] = $apiUrl;
         $this->configs['api_timeout'] = 2;
+        $useTLS = getenv('AGENT_TLS');
+        if($useTLS){
+            $this->configs['auth_type'] = Constants::AUTH_TLS;
+            $this->configs['tls_cert_path'] = getenv('AGENT_CERT');
+            $this->configs['tls_key_path'] = getenv('AGENT_KEY');
+            $this->configs['tls_verify_peer'] = false;
+        }
 
         $useCurl = !empty($this->configs['use_curl']);
         $this->watcherClient = $useCurl ? new Curl($this->configs, $this->logger) : new FileGetContents(

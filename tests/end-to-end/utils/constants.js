@@ -1,6 +1,5 @@
 const { PHP_URL } = process.env;
 
-const LAPI_URL_FROM_PHP = "http://crowdsec:8080";
 const PUBLIC_URL =
     "/my-own-modules/crowdsec-php-lib/scripts/public/protected-page.php";
 const FORCED_TEST_FORWARDED_IP =
@@ -18,6 +17,9 @@ const { DEBUG } = process.env;
 const { TIMEOUT } = process.env;
 const { CURRENT_IP } = process.env;
 const { PROXY_IP } = process.env;
+const AGENT_CERT_PATH = '/var/www/html/cfssl/agent.pem';
+const AGENT_KEY_PATH = '/var/www/html/cfssl/agent-key.pem';
+const CA_CERT_PATH = '/var/www/html/cfssl/ca-chain.pem';
 
 module.exports = {
     PHP_URL,
@@ -25,7 +27,6 @@ module.exports = {
     CURRENT_IP,
     DEBUG,
     FORCED_TEST_FORWARDED_IP,
-    LAPI_URL_FROM_PHP,
     LAPI_URL_FROM_PLAYWRIGHT,
     PROXY_IP,
     PUBLIC_URL,
@@ -37,4 +38,7 @@ module.exports = {
     STREAM_MODE,
     JAPAN_IP,
     FRANCE_IP,
+    AGENT_CERT_PATH,
+    AGENT_KEY_PATH,
+    CA_CERT_PATH
 };

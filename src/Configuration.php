@@ -60,7 +60,7 @@ class Configuration implements ConfigurationInterface
             ->ifTrue(function ($v) {
                 if ($v['auth_type'] === Constants::AUTH_TLS) {
 
-                    return empty($v['tls_bouncer_cert_path']) || empty($v['tls_bouncer_key_path']);
+                    return empty($v['tls_cert_path']) || empty($v['tls_key_path']);
                 }
                 return false;
 
@@ -103,10 +103,10 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('api_key')->end()
             ->scalarNode('api_url')->defaultValue(Constants::DEFAULT_LAPI_URL)->end()
             ->scalarNode('api_user_agent')->defaultValue(Constants::BASE_USER_AGENT)->end()
-            ->scalarNode('tls_bouncer_cert_path')
+            ->scalarNode('tls_cert_path')
                 ->info('Absolute path to the Bouncer certificate')->defaultValue('')
             ->end()
-                ->scalarNode('tls_bouncer_key_path')
+                ->scalarNode('tls_key_path')
             ->info('Absolute path to the Bouncer key')->defaultValue('')
             ->end()
             ->scalarNode('tls_ca_cert_path')
