@@ -47,9 +47,11 @@ class ApiClient
         $userAgent = $this->configs['api_user_agent'];
         $this->configs['headers'] = [
             'User-Agent' => $this->configs['api_user_agent'],
-            'X-Api-Key' => $this->configs['api_key'],
             'Accept' => 'application/json',
         ];
+        if(!empty($this->configs['api_key'])){
+            $this->configs['headers']['X-Api-Key'] = $this->configs['api_key'];
+        }
 
         $this->restClient = $useCurl ?
             new Curl($this->configs, $this->logger) :

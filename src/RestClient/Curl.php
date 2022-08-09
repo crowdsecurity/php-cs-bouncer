@@ -7,6 +7,7 @@ declare(strict_types=1);
 namespace CrowdSecBouncer\RestClient;
 
 use CrowdSecBouncer\BouncerException;
+use CrowdSecBouncer\Constants;
 
 class Curl extends AbstractClient
 {
@@ -74,6 +75,22 @@ class Curl extends AbstractClient
                 $options[\CURLOPT_HTTPHEADER][] = sprintf('%s:%s', $key, $value);
             }
         }
+
+        if (isset($this->configs['auth_type']) && $this->configs['auth_type'] === Constants::AUTH_TLS) {
+            $verifyPeer = $this->configs['tls_verify_peer'] ?? true;
+            $options[\CURLOPT_SSL_VERIFYPEER] = $verifyPeer;
+            //   The --cert option
+            $options[\CURLOPT_SSLCERT] = $this->configs['tls_bouncer_cert_path'] ?? '';
+            // The --key option
+            $options[\CURLOPT_SSLKEY] = $this->configs['tls_bouncer_key_path'] ?? '';
+            if ($verifyPeer) {
+                // The --cacert option
+                $options[\CURLOPT_CAINFO] = $this->configs['tls_ca_cert_path'] ?? '';
+            }
+        } else {
+            $options[\CURLOPT_SSL_VERIFYPEER] = false;
+        }
+
 
         if ('POST' === strtoupper($method)) {
             $parameters = $bodyParams;

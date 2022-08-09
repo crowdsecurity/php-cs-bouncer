@@ -78,6 +78,11 @@ abstract class AbstractBounce implements IBounce
 
         return [
             // LAPI connection
+            'auth_type' => $this->getStringSettings('auth_type'),
+            'tls_bouncer_cert_path' => $this->getStringSettings('tls_bouncer_cert_path'),
+            'tls_bouncer_key_path' => $this->getStringSettings('tls_bouncer_key_path'),
+            'tls_verify_peer' => $this->getBoolSettings('tls_verify_peer'),
+            'tls_ca_cert_path' => $this->getStringSettings('tls_ca_cert_path'),
             'api_key' => $this->getStringSettings('api_key'),
             'api_url' => $this->getStringSettings('api_url'),
             'api_user_agent' => $this->getStringSettings('api_user_agent'),

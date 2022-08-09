@@ -4,7 +4,7 @@ use CrowdSecBouncer\Constants;
 
 $crowdSecStandaloneBouncerConfig = [
     // LAPI Connection
-    'api_url' => 'http://crowdsec:8080',
+    'api_url' => 'https://crowdsec:8080',
     'api_key' => 'REPLACE_API_KEY',
     'api_timeout'=> 1,
     'api_user_agent'=> 'CrowdSec PHP Library/test',
