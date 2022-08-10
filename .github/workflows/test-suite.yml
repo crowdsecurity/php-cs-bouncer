@@ -221,3 +221,26 @@ jobs:
           cat scripts/auto-prepend/settings.php
           cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
           ./run-tests.sh ci "./__tests__/1-live-mode.js"
+
+      - name: Run "live mode with TLS auth" test
+        run: |
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
+          sed -i  's/\x27auth_type\x27 => \x27api_key\x27/\x27auth_type\x27 => \x27tls\x27/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27api_key\x27 => \x27${{env.BOUNCER_KEY}}\x27/\x27api_key\x27 => \x27\x27/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27tls_cert_path\x27 => \x27\x27/\x27tls_cert_path\x27 => \x27\/var\/www\/html\/cfssl\/bouncer.pem\x27/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27tls_key_path\x27 => \x27\x27/\x27tls_key_path\x27 => \x27\/var\/www\/html\/cfssl\/bouncer-key.pem\x27/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27tls_ca_cert_path\x27 => \x27\x27/\x27tls_ca_cert_path\x27 => \x27\/var\/www\/html\/cfssl\/ca-chain.pem\x27/g' scripts/auto-prepend/settings.php
+          cat scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
+          ./run-tests.sh ci "./__tests__/1-live-mode.js"
+          
+
+      - name: Run "stream mode with TLS auth and cURL" test
+        run: |
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
+          sed -i  's/\x27stream_mode\x27 => false/\x27stream_mode\x27 => true/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27forced_test_forwarded_ip\x27 => \x27${{env.IPV6_TEST_IP}}\x27/\x27forced_test_forwarded_ip\x27 => \x27\x27/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27use_curl\x27 => false/\x27use_curl\x27 => true/g' scripts/auto-prepend/settings.php
+          cat scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
+          ./run-tests.sh ci "./__tests__/3-stream-mode.js"
