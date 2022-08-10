@@ -3,7 +3,9 @@
 namespace CrowdSecBouncer;
 
 use InvalidArgumentException;
+use RuntimeException;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -21,7 +23,7 @@ class Configuration implements ConfigurationInterface
 {
     /**
      * {@inheritdoc}
-     * @throws InvalidArgumentException
+     * @throws InvalidArgumentException|RuntimeException
      */
     public function getConfigTreeBuilder(): TreeBuilder
     {
@@ -41,15 +43,16 @@ class Configuration implements ConfigurationInterface
     /**
      * Conditional validation
      *
-     * @param $rootNode
+     * @param NodeDefinition|ArrayNodeDefinition $rootNode
      * @return void
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
      */
     public function validate($rootNode)
     {
         $rootNode->validate()
-            ->ifTrue(function ($v) {
+            ->ifTrue(function (array $v) {
                 if ($v['auth_type'] === Constants::AUTH_KEY && empty($v['api_key'])) {
-
                     return true;
                 }
                 return false;
@@ -57,20 +60,17 @@ class Configuration implements ConfigurationInterface
             ->thenInvalid('Api key is required as auth type is api_key')
         ->end()
         ->validate()
-            ->ifTrue(function ($v) {
+            ->ifTrue(function (array $v) {
                 if ($v['auth_type'] === Constants::AUTH_TLS) {
-
                     return empty($v['tls_cert_path']) || empty($v['tls_key_path']);
                 }
                 return false;
-
             })
             ->thenInvalid('Bouncer certificate and key paths are required for tls authentification.')
         ->end()
         ->validate()
-            ->ifTrue(function ($v) {
+            ->ifTrue(function (array $v) {
                 if ($v['auth_type'] === Constants::AUTH_TLS && $v['tls_verify_peer'] === true) {
-
                     return empty($v['tls_ca_cert_path']);
                 }
 
@@ -85,7 +85,7 @@ class Configuration implements ConfigurationInterface
     /**
      * LAPI connection settings
      *
-     * @param $rootNode
+     * @param NodeDefinition|ArrayNodeDefinition $rootNode
      * @return void
      */
     public function addConnectionNodes($rootNode)
@@ -121,7 +121,7 @@ class Configuration implements ConfigurationInterface
     /**
      * Debug settings
      *
-     * @param $rootNode
+     * @param NodeDefinition|ArrayNodeDefinition $rootNode
      * @return void
      */
     public function addDebugNodes($rootNode)
@@ -139,7 +139,7 @@ class Configuration implements ConfigurationInterface
     /**
      * Bouncer settings
      *
-     * @param $rootNode
+     * @param NodeDefinition|ArrayNodeDefinition $rootNode
      * @return void
      */
     public function addBouncerNodes($rootNode)
@@ -177,7 +177,7 @@ class Configuration implements ConfigurationInterface
     /**
      * Cache settings
      *
-     * @param $rootNode
+     * @param NodeDefinition|ArrayNodeDefinition $rootNode
      * @return void
      */
     public function addCacheNodes($rootNode)
@@ -215,7 +215,7 @@ class Configuration implements ConfigurationInterface
     /**
      * Geolocation settings
      *
-     * @param $rootNode
+     * @param NodeDefinition|ArrayNodeDefinition $rootNode
      * @return void
      */
     public function addGeolocationNodes($rootNode)

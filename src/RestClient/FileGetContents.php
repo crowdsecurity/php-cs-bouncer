@@ -57,17 +57,17 @@ class FileGetContents extends AbstractClient
                 'ignore_errors' => true,
             ],
         ];
-        if(isset($this->configs['auth_type']) && $this->configs['auth_type'] === Constants::AUTH_TLS){
-            $verifyPeer = $this->configs['tls_verify_peer']??true;
+        if (isset($this->configs['auth_type']) && Constants::AUTH_TLS === $this->configs['auth_type']) {
+            $verifyPeer = $this->configs['tls_verify_peer'] ?? true;
             $config['ssl'] = [
                 'verify_peer' => $verifyPeer,
-                'local_cert' => $this->configs['tls_cert_path']??'',
-                'local_pk' => $this->configs['tls_key_path']??'',
+                'local_cert' => $this->configs['tls_cert_path'] ?? '',
+                'local_pk' => $this->configs['tls_key_path'] ?? '',
             ];
-            if($verifyPeer){
-                $config['ssl']['cafile'] = $this->configs['tls_ca_cert_path']??'';
+            if ($verifyPeer) {
+                $config['ssl']['cafile'] = $this->configs['tls_ca_cert_path'] ?? '';
             }
-        }else{
+        } else {
             $config['ssl'] = ['verify_peer' => false];
         }
 

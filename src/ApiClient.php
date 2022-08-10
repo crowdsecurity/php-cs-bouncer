@@ -49,7 +49,7 @@ class ApiClient
             'User-Agent' => $this->configs['api_user_agent'],
             'Accept' => 'application/json',
         ];
-        if(!empty($this->configs['api_key'])){
+        if (!empty($this->configs['api_key'])) {
             $this->configs['headers']['X-Api-Key'] = $this->configs['api_key'];
         }
 
@@ -79,10 +79,9 @@ class ApiClient
      * @throws BouncerException
      */
     public function getStreamedDecisions(
-        bool  $startup = false,
+        bool $startup = false,
         array $scopes = [Constants::SCOPE_IP, Constants::SCOPE_RANGE]
-    ): array
-    {
+    ): array {
         /** @var array */
         return $this->restClient->request(
             '/v1/decisions/stream',

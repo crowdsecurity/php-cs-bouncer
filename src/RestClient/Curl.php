@@ -59,7 +59,7 @@ class Curl extends AbstractClient
         ?array $queryParams,
         ?array $bodyParams,
         string $method,
-        ?array $headers
+        array $headers
     ): array {
         $url = $this->baseUri . $endpoint;
 
@@ -76,7 +76,7 @@ class Curl extends AbstractClient
             }
         }
 
-        if (isset($this->configs['auth_type']) && $this->configs['auth_type'] === Constants::AUTH_TLS) {
+        if (isset($this->configs['auth_type']) && Constants::AUTH_TLS === $this->configs['auth_type']) {
             $verifyPeer = $this->configs['tls_verify_peer'] ?? true;
             $options[\CURLOPT_SSL_VERIFYPEER] = $verifyPeer;
             //   The --cert option
@@ -90,7 +90,6 @@ class Curl extends AbstractClient
         } else {
             $options[\CURLOPT_SSL_VERIFYPEER] = false;
         }
-
 
         if ('POST' === strtoupper($method)) {
             $parameters = $bodyParams;
@@ -120,6 +119,10 @@ class Curl extends AbstractClient
         return $options;
     }
 
+    /**
+     * @param $handle
+     * @return mixed
+     */
     protected function getResponseHttpCode($handle)
     {
         return curl_getinfo($handle, \CURLINFO_HTTP_CODE);
