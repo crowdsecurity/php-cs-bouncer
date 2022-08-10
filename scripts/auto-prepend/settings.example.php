@@ -21,14 +21,14 @@ $crowdSecStandaloneBouncerConfig = [
      *
      * Only required if you choose tls as "auth_type"
      */
-    'tls_bouncer_key' => '',
+    'tls_key_path' => '',
 
     /** This option determines whether request handler verifies the authenticity of the peer's certificate.
      *
      * When negotiating a TLS or SSL connection, the server sends a certificate indicating its identity.
      * If "tls_verify_peer" is set to true, request handler verifies whether the certificate is authentic.
      * This trust is based on a chain of digital signatures,
-     * rooted in certification authority (CA) certificates you supply using the "tls_ca_cert" setting below.
+     * rooted in certification authority (CA) certificates you supply using the "tls_ca_cert_path" setting below.
      *
      */
     'tls_verify_peer' => true,
@@ -37,7 +37,7 @@ $crowdSecStandaloneBouncerConfig = [
      *
      * Only required if you choose tls as "auth_type" and "tls_verify_peer" is true
      */
-    'tls_ca_cert' => '',
+    'tls_ca_cert_path' => '',
 
     /** The bouncer api key to access LAPI.
      *
