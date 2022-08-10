@@ -1,7 +1,6 @@
 const axios = require("axios").default;
-const https = require('https');
+const https = require("https");
 const fs = require("fs");
-
 
 const {
     LAPI_URL_FROM_PLAYWRIGHT,
@@ -9,9 +8,8 @@ const {
     WATCHER_PASSWORD,
     AGENT_CERT_PATH,
     AGENT_KEY_PATH,
-    CA_CERT_PATH
+    CA_CERT_PATH,
 } = require("./constants");
-
 
 const httpsAgent = new https.Agent({
     rejectUnauthorized: true,
@@ -23,7 +21,7 @@ const httpsAgent = new https.Agent({
 const httpClient = axios.create({
     baseURL: LAPI_URL_FROM_PLAYWRIGHT,
     timeout: 5000,
-    httpsAgent
+    httpsAgent,
 });
 
 let authenticated = false;
@@ -140,10 +138,10 @@ module.exports.addDecision = async (
     let finalScope = "Country";
     if (["Ip", "Range"].includes(scope)) {
         // IPv6
-        if(value.includes(":")){
+        if (value.includes(":")) {
             // @TODO Handle IP range for Ipv6
             finalScope = "Ip";
-        } else{
+        } else {
             let startIp;
             let endIp;
             if (value.split("/").length === 2) {

@@ -97,19 +97,19 @@ jobs:
 
       - name: Run "IP verification with file_get_contents" test
         run: |
-          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS=1 AGENT_CERT=/var/www/html/cfssl/agent.pem AGENT_KEY=/var/www/html/cfssl/agent-key.pem  LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/IpVerificationTest.php
+          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/IpVerificationTest.php
 
       - name: Run "IP verification with cURL" test
         run: |
-          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS=1 AGENT_CERT=/var/www/html/cfssl/agent.pem AGENT_KEY=/var/www/html/cfssl/agent-key.pem USE_CURL=1 LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/IpVerificationTest.php
+          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS_PATH=/var/www/html/cfssl USE_CURL=1 LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/IpVerificationTest.php
 
       - name: Run "Geolocation with file_get_contents" test
         run: |
-          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS=1 AGENT_CERT=/var/www/html/cfssl/agent.pem AGENT_KEY=/var/www/html/cfssl/agent-key.pem LAPI_URL=https://crowdsec:8080  /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/GeolocationTest.php
+          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080  /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/GeolocationTest.php
 
       - name: Run "Geolocation with cURL" test
         run: |
-          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS=1 AGENT_CERT=/var/www/html/cfssl/agent.pem AGENT_KEY=/var/www/html/cfssl/agent-key.pem USE_CURL=1 LAPI_URL=https://crowdsec:8080  /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/GeolocationTest.php    
+          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS_PATH=/var/www/html/cfssl USE_CURL=1 LAPI_URL=https://crowdsec:8080  /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/GeolocationTest.php    
 
       - name: Prepare Standalone Bouncer end-to-end tests
         run: |
