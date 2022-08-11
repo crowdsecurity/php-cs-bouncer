@@ -13,7 +13,7 @@ use Monolog\Logger;
 
 // Parse arguments
 $bouncerApiKey = $argv[1]; // required
-$apiUrl = $argv[3] ?: 'http://crowdsec:8080';
+$apiUrl = $argv[3] ?: 'https://crowdsec:8080';
 
 if (!$bouncerApiKey) {
     echo 'Usage: php clear-cache.php <api_key>';
@@ -24,10 +24,10 @@ echo "\nClear the cache...\n";
 // Configure paths
 $logPath = __DIR__.'/.crowdsec.log';
 
-// Instantiate the Stream logger with info level(optional)
+// Instantiate the Stream logger
 $logger = new Logger('example');
 
-// Display logs with INFO verbosity
+// Display logs with DEBUG verbosity
 $streamHandler = new StreamHandler('php://stdout', Logger::DEBUG);
 $streamHandler->setFormatter(new LineFormatter("[%datetime%] %message% %context%\n"));
 $logger->pushHandler($streamHandler);
@@ -39,7 +39,7 @@ $logger->pushHandler($fileHandler);
 // Instantiate the bouncer
 $configs = [
     'api_key' => $bouncerApiKey,
-    'api_url' => 'http://crowdsec:8080',
+    'api_url' => 'https://crowdsec:8080',
     'fs_cache_path' => __DIR__ . '/.cache',
 ];
 $bouncer = new Bouncer($configs, $logger);

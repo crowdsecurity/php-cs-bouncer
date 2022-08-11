@@ -16,10 +16,10 @@ $bouncerKey = $argv[2];
 if (!$requestedIp || !$bouncerKey) {
     die('Usage: php check-ip.php <IP> <BOUNCER_KEY>');
 }
-// Instantiate the Stream logger with info level(optional)
+// Instantiate the Stream logger
 $logger = new Logger('example');
 
-// Display logs with INFO verbosity
+// Display logs with DEBUG verbosity
 $streamHandler = new StreamHandler('php://stdout', Logger::DEBUG);
 $streamHandler->setFormatter(new LineFormatter("[%datetime%] %message% %context%\n"));
 $logger->pushHandler($streamHandler);
@@ -31,7 +31,7 @@ $logger->pushHandler($fileHandler);
 // Init
 $configs = [
     'api_key' => $bouncerKey,
-    'api_url' => 'http://crowdsec:8080',
+    'api_url' => 'https://crowdsec:8080',
     'fs_cache_path' => __DIR__ . '/.cache',
 ];
 $bouncer = new Bouncer($configs, $logger);

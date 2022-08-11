@@ -14,7 +14,7 @@ if (!$bouncerKey) {
     die('Usage: php refresh-cache.php <BOUNCER_KEY>');
 }
 
-// Instantiate the Stream logger with info level(optional)
+// Instantiate the Stream logger with warning level
 $logger = new Logger('example');
 $fileHandler = new RotatingFileHandler(__DIR__ . '/crowdsec.log', 0, Logger::WARNING);
 $logger->pushHandler($fileHandler);
@@ -22,7 +22,7 @@ $logger->pushHandler($fileHandler);
 // Instantiate the bouncer
 $configs = [
     'api_key' => $bouncerKey,
-    'api_url' => 'http://crowdsec:8080',
+    'api_url' => 'https://crowdsec:8080',
     'fs_cache_path' => __DIR__ . '/.cache'
 ];
 $bouncer = new Bouncer($configs, $logger);

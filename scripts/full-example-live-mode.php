@@ -11,7 +11,7 @@ use Monolog\Logger;
 // Parse arguments
 $bouncerApiKey = $argv[1]; // required
 $requestedIp = $argv[2]; // required
-$apiUrl = $argv[3] ?: 'http://crowdsec:8080';
+$apiUrl = $argv[3] ?: 'https://crowdsec:8080';
 
 if (!$bouncerApiKey || !$requestedIp) {
     echo 'Usage: php full-example-live-mode.php <api_key> <requested_ip> [<api_url>]';
@@ -22,10 +22,10 @@ echo "\nVerify $requestedIp with $apiUrl...\n";
 // Configure paths
 $logPath = __DIR__.'/crowdsec.log';
 
-// Instantiate the Stream logger with info level(optional)
+// Instantiate the Stream logger
 $logger = new Logger('example');
 
-// Display logs with INFO verbosity
+// Display logs with DEBUG verbosity
 $streamHandler = new StreamHandler('php://stdout', Logger::DEBUG);
 $streamHandler->setFormatter(new LineFormatter("[%datetime%] %message% %context%\n"));
 $logger->pushHandler($streamHandler);

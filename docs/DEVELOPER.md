@@ -219,7 +219,7 @@ Finally, run
 
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=http://crowdsec:8080 
+ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 
 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/IpVerificationTest.php
 ```
 
@@ -230,14 +230,14 @@ and`GeoLite2-Country.mmdb`. You can download these databases by creating a maxmi
 Then, you can run:
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=http://crowdsec:8080  
+ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080  
 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/GeolocationTest.php
 ```
 
 **N.B**: If you want to test with `curl` instead of `file_get_contents` calls to LAPI, you have to add `USE_CURL=1` in 
 the previous commands.
 
-**N.B**: If you want to test with `tls` authentification, you have to add `BOUNCER_TLS_PATH` environment varibale 
+**N.B**: If you want to test with `tls` authentification, you have to add `BOUNCER_TLS_PATH` environment variable 
 and specify the path where you store certificates and keys. For example:
 
 ```bash
@@ -386,7 +386,7 @@ ddev xdebug
 
 To generate a html report, you can run:
 ```bash
-ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080
+ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key LAPI_URL=https://crowdsec:8080
 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php  ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml
 
 ```
@@ -397,7 +397,7 @@ You should find the main report file `dashboard.html` in `tools/coding-standards
 If you want to generate a text report in the same folder:
 
 ```bash
-ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080
+ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key LAPI_URL=https://crowdsec:8080
 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php  ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/code-coverage/report.txt 
 ```
 
@@ -519,7 +519,7 @@ Let's add the `max_remediation_level` configuration with `captcha` value:
 ```php
 $configs = [
     'api_key' => $bouncerKey,
-    'api_url' => 'http://crowdsec:8080',
+    'api_url' => 'https://crowdsec:8080',
     'fs_cache_path' => __DIR__ . '/.cache'
     'max_remediation_level' => 'captcha' // <== ADD THIS LINE
     ];
@@ -543,7 +543,7 @@ Replace:
 ```php
 $configs = [
     'api_key' => $bouncerKey,
-    'api_url' => 'http://crowdsec:8080',
+    'api_url' => 'https://crowdsec:8080',
     'fs_cache_path' => __DIR__ . '/.cache',
 ];
 ```
@@ -553,7 +553,7 @@ with:
 ```php
 $configs = [
     'api_key' => $bouncerKey,
-    'api_url' => 'http://crowdsec:8080',
+    'api_url' => 'https://crowdsec:8080',
     'cache_system' => 'redis',
     'redis_dsn' => 'redis://redis:6379'
 ];
@@ -564,7 +564,7 @@ Or, if `Memcached` is more adapted than `Redis` to your needs:
 ```php
 $configs = [
     'api_key' => $bouncerKey,
-    'api_url' => 'http://crowdsec:8080',
+    'api_url' => 'https://crowdsec:8080',
     'cache_system' => 'memcached',
     'memcached_dsn' => 'memcached://memcached:11211'
 ];
@@ -610,7 +610,7 @@ Try with the `full-example-live-mode.php` file:
 
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 http://crowdsec:8080
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 https://crowdsec:8080
 ```
 
 #### Simulate LAPI down by using a bad url
@@ -619,7 +619,7 @@ If you run this script twice, LAPI will not be called, the cache system will rel
 You can this behaviour by testing with a bad LAPI url.
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 http://crowdsec:BAD
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 https://crowdsec:BAD
 ```
 
 As you can see, you can check the API event if LAPI is down. This is because of the caching system.
@@ -641,7 +641,7 @@ ddev exec php my-own-modules/crowdsec-php-lib/scripts/clear-cache.php <YOUR_BOUN
 One more time, get the remediation for the IP "1.2.3.4":
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 http://crowdsec:8080
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 https://crowdsec:8080
 ```
 
 This is a ban (and cache miss) as you can see in your terminal logs.
@@ -652,7 +652,7 @@ This is a ban (and cache miss) as you can see in your terminal logs.
 This library interacts with a CrowdSec agent that you have installed on an accessible server.
 
 The easiest way to interact with the local API (LAPI) is to use the `cscli` tool,but it is also possible to contact it
-through a certain URL (e.g. `http://crowdsec:8080`).
+through a certain URL (e.g. `https://crowdsec:8080`).
 
 ### Use the CrowdSec cli (`cscli`)
 
@@ -739,10 +739,10 @@ Then, you should use some `curl` calls to contact the LAPI.
 For example, you can get the list of decisions with commands like:
 
 ```bash
-curl -H "X-Api-Key: <YOUR_BOUNCER_KEY>" http://crowdsec:8080/v1/decisions | jq
-curl -H "X-Api-Key: <YOUR_BOUNCER_KEY>" http://crowdsec:8080/v1/decisions?ip=1.2.3.4 | jq
-curl -H "X-Api-Key: <YOUR_BOUNCER_KEY>" http://crowdsec:8080/v1/decisions/stream?startup=true | jq
-curl -H "X-Api-Key: <YOUR_BOUNCER_KEY>" http://crowdsec:8080/v1/decisions/stream | jq
+curl -H "X-Api-Key: <YOUR_BOUNCER_KEY>" https://crowdsec:8080/v1/decisions | jq
+curl -H "X-Api-Key: <YOUR_BOUNCER_KEY>" https://crowdsec:8080/v1/decisions?ip=1.2.3.4 | jq
+curl -H "X-Api-Key: <YOUR_BOUNCER_KEY>" https://crowdsec:8080/v1/decisions/stream?startup=true | jq
+curl -H "X-Api-Key: <YOUR_BOUNCER_KEY>" https://crowdsec:8080/v1/decisions/stream | jq
 ```
 
 ## Commit message
