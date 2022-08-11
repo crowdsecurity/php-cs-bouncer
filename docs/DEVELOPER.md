@@ -72,14 +72,14 @@ For a quick start, follow the below steps.
 
 #### DDEV installation
 
-This project is fully compatible with DDEV 1.19.3, and it is recommended to use this specific version.
+This project is fully compatible with DDEV 1.20.0, and it is recommended to use this specific version.
 For the DDEV installation, please follow the [official instructions](https://ddev.readthedocs.io/en/stable/#installation).
 On a Linux distribution, you can run:
 ```
 sudo apt-get -qq update
 sudo apt-get -qq -y install libnss3-tools
 curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh
-bash install_ddev.sh v1.19.3
+bash install_ddev.sh v1.20.0
 rm install_ddev.sh
 ```
 
@@ -167,6 +167,8 @@ It will return the bouncer key.
 ddev create-watcher [name] [password]
 ```
 
+N.B : Since we are using TLS authentification for agent, you should avoid to create a watcher with this method.
+
 
 #### Use composer to update or install the lib
 
@@ -205,17 +207,20 @@ First, create a bouncer and keep the result key.
 ddev create-bouncer
 ```
 
-Then, create a specific watcher for unit test:
-
+Then, as we use a TLS ready CrowdSec container, you have to copy some certificates and key:
+  
 ```bash
-ddev create-watcher PhpUnitTestMachine PhpUnitTestMachinePassword
+cd php-project-sources
+mkdir cfssl
+cp -r ../.ddev/custom_files/crowdsec/cfssl/* cfssl
 ```
 
 Finally, run
 
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/IpVerificationTest.php
+ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=http://crowdsec:8080 
+MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/IpVerificationTest.php
 ```
 
 For geolocation Unit Test, you should first put 2 free MaxMind databases in the `tests` folder : `GeoLite2-City.mmdb`
@@ -225,8 +230,18 @@ and`GeoLite2-Country.mmdb`. You can download these databases by creating a maxmi
 Then, you can run:
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key LAPI_URL=http://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/GeolocationTest.php
+ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=http://crowdsec:8080  
+/usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/GeolocationTest.php
+```
 
+**N.B**: If you want to test with `curl` instead of `file_get_contents` calls to LAPI, you have to add `USE_CURL=1` in 
+the previous commands.
+
+**N.B**: If you want to test with `tls` authentification, you have to add `BOUNCER_TLS_PATH` environment varibale 
+and specify the path where you store certificates and keys. For example:
+
+```bash
+ddev exec USE_CURL=1 AGENT_TLS_PATH=/var/www/html/cfssl  BOUNCER_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/IpVerificationTest.php
 ```
 
 

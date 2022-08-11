@@ -16,5 +16,4 @@ if(isset($crowdSecStandaloneBouncerConfig['bouncing_level']) && $crowdSecStandal
 }elseif($crowdSecStandaloneBouncerConfig['bouncing_level'] === 'flex_boucing'){
     $crowdSecStandaloneBouncerConfig['bouncing_level'] = 'flex_bouncing';
 }
-
 $bounce->safelyBounce($crowdSecStandaloneBouncerConfig);

@@ -20,10 +20,14 @@ final class IpVerificationTest extends TestCase
     /** @var bool  */
     private $useCurl;
 
+    /** @var bool  */
+    private $useTls;
+
     protected function setUp(): void
     {
         $this->logger = TestHelpers::createLogger();
         $this->useCurl = (bool) getenv('USE_CURL');
+        $this->useTls = (string) getenv('BOUNCER_TLS_PATH');
         $this->watcherClient = new WatcherClient(['use_curl' => $this->useCurl], $this->logger);
     }
 
@@ -43,6 +47,7 @@ final class IpVerificationTest extends TestCase
 
         // Init bouncer
         $bouncerConfigs = [
+            'auth_type' => $this->useTls ? Constants::AUTH_TLS : Constants::AUTH_KEY,
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'use_curl' => $this->useCurl,
@@ -52,6 +57,13 @@ final class IpVerificationTest extends TestCase
             'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
+        if($this->useTls){
+            $bouncerConfigs['tls_cert_path'] = $this->useTls . '/bouncer.pem';
+            $bouncerConfigs['tls_key_path'] = $this->useTls . '/bouncer-key.pem';
+            $bouncerConfigs['tls_ca_cert_path'] = $this->useTls . '/ca-chain.pem';
+            $bouncerConfigs['tls_verify_peer'] = true;
+
+        }
 
         $bouncer = new Bouncer($bouncerConfigs, $this->logger);
 
@@ -154,6 +166,7 @@ final class IpVerificationTest extends TestCase
         $this->watcherClient->setInitialState();
         // Init bouncer
         $bouncerConfigs = [
+            'auth_type' => $this->useTls ? Constants::AUTH_TLS : Constants::AUTH_KEY,
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'api_user_agent' => TestHelpers::UNIT_TEST_AGENT_PREFIX . '/' . Constants::BASE_USER_AGENT,
@@ -164,6 +177,12 @@ final class IpVerificationTest extends TestCase
             'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
+        if($this->useTls){
+            $bouncerConfigs['tls_cert_path'] = $this->useTls . '/bouncer.pem';
+            $bouncerConfigs['tls_key_path'] = $this->useTls . '/bouncer-key.pem';
+            $bouncerConfigs['tls_ca_cert_path'] = $this->useTls . '/ca-chain.pem';
+            $bouncerConfigs['tls_verify_peer'] = true;
+        }
 
         $bouncer = new Bouncer($bouncerConfigs, $this->logger);
         // Test cache adapter
@@ -251,8 +270,9 @@ final class IpVerificationTest extends TestCase
             'The old decisions should now be removed, so the previously bad IP should now be clean'
         );
 
-        // Setup an new instance.
+        // Set up a new instance.
         $bouncerConfigs = [
+            'auth_type' => $this->useTls ? Constants::AUTH_TLS : Constants::AUTH_KEY,
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'stream_mode' => true,
@@ -263,6 +283,13 @@ final class IpVerificationTest extends TestCase
             'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
+        if($this->useTls){
+            $bouncerConfigs['tls_cert_path'] = $this->useTls . '/bouncer.pem';
+            $bouncerConfigs['tls_key_path'] = $this->useTls . '/bouncer-key.pem';
+            $bouncerConfigs['tls_ca_cert_path'] = $this->useTls . '/ca-chain.pem';
+            $bouncerConfigs['tls_verify_peer'] = true;
+
+        }
 
         $bouncer = new Bouncer($bouncerConfigs, $this->logger);
 

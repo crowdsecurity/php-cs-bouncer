@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace CrowdSecBouncer\Tests\Integration;
 
 
+use CrowdSecBouncer\BouncerException;
 use CrowdSecBouncer\Constants;
 use CrowdSecBouncer\RestClient\FileGetContents;
 use CrowdSecBouncer\RestClient\Curl;
@@ -44,6 +45,14 @@ class WatcherClient
         $apiUrl = getenv('LAPI_URL');
         $this->configs['api_url'] = $apiUrl;
         $this->configs['api_timeout'] = 2;
+        $agentTlsPath = getenv('AGENT_TLS_PATH');
+        if(!$agentTlsPath){
+            throw new \Exception('Using TLS auth for agent is required. Please set AGENT_TLS_PATH env.');
+        }
+        $this->configs['auth_type'] = Constants::AUTH_TLS;
+        $this->configs['tls_cert_path'] = $agentTlsPath. '/agent.pem';
+        $this->configs['tls_key_path'] = $agentTlsPath. '/agent-key.pem';
+        $this->configs['tls_verify_peer'] = false;
 
         $useCurl = !empty($this->configs['use_curl']);
         $this->watcherClient = $useCurl ? new Curl($this->configs, $this->logger) : new FileGetContents(
