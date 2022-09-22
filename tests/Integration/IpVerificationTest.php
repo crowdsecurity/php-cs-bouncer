@@ -17,17 +17,17 @@ final class IpVerificationTest extends TestCase
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var bool  */
+    /** @var bool */
     private $useCurl;
 
-    /** @var bool  */
+    /** @var bool */
     private $useTls;
 
     protected function setUp(): void
     {
         $this->logger = TestHelpers::createLogger();
-        $this->useCurl = (bool) getenv('USE_CURL');
-        $this->useTls = (string) getenv('BOUNCER_TLS_PATH');
+        $this->useCurl = (bool)getenv('USE_CURL');
+        $this->useTls = (string)getenv('BOUNCER_TLS_PATH');
         $this->watcherClient = new WatcherClient(['use_curl' => $this->useCurl], $this->logger);
     }
 
@@ -36,40 +36,8 @@ final class IpVerificationTest extends TestCase
         return TestHelpers::cacheAdapterConfigProvider();
     }
 
-    /**
-     * @group integration
-     * @dataProvider cacheAdapterConfigProvider
-     */
-    public function testCanVerifyIpInLiveModeWithCacheSystem($cacheAdapterName, $origCacheName): void
+    private function cacheAdapterCheck($cacheAdapter, $origCacheName)
     {
-        // Init context
-        $this->watcherClient->setInitialState();
-
-        // Init bouncer
-        $bouncerConfigs = [
-            'auth_type' => $this->useTls ? Constants::AUTH_TLS : Constants::AUTH_KEY,
-            'api_key' => TestHelpers::getBouncerKey(),
-            'api_url' => TestHelpers::getLapiUrl(),
-            'use_curl' => $this->useCurl,
-            'api_user_agent' => TestHelpers::UNIT_TEST_AGENT_PREFIX . '/' . Constants::BASE_USER_AGENT,
-            'cache_system' => $cacheAdapterName,
-            'redis_dsn' => getenv('REDIS_DSN'),
-            'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
-            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
-        ];
-        if ($this->useTls) {
-            $bouncerConfigs['tls_cert_path'] = $this->useTls . '/bouncer.pem';
-            $bouncerConfigs['tls_key_path'] = $this->useTls . '/bouncer-key.pem';
-            $bouncerConfigs['tls_ca_cert_path'] = $this->useTls . '/ca-chain.pem';
-            $bouncerConfigs['tls_verify_peer'] = true;
-        }
-
-        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
-
-        // Test cache adapter
-        $cacheAdapter = $bouncer->getCacheAdapter();
-        $cacheAdapter->clear();
-
         switch ($origCacheName) {
             case 'PhpFilesAdapter':
                 $this->assertEquals(
@@ -95,6 +63,47 @@ final class IpVerificationTest extends TestCase
             default:
                 break;
         }
+    }
+
+    private function addTlsConfig(&$bouncerConfigs, $tlsPath)
+    {
+        $bouncerConfigs['tls_cert_path'] = $tlsPath . '/bouncer.pem';
+        $bouncerConfigs['tls_key_path'] = $tlsPath . '/bouncer-key.pem';
+        $bouncerConfigs['tls_ca_cert_path'] = $tlsPath . '/ca-chain.pem';
+        $bouncerConfigs['tls_verify_peer'] = true;
+    }
+
+    /**
+     * @group integration
+     * @dataProvider cacheAdapterConfigProvider
+     */
+    public function testCanVerifyIpInLiveModeWithCacheSystem($cacheAdapterName, $origCacheName): void
+    {
+        // Init context
+        $this->watcherClient->setInitialState();
+
+        // Init bouncer
+        $bouncerConfigs = [
+            'auth_type' => $this->useTls ? Constants::AUTH_TLS : Constants::AUTH_KEY,
+            'api_key' => TestHelpers::getBouncerKey(),
+            'api_url' => TestHelpers::getLapiUrl(),
+            'use_curl' => $this->useCurl,
+            'api_user_agent' => TestHelpers::UNIT_TEST_AGENT_PREFIX . '/' . Constants::BASE_USER_AGENT,
+            'cache_system' => $cacheAdapterName,
+            'redis_dsn' => getenv('REDIS_DSN'),
+            'memcached_dsn' => getenv('MEMCACHED_DSN'),
+            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
+        ];
+        if ($this->useTls) {
+            $this->addTlsConfig($bouncerConfigs, $this->useTls);
+        }
+
+        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+
+        // Test cache adapter
+        $cacheAdapter = $bouncer->getCacheAdapter();
+        $cacheAdapter->clear();
+        $this->cacheAdapterCheck($cacheAdapter, $origCacheName);
 
         $this->assertEquals(
             'ban',
@@ -143,8 +152,13 @@ final class IpVerificationTest extends TestCase
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
-        $this->watcherClient->addDecision(new \DateTime(), '24h', WatcherClient::HOURS24, TestHelpers::BAD_IP . '/'
-                                                                     . TestHelpers::LARGE_IPV4_RANGE, 'ban');
+        $this->watcherClient->addDecision(
+            new \DateTime(),
+            '24h',
+            WatcherClient::HOURS24,
+            TestHelpers::BAD_IP . '/' . TestHelpers::LARGE_IPV4_RANGE,
+            'ban'
+        );
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals(
             'ban',
@@ -187,46 +201,18 @@ final class IpVerificationTest extends TestCase
             'use_curl' => $this->useCurl,
             'cache_system' => $cacheAdapterName,
             'redis_dsn' => getenv('REDIS_DSN'),
-            'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
+            'memcached_dsn' => getenv('MEMCACHED_DSN'),
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
         if ($this->useTls) {
-            $bouncerConfigs['tls_cert_path'] = $this->useTls . '/bouncer.pem';
-            $bouncerConfigs['tls_key_path'] = $this->useTls . '/bouncer-key.pem';
-            $bouncerConfigs['tls_ca_cert_path'] = $this->useTls . '/ca-chain.pem';
-            $bouncerConfigs['tls_verify_peer'] = true;
+            $this->addTlsConfig($bouncerConfigs, $this->useTls);
         }
 
         $bouncer = new Bouncer($bouncerConfigs, $this->logger);
         // Test cache adapter
         $cacheAdapter = $bouncer->getCacheAdapter();
         $cacheAdapter->clear();
-
-        switch ($origCacheName) {
-            case 'PhpFilesAdapter':
-                $this->assertEquals(
-                    'Symfony\Component\Cache\Adapter\TagAwareAdapter',
-                    get_class($cacheAdapter),
-                    'Tested adapter should be correct'
-                );
-                break;
-            case 'MemcachedAdapter':
-                $this->assertEquals(
-                    'CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter',
-                    get_class($cacheAdapter),
-                    'Tested adapter should be correct'
-                );
-                break;
-            case 'RedisAdapter':
-                $this->assertEquals(
-                    'Symfony\Component\Cache\Adapter\RedisTagAwareAdapter',
-                    get_class($cacheAdapter),
-                    'Tested adapter should be correct'
-                );
-                break;
-            default:
-                break;
-        }
+        $this->cacheAdapterCheck($cacheAdapter, $origCacheName);
         // As we are in stream mode, no live call should be done to the API.
         // Warm BlockList cache up
 
@@ -270,7 +256,6 @@ final class IpVerificationTest extends TestCase
         $this->logger->debug('', ['message' => 'Refresh 2nd time the cache. Nothing should append.']);
         $bouncer->refreshBlocklistCache();
 
-
         $this->assertEquals(
             'ban',
             $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP),
@@ -293,7 +278,7 @@ final class IpVerificationTest extends TestCase
             'api_user_agent' => TestHelpers::UNIT_TEST_AGENT_PREFIX . '/' . Constants::BASE_USER_AGENT,
             'cache_system' => $cacheAdapterName,
             'redis_dsn' => getenv('REDIS_DSN'),
-            'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
+            'memcached_dsn' => getenv('MEMCACHED_DSN'),
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
         if ($this->useTls) {

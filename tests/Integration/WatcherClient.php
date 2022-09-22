@@ -78,8 +78,13 @@ class WatcherClient
         $this->deleteAllDecisions();
         $now = new \DateTime();
         $this->addDecision($now, '36h', '+36 hours', TestHelpers::NEWLY_BAD_IP, 'ban');
-        $this->addDecision($now, '48h', '+48 hours', TestHelpers::NEWLY_BAD_IP . '/' .
-                                                     TestHelpers::IP_RANGE, 'captcha');
+        $this->addDecision(
+            $now,
+            '48h',
+            '+48 hours',
+            TestHelpers::NEWLY_BAD_IP . '/' . TestHelpers::IP_RANGE,
+            'captcha'
+        );
         $this->addDecision($now, '24h', self::HOURS24, TestHelpers::JAPAN, 'captcha', Constants::SCOPE_COUNTRY);
         $this->addDecision($now, '24h', self::HOURS24, TestHelpers::IP_JAPAN, 'ban');
         $this->addDecision($now, '24h', self::HOURS24, TestHelpers::IP_FRANCE, 'ban');

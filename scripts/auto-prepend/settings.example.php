@@ -210,6 +210,7 @@ $crowdSecStandaloneBouncerConfig = [
     // Settings for ban wall
     'theme_text_ban_wall_tab_title' => 'Oops..',
     'theme_text_ban_wall_title' => '🤭 Oh!',
-    'theme_text_ban_wall_subtitle' => 'This page is protected against cyber attacks and your IP has been banned by our system.',
+    'theme_text_ban_wall_subtitle' =>
+        'This page is protected against cyber attacks and your IP has been banned by our system.',
     'theme_text_ban_wall_footer' => '',
 ];

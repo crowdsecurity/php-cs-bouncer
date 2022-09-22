@@ -105,6 +105,48 @@ class StandaloneBounce extends AbstractBounce
         return $_SERVER['REQUEST_METHOD'];
     }
 
+    private function getColorConfigs()
+    {
+        return [
+            'text' => [
+                'primary' => htmlspecialchars_decode(
+                    $this->getStringSettings('theme_color_text_primary'),
+                    \ENT_QUOTES
+                ),
+                'secondary' => htmlspecialchars_decode(
+                    $this->getStringSettings('theme_color_text_secondary'),
+                    \ENT_QUOTES
+                ),
+                'button' => htmlspecialchars_decode(
+                    $this->getStringSettings('theme_color_text_button'),
+                    \ENT_QUOTES
+                ),
+                'error_message' => htmlspecialchars_decode(
+                    $this->getStringSettings('theme_color_text_error_message'),
+                    \ENT_QUOTES
+                ),
+            ],
+            'background' => [
+                'page' => htmlspecialchars_decode(
+                    $this->getStringSettings('theme_color_background_page'),
+                    \ENT_QUOTES
+                ),
+                'container' => htmlspecialchars_decode(
+                    $this->getStringSettings('theme_color_background_container'),
+                    \ENT_QUOTES
+                ),
+                'button' => htmlspecialchars_decode(
+                    $this->getStringSettings('theme_color_background_button'),
+                    \ENT_QUOTES
+                ),
+                'button_hover' => htmlspecialchars_decode(
+                    $this->getStringSettings('theme_color_background_button_hover'),
+                    \ENT_QUOTES
+                ),
+            ],
+        ];
+    }
+
     /**
      * @return array ['hide_crowdsec_mentions': bool, color:[text:['primary' : string, 'secondary' : string, 'button' :
      *     string, 'error_message : string' ...]]] (returns an array of option required to build the captcha wall
@@ -114,44 +156,7 @@ class StandaloneBounce extends AbstractBounce
     {
         return [
             'hide_crowdsec_mentions' => $this->getBoolSettings('hide_mentions'),
-            'color' => [
-                'text' => [
-                    'primary' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_text_primary'),
-                        \ENT_QUOTES
-                    ),
-                    'secondary' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_text_secondary'),
-                        \ENT_QUOTES
-                    ),
-                    'button' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_text_button'),
-                        \ENT_QUOTES
-                    ),
-                    'error_message' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_text_error_message'),
-                        \ENT_QUOTES
-                    ),
-                ],
-                'background' => [
-                    'page' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_background_page'),
-                        \ENT_QUOTES
-                    ),
-                    'container' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_background_container'),
-                        \ENT_QUOTES
-                    ),
-                    'button' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_background_button'),
-                        \ENT_QUOTES
-                    ),
-                    'button_hover' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_background_button_hover'),
-                        \ENT_QUOTES
-                    ),
-                ],
-            ],
+            'color' => $this->getColorConfigs(),
             'text' => [
                 'captcha_wall' => [
                     'tab_title' => htmlspecialchars_decode(
@@ -200,40 +205,7 @@ class StandaloneBounce extends AbstractBounce
     {
         return [
             'hide_crowdsec_mentions' => $this->getBoolSettings('hide_mentions'),
-            'color' => [
-                'text' => [
-                    'primary' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_text_primary'),
-                        \ENT_QUOTES
-                    ),
-                    'secondary' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_text_secondary'),
-                        \ENT_QUOTES
-                    ),
-                    'error_message' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_text_error_message'),
-                        \ENT_QUOTES
-                    ),
-                ],
-                'background' => [
-                    'page' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_background_page'),
-                        \ENT_QUOTES
-                    ),
-                    'container' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_background_container'),
-                        \ENT_QUOTES
-                    ),
-                    'button' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_background_button'),
-                        \ENT_QUOTES
-                    ),
-                    'button_hover' => htmlspecialchars_decode(
-                        $this->getStringSettings('theme_color_background_button_hover'),
-                        \ENT_QUOTES
-                    ),
-                ],
-            ],
+            'color' => $this->getColorConfigs(),
             'text' => [
                 'ban_wall' => [
                     'tab_title' => htmlspecialchars_decode(
