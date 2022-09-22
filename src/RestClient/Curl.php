@@ -121,6 +121,7 @@ class Curl extends AbstractClient
 
     /**
      * @param $handle
+     *
      * @return mixed
      */
     protected function getResponseHttpCode($handle)
