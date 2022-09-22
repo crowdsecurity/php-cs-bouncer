@@ -23,5 +23,6 @@ return $config
         PhpCsFixer\Finder::create()
             ->in(__DIR__ . '/../../../src')->exclude(['templates'])
             ->in(__DIR__ . '/../../../tests/Integration')->depth(1)
+            ->in(__DIR__ . '/../../../scripts')
     )
 ;
