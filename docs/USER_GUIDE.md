@@ -16,7 +16,7 @@
     - [Quick start](#quick-start)
     - [Test your bouncer](#test-your-bouncer)
     - [Configurations](#configurations)
-      - [LAPI Connection](#lapi-connection)
+      - [Local API Connection](#local-api-connection)
       - [Debug](#debug)
       - [Bouncer behavior](#bouncer-behavior)
       - [Cache](#cache)
