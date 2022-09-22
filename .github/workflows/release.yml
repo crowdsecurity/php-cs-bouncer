@@ -44,7 +44,7 @@ jobs:
       - name: Check version ${{ env.VERSION_NUMBER }} consistency in files
         # Check src/Constants.php and CHANGELOG.md
         run: |
-          : # Check public const VERSION = 'vVERSION_NUMBER'; in CHANGELOG.md in src/Constants.php
+          # Check public const VERSION = 'vVERSION_NUMBER'; in CHANGELOG.md in src/Constants.php
           CONSTANT_VERSION=$(grep -E "public const VERSION = 'v(.*)';"  src/Constants.php | sed 's/ //g')
           if [[ $CONSTANT_VERSION == "publicconstVERSION='v${{ env.VERSION_NUMBER }}';" ]]
           then
@@ -54,7 +54,7 @@ jobs:
           exit 1
           fi
           
-          : # Check top ## [VERSION_NUMBER](GITHUB_URL/releases/tag/vVERSION_NUMBER) - yyyy-mm-dd in CHANGELOG.md
+          # Check top ## [VERSION_NUMBER](GITHUB_URL/releases/tag/vVERSION_NUMBER) - yyyy-mm-dd in CHANGELOG.md
           CURRENT_DATE=$(date +'%Y-%m-%d')
           echo $CURRENT_DATE
           CHANGELOG_VERSION=$(grep -o -E "## \[(.*)\].* - $CURRENT_DATE"  CHANGELOG.md | head -1 | sed 's/ //g')
@@ -67,7 +67,7 @@ jobs:
               exit 1
           fi
           
-          : # Check top [_Compare with previous release_](GITHUB_URL/compare/vLAST_TAG...vVERSION_NUMBER) in CHANGELOG.md
+          # Check top [_Compare with previous release_](GITHUB_URL/compare/vLAST_TAG...vVERSION_NUMBER) in CHANGELOG.md
           COMPARISON=$(grep -oP "\/compare\/\K(.*)$" CHANGELOG.md | head -1)
           LAST_TAG=$(curl -Ls -o /dev/null -w %{url_effective} ${{ env.GITHUB_URL }}/releases/latest | grep -oP "\/tag\/\K(.*)$")
           if [[ $COMPARISON == "$LAST_TAG...v${{ env.VERSION_NUMBER }})" ]]

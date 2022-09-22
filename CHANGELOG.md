@@ -5,8 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
-## [0.29.1](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v0.29.1) - 2022-09-22
-[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v0.29.0...v0.29.1)
+## [0.30.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v0.30.0) - 2022-09-22
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v0.29.0...v0.30.0)
 
 ### Changed
 - Update `symfony/cache` and `symfony/config` dependencies requirement
