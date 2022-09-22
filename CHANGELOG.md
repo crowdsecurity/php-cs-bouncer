@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Update `symfony/cache` and `symfony/config` dependencies requirement
 
+---
 ## [0.29.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v0.29.0) - 2022-08-11
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v0.28.0...v0.29.0)
 
