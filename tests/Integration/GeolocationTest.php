@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 namespace CrowdSecBouncer\Tests\Integration;
 
 use CrowdSecBouncer\ApiCache;
@@ -39,7 +40,7 @@ final class GeolocationTest extends TestCase
     {
         // Check if MaxMind database exist
         if (!file_exists($maxmindConfig['database_path'])) {
-            $this->fail('There must be a MaxMind Database here: '.$maxmindConfig['database_path']);
+            $this->fail('There must be a MaxMind Database here: ' . $maxmindConfig['database_path']);
         }
 
         return [
@@ -74,7 +75,7 @@ final class GeolocationTest extends TestCase
             'api_url' => TestHelpers::getLapiUrl(),
             'geolocation' => $geolocationConfig,
             'use_curl' => $this->useCurl,
-            'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
+            'api_user_agent' => 'Unit test/' . Constants::BASE_USER_AGENT,
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
@@ -148,7 +149,7 @@ final class GeolocationTest extends TestCase
             'stream_mode' => true,
             'geolocation' => $geolocationConfig,
             'use_curl' => $this->useCurl,
-            'api_user_agent' => 'Unit test/'.Constants::BASE_USER_AGENT,
+            'api_user_agent' => 'Unit test/' . Constants::BASE_USER_AGENT,
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];

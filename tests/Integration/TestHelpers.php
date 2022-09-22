@@ -30,7 +30,7 @@ class TestHelpers
     public const IP_FRANCE = '78.119.253.85';
     public const UNIT_TEST_AGENT_PREFIX = 'Unit test';
 
-    public const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__.'/../var/phpFiles.cache';
+    public const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__ . '/../var/phpFiles.cache';
 
     public const LOG_LEVEL = Logger::DEBUG; // set to Logger::DEBUG to get high verbosity
 
@@ -64,11 +64,11 @@ class TestHelpers
         return [
             'country database' => [[
                 'database_type' => 'country',
-                'database_path' => __DIR__.'/../GeoLite2-Country.mmdb',
+                'database_path' => __DIR__ . '/../GeoLite2-Country.mmdb',
             ]],
             'city database' => [[
                 'database_type' => 'city',
-                'database_path' => __DIR__.'/../GeoLite2-City.mmdb',
+                'database_path' => __DIR__ . '/../GeoLite2-City.mmdb',
             ]],
         ];
     }

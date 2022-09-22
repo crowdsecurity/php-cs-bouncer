@@ -168,9 +168,9 @@ abstract class AbstractBounce implements IBounce
     {
         $forwardedIp = null;
         if (empty($configs['forced_test_forwarded_ip'])) {
-            $XForwardedForHeader = $this->getHttpRequestHeader('X-Forwarded-For');
-            if (null !== $XForwardedForHeader) {
-                $ipList = array_map('trim', array_values(array_filter(explode(',', $XForwardedForHeader))));
+            $xForwardedForHeader = $this->getHttpRequestHeader('X-Forwarded-For');
+            if (null !== $xForwardedForHeader) {
+                $ipList = array_map('trim', array_values(array_filter(explode(',', $xForwardedForHeader))));
                 $forwardedIp = end($ipList);
             }
         } elseif ($configs['forced_test_forwarded_ip'] === Constants::X_FORWARDED_DISABLED) {

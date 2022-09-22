@@ -57,12 +57,11 @@ final class IpVerificationTest extends TestCase
             'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
-        if($this->useTls){
+        if ($this->useTls) {
             $bouncerConfigs['tls_cert_path'] = $this->useTls . '/bouncer.pem';
             $bouncerConfigs['tls_key_path'] = $this->useTls . '/bouncer-key.pem';
             $bouncerConfigs['tls_ca_cert_path'] = $this->useTls . '/ca-chain.pem';
             $bouncerConfigs['tls_verify_peer'] = true;
-
         }
 
         $bouncer = new Bouncer($bouncerConfigs, $this->logger);
@@ -135,7 +134,7 @@ final class IpVerificationTest extends TestCase
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
         $bouncerConfigs['max_remediation_level'] = 'captcha';
-        $bouncer = new Bouncer( $bouncerConfigs, $this->logger);
+        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
         // Reset the max remediation level to its origin state
@@ -144,16 +143,30 @@ final class IpVerificationTest extends TestCase
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
-        $this->watcherClient->addDecision(new \DateTime(), '24h', WatcherClient::HOURS24, TestHelpers::BAD_IP.'/'
-                                                                     .TestHelpers::LARGE_IPV4_RANGE, 'ban');
+        $this->watcherClient->addDecision(new \DateTime(), '24h', WatcherClient::HOURS24, TestHelpers::BAD_IP . '/'
+                                                                     . TestHelpers::LARGE_IPV4_RANGE, 'ban');
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
-        $this->assertEquals('ban', $cappedRemediation, 'The remediation for the banned IP with a too large range should now be "ban" as we are in live mode');
+        $this->assertEquals(
+            'ban',
+            $cappedRemediation,
+            'The remediation for the banned IP with a too large range should now be "ban" as we are in live mode'
+        );
 
         $this->logger->info('', ['message' => 'set "IPV6 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
-        $this->watcherClient->addDecision(new \DateTime(), '24h', WatcherClient::HOURS24, TestHelpers::BAD_IPV6.'/'.TestHelpers::IPV6_RANGE, 'ban');
+        $this->watcherClient->addDecision(
+            new \DateTime(),
+            '24h',
+            WatcherClient::HOURS24,
+            TestHelpers::BAD_IPV6 . '/' . TestHelpers::IPV6_RANGE,
+            'ban'
+        );
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
-        $this->assertEquals('ban', $cappedRemediation, 'The remediation for the banned IPV6 with a too large range should now be "ban" as we are in live mode');
+        $this->assertEquals(
+            'ban',
+            $cappedRemediation,
+            'The remediation for the banned IPV6 with a too large range should now be "ban" as we are in live mode'
+        );
     }
 
     /**
@@ -177,7 +190,7 @@ final class IpVerificationTest extends TestCase
             'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
-        if($this->useTls){
+        if ($this->useTls) {
             $bouncerConfigs['tls_cert_path'] = $this->useTls . '/bouncer.pem';
             $bouncerConfigs['tls_key_path'] = $this->useTls . '/bouncer-key.pem';
             $bouncerConfigs['tls_ca_cert_path'] = $this->useTls . '/ca-chain.pem';
@@ -283,12 +296,11 @@ final class IpVerificationTest extends TestCase
             'memcached_dsn' =>  getenv('MEMCACHED_DSN'),
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
-        if($this->useTls){
+        if ($this->useTls) {
             $bouncerConfigs['tls_cert_path'] = $this->useTls . '/bouncer.pem';
             $bouncerConfigs['tls_key_path'] = $this->useTls . '/bouncer-key.pem';
             $bouncerConfigs['tls_ca_cert_path'] = $this->useTls . '/ca-chain.pem';
             $bouncerConfigs['tls_verify_peer'] = true;
-
         }
 
         $bouncer = new Bouncer($bouncerConfigs, $this->logger);
@@ -301,14 +313,34 @@ final class IpVerificationTest extends TestCase
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" + "IPV6 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
-        $this->watcherClient->addDecision(new \DateTime(), '24h', WatcherClient::HOURS24, TestHelpers::BAD_IP.'/'.TestHelpers::LARGE_IPV4_RANGE, 'ban');
-        $this->watcherClient->addDecision(new \DateTime(), '24h', WatcherClient::HOURS24, TestHelpers::BAD_IPV6.'/'.TestHelpers::IPV6_RANGE, 'ban');
+        $this->watcherClient->addDecision(
+            new \DateTime(),
+            '24h',
+            WatcherClient::HOURS24,
+            TestHelpers::BAD_IP . '/' . TestHelpers::LARGE_IPV4_RANGE,
+            'ban'
+        );
+        $this->watcherClient->addDecision(
+            new \DateTime(),
+            '24h',
+            WatcherClient::HOURS24,
+            TestHelpers::BAD_IPV6 . '/' . TestHelpers::IPV6_RANGE,
+            'ban'
+        );
         // Pull updates
         $bouncer->refreshBlocklistCache();
 
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
-        $this->assertEquals('bypass', $cappedRemediation, 'The remediation for the banned IP with a too large range should now be "bypass" as we are in stream mode');
+        $this->assertEquals(
+            'bypass',
+            $cappedRemediation,
+            'The remediation for the banned IP with a too large range should now be "bypass" as we are in stream mode'
+        );
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
-        $this->assertEquals('bypass', $cappedRemediation, 'The remediation for the banned IPV6 with a too large range should now be "bypass" as we are in stream mode');
+        $this->assertEquals(
+            'bypass',
+            $cappedRemediation,
+            'The remediation for the banned IPV6 with a too large range should now be "bypass" as we are in stream mode'
+        );
     }
 }
