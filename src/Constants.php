@@ -20,7 +20,7 @@ class Constants
     public const DEFAULT_LAPI_URL = 'http://localhost:8080';
 
     /** @var string The last version of this library */
-    public const VERSION = 'v0.30.0';
+    public const VERSION = 'v0.31.0';
 
     /** @var string The user agent used to send request to LAPI */
     public const BASE_USER_AGENT = 'PHP CrowdSec Bouncer/' . self::VERSION;
@@ -105,4 +105,7 @@ class Constants
 
     /** @var string The "disabled" x-forwarded-for setting */
     public const X_FORWARDED_DISABLED = 'no_forward';
+
+    /** @var string Path for html templates folder (e.g. ban and captcha wall) */
+    public const TEMPLATES_DIR = __DIR__ . "/templates";
 }

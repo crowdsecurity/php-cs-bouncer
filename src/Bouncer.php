@@ -2,9 +2,6 @@
 
 namespace CrowdSecBouncer;
 
-require_once __DIR__ . '/templates/captcha.php';
-require_once __DIR__ . '/templates/access-forbidden.php';
-
 use CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder;
 use CrowdSecBouncer\RestClient\AbstractClient;
 use ErrorException;
@@ -154,7 +151,7 @@ class Bouncer
     }
 
     /**
-     * Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.
+     * Returns a default "CrowdSec 403" HTML template.
      * The input $config should match the TemplateConfiguration input format.
      *
      * @param array $config An array of template configuration parameters
@@ -167,16 +164,20 @@ class Bouncer
         $configuration = new TemplateConfiguration();
         $processor = new Processor();
         $config = $processor->processConfiguration($configuration, [$config]);
+        $template = new Template('ban.html.twig');
 
-        ob_start();
-        displayAccessForbiddenTemplate($config);
-
-        return ob_get_clean();
+        return $template->render($config);
     }
 
     /**
-     * Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.
+     * Returns a default "CrowdSec Captcha (401)" HTML template.
      * The input $config should match the TemplateConfiguration input format.
+     *
+     * @param bool $error
+     * @param string $captchaImageSrc
+     * @param string $captchaResolutionFormUrl
+     * @param array $config
+     * @return string
      */
     public static function getCaptchaHtmlTemplate(
         bool $error,
@@ -188,11 +189,16 @@ class Bouncer
         $configuration = new TemplateConfiguration();
         $processor = new Processor();
         $config = $processor->processConfiguration($configuration, [$config]);
+        $template = new Template('captcha.html.twig');
 
-        ob_start();
-        displayCaptchaTemplate($error, $captchaImageSrc, $captchaResolutionFormUrl, $config);
-
-        return ob_get_clean();
+        return $template->render(array_merge(
+            $config,
+            [
+                    'error' => $error,
+                    'captcha_img' => $captchaImageSrc,
+                    'captcha_resolution_url' => $captchaResolutionFormUrl
+                ]
+        ));
     }
 
     /**
