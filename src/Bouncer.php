@@ -151,7 +151,7 @@ class Bouncer
     }
 
     /**
-     * Returns a default "CrowdSec 403" HTML template to display to a web browser using a banned IP.
+     * Returns a default "CrowdSec 403" HTML template.
      * The input $config should match the TemplateConfiguration input format.
      *
      * @param array $config An array of template configuration parameters
@@ -170,8 +170,14 @@ class Bouncer
     }
 
     /**
-     * Returns a default "CrowdSec Captcha" HTML template to display to a web browser using a captchable IP.
+     * Returns a default "CrowdSec Captcha (401)" HTML template.
      * The input $config should match the TemplateConfiguration input format.
+     *
+     * @param bool $error
+     * @param string $captchaImageSrc
+     * @param string $captchaResolutionFormUrl
+     * @param array $config
+     * @return string
      */
     public static function getCaptchaHtmlTemplate(
         bool $error,

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.31.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v0.31.0) - 2022-09-23
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v0.30.0...v0.31.0)
+
+### Changed
+- Use Twig as template engine for ban and captcha walls
+
+---
 
 ## [0.30.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v0.30.0) - 2022-09-22
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v0.29.0...v0.30.0)
