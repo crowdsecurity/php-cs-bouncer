@@ -2,9 +2,6 @@
 
 namespace CrowdSecBouncer;
 
-require_once __DIR__ . '/templates/captcha.php';
-require_once __DIR__ . '/templates/access-forbidden.php';
-
 use CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder;
 use CrowdSecBouncer\RestClient\AbstractClient;
 use ErrorException;
@@ -167,11 +164,9 @@ class Bouncer
         $configuration = new TemplateConfiguration();
         $processor = new Processor();
         $config = $processor->processConfiguration($configuration, [$config]);
+        $template = new Template('ban.html.twig');
 
-        ob_start();
-        displayAccessForbiddenTemplate($config);
-
-        return ob_get_clean();
+        return $template->render($config);
     }
 
     /**
@@ -188,11 +183,16 @@ class Bouncer
         $configuration = new TemplateConfiguration();
         $processor = new Processor();
         $config = $processor->processConfiguration($configuration, [$config]);
+        $template = new Template('captcha.html.twig');
 
-        ob_start();
-        displayCaptchaTemplate($error, $captchaImageSrc, $captchaResolutionFormUrl, $config);
-
-        return ob_get_clean();
+        return $template->render(array_merge(
+            $config,
+            [
+                    'error' => $error,
+                    'captcha_img' => $captchaImageSrc,
+                    'captcha_resolution_url' => $captchaResolutionFormUrl
+                ]
+        ));
     }
 
     /**
