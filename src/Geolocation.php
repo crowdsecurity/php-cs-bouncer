@@ -7,6 +7,9 @@ namespace CrowdSecBouncer;
 use Exception;
 use GeoIp2\Database\Reader;
 use GeoIp2\Exception\AddressNotFoundException;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 
 /**
  * The Library geolocation helper. You'll find here methods used for geolocation purposes.
@@ -72,8 +75,8 @@ class Geolocation
      * @param ApiCache $apiCache
      * @return array
      * @throws BouncerException
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws CacheException
+     * @throws InvalidArgumentException
      * @throws Exception
      */
     public function getCountryResult(array $geolocConfig, string $ip, ApiCache $apiCache): array
@@ -124,9 +127,46 @@ class Geolocation
     }
 
     /**
-     * @throws \Psr\Cache\CacheException
+     * Retrieve country ISO code alpha-2 if exists for the specified IP
+     *
+     * @param array $geolocConfig
+     * @param string $ip
+     * @param ApiCache $apiCache
+     * @param LoggerInterface $logger
+     * @return string|null
      * @throws BouncerException
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     */
+    public function getCountryToQuery(array $geolocConfig, string $ip, ApiCache $apiCache, LoggerInterface $logger)
+    :?string
+    {
+        $countryToQuery = null;
+        $countryResult = $this->getCountryResult($geolocConfig, $ip, $apiCache);
+        if (!empty($countryResult['country'])) {
+            $countryToQuery = $countryResult['country'];
+            $logger->debug('', ['type' => 'GEOLOCALISED_COUNTRY', 'ip' => $ip, 'country' => $countryToQuery]);
+        } elseif (!empty($countryResult['not_found'])) {
+            $logger->warning('', [
+                'type' => 'IP_NOT_FOUND_WHILE_GETTING_GEOLOC_COUNTRY',
+                'ip' => $ip,
+                'error' => $countryResult['not_found'],
+            ]);
+        } elseif (!empty($countryResult['error'])) {
+            $logger->warning('', [
+                'type' => 'ERROR_WHILE_GETTING_GEOLOC_COUNTRY',
+                'ip' => $ip,
+                'error' => $countryResult['error'],
+            ]);
+        }
+
+        return $countryToQuery;
+    }
+
+    /**
+     * @throws CacheException
+     * @throws BouncerException
+     * @throws InvalidArgumentException
      */
     public function clearGeolocationCache(string $ip, ApiCache $apiCache): void
     {

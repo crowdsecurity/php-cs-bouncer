@@ -10,7 +10,9 @@
         Rule set that checks CrowdSec Bouncer PHP lib
     </description>
 
-    <rule ref="rulesets/codesize.xml" />
+    <rule ref="rulesets/codesize.xml" >
+        <exclude name="ExcessiveClassComplexity"/>
+    </rule>
     <rule ref="rulesets/cleancode.xml">
         <exclude name="StaticAccess"/>
     </rule>
@@ -28,6 +30,12 @@
             <property name="exceptions" >
                 <value><![CDATA[\IPLib\Factory]]></value>
             </property>
+        </properties>
+    </rule>
+    <!-- Allow more complexity -->
+    <rule ref="rulesets/codesize.xml/ExcessiveClassComplexity">
+        <properties>
+            <property name="maximum" value="100" />
         </properties>
     </rule>
 

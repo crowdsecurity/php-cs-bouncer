@@ -134,11 +134,6 @@ abstract class AbstractBounce implements IBounce
      */
     protected function initLoggerHelper(array $configs, string $loggerName): void
     {
-        // Singleton for this function
-        if ($this->logger) {
-            return;
-        }
-
         $this->logger = new Logger($loggerName);
         $logDir = $configs['log_directory_path'] ?? __DIR__ . '/.logs';
         if (empty($configs['disable_prod_log'])) {

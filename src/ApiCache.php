@@ -236,7 +236,6 @@ class ApiCache extends AbstractApiCache
      * @throws InvalidArgumentException
      * @throws CacheException
      *
-     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     private function handleDecisionRemoving(string $cacheKey, array $decision, int &$count): void
     {
@@ -245,14 +244,15 @@ class ApiCache extends AbstractApiCache
                 'type' => 'DECISION_TO_REMOVE_NOT_FOUND_IN_CACHE',
                 'decision' => $decision['id']
             ]);
-        } else {
-            $this->logger->debug('', [
-                'type' => 'DECISION_REMOVED',
-                'decision' => $decision['id'],
-                'value' => $decision['value'],
-            ]);
-            ++$count;
+
+            return;
         }
+        $this->logger->debug('', [
+            'type' => 'DECISION_REMOVED',
+            'decision' => $decision['id'],
+            'value' => $decision['value'],
+        ]);
+        ++$count;
     }
 
     /**
@@ -542,7 +542,13 @@ class ApiCache extends AbstractApiCache
         ];
     }
 
-
+    /**
+     * @param string $cacheScope
+     * @param string $value
+     * @param string $cache
+     * @param string $remediation
+     * @return void
+     */
     private function logRemediation(string $cacheScope, string $value, string $cache, string $remediation): void
     {
         if (Constants::REMEDIATION_BYPASS === $remediation) {
@@ -611,24 +617,7 @@ class ApiCache extends AbstractApiCache
         // Handle Geolocation remediation
         if (!empty($this->geolocConfig['enabled'])) {
             $geolocation = new Geolocation();
-            $countryResult = $geolocation->getCountryResult($this->geolocConfig, $ip, $this);
-            $countryToQuery = null;
-            if (!empty($countryResult['country'])) {
-                $countryToQuery = $countryResult['country'];
-                $this->logger->debug('', ['type' => 'GEOLOCALISED_COUNTRY', 'ip' => $ip, 'country' => $countryToQuery]);
-            } elseif (!empty($countryResult['not_found'])) {
-                $this->logger->warning('', [
-                    'type' => 'IP_NOT_FOUND_WHILE_GETTING_GEOLOC_COUNTRY',
-                    'ip' => $ip,
-                    'error' => $countryResult['not_found'],
-                ]);
-            } elseif (!empty($countryResult['error'])) {
-                $this->logger->warning('', [
-                    'type' => 'ERROR_WHILE_GETTING_GEOLOC_COUNTRY',
-                    'ip' => $ip,
-                    'error' => $countryResult['error'],
-                ]);
-            }
+            $countryToQuery = $geolocation->getCountryToQuery($this->geolocConfig, $ip, $this, $this->logger);
             if ($countryToQuery) {
                 $remediations[] = [$this->handleCacheRemediation(Constants::SCOPE_COUNTRY, $countryToQuery), '', ''];
             }
