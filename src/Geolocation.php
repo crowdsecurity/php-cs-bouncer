@@ -138,9 +138,12 @@ class Geolocation
      * @throws CacheException
      * @throws InvalidArgumentException
      */
-    public function getCountryToQuery(array $geolocConfig, string $ip, ApiCache $apiCache, LoggerInterface $logger)
-    :?string
-    {
+    public function getCountryToQuery(
+        array $geolocConfig,
+        string $ip,
+        ApiCache $apiCache,
+        LoggerInterface $logger
+    ): ?string {
         $countryToQuery = null;
         $countryResult = $this->getCountryResult($geolocConfig, $ip, $apiCache);
         if (!empty($countryResult['country'])) {

@@ -1,0 +1,80 @@
+name: Coding standards
+on:
+  push:
+    branches:
+      - main
+      - feat/mess-detector
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+jobs:
+  coding-standards:
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['7.4', '8.0', '8.1']
+
+    name: Coding standards
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, 'chore(') }}
+    env:
+      EXTENSION_PATH: "my-own-modules/crowdsec-php-lib"
+
+    steps:
+      - name: Clone DDEV files
+        uses: actions/checkout@v2
+        with:
+          path: .ddev
+          repository: julienloizelet/ddev-php
+          ref: "main"
+
+      - name: Install DDEV
+        env:
+          DDEV_VERSION: v1.21.1
+        run: |
+          # @see https://ddev.readthedocs.io/en/stable/#installationupgrade-script-linux-and-macos-armarm64-and-amd64-architectures
+          sudo apt-get -qq update
+          sudo apt-get -qq -y install libnss3-tools
+          curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh
+          bash install_ddev.sh ${{env.DDEV_VERSION}}
+          ddev config global --instrumentation-opt-in=false --omit-containers=dba,ddev-ssh-agent
+          rm install_ddev.sh
+
+      - name: Set PHP_VERSION_CODE env
+        # used in some directory path and conventional file naming
+        # Example : 7.4 => 74
+        run: |
+           echo "PHP_VERSION_CODE=$(echo php${{ matrix.php-version }} | sed 's/\.//g' )" >> $GITHUB_ENV
+
+
+      - name: Start DDEV  with PHP ${{ matrix.php-version }}
+        run: |
+          cp .ddev/config_overrides/config.${{ env.PHP_VERSION_CODE }}.yaml .ddev/config.${{ env.PHP_VERSION_CODE }}.yaml
+          ddev start
+
+      - name: Some DEBUG information
+        run: |
+          ddev --version
+          ddev exec php -v
+          ddev php -r "echo phpversion('memcached');"
+
+      - name: Clone PHP lib Crowdsec files
+        uses: actions/checkout@v2
+        with:
+          path: my-own-modules/crowdsec-php-lib
+
+      - name: Install CrowdSec lib dependencies
+        run: ddev composer update --working-dir ./${{env.EXTENSION_PATH}}
+
+      - name: Install Coding standards tools
+        run:  ddev composer update --working-dir=./${{env.EXTENSION_PATH}}/tools/coding-standards
+
+      - name: Run PHPCS
+        run: ddev phpcs ./${{env.EXTENSION_PATH}}/tools/coding-standards ${{env.EXTENSION_PATH}}/src PSR12
+
+      - name: Run PHPSTAN
+        run: ddev phpstan /var/www/html/${{env.EXTENSION_PATH}}/tools/coding-standards phpstan/phpstan.neon /var/www/html/${{env.EXTENSION_PATH}}/src
+
+      - name: Run PHPMD
+        run: ddev phpmd ./${{env.EXTENSION_PATH}}/tools/coding-standards phpmd/rulesets.xml ../../src
