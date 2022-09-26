@@ -285,6 +285,8 @@ class Bouncer
      * @param string $ip The IP of the use (for logging purpose)
      *
      * @return bool If the captcha input was correct or not
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     public function checkCaptcha(string $expected, string $try, string $ip): bool
     {

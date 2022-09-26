@@ -25,7 +25,6 @@ class Curl extends AbstractClient
         int $timeout = null
     ): ?array {
         $handle = curl_init();
-
         $curlOptions = $this->createOptions($endpoint, $queryParams, $bodyParams, $method, $headers ?: $this->headers);
 
         curl_setopt_array($handle, $curlOptions);
@@ -49,6 +48,34 @@ class Curl extends AbstractClient
         }
 
         return json_decode($response, true);
+    }
+
+    private function updateOptionsByMethod(
+        array &$options,
+        string &$url,
+        string $method,
+        ?array $queryParams,
+        ?array $bodyParams
+    ): void {
+        if ('POST' === strtoupper($method)) {
+            $parameters = $bodyParams;
+            $options[\CURLOPT_POST] = true;
+            $options[\CURLOPT_CUSTOMREQUEST] = 'POST';
+            $options[\CURLOPT_POSTFIELDS] = json_encode($parameters);
+        } elseif ('GET' === strtoupper($method)) {
+            $parameters = $queryParams;
+            $options[\CURLOPT_POST] = false;
+            $options[\CURLOPT_CUSTOMREQUEST] = 'GET';
+            $options[\CURLOPT_HTTPGET] = true;
+
+            if (!empty($parameters)) {
+                $url .= strpos($url, '?') ? '&' : '?';
+                $url .= http_build_query($parameters);
+            }
+        } elseif ('DELETE' === strtoupper($method)) {
+            $options[\CURLOPT_POST] = false;
+            $options[\CURLOPT_CUSTOMREQUEST] = 'DELETE';
+        }
     }
 
     /**
@@ -75,7 +102,7 @@ class Curl extends AbstractClient
                 $options[\CURLOPT_HTTPHEADER][] = sprintf('%s:%s', $key, $value);
             }
         }
-
+        $options[\CURLOPT_SSL_VERIFYPEER] = false;
         if (isset($this->configs['auth_type']) && Constants::AUTH_TLS === $this->configs['auth_type']) {
             $verifyPeer = $this->configs['tls_verify_peer'] ?? true;
             $options[\CURLOPT_SSL_VERIFYPEER] = $verifyPeer;
@@ -87,29 +114,8 @@ class Curl extends AbstractClient
                 // The --cacert option
                 $options[\CURLOPT_CAINFO] = $this->configs['tls_ca_cert_path'] ?? '';
             }
-        } else {
-            $options[\CURLOPT_SSL_VERIFYPEER] = false;
         }
-
-        if ('POST' === strtoupper($method)) {
-            $parameters = $bodyParams;
-            $options[\CURLOPT_POST] = true;
-            $options[\CURLOPT_CUSTOMREQUEST] = 'POST';
-            $options[\CURLOPT_POSTFIELDS] = json_encode($parameters);
-        } elseif ('GET' === strtoupper($method)) {
-            $parameters = $queryParams;
-            $options[\CURLOPT_POST] = false;
-            $options[\CURLOPT_CUSTOMREQUEST] = 'GET';
-            $options[\CURLOPT_HTTPGET] = true;
-
-            if (!empty($parameters)) {
-                $url .= strpos($url, '?') ? '&' : '?';
-                $url .= http_build_query($parameters);
-            }
-        } elseif ('DELETE' === strtoupper($method)) {
-            $options[\CURLOPT_POST] = false;
-            $options[\CURLOPT_CUSTOMREQUEST] = 'DELETE';
-        }
+        $this->updateOptionsByMethod($options, $url, $method, $queryParams, $bodyParams);
 
         $options[\CURLOPT_URL] = $url;
         if ($this->timeout > 0) {

@@ -163,6 +163,8 @@ abstract class AbstractBounce implements IBounce
      * @param string $ip
      * @param array $configs
      * @return string
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      */
     protected function handleForwardedFor(string $ip, array $configs): string
     {
@@ -243,6 +245,8 @@ abstract class AbstractBounce implements IBounce
 
     /**
      * @throws InvalidArgumentException|BouncerException
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     protected function displayCaptchaWall(string $ip): void
     {
@@ -261,6 +265,11 @@ abstract class AbstractBounce implements IBounce
         $this->sendResponse($body, 401);
     }
 
+    /**
+     * @return void
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     */
     protected function handleBanRemediation(): void
     {
         $options = $this->getBanWallOptions();
@@ -269,30 +278,25 @@ abstract class AbstractBounce implements IBounce
     }
 
     /**
+     * @param array $cachedCaptchaVariables
      * @param string $ip
-     * @return void
+     * @return bool
+     * @throws BouncerException
+     * @throws CacheException
      * @throws InvalidArgumentException
-     * @throws CacheException|BouncerException
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    protected function handleCaptchaResolutionForm(string $ip)
+    private function shouldEarlyReturn(array $cachedCaptchaVariables, string $ip): bool
     {
-        $cachedCaptchaVariables = $this->getIpVariables(
-            Constants::CACHE_TAG_CAPTCHA,
-            [
-                'crowdsec_captcha_has_to_be_resolved',
-                'crowdsec_captcha_phrase_to_guess',
-                'crowdsec_captcha_resolution_redirect',
-            ],
-            $ip
-        );
-        // Early return if no captcha has to be resolved or if captcha already resolved.
+        // Early return if no captcha has to be resolved.
         if (\in_array($cachedCaptchaVariables['crowdsec_captcha_has_to_be_resolved'], [null, false])) {
-            return;
+            return true;
         }
 
         // Early return if no form captcha form has been filled.
         if ('POST' !== $this->getHttpMethod() || null === $this->getPostedVariable('crowdsec_captcha')) {
-            return;
+            return true;
         }
 
         // Handle image refresh.
@@ -306,6 +310,32 @@ abstract class AbstractBounce implements IBounce
             ];
             $this->setIpVariables(Constants::CACHE_TAG_CAPTCHA, $captchaVariables, $ip);
 
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $ip
+     * @return void
+     * @throws InvalidArgumentException
+     * @throws CacheException|BouncerException
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
+     */
+    protected function handleCaptchaResolutionForm(string $ip): void
+    {
+        $cachedCaptchaVariables = $this->getIpVariables(
+            Constants::CACHE_TAG_CAPTCHA,
+            [
+                'crowdsec_captcha_has_to_be_resolved',
+                'crowdsec_captcha_phrase_to_guess',
+                'crowdsec_captcha_resolution_redirect',
+            ],
+            $ip
+        );
+        if ($this->shouldEarlyReturn($cachedCaptchaVariables, $ip)) {
             return;
         }
 
@@ -357,6 +387,8 @@ abstract class AbstractBounce implements IBounce
      * @return void
      * @throws InvalidArgumentException
      * @throws CacheException|BouncerException
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
     protected function handleCaptchaRemediation(string $ip)
     {

@@ -86,22 +86,23 @@ class Geolocation
                 ['crowdsec_geolocation_country', 'crowdsec_geolocation_not_found'],
                 $ip
             );
-            if ($country = $cachedVariables['crowdsec_geolocation_country']) {
+            $country = $cachedVariables['crowdsec_geolocation_country'] ?? null;
+            $notFoundError = $cachedVariables['crowdsec_geolocation_not_found'] ?? null;
+            if ($country) {
                 $result['country'] = $country;
 
                 return $result;
-            } elseif ($notFoundError = $cachedVariables['crowdsec_geolocation_not_found']) {
+            } elseif ($notFoundError) {
                 $result['not_found'] = $notFoundError;
 
                 return $result;
             }
         }
-        if (Constants::GEOLOCATION_TYPE_MAXMIND === $geolocConfig['type']) {
-            $configPath = $geolocConfig[Constants::GEOLOCATION_TYPE_MAXMIND];
-            $result = $this->getMaxMindCountry($ip, $configPath['database_type'], $configPath['database_path']);
-        } else {
+        if (Constants::GEOLOCATION_TYPE_MAXMIND !== $geolocConfig['type']) {
             throw new BouncerException('Unknown Geolocation type:' . $geolocConfig['type']);
         }
+        $configPath = $geolocConfig[Constants::GEOLOCATION_TYPE_MAXMIND];
+        $result = $this->getMaxMindCountry($ip, $configPath['database_type'], $configPath['database_path']);
 
         if ($saveInCache) {
             if (!empty($result['country'])) {
