@@ -34,37 +34,14 @@ class Geolocation
     private $resultTemplate = ['country' => '', 'not_found' => '', 'error' => ''];
 
     /**
-     * Retrieve a country from a MaxMind database.
-     *
-     * @throws Exception
+     * @throws CacheException
+     * @throws BouncerException
+     * @throws InvalidArgumentException
      */
-    private function getMaxMindCountry(string $ip, string $databaseType, string $databasePath): array
+    public function clearGeolocationCache(string $ip, ApiCache $apiCache): void
     {
-        if (!isset($this->maxmindCountry[$ip][$databaseType][$databasePath])) {
-            $result = $this->resultTemplate;
-            try {
-                $reader = new Reader($databasePath);
-                switch ($databaseType) {
-                    case Constants::MAXMIND_COUNTRY:
-                        $record = $reader->country($ip);
-                        break;
-                    case Constants::MAXMIND_CITY:
-                        $record = $reader->city($ip);
-                        break;
-                    default:
-                        throw new BouncerException("Unknown MaxMind database type:$databaseType");
-                }
-                $result['country'] = $record->country->isoCode;
-            } catch (AddressNotFoundException $e) {
-                $result['not_found'] = $e->getMessage();
-            } catch (Exception $e) {
-                $result['error'] = $e->getMessage();
-            }
-
-            $this->maxmindCountry[$ip][$databaseType][$databasePath] = $result;
-        }
-
-        return $this->maxmindCountry[$ip][$databaseType][$databasePath];
+        $variables = ['crowdsec_geolocation_country', 'crowdsec_geolocation_not_found'];
+        $apiCache->unsetIpVariables(Constants::CACHE_TAG_GEO, $variables, $ip);
     }
 
     /**
@@ -167,13 +144,36 @@ class Geolocation
     }
 
     /**
-     * @throws CacheException
-     * @throws BouncerException
-     * @throws InvalidArgumentException
+     * Retrieve a country from a MaxMind database.
+     *
+     * @throws Exception
      */
-    public function clearGeolocationCache(string $ip, ApiCache $apiCache): void
+    private function getMaxMindCountry(string $ip, string $databaseType, string $databasePath): array
     {
-        $variables = ['crowdsec_geolocation_country', 'crowdsec_geolocation_not_found'];
-        $apiCache->unsetIpVariables(Constants::CACHE_TAG_GEO, $variables, $ip);
+        if (!isset($this->maxmindCountry[$ip][$databaseType][$databasePath])) {
+            $result = $this->resultTemplate;
+            try {
+                $reader = new Reader($databasePath);
+                switch ($databaseType) {
+                    case Constants::MAXMIND_COUNTRY:
+                        $record = $reader->country($ip);
+                        break;
+                    case Constants::MAXMIND_CITY:
+                        $record = $reader->city($ip);
+                        break;
+                    default:
+                        throw new BouncerException("Unknown MaxMind database type:$databaseType");
+                }
+                $result['country'] = $record->country->isoCode;
+            } catch (AddressNotFoundException $e) {
+                $result['not_found'] = $e->getMessage();
+            } catch (Exception $e) {
+                $result['error'] = $e->getMessage();
+            }
+
+            $this->maxmindCountry[$ip][$databaseType][$databasePath] = $result;
+        }
+
+        return $this->maxmindCountry[$ip][$databaseType][$databasePath];
     }
 }

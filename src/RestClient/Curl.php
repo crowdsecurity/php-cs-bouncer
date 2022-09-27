@@ -50,32 +50,24 @@ class Curl extends AbstractClient
         return json_decode($response, true);
     }
 
-    private function updateOptionsByMethod(
-        array &$options,
-        string &$url,
-        string $method,
-        ?array $queryParams,
-        ?array $bodyParams
-    ): void {
-        if ('POST' === strtoupper($method)) {
-            $parameters = $bodyParams;
-            $options[\CURLOPT_POST] = true;
-            $options[\CURLOPT_CUSTOMREQUEST] = 'POST';
-            $options[\CURLOPT_POSTFIELDS] = json_encode($parameters);
-        } elseif ('GET' === strtoupper($method)) {
-            $parameters = $queryParams;
-            $options[\CURLOPT_POST] = false;
-            $options[\CURLOPT_CUSTOMREQUEST] = 'GET';
-            $options[\CURLOPT_HTTPGET] = true;
+    /**
+     * @param $handle
+     *
+     * @return bool|string
+     */
+    protected function exec($handle)
+    {
+        return curl_exec($handle);
+    }
 
-            if (!empty($parameters)) {
-                $url .= strpos($url, '?') ? '&' : '?';
-                $url .= http_build_query($parameters);
-            }
-        } elseif ('DELETE' === strtoupper($method)) {
-            $options[\CURLOPT_POST] = false;
-            $options[\CURLOPT_CUSTOMREQUEST] = 'DELETE';
-        }
+    /**
+     * @param $handle
+     *
+     * @return mixed
+     */
+    protected function getResponseHttpCode($handle)
+    {
+        return curl_getinfo($handle, \CURLINFO_HTTP_CODE);
     }
 
     /**
@@ -125,23 +117,31 @@ class Curl extends AbstractClient
         return $options;
     }
 
-    /**
-     * @param $handle
-     *
-     * @return mixed
-     */
-    protected function getResponseHttpCode($handle)
-    {
-        return curl_getinfo($handle, \CURLINFO_HTTP_CODE);
-    }
+    private function updateOptionsByMethod(
+        array &$options,
+        string &$url,
+        string $method,
+        ?array $queryParams,
+        ?array $bodyParams
+    ): void {
+        if ('POST' === strtoupper($method)) {
+            $parameters = $bodyParams;
+            $options[\CURLOPT_POST] = true;
+            $options[\CURLOPT_CUSTOMREQUEST] = 'POST';
+            $options[\CURLOPT_POSTFIELDS] = json_encode($parameters);
+        } elseif ('GET' === strtoupper($method)) {
+            $parameters = $queryParams;
+            $options[\CURLOPT_POST] = false;
+            $options[\CURLOPT_CUSTOMREQUEST] = 'GET';
+            $options[\CURLOPT_HTTPGET] = true;
 
-    /**
-     * @param $handle
-     *
-     * @return bool|string
-     */
-    protected function exec($handle)
-    {
-        return curl_exec($handle);
+            if (!empty($parameters)) {
+                $url .= strpos($url, '?') ? '&' : '?';
+                $url .= http_build_query($parameters);
+            }
+        } elseif ('DELETE' === strtoupper($method)) {
+            $options[\CURLOPT_POST] = false;
+            $options[\CURLOPT_CUSTOMREQUEST] = 'DELETE';
+        }
     }
 }

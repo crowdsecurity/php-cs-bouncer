@@ -21,11 +21,10 @@ use CrowdSecBouncer\RestClient\AbstractClient;
  */
 class ApiClient
 {
-    /** @var LoggerInterface */
-    private $logger;
     /** @var array */
     private $configs;
-
+    /** @var LoggerInterface */
+    private $logger;
     /**
      * @var AbstractClient
      */
@@ -73,6 +72,11 @@ class ApiClient
         return $this->restClient->request('/v1/decisions', $filter) ?: [];
     }
 
+    public function getRestClient(): AbstractClient
+    {
+        return $this->restClient;
+    }
+
     /**
      * Request decisions using the stream mode. When the $startup flag is used, all the decisions are returned.
      * Else only the decisions updates (add or remove) from the last stream call are returned.
@@ -89,10 +93,5 @@ class ApiClient
             '/v1/decisions/stream',
             ['startup' => $startup ? 'true' : 'false', 'scopes' => implode(',', $scopes)]
         );
-    }
-
-    public function getRestClient(): AbstractClient
-    {
-        return $this->restClient;
     }
 }
