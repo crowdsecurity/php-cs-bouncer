@@ -152,16 +152,32 @@ jobs:
         run: |
           cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
           cat scripts/auto-prepend/settings.php
-          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
-          ./run-tests.sh ci "./__tests__/1-live-mode.js"
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/1-live-mode.js"
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi
 
       - name: Run "live mode with cURL and without geolocation" test
         run: |
           cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
           sed -i  's/\x27use_curl\x27 => false/\x27use_curl\x27 => true/g' scripts/auto-prepend/settings.php
           cat scripts/auto-prepend/settings.php
-          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
-          ./run-tests.sh ci "./__tests__/1-live-mode.js"    
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/1-live-mode.js"    
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi
 
       - name: Run "live mode with file_get_contents and with geolocation" test
         run: |
@@ -170,8 +186,16 @@ jobs:
           sed -i  's/\x27enabled\x27 => false/\x27enabled\x27 => true/g' scripts/auto-prepend/settings.php
           sed -i  's/\x27forced_test_forwarded_ip\x27 => \x27\x27/\x27forced_test_forwarded_ip\x27 => \x27${{env.JP_TEST_IP}}\x27/g' scripts/auto-prepend/settings.php
           cat scripts/auto-prepend/settings.php
-          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
-          ./run-tests.sh ci "./__tests__/2-live-mode-with-geolocation.js"
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/2-live-mode-with-geolocation.js"
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi
 
       - name: Run "live mode with cURL and with geolocation" test
         run: |
@@ -181,8 +205,16 @@ jobs:
           sed -i  's/\x27enabled\x27 => false/\x27enabled\x27 => true/g' scripts/auto-prepend/settings.php
           sed -i  's/\x27forced_test_forwarded_ip\x27 => \x27\x27/\x27forced_test_forwarded_ip\x27 => \x27${{env.JP_TEST_IP}}\x27/g' scripts/auto-prepend/settings.php
           cat scripts/auto-prepend/settings.php
-          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
-          ./run-tests.sh ci "./__tests__/2-live-mode-with-geolocation.js"   
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/2-live-mode-with-geolocation.js"   
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi
 
       - name: Run "stream mode with file_get_contents and without geolocation" test
         run: |
@@ -192,8 +224,16 @@ jobs:
           sed -i  's/\x27forced_test_forwarded_ip\x27 => \x27${{env.JP_TEST_IP}}\x27/\x27forced_test_forwarded_ip\x27 => \x27\x27/g' scripts/auto-prepend/settings.php
           sed -i  's/\x27stream_mode\x27 => false/\x27stream_mode\x27 => true/g' scripts/auto-prepend/settings.php
           cat scripts/auto-prepend/settings.php
-          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
-          ./run-tests.sh ci "./__tests__/3-stream-mode.js"
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/3-stream-mode.js"
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi
 
       - name: Run "stream mode with cURL and without geolocation" test
         run: |
@@ -203,13 +243,29 @@ jobs:
           sed -i  's/\x27forced_test_forwarded_ip\x27 => \x27${{env.JP_TEST_IP}}\x27/\x27forced_test_forwarded_ip\x27 => \x27\x27/g' scripts/auto-prepend/settings.php
           sed -i  's/\x27stream_mode\x27 => false/\x27stream_mode\x27 => true/g' scripts/auto-prepend/settings.php
           cat scripts/auto-prepend/settings.php
-          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
-          ./run-tests.sh ci "./__tests__/3-stream-mode.js"    
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/3-stream-mode.js"    
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi
 
       - name: Run "standalone geolocation" test
         run: |
-          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
-          ./run-tests.sh ci "./__tests__/4-geolocation.js"
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/4-geolocation.js"
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi
 
       - name: Run "live mode with IPv6" test
         run: |
@@ -219,8 +275,8 @@ jobs:
           sed -i -e 's/${{ env.PROXY_IP }}/${{env.IPV6_TEST_PROXY_IP}}/g' scripts/auto-prepend/settings.php
           sed -i  's/\x27stream_mode\x27 => true/\x27stream_mode\x27 => false/g' scripts/auto-prepend/settings.php
           cat scripts/auto-prepend/settings.php
-          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
-          ./run-tests.sh ci "./__tests__/1-live-mode.js"
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/1-live-mode.js"
 
       - name: Run "live mode with TLS auth" test
         run: |
@@ -231,9 +287,16 @@ jobs:
           sed -i  's/\x27tls_key_path\x27 => \x27\x27/\x27tls_key_path\x27 => \x27\/var\/www\/html\/cfssl\/bouncer-key.pem\x27/g' scripts/auto-prepend/settings.php
           sed -i  's/\x27tls_ca_cert_path\x27 => \x27\x27/\x27tls_ca_cert_path\x27 => \x27\/var\/www\/html\/cfssl\/ca-chain.pem\x27/g' scripts/auto-prepend/settings.php
           cat scripts/auto-prepend/settings.php
-          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
-          ./run-tests.sh ci "./__tests__/1-live-mode.js"
-          
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/1-live-mode.js"
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi          
 
       - name: Run "stream mode with TLS auth and cURL" test
         run: |
@@ -242,5 +305,13 @@ jobs:
           sed -i  's/\x27forced_test_forwarded_ip\x27 => \x27${{env.IPV6_TEST_IP}}\x27/\x27forced_test_forwarded_ip\x27 => \x27\x27/g' scripts/auto-prepend/settings.php
           sed -i  's/\x27use_curl\x27 => false/\x27use_curl\x27 => true/g' scripts/auto-prepend/settings.php
           cat scripts/auto-prepend/settings.php
-          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/__scripts__
-          ./run-tests.sh ci "./__tests__/3-stream-mode.js"
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/3-stream-mode.js"
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi

@@ -120,5 +120,5 @@ AGENT_TLS_PATH=$AGENT_TLS_PATH \
 yarn --cwd $YARN_PATH test \
     "$JEST_PARAMS" \
     --json \
-    --outputFile=./.test-results-"$PHPVERSION".json \
+    --outputFile=./.test-results.json \
     "$FILE_LIST"

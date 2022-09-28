@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - feat/mess-detector
     paths-ignore:
       - '**.md'
   workflow_dispatch:
