@@ -14,7 +14,7 @@ use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Cache\PruneableInterface;
 
 /**
- * The cache mechanism class.
+ * The cache mechanism class to handle decisions from Local API.
  *
  * @author    CrowdSec team
  *
@@ -23,7 +23,7 @@ use Symfony\Component\Cache\PruneableInterface;
  * @copyright Copyright (c) 2020+ CrowdSec
  * @license   MIT License
  */
-class ApiCache extends AbstractApiCache
+class ApiCache extends AbstractCache
 {
     /**
      * @throws InvalidArgumentException|BouncerException

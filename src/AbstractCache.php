@@ -19,7 +19,7 @@ use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
 use Symfony\Component\Cache\Exception\CacheException;
 
 /**
- * The cache mechanism to store every decision from LAPI. Symfony Cache component powered.
+ * The cache mechanism. Symfony Cache component powered.
  *
  * @author    CrowdSec team
  *
@@ -28,7 +28,7 @@ use Symfony\Component\Cache\Exception\CacheException;
  * @copyright Copyright (c) 2020+ CrowdSec
  * @license   MIT License
  */
-class AbstractApiCache
+abstract class AbstractCache
 {
     public const CACHE_SEP = '_';
     /** @var TagAwareAdapterInterface */
@@ -125,56 +125,6 @@ class AbstractApiCache
     }
 
     /**
-     * Add remediation to a Symfony Cache Item identified by a cache key.
-     *
-     * @throws InvalidArgumentException
-     * @throws Exception
-     * @throws \Psr\Cache\CacheException
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess)
-     */
-    public function addRemediationToCacheItem(string $cacheKey, string $type, int $expiration, int $decisionId): string
-    {
-        $item = $this->adapter->getItem(base64_encode($cacheKey));
-
-        // Merge with existing remediations (if any).
-        $remediations = $item->isHit() ? $item->get() : [];
-
-        $index = array_search(Constants::REMEDIATION_BYPASS, array_column($remediations, 0));
-        if (false !== $index) {
-            $this->logger->debug('', [
-                'type' => 'IP_CLEAN_TO_BAD',
-                'cache_key' => $cacheKey,
-                'old_remediation' => Constants::REMEDIATION_BYPASS,
-            ]);
-            unset($remediations[$index]);
-        }
-
-        $remediations[] = [
-            $type,
-            $expiration,
-            $decisionId,
-        ]; // erase previous decision with the same id
-
-        // Build the item lifetime in cache and sort remediations by priority
-        $maxLifetime = max(array_column($remediations, 1));
-        $prioritizedRemediations = Remediation::sortRemediationByPriority($remediations);
-
-        $item->set($prioritizedRemediations);
-        $item->expiresAt(new DateTime('@' . $maxLifetime));
-        $item->tag(Constants::CACHE_TAG_REM);
-
-        // Save the cache without committing it to the cache system.
-        // Useful to improve performance when updating the cache.
-        if (!$this->adapter->saveDeferred($item)) {
-            throw new BouncerException("cache#$cacheKey: Unable to save this deferred item in cache: " .
-                                       "$type for $expiration sec, (decision $decisionId)");
-        }
-
-        return $prioritizedRemediations[0][0];
-    }
-
-    /**
      * @return TagAwareAdapterInterface
      */
     public function getAdapter(): TagAwareAdapterInterface
@@ -190,7 +140,7 @@ class AbstractApiCache
      * @return string
      * @throws BouncerException
      */
-    public function getCacheKey(string $scope, string $value): string
+    protected function getCacheKey(string $scope, string $value): string
     {
         if (!isset($this->cacheKeys[$scope][$value])) {
             switch ($scope) {
@@ -296,6 +246,60 @@ class AbstractApiCache
             unset($cachedVariables[$name]);
         }
         $this->saveCacheItem($cacheTag, $cacheKey, $cachedVariables);
+    }
+
+    /**
+     * Add remediation to a Symfony Cache Item identified by a cache key.
+     *
+     * @throws InvalidArgumentException
+     * @throws Exception
+     * @throws \Psr\Cache\CacheException
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
+     */
+    protected function addRemediationToCacheItem(
+        string $cacheKey,
+        string $type,
+        int $expiration,
+        int $decisionId
+    ): string {
+        $item = $this->adapter->getItem(base64_encode($cacheKey));
+
+        // Merge with existing remediations (if any).
+        $remediations = $item->isHit() ? $item->get() : [];
+
+        $index = array_search(Constants::REMEDIATION_BYPASS, array_column($remediations, 0));
+        if (false !== $index) {
+            $this->logger->debug('', [
+                'type' => 'IP_CLEAN_TO_BAD',
+                'cache_key' => $cacheKey,
+                'old_remediation' => Constants::REMEDIATION_BYPASS,
+            ]);
+            unset($remediations[$index]);
+        }
+
+        $remediations[] = [
+            $type,
+            $expiration,
+            $decisionId,
+        ]; // erase previous decision with the same id
+
+        // Build the item lifetime in cache and sort remediations by priority
+        $maxLifetime = max(array_column($remediations, 1));
+        $prioritizedRemediations = Remediation::sortRemediationByPriority($remediations);
+
+        $item->set($prioritizedRemediations);
+        $item->expiresAt(new DateTime('@' . $maxLifetime));
+        $item->tag(Constants::CACHE_TAG_REM);
+
+        // Save the cache without committing it to the cache system.
+        // Useful to improve performance when updating the cache.
+        if (!$this->adapter->saveDeferred($item)) {
+            throw new BouncerException("cache#$cacheKey: Unable to save this deferred item in cache: " .
+                                       "$type for $expiration sec, (decision $decisionId)");
+        }
+
+        return $prioritizedRemediations[0][0];
     }
 
     /**
