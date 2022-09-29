@@ -28,17 +28,14 @@ use Symfony\Component\Config\Definition\Processor;
  */
 class Bouncer
 {
-    /** @var LoggerInterface */
-    private $logger;
-
     /** @var ApiCache */
     private $apiCache;
-
-    /** @var int */
-    private $maxRemediationLevelIndex;
-
     /** @var array */
     private $configs = [];
+    /** @var LoggerInterface */
+    private $logger;
+    /** @var int */
+    private $maxRemediationLevelIndex;
 
     /**
      * @param array $configs
@@ -75,79 +72,56 @@ class Bouncer
         ]);
     }
 
-
     /**
-     * Retrieve Bouncer configurations
+     * Build a captcha couple.
      *
-     * @return array
+     * @return array an array composed of two items, a "phrase" string representing the phrase and a "inlineImage"
+     *     representing the image data
      */
-    public function getConfigs(): array
+    public static function buildCaptchaCouple(): array
     {
-        return $this->configs;
+        $captchaBuilder = new CaptchaBuilder();
+
+        return [
+            'phrase' => $captchaBuilder->getPhrase(),
+            'inlineImage' => $captchaBuilder->build()->inline(),
+        ];
     }
 
     /**
-     * Retrieve Bouncer configuration by name
+     * Check if the captcha filled by the user is correct or not.
+     * We are permissive with the user (0 is interpreted as "o" and 1 in interpreted as "l").
      *
-     * @param string $name
-     * @return mixed
+     * @param string $expected The expected phrase
+     * @param string $try The phrase to check (the user input)
+     * @param string $ip The IP of the use (for logging purpose)
+     *
+     * @return bool If the captcha input was correct or not
+     *
+     * @SuppressWarnings(PHPMD.StaticAccess)
      */
-    public function getConfig(string $name)
+    public function checkCaptcha(string $expected, string $try, string $ip): bool
     {
-        return $this->configs[$name];
+        $solved = PhraseBuilder::comparePhrases($expected, $try);
+        $this->logger->warning('', [
+            'type' => 'CAPTCHA_SOLVED',
+            'ip' => $ip,
+            'resolution' => $solved,
+        ]);
+
+        return $solved;
     }
 
     /**
-     * Configure this instance.
+     * This method clear the full data in cache.
      *
-     * @param array $config An array with all configuration parameters
+     * @return bool If the cache has been successfully cleared or not
      *
+     * @throws InvalidArgumentException|BouncerException
      */
-    private function configure(array $config): void
+    public function clearCache(): bool
     {
-        // Process and validate input configuration.
-        $configuration = new Configuration();
-        $processor = new Processor();
-        $this->configs = $processor->processConfiguration($configuration, [$config]);
-    }
-
-    /**
-     * Cap the remediation to a fixed value given in configuration.
-     *
-     * @param string $remediation The maximum remediation that can ban applied (ex: 'ban', 'captcha', 'bypass')
-     *
-     * @return string $remediation The resulting remediation to use (ex: 'ban', 'captcha', 'bypass')
-     */
-    private function capRemediationLevel(string $remediation): string
-    {
-        $currentIndex = array_search($remediation, Constants::ORDERED_REMEDIATIONS);
-        if ($currentIndex < $this->maxRemediationLevelIndex) {
-            return Constants::ORDERED_REMEDIATIONS[$this->maxRemediationLevelIndex];
-        }
-
-        return $remediation;
-    }
-
-    /**
-     * Get the remediation for the specified IP. This method use the cache layer.
-     * In live mode, when no remediation was found in cache,
-     * the cache system will call the API to check if there is a decision.
-     *
-     * @param string $ip The IP to check
-     *
-     * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
-     *
-     * @throws InvalidArgumentException|\Psr\Cache\CacheException|BouncerException
-     */
-    public function getRemediationForIp(string $ip): string
-    {
-        $address = Factory::parseAddressString($ip, ParseStringFlag::MAY_INCLUDE_ZONEID);
-        if (null === $address) {
-            throw new BouncerException("IP $ip format is invalid.");
-        }
-        $remediation = $this->apiCache->get($address);
-
-        return $this->capRemediationLevel($remediation);
+        return $this->apiCache->clear();
     }
 
     /**
@@ -167,6 +141,16 @@ class Bouncer
         $template = new Template('ban.html.twig');
 
         return $template->render($config);
+    }
+
+    public function getApiCache(): ApiCache
+    {
+        return $this->apiCache;
+    }
+
+    public function getCacheAdapter(): TagAwareAdapterInterface
+    {
+        return $this->getApiCache()->getAdapter();
     }
 
     /**
@@ -201,17 +185,78 @@ class Bouncer
         ));
     }
 
+    public function getClient(): ApiClient
+    {
+        return $this->getApiCache()->getClient();
+    }
+
     /**
-     * Used in stream mode only.
-     * This method should be called only to force a cache warm up.
+     * Retrieve Bouncer configuration by name
      *
-     * @return array "count": number of decisions added, "errors": decisions not added
+     * @param string $name
+     * @return mixed
+     */
+    public function getConfig(string $name)
+    {
+        return $this->configs[$name];
+    }
+
+    /**
+     * Retrieve Bouncer configurations
+     *
+     * @return array
+     */
+    public function getConfigs(): array
+    {
+        return $this->configs;
+    }
+
+    /**
+     * Returns the logger instance.
+     *
+     * @return LoggerInterface the logger used by this library
+     */
+    public function getLogger(): LoggerInterface
+    {
+        return $this->logger;
+    }
+
+    /**
+     * Get the remediation for the specified IP. This method use the cache layer.
+     * In live mode, when no remediation was found in cache,
+     * the cache system will call the API to check if there is a decision.
+     *
+     * @param string $ip The IP to check
+     *
+     * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
      *
      * @throws InvalidArgumentException|\Psr\Cache\CacheException|BouncerException
      */
-    public function warmBlocklistCacheUp(): array
+    public function getRemediationForIp(string $ip): string
     {
-        return $this->apiCache->warmUp();
+        $address = Factory::parseAddressString($ip, ParseStringFlag::MAY_INCLUDE_ZONEID);
+        if (null === $address) {
+            throw new BouncerException("IP $ip format is invalid.");
+        }
+        $remediation = $this->apiCache->get($address);
+
+        return $this->capRemediationLevel($remediation);
+    }
+
+    public function getRestClient(): AbstractClient
+    {
+        return $this->getClient()->getRestClient();
+    }
+
+    /**
+     * This method prune the cache: it removes all the expired cache items.
+     *
+     * @return bool If the cache has been successfully pruned or not
+     * @throws BouncerException
+     */
+    public function pruneCache(): bool
+    {
+        return $this->apiCache->prune();
     }
 
     /**
@@ -228,77 +273,6 @@ class Bouncer
     }
 
     /**
-     * This method clear the full data in cache.
-     *
-     * @return bool If the cache has been successfully cleared or not
-     *
-     * @throws InvalidArgumentException|BouncerException
-     */
-    public function clearCache(): bool
-    {
-        return $this->apiCache->clear();
-    }
-
-    /**
-     * This method prune the cache: it removes all the expired cache items.
-     *
-     * @return bool If the cache has been successfully pruned or not
-     * @throws BouncerException
-     */
-    public function pruneCache(): bool
-    {
-        return $this->apiCache->prune();
-    }
-
-    /**
-     * Returns the logger instance.
-     *
-     * @return LoggerInterface the logger used by this library
-     */
-    public function getLogger(): LoggerInterface
-    {
-        return $this->logger;
-    }
-
-    /**
-     * Build a captcha couple.
-     *
-     * @return array an array composed of two items, a "phrase" string representing the phrase and a "inlineImage"
-     *     representing the image data
-     */
-    public static function buildCaptchaCouple(): array
-    {
-        $captchaBuilder = new CaptchaBuilder();
-
-        return [
-            'phrase' => $captchaBuilder->getPhrase(),
-            'inlineImage' => $captchaBuilder->build()->inline(),
-        ];
-    }
-
-    /**
-     * Check if the captcha filled by the user is correct or not.
-     * We are permissive with the user (0 is interpreted as "o" and 1 in interpreted as "l").
-     *
-     * @param string $expected The expected phrase
-     * @param string $try The phrase to check (the user input)
-     * @param string $ip The IP of the use (for logging purpose)
-     *
-     * @return bool If the captcha input was correct or not
-     */
-    public function checkCaptcha(string $expected, string $try, string $ip): bool
-    {
-        $solved = PhraseBuilder::comparePhrases($expected, $try);
-        $this->logger->warning('', [
-            'type' => 'CAPTCHA_SOLVED',
-            'ip' => $ip,
-            'resolution' => $solved,
-        ]);
-
-        return $solved;
-    }
-
-    /**
      * Test the connection to the cache system (Redis or Memcached).
      *
      * @return void If the connection was successful or not
@@ -310,23 +284,47 @@ class Bouncer
         $this->apiCache->testConnection();
     }
 
-    public function getApiCache(): ApiCache
+    /**
+     * Used in stream mode only.
+     * This method should be called only to force a cache warm up.
+     *
+     * @return array "count": number of decisions added, "errors": decisions not added
+     *
+     * @throws InvalidArgumentException|\Psr\Cache\CacheException|BouncerException
+     */
+    public function warmBlocklistCacheUp(): array
     {
-        return $this->apiCache;
+        return $this->apiCache->warmUp();
     }
 
-    public function getCacheAdapter(): TagAwareAdapterInterface
+    /**
+     * Cap the remediation to a fixed value given in configuration.
+     *
+     * @param string $remediation The maximum remediation that can ban applied (ex: 'ban', 'captcha', 'bypass')
+     *
+     * @return string $remediation The resulting remediation to use (ex: 'ban', 'captcha', 'bypass')
+     */
+    private function capRemediationLevel(string $remediation): string
     {
-        return $this->getApiCache()->getAdapter();
+        $currentIndex = array_search($remediation, Constants::ORDERED_REMEDIATIONS);
+        if ($currentIndex < $this->maxRemediationLevelIndex) {
+            return Constants::ORDERED_REMEDIATIONS[$this->maxRemediationLevelIndex];
+        }
+
+        return $remediation;
     }
 
-    public function getClient(): ApiClient
+    /**
+     * Configure this instance.
+     *
+     * @param array $config An array with all configuration parameters
+     *
+     */
+    private function configure(array $config): void
     {
-        return $this->getApiCache()->getClient();
-    }
-
-    public function getRestClient(): AbstractClient
-    {
-        return $this->getClient()->getRestClient();
+        // Process and validate input configuration.
+        $configuration = new Configuration();
+        $processor = new Processor();
+        $this->configs = $processor->processConfiguration($configuration, [$config]);
     }
 }

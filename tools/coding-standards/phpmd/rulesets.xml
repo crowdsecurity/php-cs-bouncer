@@ -10,8 +10,12 @@
         Rule set that checks CrowdSec Bouncer PHP lib
     </description>
 
-    <rule ref="rulesets/codesize.xml" />
-    <rule ref="rulesets/cleancode.xml" />
+    <rule ref="rulesets/codesize.xml" >
+        <exclude name="ExcessiveClassComplexity"/>
+    </rule>
+    <rule ref="rulesets/cleancode.xml">
+        <exclude name="StaticAccess"/>
+    </rule>
     <rule ref="rulesets/unusedcode.xml">
         <exclude name="UnusedLocalVariable"/>
     </rule>
@@ -20,6 +24,18 @@
             <property name="allow-unused-foreach-variables" value="true" />
         </properties>
     </rule>
-
-
+    <!--The only case when static access is acceptable is when used for factory methods.-->
+    <rule ref="rulesets/cleancode.xml/StaticAccess">
+        <properties>
+            <property name="exceptions" >
+                <value><![CDATA[\IPLib\Factory]]></value>
+            </property>
+        </properties>
+    </rule>
+    <!-- Allow more complexity -->
+    <rule ref="rulesets/codesize.xml/ExcessiveClassComplexity">
+        <properties>
+            <property name="maximum" value="100" />
+        </properties>
+    </rule>
 </ruleset>

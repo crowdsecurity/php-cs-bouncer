@@ -32,7 +32,7 @@ class TestHelpers
 
     public const PHP_FILES_CACHE_ADAPTER_DIR = __DIR__ . '/../var/phpFiles.cache';
 
-    public const LOG_LEVEL = Logger::DEBUG; // set to Logger::DEBUG to get high verbosity
+    public const LOG_LEVEL = Logger::WARNING; // set to Logger::DEBUG to get high verbosity
 
     public static function createLogger(): Logger
     {
