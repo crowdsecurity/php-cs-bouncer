@@ -468,18 +468,15 @@ abstract class AbstractBounce implements IBounce
      */
     private function shouldEarlyReturn(array $cachedCaptchaVariables, string $ip): bool
     {
-        // Early return if no captcha has to be resolved.
+        $result = false;
         if (\in_array($cachedCaptchaVariables['crowdsec_captcha_has_to_be_resolved'], [null, false])) {
-            return true;
-        }
-
-        // Early return if no form captcha form has been filled.
-        if ('POST' !== $this->getHttpMethod() || null === $this->getPostedVariable('crowdsec_captcha')) {
-            return true;
-        }
-
-        // Handle image refresh.
-        if (null !== $this->getPostedVariable('refresh') && (int)$this->getPostedVariable('refresh')) {
+            // Early return if no captcha has to be resolved.
+            $result = true;
+        } elseif ('POST' !== $this->getHttpMethod() || null === $this->getPostedVariable('crowdsec_captcha')) {
+            // Early return if no form captcha form has been filled.
+            $result = true;
+        } elseif (null !== $this->getPostedVariable('refresh') && (int)$this->getPostedVariable('refresh')) {
+            // Handle image refresh.
             // Generate new captcha image for the user
             $captchaCouple = Bouncer::buildCaptchaCouple();
             $captchaVariables = [
@@ -489,9 +486,9 @@ abstract class AbstractBounce implements IBounce
             ];
             $this->setIpVariables(Constants::CACHE_TAG_CAPTCHA, $captchaVariables, $ip);
 
-            return true;
+            $result = true;
         }
 
-        return false;
+        return $result;
     }
 }
