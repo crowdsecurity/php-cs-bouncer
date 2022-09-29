@@ -76,7 +76,7 @@ class Constants
     /** @var string Path for html templates folder (e.g. ban and captcha wall) */
     public const TEMPLATES_DIR = __DIR__ . "/templates";
     /** @var string The last version of this library */
-    public const VERSION = 'v0.31.0';
+    public const VERSION = 'v0.32.0';
     /** @var string The "disabled" x-forwarded-for setting */
     public const X_FORWARDED_DISABLED = 'no_forward';
 }
