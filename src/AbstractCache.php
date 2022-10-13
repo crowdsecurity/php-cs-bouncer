@@ -571,9 +571,8 @@ abstract class AbstractCache
                     $this->adapter = new RedisTagAwareAdapter((RedisAdapter::createConnection($redisDsn)));
                 } catch (Exception $e) {
                     throw new BouncerException('Error when connecting to Redis.' .
-                                               ' Please fix the Redis DSN or select another cache technology.'.
-                                                ' Initial error was: '.$e->getMessage()
-                    );
+                                               ' Please fix the Redis DSN or select another cache technology.' .
+                                                ' Initial error was: ' . $e->getMessage());
                 }
                 break;
 
