@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace CrowdSecBouncer;
 
 use CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder;
@@ -52,7 +54,7 @@ class Bouncer
         }
         $this->logger = $logger;
         $this->configure($configs);
-        /** @var int */
+        /** @var int $index */
         $index = array_search(
             $this->configs['max_remediation_level'],
             Constants::ORDERED_REMEDIATIONS
