@@ -571,7 +571,9 @@ abstract class AbstractCache
                     $this->adapter = new RedisTagAwareAdapter((RedisAdapter::createConnection($redisDsn)));
                 } catch (Exception $e) {
                     throw new BouncerException('Error when connecting to Redis.' .
-                                               ' Please fix the Redis DSN or select another cache technology.');
+                                               ' Please fix the Redis DSN or select another cache technology.'.
+                                                ' Initial error was: '.$e->getMessage()
+                    );
                 }
                 break;
 
@@ -607,7 +609,7 @@ abstract class AbstractCache
         $re = '/(-?)(?:(?:(\d+)h)?(\d+)m)?(\d+).\d+(m?)s/m';
         preg_match($re, $duration, $matches);
         if (!\count($matches)) {
-            throw new BouncerException("Unable to parse the following duration: ${$duration}.");
+            throw new BouncerException("Unable to parse the following duration: {$$duration}.");
         }
         $seconds = 0;
         if (isset($matches[2])) {
