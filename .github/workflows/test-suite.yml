@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Clone DDEV files
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: .ddev
           repository: julienloizelet/ddev-php
@@ -73,7 +73,7 @@ jobs:
           ddev php -r "echo phpversion('memcached');"
 
       - name: Clone PHP lib Crowdsec files
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: my-own-modules/crowdsec-php-lib
 
