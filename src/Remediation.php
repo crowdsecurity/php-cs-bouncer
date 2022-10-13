@@ -58,7 +58,7 @@ class Remediation
 
         // Sort by priorities.
         /** @var $compareFunction callable */
-        $compareFunction = 'self::comparePriorities';
+        $compareFunction = self::class . '::comparePriorities';
         usort($remediationsWithPriorities, $compareFunction);
 
         return $remediationsWithPriorities;
