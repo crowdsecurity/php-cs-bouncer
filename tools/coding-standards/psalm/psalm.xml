@@ -26,15 +26,16 @@
                 <referencedClass name="Predis\ClientInterface"/>
             </errorLevel>
         </UndefinedDocblockClass>
-        <UndefinedInterfaceMethod>
+        <UndefinedClass>
             <errorLevel type="info">
-                <referencedMethod name="Symfony\Component\Cache\Adapter\TagAwareAdapterInterface::delete"/>
+                <referencedClass name="Predis\ClientInterface"/>
             </errorLevel>
-        </UndefinedInterfaceMethod>
+        </UndefinedClass>
         <PossiblyUndefinedMethod>
             <errorLevel type="suppress">
                 <referencedMethod name="Symfony\Component\Config\Definition\Builder\NodeDefinition::scalarNode"/>
                 <referencedMethod name="Symfony\Component\Config\Definition\Builder\NodeDefinition::children"/>
+                <referencedMethod name="Symfony\Component\Config\Definition\Builder\VariableNodeDefinition::scalarNode"/>
             </errorLevel>
         </PossiblyUndefinedMethod>
     </issueHandlers>

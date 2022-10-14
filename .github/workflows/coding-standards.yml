@@ -30,7 +30,7 @@ jobs:
 
       - name: Install DDEV
         env:
-          DDEV_VERSION: v1.21.1
+          DDEV_VERSION: v1.21.2
         run: |
           # @see https://ddev.readthedocs.io/en/stable/#installationupgrade-script-linux-and-macos-armarm64-and-amd64-architectures
           sudo apt-get -qq update
@@ -77,3 +77,6 @@ jobs:
 
       - name: Run PHPMD
         run: ddev phpmd ./${{env.EXTENSION_PATH}}/tools/coding-standards phpmd/rulesets.xml ../../src
+
+      - name: Run PSALM
+        run: ddev psalm ./${{env.EXTENSION_PATH}}/tools/coding-standards ./${{env.EXTENSION_PATH}}/tools/coding-standards/psalm

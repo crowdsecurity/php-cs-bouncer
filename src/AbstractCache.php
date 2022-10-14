@@ -31,7 +31,7 @@ use Symfony\Component\Cache\Exception\CacheException;
 abstract class AbstractCache
 {
     public const CACHE_SEP = '_';
-    /** @var TagAwareAdapterInterface */
+    /** @var TagAwareAdapter|MemcachedTagAwareAdapter|RedisTagAwareAdapter */
     protected $adapter;
     /**
      * @var ApiClient
