@@ -14,7 +14,7 @@ use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Cache\Adapter\TagAwareAdapterInterface;
+use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\Cache\Exception\CacheException;
 use Symfony\Component\Config\Definition\Processor;
 
@@ -150,7 +150,7 @@ class Bouncer
         return $this->apiCache;
     }
 
-    public function getCacheAdapter(): TagAwareAdapterInterface
+    public function getCacheAdapter(): AdapterInterface
     {
         return $this->getApiCache()->getAdapter();
     }

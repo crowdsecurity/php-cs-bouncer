@@ -461,7 +461,7 @@ abstract class AbstractCache
                 'type' => 'CACHE_ITEM_REMOVED',
                 'cache_key' => $cacheKey,
             ]);
-            $this->adapter->delete(base64_encode($cacheKey));
+            $this->adapter->deleteItem(base64_encode($cacheKey));
 
             return true;
         }

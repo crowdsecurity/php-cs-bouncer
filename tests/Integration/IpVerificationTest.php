@@ -48,7 +48,7 @@ final class IpVerificationTest extends TestCase
                 break;
             case 'MemcachedAdapter':
                 $this->assertEquals(
-                    'CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter',
+                    'Symfony\Component\Cache\Adapter\MemcachedAdapter',
                     get_class($cacheAdapter),
                     'Tested adapter should be correct'
                 );
