@@ -32,7 +32,6 @@ class Constants
     public const BOUNCING_LEVEL_NORMAL = 'normal_bouncing';
     /** @var int The duration we keep a bad IP in cache */
     public const CACHE_EXPIRATION_FOR_BAD_IP = 20;
-
     /** @var int The duration we keep a captcha flow in cache */
     public const CACHE_EXPIRATION_FOR_CAPTCHA = 86400;
     /** @var int The duration we keep a clean IP in cache */

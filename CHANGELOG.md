@@ -8,8 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.33.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v0.33.0) - 2022-11-10
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v0.32.0...v0.33.0)
 
+### Changed
+- Do not use tags for `memcached` as it is discouraged
+
 ### Fixed
-- In stream mode, a clean IP decision (`bypass`) was not cached at all. The decision is now cached for ten years as expected.
+- In stream mode, a clean IP decision (`bypass`) was not cached at all. The decision is now cached for ten years as expected
 
 ---
 
