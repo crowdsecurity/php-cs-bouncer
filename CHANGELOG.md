@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.33.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v0.33.0) - 2022-11-10
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v0.32.0...v0.33.0)
+
+### Fixed
+- In stream mode, a clean IP decision (`bypass`) was not cached at all. The decision is now cached for ten years as expected.
+
+---
+
 ## [0.32.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v0.32.0) - 2022-09-29
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v0.31.0...v0.32.0)
 

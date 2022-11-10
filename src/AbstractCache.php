@@ -339,17 +339,15 @@ abstract class AbstractCache
     protected function formatRemediationFromDecision(?array $decision): array
     {
         if (!$decision) {
-            $duration = time() + $this->cacheExpirationForCleanIp;
-            if ($this->streamMode) {
-                /**
-                 * In stream mode we consider a clean IP forever... until the next resync.
-                 * in this case, forever is 10 years as PHP_INT_MAX will cause trouble with the Memcached Adapter
-                 * (int to float unwanted conversion)
-                 * */
-                $duration = 315360000;
-            }
+            /**
+             * In stream mode we consider a clean IP forever... until the next resync.
+             * in this case, forever is 10 years as PHP_INT_MAX will cause trouble with the Memcached Adapter
+             * (int to float unwanted conversion)
+             *
+             */
+            $duration = $this->streamMode ? 315360000 : $this->cacheExpirationForCleanIp;
 
-            return [Constants::REMEDIATION_BYPASS, $duration, 0];
+            return [Constants::REMEDIATION_BYPASS, time() + $duration, 0];
         }
 
         $duration = self::parseDurationToSeconds($decision['duration']);
