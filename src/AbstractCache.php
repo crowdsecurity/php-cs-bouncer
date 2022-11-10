@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
-use CrowdSecBouncer\Fixes\Memcached\TagAwareAdapter as MemcachedTagAwareAdapter;
 use DateTime;
 use ErrorException;
 use Exception;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\Cache\Adapter\MemcachedAdapter;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Adapter\RedisAdapter;
@@ -31,7 +31,7 @@ use Symfony\Component\Cache\Exception\CacheException;
 abstract class AbstractCache
 {
     public const CACHE_SEP = '_';
-    /** @var TagAwareAdapter|MemcachedTagAwareAdapter|RedisTagAwareAdapter */
+    /** @var AdapterInterface */
     protected $adapter;
     /**
      * @var ApiClient
@@ -125,9 +125,9 @@ abstract class AbstractCache
     }
 
     /**
-     * @return TagAwareAdapterInterface
+     * @return AdapterInterface
      */
-    public function getAdapter(): TagAwareAdapterInterface
+    public function getAdapter(): AdapterInterface
     {
         return $this->adapter;
     }
@@ -290,7 +290,9 @@ abstract class AbstractCache
 
         $item->set($prioritizedRemediations);
         $item->expiresAt(new DateTime('@' . $maxLifetime));
-        $item->tag(Constants::CACHE_TAG_REM);
+        if ($this->adapter instanceof TagAwareAdapterInterface) {
+            $item->tag(Constants::CACHE_TAG_REM);
+        }
 
         // Save the cache without committing it to the cache system.
         // Useful to improve performance when updating the cache.
@@ -457,7 +459,7 @@ abstract class AbstractCache
                 'type' => 'CACHE_ITEM_REMOVED',
                 'cache_key' => $cacheKey,
             ]);
-            $this->adapter->delete(base64_encode($cacheKey));
+            $this->adapter->deleteItem(base64_encode($cacheKey));
 
             return true;
         }
@@ -466,7 +468,9 @@ abstract class AbstractCache
         $cacheContent = Remediation::sortRemediationByPriority($remediations);
         $item->expiresAt(new DateTime('@' . $maxLifetime));
         $item->set($cacheContent);
-        $item->tag(Constants::CACHE_TAG_REM);
+        if ($this->adapter instanceof TagAwareAdapterInterface) {
+            $item->tag(Constants::CACHE_TAG_REM);
+        }
 
         // Save the cache without committing it to the cache system.
         // Useful to improve performance when updating the cache.
@@ -497,7 +501,9 @@ abstract class AbstractCache
         $item = $this->adapter->getItem(base64_encode($cacheKey));
         $item->set($cachedVariables);
         $item->expiresAt(new DateTime("+$duration seconds"));
-        $item->tag($cacheTag);
+        if ($this->adapter instanceof TagAwareAdapterInterface) {
+            $item->tag($cacheTag);
+        }
         $this->adapter->save($item);
     }
 
@@ -508,7 +514,7 @@ abstract class AbstractCache
      */
     protected function setCustomErrorHandler(): void
     {
-        if ($this->adapter instanceof MemcachedTagAwareAdapter) {
+        if ($this->adapter instanceof MemcachedAdapter) {
             set_error_handler(function ($errno, $errstr) {
                 $message = "Error when connecting to Memcached. (Error level: $errno)" .
                            "Please fix the Memcached DSN or select another cache technology." .
@@ -523,7 +529,7 @@ abstract class AbstractCache
      * */
     protected function unsetCustomErrorHandler(): void
     {
-        if ($this->adapter instanceof MemcachedTagAwareAdapter) {
+        if ($this->adapter instanceof MemcachedAdapter) {
             restore_error_handler();
         }
     }
@@ -552,10 +558,11 @@ abstract class AbstractCache
                     throw new BouncerException('The selected cache technology is Memcached.' .
                                                ' Please set a Memcached DSN or select another cache technology.');
                 }
-
-                $this->adapter = new MemcachedTagAwareAdapter(
-                    new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedDsn))
-                );
+                /**
+                 * Using a MemcachedAdapter with a TagAwareAdapter for storing tags is discouraged.
+                 * @see \Symfony\Component\Cache\Adapter\MemcachedAdapter::__construct comment
+                 */
+                $this->adapter = new MemcachedAdapter(MemcachedAdapter::createConnection($memcachedDsn));
                 break;
 
             case Constants::CACHE_SYSTEM_REDIS:
