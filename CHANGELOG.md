@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Do not cache bypass decision in stream mode
 - Replace unauthorized chars by underscore `_` in cache key
 
+### Added
+- Add compatibility with PHP 8.2
+
 ### Fixed
 - Fix decision duration parsing when it uses milliseconds
 
