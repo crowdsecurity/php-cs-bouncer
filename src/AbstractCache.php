@@ -292,7 +292,8 @@ abstract class AbstractCache
         ]; // erase previous decision with the same id
 
         // Build the item lifetime in cache and sort remediations by priority
-        $maxLifetime = max(array_column($remediations, 1));
+        $exps = array_column($remediations, 1);
+        $maxLifetime = $exps ? max($exps) : 0;
         $prioritizedRemediations = Remediation::sortRemediationByPriority($remediations);
 
         $item->set($prioritizedRemediations);
@@ -427,7 +428,7 @@ abstract class AbstractCache
             }
         }
         // In stream mode, we do not save bypass decision in cache
-        if($this->streamMode && !$decisions){
+        if ($this->streamMode && !$decisions) {
             return Constants::REMEDIATION_BYPASS;
         }
 
@@ -469,7 +470,8 @@ abstract class AbstractCache
             return true;
         }
         // Build the item lifetime in cache and sort remediations by priority
-        $maxLifetime = max(array_column($remediations, 1));
+        $exps = array_column($remediations, 1);
+        $maxLifetime = $exps ? max($exps) : 0;
         $cacheContent = Remediation::sortRemediationByPriority($remediations);
         $item->expiresAt(new DateTime('@' . $maxLifetime));
         $item->set($cacheContent);

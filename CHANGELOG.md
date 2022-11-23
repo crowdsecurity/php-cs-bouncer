@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.34.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v0.34.0) - 2022-11-24
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v0.33.0...v0.34.0)
+
+### Changed
+- Do not cache bypass decision in stream mode
+- Replace unauthorized chars by underscore `_` in cache key
+
+### Fixed
+- Fix decision duration parsing when it uses milliseconds
+
+---
+
+
 ## [0.33.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v0.33.0) - 2022-11-10
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v0.32.0...v0.33.0)
 
