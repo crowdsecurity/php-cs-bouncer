@@ -621,12 +621,14 @@ abstract class AbstractCache
         if (isset($matches[3])) {
             $seconds += ((int)$matches[3]) * 60; // minutes
         }
+        $secondsPart = 0;
         if (isset($matches[4])) {
-            $seconds += ((int)$matches[4]); // seconds
+            $secondsPart += ((int)$matches[4]); // seconds
         }
         if ('m' === ($matches[5])) { // units in milliseconds
-            $seconds *= 0.001;
+            $secondsPart *= 0.001;
         }
+        $seconds += $secondsPart;
         if ('-' === ($matches[1])) { // negative
             $seconds *= -1;
         }
