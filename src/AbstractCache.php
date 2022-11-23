@@ -145,17 +145,24 @@ abstract class AbstractCache
         if (!isset($this->cacheKeys[$scope][$value])) {
             switch ($scope) {
                 case Constants::SCOPE_RANGE:
-                    $this->cacheKeys[$scope][$value] = Constants::SCOPE_IP . self::CACHE_SEP . $value;
+                    $result = Constants::SCOPE_IP . self::CACHE_SEP . $value;
                     break;
                 case Constants::SCOPE_IP:
                 case Constants::CACHE_TAG_GEO . self::CACHE_SEP . Constants::SCOPE_IP:
                 case Constants::CACHE_TAG_CAPTCHA . self::CACHE_SEP . Constants::SCOPE_IP:
                 case Constants::SCOPE_COUNTRY:
-                    $this->cacheKeys[$scope][$value] = $scope . self::CACHE_SEP . $value;
+                    $result = $scope . self::CACHE_SEP . $value;
                     break;
                 default:
                     throw new BouncerException('Unknown scope:' . $scope);
             }
+
+            /**
+             * Replace unauthorized symbols.
+             *
+             * @see https://symfony.com/doc/current/components/cache/cache_items.html#cache-item-keys-and-values
+             */
+            $this->cacheKeys[$scope][$value] = preg_replace('/[^A-Za-z0-9_.]/', self::CACHE_SEP, $result);
         }
 
         return $this->cacheKeys[$scope][$value];
