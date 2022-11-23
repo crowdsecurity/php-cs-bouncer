@@ -348,20 +348,14 @@ abstract class AbstractCache
     protected function formatRemediationFromDecision(?array $decision): array
     {
         if (!$decision) {
-            /**
-             * In stream mode we consider a clean IP forever... until the next resync.
-             * in this case, forever is 10 years as PHP_INT_MAX will cause trouble with the Memcached Adapter
-             * (int to float unwanted conversion)
-             *
-             */
-            $duration = $this->streamMode ? 315360000 : $this->cacheExpirationForCleanIp;
+            $duration = $this->cacheExpirationForCleanIp;
 
             return [Constants::REMEDIATION_BYPASS, time() + $duration, 0];
         }
 
         $duration = self::parseDurationToSeconds($decision['duration']);
 
-        // Don't set a max duration in stream mode to avoid bugs. Only the stream update has to change the cache state.
+        // In stream mode, only the stream update has to change the cache state.
         if (!$this->streamMode) {
             $duration = min($this->cacheExpirationForBadIp, $duration);
         }
@@ -431,6 +425,10 @@ abstract class AbstractCache
                     'value' => $value,
                 ]);
             }
+        }
+        // In stream mode, we do not save bypass decision in cache
+        if($this->streamMode && !$decisions){
+            return Constants::REMEDIATION_BYPASS;
         }
 
         return $this->saveRemediationsForCacheKey($decisions, $cacheKey);
