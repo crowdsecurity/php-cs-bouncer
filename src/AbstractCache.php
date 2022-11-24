@@ -145,17 +145,24 @@ abstract class AbstractCache
         if (!isset($this->cacheKeys[$scope][$value])) {
             switch ($scope) {
                 case Constants::SCOPE_RANGE:
-                    $this->cacheKeys[$scope][$value] = Constants::SCOPE_IP . self::CACHE_SEP . $value;
+                    $result = Constants::SCOPE_IP . self::CACHE_SEP . $value;
                     break;
                 case Constants::SCOPE_IP:
                 case Constants::CACHE_TAG_GEO . self::CACHE_SEP . Constants::SCOPE_IP:
                 case Constants::CACHE_TAG_CAPTCHA . self::CACHE_SEP . Constants::SCOPE_IP:
                 case Constants::SCOPE_COUNTRY:
-                    $this->cacheKeys[$scope][$value] = $scope . self::CACHE_SEP . $value;
+                    $result = $scope . self::CACHE_SEP . $value;
                     break;
                 default:
                     throw new BouncerException('Unknown scope:' . $scope);
             }
+
+            /**
+             * Replace unauthorized symbols.
+             *
+             * @see https://symfony.com/doc/current/components/cache/cache_items.html#cache-item-keys-and-values
+             */
+            $this->cacheKeys[$scope][$value] = preg_replace('/[^A-Za-z0-9_.]/', self::CACHE_SEP, $result);
         }
 
         return $this->cacheKeys[$scope][$value];
@@ -285,7 +292,8 @@ abstract class AbstractCache
         ]; // erase previous decision with the same id
 
         // Build the item lifetime in cache and sort remediations by priority
-        $maxLifetime = max(array_column($remediations, 1));
+        $exps = array_column($remediations, 1);
+        $maxLifetime = $exps ? max($exps) : 0;
         $prioritizedRemediations = Remediation::sortRemediationByPriority($remediations);
 
         $item->set($prioritizedRemediations);
@@ -341,20 +349,14 @@ abstract class AbstractCache
     protected function formatRemediationFromDecision(?array $decision): array
     {
         if (!$decision) {
-            /**
-             * In stream mode we consider a clean IP forever... until the next resync.
-             * in this case, forever is 10 years as PHP_INT_MAX will cause trouble with the Memcached Adapter
-             * (int to float unwanted conversion)
-             *
-             */
-            $duration = $this->streamMode ? 315360000 : $this->cacheExpirationForCleanIp;
+            $duration = $this->cacheExpirationForCleanIp;
 
             return [Constants::REMEDIATION_BYPASS, time() + $duration, 0];
         }
 
         $duration = self::parseDurationToSeconds($decision['duration']);
 
-        // Don't set a max duration in stream mode to avoid bugs. Only the stream update has to change the cache state.
+        // In stream mode, only the stream update has to change the cache state.
         if (!$this->streamMode) {
             $duration = min($this->cacheExpirationForBadIp, $duration);
         }
@@ -425,6 +427,10 @@ abstract class AbstractCache
                 ]);
             }
         }
+        // In stream mode, we do not save bypass decision in cache
+        if ($this->streamMode && !$decisions) {
+            return Constants::REMEDIATION_BYPASS;
+        }
 
         return $this->saveRemediationsForCacheKey($decisions, $cacheKey);
     }
@@ -464,7 +470,8 @@ abstract class AbstractCache
             return true;
         }
         // Build the item lifetime in cache and sort remediations by priority
-        $maxLifetime = max(array_column($remediations, 1));
+        $exps = array_column($remediations, 1);
+        $maxLifetime = $exps ? max($exps) : 0;
         $cacheContent = Remediation::sortRemediationByPriority($remediations);
         $item->expiresAt(new DateTime('@' . $maxLifetime));
         $item->set($cacheContent);
@@ -576,7 +583,8 @@ abstract class AbstractCache
                     $this->adapter = new RedisTagAwareAdapter((RedisAdapter::createConnection($redisDsn)));
                 } catch (Exception $e) {
                     throw new BouncerException('Error when connecting to Redis.' .
-                                               ' Please fix the Redis DSN or select another cache technology.');
+                                               ' Please fix the Redis DSN or select another cache technology.' .
+                                                ' Initial error was: ' . $e->getMessage());
                 }
                 break;
 
@@ -612,7 +620,7 @@ abstract class AbstractCache
         $re = '/(-?)(?:(?:(\d+)h)?(\d+)m)?(\d+).\d+(m?)s/m';
         preg_match($re, $duration, $matches);
         if (!\count($matches)) {
-            throw new BouncerException("Unable to parse the following duration: ${$duration}.");
+            throw new BouncerException('Unable to parse the following duration: ' . $duration);
         }
         $seconds = 0;
         if (isset($matches[2])) {
@@ -621,12 +629,14 @@ abstract class AbstractCache
         if (isset($matches[3])) {
             $seconds += ((int)$matches[3]) * 60; // minutes
         }
+        $secondsPart = 0;
         if (isset($matches[4])) {
-            $seconds += ((int)$matches[4]); // seconds
+            $secondsPart += ((int)$matches[4]); // seconds
         }
         if ('m' === ($matches[5])) { // units in milliseconds
-            $seconds *= 0.001;
+            $secondsPart *= 0.001;
         }
+        $seconds += $secondsPart;
         if ('-' === ($matches[1])) { // negative
             $seconds *= -1;
         }
