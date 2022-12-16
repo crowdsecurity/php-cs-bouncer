@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['7.2', '7.3', '7.4', '8.0', '8.1']
+        php-version: ['7.2', '7.3', '7.4', '8.0', '8.1', '8.2']
 
     name: Test suite
     runs-on: ubuntu-latest
@@ -33,7 +33,7 @@ jobs:
 
       - name: Install DDEV
         env:
-          DDEV_VERSION: v1.21.2
+          DDEV_VERSION: v1.21.4
         run: |
           # @see https://ddev.readthedocs.io/en/stable/#installationupgrade-script-linux-and-macos-armarm64-and-amd64-architectures
           sudo apt-get -qq update
@@ -315,3 +315,38 @@ jobs:
             echo "There are pending tests: $PENDING_TESTS (KO)"
             exit 1
           fi
+          
+
+      - name: Run "stream mode with TLS auth and cURL and Redis" test
+        run: |
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
+          sed -i  's/\x27cache_system\x27 => \x27Constants::CACHE_SYSTEM_PHPFS\x27/\x27cache_system\x27 => \x27Constants::CACHE_SYSTEM_REDIS\x27/g' scripts/auto-prepend/settings.php
+          cat scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/3-stream-mode.js"
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi
+          
+
+      - name: Run "stream mode with TLS auth and cURL and Memcached" test
+        run: |
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
+          sed -i  's/\x27cache_system\x27 => \x27Constants::CACHE_SYSTEM_REDIS\x27/\x27cache_system\x27 => \x27Constants::CACHE_SYSTEM_MEMCACHED\x27/g' scripts/auto-prepend/settings.php
+          cat scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/3-stream-mode.js"
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi    
+    
