@@ -46,11 +46,10 @@ Please note that first and foremost a CrowdSec agent must be installed on a serv
   - Handle IP, IP ranges and Country scoped decisions
   - Clear, prune and refresh the Local API cache
   - `Live mode` or `Stream mode`
-- Large PHP matrix compatibility: 7.2.x, 7.3.x, 7.4.x, 8.0.x and 8.1.x
+- Large PHP matrix compatibility: 7.2, 7.3, 7.4, 8.0, 8.1 and 8.2
 - Built-in support for the most known cache systems like Redis, Memcached, PhpFiles
 - Events logged using monolog
 - Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)
-
 
 
 ## Usage

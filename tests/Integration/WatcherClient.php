@@ -124,7 +124,7 @@ class WatcherClient
             $queryParams,
             $bodyParams,
             $method,
-            $headers ?: $this->baseHeaders,
+            $headers ?: $this->baseHeaders
         );
     }
 

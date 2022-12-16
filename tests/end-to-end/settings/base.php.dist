@@ -30,8 +30,8 @@ $crowdSecStandaloneBouncerConfig = [
     'trust_ip_forward_array' => ['REPLACE_PROXY_IP'],
     // Cache
     'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
-    'redis_dsn' => '',
-    'memcached_dsn' => '',
+    'redis_dsn' => 'redis://redis:6379',
+    'memcached_dsn' => 'memcached://memcached:11211',
     'clean_ip_cache_duration' => 1,
     'bad_ip_cache_duration' => 1,
     'captcha_cache_duration'=> 86400,
