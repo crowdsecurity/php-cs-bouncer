@@ -17,7 +17,7 @@ namespace CrowdSecBouncer;
 class Constants
 {
     /** @var int The timeout when calling LAPI */
-    public const API_TIMEOUT = 1;
+    public const API_TIMEOUT = 120;
     /** @var string The API-KEY auth type */
     public const AUTH_KEY = 'api_key';
     /** @var string The TLS auth type */

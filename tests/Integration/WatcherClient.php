@@ -115,8 +115,7 @@ class WatcherClient
         array $queryParams = null,
         array $bodyParams = null,
         string $method = 'GET',
-        array $headers = null,
-        int $timeout = null
+        array $headers = null
     ): ?array {
         $this->ensureLogin();
 
@@ -126,7 +125,6 @@ class WatcherClient
             $bodyParams,
             $method,
             $headers ?: $this->baseHeaders,
-            $timeout
         );
     }
 
