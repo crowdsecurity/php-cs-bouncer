@@ -6,6 +6,7 @@ namespace CrowdSecBouncer\Tests\Integration;
 
 use CrowdSecBouncer\Bouncer;
 use CrowdSecBouncer\Constants;
+use CrowdSecBouncer\StandaloneBouncer;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -14,21 +15,37 @@ final class IpVerificationTest extends TestCase
     /** @var WatcherClient */
     private $watcherClient;
 
-    /** @var LoggerInterface */
-    private $logger;
-
     /** @var bool */
     private $useCurl;
 
     /** @var bool */
     private $useTls;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     protected function setUp(): void
     {
+        $this->useTls = (string) getenv('BOUNCER_TLS_PATH');
+        $this->useCurl = (bool) getenv('USE_CURL');
         $this->logger = TestHelpers::createLogger();
-        $this->useCurl = (bool)getenv('USE_CURL');
-        $this->useTls = (string)getenv('BOUNCER_TLS_PATH');
-        $this->watcherClient = new WatcherClient(['use_curl' => $this->useCurl], $this->logger);
+
+        $bouncerConfigs = [
+            'auth_type' => $this->useTls ? \CrowdSec\LapiClient\Constants::AUTH_TLS : Constants::AUTH_KEY,
+            'api_key' => getenv('BOUNCER_KEY'),
+            'api_url' => getenv('LAPI_URL'),
+            'use_curl' => $this->useCurl,
+            'user_agent_suffix' => 'testphpbouncer',
+        ];
+        if ($this->useTls) {
+            $this->addTlsConfig($bouncerConfigs, $this->useTls);
+        }
+
+        $this->configs = $bouncerConfigs;
+        $this->watcherClient = new WatcherClient($this->configs);
+        // Delete all decisions
+        $this->watcherClient->deleteAllDecisions();
     }
 
     public function cacheAdapterConfigProvider(): array
@@ -41,21 +58,21 @@ final class IpVerificationTest extends TestCase
         switch ($origCacheName) {
             case 'PhpFilesAdapter':
                 $this->assertEquals(
-                    'Symfony\Component\Cache\Adapter\TagAwareAdapter',
+                    'CrowdSec\RemediationEngine\CacheStorage\PhpFiles',
                     get_class($cacheAdapter),
                     'Tested adapter should be correct'
                 );
                 break;
             case 'MemcachedAdapter':
                 $this->assertEquals(
-                    'Symfony\Component\Cache\Adapter\MemcachedAdapter',
+                    'CrowdSec\RemediationEngine\CacheStorage\Memcached',
                     get_class($cacheAdapter),
                     'Tested adapter should be correct'
                 );
                 break;
             case 'RedisAdapter':
                 $this->assertEquals(
-                    'Symfony\Component\Cache\Adapter\RedisTagAwareAdapter',
+                    'CrowdSec\RemediationEngine\CacheStorage\Redis',
                     get_class($cacheAdapter),
                     'Tested adapter should be correct'
                 );
@@ -88,20 +105,20 @@ final class IpVerificationTest extends TestCase
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'use_curl' => $this->useCurl,
-            'api_user_agent' => TestHelpers::UNIT_TEST_AGENT_PREFIX . '/' . Constants::BASE_USER_AGENT,
             'cache_system' => $cacheAdapterName,
             'redis_dsn' => getenv('REDIS_DSN'),
             'memcached_dsn' => getenv('MEMCACHED_DSN'),
-            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
+            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR,
+            'stream_mode' => false
         ];
         if ($this->useTls) {
             $this->addTlsConfig($bouncerConfigs, $this->useTls);
         }
 
-        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
 
         // Test cache adapter
-        $cacheAdapter = $bouncer->getCacheAdapter();
+        $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
         $cacheAdapter->clear();
         $this->cacheAdapterCheck($cacheAdapter, $origCacheName);
 
@@ -142,13 +159,13 @@ final class IpVerificationTest extends TestCase
         $this->assertEquals('ban', $remediation3rdCall);
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
-        $bouncerConfigs['max_remediation_level'] = 'captcha';
-        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+        $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_FLEX;
+        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
         // Reset the max remediation level to its origin state
-        unset($bouncerConfigs['max_remediation_level']);
-        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+        $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
+        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
@@ -163,7 +180,7 @@ final class IpVerificationTest extends TestCase
         $this->assertEquals(
             'ban',
             $cappedRemediation,
-            'The remediation for the banned IP with a too large range should now be "ban" as we are in live mode'
+            'The remediation for the banned IPv4 range should be ban'
         );
 
         $this->logger->info('', ['message' => 'set "IPV6 range banned" state']);
@@ -179,7 +196,21 @@ final class IpVerificationTest extends TestCase
         $this->assertEquals(
             'ban',
             $cappedRemediation,
-            'The remediation for the banned IPV6 with a too large range should now be "ban" as we are in live mode'
+            'The remediation for a banned IPv6 range should be ban in live mode'
+        );
+        $this->watcherClient->deleteAllDecisions();
+        $this->watcherClient->addDecision(
+            new \DateTime(),
+            '24h',
+            WatcherClient::HOURS24,
+            TestHelpers::BAD_IPV6,
+            'ban'
+        );
+        $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
+        $this->assertEquals(
+            'ban',
+            $cappedRemediation,
+            'The remediation for a banned IPv6 should be ban'
         );
     }
 
@@ -208,9 +239,9 @@ final class IpVerificationTest extends TestCase
             $this->addTlsConfig($bouncerConfigs, $this->useTls);
         }
 
-        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
         // Test cache adapter
-        $cacheAdapter = $bouncer->getCacheAdapter();
+        $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
         $cacheAdapter->clear();
         $this->cacheAdapterCheck($cacheAdapter, $origCacheName);
         // As we are in stream mode, no live call should be done to the API.
@@ -218,7 +249,6 @@ final class IpVerificationTest extends TestCase
 
         $bouncer->refreshBlocklistCache();
 
-        $this->logger->debug('', ['message' => 'Refresh the cache just after the warm up. Nothing should append.']);
         $bouncer->refreshBlocklistCache();
 
         $this->assertEquals(
@@ -228,12 +258,12 @@ final class IpVerificationTest extends TestCase
         );
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
-        $bouncerConfigs['max_remediation_level'] = 'captcha';
-        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+        $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_FLEX;
+        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
-        unset($bouncerConfigs['max_remediation_level']);
-        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+        $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
+        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
         $this->assertEquals(
             'bypass',
             $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP),
@@ -288,7 +318,7 @@ final class IpVerificationTest extends TestCase
             $bouncerConfigs['tls_verify_peer'] = true;
         }
 
-        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
 
         $this->assertEquals(
             'ban',
@@ -317,9 +347,9 @@ final class IpVerificationTest extends TestCase
 
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals(
-            'bypass',
+            'ban',
             $cappedRemediation,
-            'The remediation for the banned IP with a too large range should now be "bypass" as we are in stream mode'
+            'The remediation for the banned IP with a large range should be "ban" even in stream mode'
         );
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
         $this->assertEquals(

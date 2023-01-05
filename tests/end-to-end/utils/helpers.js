@@ -24,7 +24,7 @@ const runCacheAction = async (actionType = "refresh") => {
 const runGeolocationTest = async (ip, saveResult, brokenDb = false) => {
     let url = `/my-own-modules/crowdsec-php-lib/scripts/public/geolocation-test.php?ip=${ip}`;
     if (saveResult) {
-        url += "&save-result=1";
+        url += "&cache-duration=120";
     }
     if (brokenDb) {
         url += "&broken-db=1";

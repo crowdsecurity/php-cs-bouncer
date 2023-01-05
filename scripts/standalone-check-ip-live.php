@@ -2,19 +2,18 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use CrowdSecBouncer\Bouncer;
+use CrowdSecBouncer\StandaloneBouncer;
 use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\RotatingFileHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
 
 // Parse argument
 
-$requestedIp = $argv[1];
-$bouncerKey = $argv[2];
+$requestedIp = $argv[1]??null;
+$bouncerKey = $argv[2]??null;
 if (!$requestedIp || !$bouncerKey) {
-    die('Usage: php check-ip.php <IP> <BOUNCER_KEY>');
+    exit('Usage: php standalone-check-ip-live.php <IP> <BOUNCER_KEY>');
 }
 // Instantiate the Stream logger
 $logger = new Logger('example');
@@ -24,17 +23,14 @@ $streamHandler = new StreamHandler('php://stdout', Logger::DEBUG);
 $streamHandler->setFormatter(new LineFormatter("[%datetime%] %message% %context%\n"));
 $logger->pushHandler($streamHandler);
 
-// Store logs with WARNING verbosity
-$fileHandler = new RotatingFileHandler(__DIR__ . '/crowdsec.log', 0, Logger::WARNING);
-$logger->pushHandler($fileHandler);
-
 // Init
 $configs = [
     'api_key' => $bouncerKey,
     'api_url' => 'https://crowdsec:8080',
     'fs_cache_path' => __DIR__ . '/.cache',
+    'stream_mode' => false
 ];
-$bouncer = new Bouncer($configs, $logger);
+$bouncer = new StandaloneBouncer($configs, $logger);
 
 // Ask remediation to LAPI
 

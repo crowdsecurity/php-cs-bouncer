@@ -14,23 +14,8 @@ namespace CrowdSecBouncer;
  * @copyright Copyright (c) 2021+ CrowdSec
  * @license   MIT License
  */
-interface IBounce
+interface BouncerInterface
 {
-    /**
-     * @return array array of option required to build the ban wall template
-     */
-    public function getBanWallOptions(): array;
-
-    /**
-     * Get the bouncer instance.
-     */
-    public function getBouncerInstance(array $settings): Bouncer;
-
-    /**
-     * @return array array of option required to build the captcha wall template
-     */
-    public function getCaptchaWallOptions(): array;
-
     /**
      * @return string The current IP, even if it's the IP of a proxy
      */
@@ -52,24 +37,9 @@ interface IBounce
     public function getRemoteIp(): string;
 
     /**
-     * @return array [[string, string], ...] Returns IP ranges to trust as proxies as an array of comparable ip bounds
-     */
-    public function getTrustForwardedIpBoundsList(): array;
-
-    /**
-     * Init the bouncer.
-     */
-    public function init(array $configs): Bouncer;
-
-    /**
-     * Init the logger.
-     */
-    public function initLogger(array $configs): void;
-
-    /**
      * If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
      */
-    public function safelyBounce(array $configs): bool;
+    public function safelyBounce(): bool;
 
     /**
      * Send HTTP response.

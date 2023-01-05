@@ -3,18 +3,15 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use CrowdSecBouncer\StandaloneBouncer;
-use Monolog\Formatter\LineFormatter;
-use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Formatter\LineFormatter;
 
-// Parse arguments
-$bouncerApiKey = $argv[1]??null; // required
-$apiUrl = $argv[3] ?: 'https://crowdsec:8080';
 
-if (!$bouncerApiKey) {
-    exit('Usage: php clear-cache.php <api_key>');
+$bouncerKey = $argv[1]??null;
+if (!$bouncerKey) {
+    exit('Usage: php refresh-cache-stream.php <BOUNCER_KEY>');
 }
-echo "\nClear the cache...\n";
 
 // Instantiate the Stream logger
 $logger = new Logger('example');
@@ -24,15 +21,15 @@ $streamHandler = new StreamHandler('php://stdout', Logger::DEBUG);
 $streamHandler->setFormatter(new LineFormatter("[%datetime%] %message% %context%\n"));
 $logger->pushHandler($streamHandler);
 
-
 // Instantiate the bouncer
 $configs = [
-    'api_key' => $bouncerApiKey,
+    'api_key' => $bouncerKey,
     'api_url' => 'https://crowdsec:8080',
     'fs_cache_path' => __DIR__ . '/.cache',
+    'stream_mode' => true,
 ];
 $bouncer = new StandaloneBouncer($configs, $logger);
 
-// Clear the cache.
-$bouncer->clearCache();
-echo "Cache successfully cleared.\n";
+// Refresh the blocklist cache
+$bouncer->refreshBlocklistCache();
+echo "Cache successfully refreshed.\n";

@@ -3,47 +3,46 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../auto-prepend/settings.php';
 
-use CrowdSecBouncer\StandaloneBounce;
-use CrowdSecBouncer\Geolocation;
-
+use CrowdSec\RemediationEngine\Geolocation;
+use CrowdSecBouncer\StandaloneBouncer;
+/**
+ * @var $crowdSecStandaloneBouncerConfig
+ */
 if (isset($_GET['ip'])) {
     $requestedIp = $_GET['ip'];
     $dbName = $_GET['db-name'] ?? 'GeoLite2-Country.mmdb';
     $dbType = $_GET['db-type'] ?? 'country';
-    $saveResult = isset($_GET['save-result']);
+    $cacheDuration = isset($_GET['cache-duration']) ? (int) $_GET['cache-duration'] : 0;
     $fakeBrokenDb = isset($_GET['broken-db']);
 
     $geolocConfig = [
         'enabled' => true,
-        'save_result' => $saveResult,
+        'cache_duration' => $cacheDuration,
         'type' => 'maxmind',
         'maxmind' => [
             'database_type' => $dbType,
-            'database_path' => '/var/www/html/my-own-modules/crowdsec-php-lib/tests/' . $dbName
-        ]
+            'database_path' => '/var/www/html/my-own-modules/crowdsec-php-lib/tests/' . $dbName,
+        ],
     ];
 
-    if($fakeBrokenDb){
+    if ($fakeBrokenDb) {
         $geolocConfig['maxmind']['database_path'] = '/var/www/html/my-own-modules/crowdsec-php-lib/tests/broken.mmdb';
     }
 
-    $bounce = new StandaloneBounce();
-    /** @var $crowdSecStandaloneBouncerConfig */
     $finalConfig = array_merge($crowdSecStandaloneBouncerConfig, ['geolocation' => $geolocConfig]);
-    $bounce->initLogger($finalConfig);
-    $bouncer = $bounce->init($finalConfig);
-    $apiCache = $bouncer->getApiCache();
+    $bouncer = new StandaloneBouncer($finalConfig);
 
-    $geolocation = new Geolocation();
-    if(!$saveResult){
-        $geolocation->clearGeolocationCache($requestedIp, $apiCache);
+    $cache = $bouncer->getRemediationEngine()->getCacheStorage();
+
+    $geolocation = new Geolocation($geolocConfig, $cache, $bouncer->getLogger());
+    if ($cacheDuration <= 0) {
+        $geolocation->clearGeolocationCache($requestedIp);
     }
 
-    $countryResult = $geolocation->getCountryResult($geolocConfig, $requestedIp, $apiCache);
+    $countryResult = $geolocation->handleCountryResultForIp($requestedIp);
     $country = $countryResult['country'];
     $notFound = $countryResult['not_found'];
     $error = $countryResult['error'];
-    $saveMessage = $saveResult ? 'true' : 'false';
 
     echo "
 <!DOCTYPE html>
@@ -59,15 +58,11 @@ if (isset($_GET['ip'])) {
         <li>Country: $country</li>
         <li>Not Found message: $notFound</li>
         <li>Error message: $error</li>
-        <li>Save result: $saveMessage</li>
+        <li>Cache duration: $cacheDuration</li>
     </ul>
 </body>
 </html>
 ";
 } else {
-    die('You must pass an "ip" param' . PHP_EOL);
+    exit('You must pass an "ip" param' . \PHP_EOL);
 }
-
-
-
-

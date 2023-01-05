@@ -9,7 +9,7 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/settings.php';
 
-use CrowdSecBouncer\StandaloneBounce;
+use CrowdSecBouncer\StandaloneBouncer;
 
-$bounce = new StandaloneBounce();
-$bounce->safelyBounce($crowdSecStandaloneBouncerConfig);
+$bouncer = new StandaloneBouncer($crowdSecStandaloneBouncerConfig);
+$bouncer->safelyBounce();

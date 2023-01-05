@@ -4,45 +4,27 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
-use CrowdSecBouncer\Constants;
-use CrowdSecBouncer\RestClient\FileGetContents;
-use CrowdSecBouncer\RestClient\Curl;
-use Psr\Log\LoggerInterface;
+use CrowdSec\LapiClient\AbstractClient;
+use CrowdSec\LapiClient\ClientException;
+use CrowdSec\LapiClient\Constants;
 
-class WatcherClient
+class WatcherClient extends AbstractClient
 {
-    public const WATCHER_LOGIN = 'PhpUnitTestMachine';
-    public const WATCHER_PASSWORD = 'PhpUnitTestMachinePassword';
+    public const WATCHER_LOGIN_ENDPOINT = '/v1/watchers/login';
+
+    public const WATCHER_DECISIONS_ENDPOINT = '/v1/decisions';
+
+    public const WATCHER_ALERT_ENDPOINT = '/v1/alerts';
 
     public const HOURS24 = '+24 hours';
-
-    /** @var LoggerInterface */
-    private $logger;
-
-    /** @var RestClient */
-    private $watcherClient;
-
-    /** @var array<string> */
-    private $baseHeaders;
 
     /** @var string */
     private $token;
 
-    private $configs;
-
-    public function __construct(array $configs, LoggerInterface $logger)
+    public function __construct(array $configs)
     {
-        $this->logger = $logger;
         $this->configs = $configs;
-        $this->baseHeaders = [
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
-            'User-Agent' => Constants::BASE_USER_AGENT,
-        ];
-        $this->configs['headers'] = $this->baseHeaders;
-        $apiUrl = getenv('LAPI_URL');
-        $this->configs['api_url'] = $apiUrl;
-        $this->configs['api_timeout'] = 2;
+        $this->headers = ['User-Agent' => 'LAPI_WATCHER_TEST/' . Constants::VERSION];
         $agentTlsPath = getenv('AGENT_TLS_PATH');
         if (!$agentTlsPath) {
             throw new \Exception('Using TLS auth for agent is required. Please set AGENT_TLS_PATH env.');
@@ -52,18 +34,32 @@ class WatcherClient
         $this->configs['tls_key_path'] = $agentTlsPath . '/agent-key.pem';
         $this->configs['tls_verify_peer'] = false;
 
-        $useCurl = !empty($this->configs['use_curl']);
-        $this->watcherClient = $useCurl ? new Curl($this->configs, $this->logger) : new FileGetContents(
-            $this->configs,
-            $this->logger
-        );
-        $this->logger->info('', ['message' => 'Watcher client initialized', 'use_curl' => $useCurl]);
+        parent::__construct($this->configs);
+    }
+
+    /**
+     * Make a request.
+     *
+     * @throws ClientException
+     */
+    private function manageRequest(
+        string $method,
+        string $endpoint,
+        array $parameters = []
+    ): array {
+        $this->logger->debug('', [
+            'type' => 'WATCHER_CLIENT_REQUEST',
+            'method' => $method,
+            'endpoint' => $endpoint,
+            'parameters' => $parameters,
+        ]);
+
+        return $this->request($method, $endpoint, $parameters, $this->headers);
     }
 
     /** Set the initial watcher state */
     public function setInitialState(): void
     {
-        $this->logger->info('', ['message' => 'Set initial state']);
         $this->deleteAllDecisions();
         $now = new \DateTime();
         $this->addDecision($now, '12h', '+12 hours', TestHelpers::BAD_IP, 'captcha');
@@ -97,47 +93,43 @@ class WatcherClient
     {
         if (!$this->token) {
             $data = [
-                'machine_id' => self::WATCHER_LOGIN,
-                'password' => self::WATCHER_PASSWORD,
+                'scenarios' => [],
             ];
-            /** @var array */
-            $credentials = $this->watcherClient->request('/v1/watchers/login', null, $data, 'POST');
+            $credentials = $this->manageRequest(
+                'POST',
+                self::WATCHER_LOGIN_ENDPOINT,
+                $data
+            );
+
             $this->token = $credentials['token'];
-            $this->baseHeaders['Authorization'] = 'Bearer ' . $this->token;
+            $this->headers['Authorization'] = 'Bearer ' . $this->token;
         }
-    }
-
-    /**
-     * Request the Watcher API.
-     */
-    private function request(
-        string $endpoint,
-        array $queryParams = null,
-        array $bodyParams = null,
-        string $method = 'GET',
-        array $headers = null
-    ): ?array {
-        $this->ensureLogin();
-
-        return $this->watcherClient->request(
-            $endpoint,
-            $queryParams,
-            $bodyParams,
-            $method,
-            $headers ?: $this->baseHeaders
-        );
     }
 
     public function deleteAllDecisions(): void
     {
         // Delete all existing decisions.
-        $this->logger->info('', ['message' => 'Delete all decisions']);
-        $this->request('/v1/decisions', null, null, 'DELETE');
+        $this->ensureLogin();
+
+        $this->manageRequest(
+            'DELETE',
+            self::WATCHER_DECISIONS_ENDPOINT,
+            []
+        );
     }
 
     protected function getFinalScope($scope, $value)
     {
-        return (Constants::SCOPE_IP === $scope && 2 === count(explode('/', $value))) ? Constants::SCOPE_RANGE : $scope;
+
+        $scope = (Constants::SCOPE_IP === $scope && 2 === count(explode('/', $value))) ? Constants::SCOPE_RANGE :
+            $scope;
+        /**
+         * Must use capital first letter as the crowdsec agent seems to query with first capital letter
+         * during getStreamDecisions
+         * @see https://github.com/crowdsecurity/crowdsec/blob/ae6bf3949578a5f3aa8ec415e452f15b404ba5af/pkg/database/decisions.go#L56
+         */
+        return ucfirst($scope);
+
     }
 
     public function addDecision(
@@ -181,8 +173,11 @@ class WatcherClient
             'start_at' => $startAt,
             'stop_at' => $stopAt,
         ];
-        $result = $this->request('/v1/alerts', null, [$body], 'POST');
-        $this->logger->info('', ['message' => 'Decision ' . $result[0] . ' added: ' .
-                                              $body['decisions'][0]['scenario'] . '']);
+
+        $result = $this->manageRequest(
+            'POST',
+            self::WATCHER_ALERT_ENDPOINT,
+            [$body]
+        );
     }
 }

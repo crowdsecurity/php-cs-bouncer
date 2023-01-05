@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
-use CrowdSecBouncer\ApiCache;
-use CrowdSecBouncer\ApiClient;
-use CrowdSecBouncer\Bouncer;
+use CrowdSecBouncer\StandaloneBouncer;
 use CrowdSecBouncer\Constants;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
-use Symfony\Component\Cache\Adapter\TagAwareAdapter;
 
 final class GeolocationTest extends TestCase
 {
@@ -23,12 +19,35 @@ final class GeolocationTest extends TestCase
     /** @var bool  */
     private $useCurl;
 
+    private function addTlsConfig(&$bouncerConfigs, $tlsPath)
+    {
+        $bouncerConfigs['tls_cert_path'] = $tlsPath . '/bouncer.pem';
+        $bouncerConfigs['tls_key_path'] = $tlsPath . '/bouncer-key.pem';
+        $bouncerConfigs['tls_ca_cert_path'] = $tlsPath . '/ca-chain.pem';
+        $bouncerConfigs['tls_verify_peer'] = true;
+    }
+
     protected function setUp(): void
     {
+        $this->useTls = (string) getenv('BOUNCER_TLS_PATH');
+        $this->useCurl = (bool) getenv('USE_CURL');
         $this->logger = TestHelpers::createLogger();
 
-        $this->useCurl = (bool) getenv('USE_CURL');
-        $this->watcherClient = new WatcherClient(['use_curl' => $this->useCurl], $this->logger);
+        $bouncerConfigs = [
+            'auth_type' => $this->useTls ? \CrowdSec\LapiClient\Constants::AUTH_TLS : Constants::AUTH_KEY,
+            'api_key' => getenv('BOUNCER_KEY'),
+            'api_url' => getenv('LAPI_URL'),
+            'use_curl' => $this->useCurl,
+            'user_agent_suffix' => 'testphpbouncer',
+        ];
+        if ($this->useTls) {
+            $this->addTlsConfig($bouncerConfigs, $this->useTls);
+        }
+
+        $this->configs = $bouncerConfigs;
+        $this->watcherClient = new WatcherClient($this->configs);
+        // Delete all decisions
+        $this->watcherClient->deleteAllDecisions();
     }
 
     public function maxmindConfigProvider(): array
@@ -44,7 +63,7 @@ final class GeolocationTest extends TestCase
         }
 
         return [
-            'save_result' => false,
+            'cache_duration' => 0,
             'enabled' => true,
             'type' => 'maxmind',
             'maxmind' => [
@@ -56,7 +75,6 @@ final class GeolocationTest extends TestCase
 
     /**
      * @group integration
-     * @covers       \Bouncer
      * @dataProvider maxmindConfigProvider
      * @group ignore_
      *
@@ -77,12 +95,13 @@ final class GeolocationTest extends TestCase
             'use_curl' => $this->useCurl,
             'api_user_agent' => 'Unit test/' . Constants::BASE_USER_AGENT,
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
-            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
+            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR,
+            'stream_mode' => false
         ];
 
-        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
 
-        $cacheAdapter = $bouncer->getCacheAdapter();
+        $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
         $cacheAdapter->clear();
 
         $this->assertEquals(
@@ -100,7 +119,7 @@ final class GeolocationTest extends TestCase
         // Disable Geolocation feature
         $geolocationConfig['enabled'] = false;
         $bouncerConfigs['geolocation'] = $geolocationConfig;
-        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
         $cacheAdapter->clear();
 
         $this->assertEquals(
@@ -113,7 +132,7 @@ final class GeolocationTest extends TestCase
         $this->watcherClient->setSecondState();
         $geolocationConfig['enabled'] = true;
         $bouncerConfigs['geolocation'] = $geolocationConfig;
-        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
+        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
         $cacheAdapter->clear();
 
         $this->assertEquals(
@@ -154,8 +173,8 @@ final class GeolocationTest extends TestCase
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
 
-        $bouncer = new Bouncer($bouncerConfigs, $this->logger);
-        $cacheAdapter = $bouncer->getCacheAdapter();
+        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
+        $cacheAdapter= $bouncer->getRemediationEngine()->getCacheStorage();
         $cacheAdapter->clear();
 
         // Warm BlockList cache up

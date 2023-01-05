@@ -1,20 +1,19 @@
 <?php
 /**
  * This script is aimed to be called directly in a browser
- * It will act on the LAPI cache depending on the auto-prepend settings file and on the passed parameter
- *
+ * It will act on the LAPI cache depending on the auto-prepend settings file and on the passed parameter.
  */
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../auto-prepend/settings.php';
 
-use CrowdSecBouncer\StandaloneBounce;
-
-if (isset($_GET['action']) && in_array($_GET['action'],['refresh', 'clear', 'prune', 'warm-up'])) {
+use CrowdSecBouncer\StandaloneBouncer;
+/**
+ * @var $crowdSecStandaloneBouncerConfig
+ */
+if (isset($_GET['action']) && in_array($_GET['action'], ['refresh', 'clear', 'prune'])) {
     $action = $_GET['action'];
-    $bounce = new StandaloneBounce();
-    /** @var $crowdSecStandaloneBouncerConfig */
-    $bounce->initLogger($crowdSecStandaloneBouncerConfig);
-    $bouncer = $bounce->init($crowdSecStandaloneBouncerConfig);
+    $bouncer = new StandaloneBouncer($crowdSecStandaloneBouncerConfig);
+
     switch ($action) {
         case 'refresh':
             $bouncer->refreshBlocklistCache();
@@ -24,9 +23,6 @@ if (isset($_GET['action']) && in_array($_GET['action'],['refresh', 'clear', 'pru
             break;
         case 'prune':
             $bouncer->pruneCache();
-            break;
-        case 'warm-up':
-            $bouncer->warmBlocklistCacheUp();
             break;
         default:
             throw new Exception("Unknown cache action type:$action");
@@ -46,9 +42,5 @@ if (isset($_GET['action']) && in_array($_GET['action'],['refresh', 'clear', 'pru
 </html>
 ";
 } else {
-    die('You must pass an "action" param (refresh or clear)' . PHP_EOL);
+    exit('You must pass an "action" param (refresh, clear or prune)' . \PHP_EOL);
 }
-
-
-
-

@@ -104,13 +104,6 @@ $crowdSecStandaloneBouncerConfig = [
      */
     'fallback_remediation' => Constants::REMEDIATION_CAPTCHA,
 
-    /** Select from 'bypass' (minimum remediation),'captcha' or 'ban' (maximum remediation).
-     * Default to 'ban'.
-     *
-     * Cap the remediation to the selected one.
-     */
-    'max_remediation_level' => Constants::REMEDIATION_BAN,
-
     /** If you use a CDN, a reverse proxy or a load balancer, set an array of IPs.
      *
      * For other IPs, the bouncer will not trust the X-Forwarded-For header.
@@ -146,9 +139,6 @@ $crowdSecStandaloneBouncerConfig = [
     // Set the duration we keep in cache the captcha flow variables for an IP. In seconds. Defaults to 86400.
     'captcha_cache_duration' => Constants::CACHE_EXPIRATION_FOR_CAPTCHA,
 
-    // Set the duration we keep in cache a geolocation result for an IP . In seconds. Defaults to 86400.
-    'geolocation_cache_duration' => Constants::CACHE_EXPIRATION_FOR_GEO,
-
     /** true to enable stream mode, false to enable the live mode. Default to false.
      *
      * By default, the `live mode` is enabled. The first time a stranger connects to your website, this mode
@@ -168,11 +158,12 @@ $crowdSecStandaloneBouncerConfig = [
         'enabled' => false,
         // Geolocation system. Only 'maxmind' is available for the moment. Default to 'maxmind'
         'type' => Constants::GEOLOCATION_TYPE_MAXMIND,
-        /** true to store the geolocalized country in session. Default to true.
-         *
-         * Setting true will avoid multiple call to the geolocalized system (e.g. maxmind database)
+        /**
+         * This setting will be used to set the lifetime (in seconds) of a cached country
+         * associated to an IP. The purpose is to avoid multiple call to the geolocation system (e.g. maxmind database)
+         * . Default to 86400. Set 0 to disable caching.
          */
-        'save_result' => true,
+        'cache_duration' => Constants::CACHE_EXPIRATION_FOR_GEO,
         // MaxMind settings
         'maxmind' => [
             /**Select from 'country' or 'city'. Default to 'country'
@@ -185,31 +176,42 @@ $crowdSecStandaloneBouncerConfig = [
         ],
     ],
 
+    // Settings for ban and captcha walls
+    'custom_css' => '',
     // true to hide CrowdSec mentions on ban and captcha walls.
     'hide_mentions' => false,
-
-    // Settings for ban and captcha walls
-    'theme_color_text_primary' => 'black',
-    'theme_color_text_secondary' => '#AAA',
-    'theme_color_text_button' => 'white',
-    'theme_color_text_error_message' => '#b90000',
-    'theme_color_background_page' => '#eee',
-    'theme_color_background_container' => 'white',
-    'theme_color_background_button' => '#626365',
-    'theme_color_background_button_hover' => '#333',
-    'theme_custom_css' => '',
-    // Settings for captcha wall
-    'theme_text_captcha_wall_tab_title' => 'Oops..',
-    'theme_text_captcha_wall_title' => 'Hmm, sorry but...',
-    'theme_text_captcha_wall_subtitle' => 'Please complete the security check.',
-    'theme_text_captcha_wall_refresh_image_link' => 'refresh image',
-    'theme_text_captcha_wall_captcha_placeholder' => 'Type here...',
-    'theme_text_captcha_wall_send_button' => 'CONTINUE',
-    'theme_text_captcha_wall_error_message' => 'Please try again.',
-    'theme_text_captcha_wall_footer' => '',
-    // Settings for ban wall
-    'theme_text_ban_wall_tab_title' => 'Oops..',
-    'theme_text_ban_wall_title' => '🤭 Oh!',
-    'theme_text_ban_wall_subtitle' => 'This page is protected against cyber attacks and your IP has been banned by our system.',
-    'theme_text_ban_wall_footer' => '',
+    'color' => [
+        'text' => [
+            'primary' => 'black',
+            'secondary' => '#AAA',
+            'button' => 'white',
+            'error_message' => '#b90000',
+        ],
+        'background' => [
+            'page' => '#eee',
+            'container' => 'white',
+            'button' => '#626365',
+            'button_hover' => '#333',
+        ],
+    ],
+    'text' => [
+        // Settings for captcha wall
+        'captcha_wall' => [
+            'tab_title' => 'Oops..',
+            'title' => 'Hmm, sorry but...',
+            'subtitle' => 'Please complete the security check.',
+            'refresh_image_link' => 'refresh image',
+            'captcha_placeholder' => 'Type here...',
+            'send_button' => 'CONTINUE',
+            'error_message' => 'Please try again.',
+            'footer' => '',
+        ],
+        // Settings for ban wall
+        'ban_wall' => [
+            'tab_title' => 'Oops..',
+            'title' => '🤭 Oh!',
+            'subtitle' => 'This page is protected against cyber attacks and your IP has been banned by our system.',
+            'footer' => '',
+        ],
+    ],
 ];
