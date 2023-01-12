@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
+use CrowdSec\RemediationEngine\CacheStorage\CacheStorageException;
 use Exception;
 use IPLib\Factory;
 use CrowdSec\RemediationEngine\LapiRemediation;
 use CrowdSec\RemediationEngine\Logger\FileLog;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -22,10 +25,13 @@ use Psr\Log\LoggerInterface;
  */
 class StandaloneBouncer extends AbstractBouncer
 {
-
+    /**
+     * @throws BouncerException
+     * @throws CacheStorageException
+     */
     public function __construct(array $configs, LoggerInterface $logger = null)
     {
-        $this->logger = $logger ?:new FileLog($configs, 'php_standalone_bouncer');
+        $this->logger = $logger ?: new FileLog($configs, 'php_standalone_bouncer');
         $configs = $this->handleTrustedIpsConfig($configs);
         $configs['user_agent_version'] = Constants::VERSION;
         $configs['user_agent_suffix'] = 'Standalone';
@@ -80,8 +86,12 @@ class StandaloneBouncer extends AbstractBouncer
     /**
      * If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
      *
-     * @param array $configs
      * @return bool
+     * @throws BouncerException
+     * @throws CacheException
+     * @throws CacheStorageException
+     * @throws InvalidArgumentException
+     * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
      */
     public function safelyBounce(): bool
     {
@@ -102,7 +112,7 @@ class StandaloneBouncer extends AbstractBouncer
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
-            if (!empty($this->getBoolConfig('display_errors'))) {
+            if (true === $this->getConfig('display_errors')) {
                 throw $e;
             }
         }
@@ -113,6 +123,7 @@ class StandaloneBouncer extends AbstractBouncer
 
     /**
      * Send HTTP response.
+     * @throws BouncerException
      */
     public function sendResponse(?string $body, int $statusCode = 200): void
     {
@@ -146,7 +157,7 @@ class StandaloneBouncer extends AbstractBouncer
      */
     public function shouldBounceCurrentIp(): bool
     {
-        $excludedURIs = $this->getArrayConfig('excluded_uris');
+        $excludedURIs = $this->getConfig('excluded_uris') ?? [];
         if (isset($_SERVER['REQUEST_URI']) && \in_array($_SERVER['REQUEST_URI'], $excludedURIs)) {
             $this->logger->debug('Will not bounce as URI is excluded', [
                 'type' => 'SHOULD_NOT_BOUNCE',
@@ -155,7 +166,7 @@ class StandaloneBouncer extends AbstractBouncer
 
             return false;
         }
-        $bouncingDisabled = (Constants::BOUNCING_LEVEL_DISABLED === $this->getStringConfig('bouncing_level'));
+        $bouncingDisabled = (Constants::BOUNCING_LEVEL_DISABLED === $this->getConfig('bouncing_level'));
         if ($bouncingDisabled) {
             $this->logger->debug('Will not bounce as bouncing is disabled', [
                 'type' => 'SHOULD_NOT_BOUNCE',
@@ -167,7 +178,6 @@ class StandaloneBouncer extends AbstractBouncer
 
         return true;
     }
-
 
     /**
      * Initialize the bouncer.

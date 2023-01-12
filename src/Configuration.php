@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace CrowdSecBouncer;
 
 use InvalidArgumentException;
-use RuntimeException;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -23,7 +22,6 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  */
 class Configuration implements ConfigurationInterface
 {
-
     /**
      * @var string[]
      */
@@ -58,6 +56,7 @@ class Configuration implements ConfigurationInterface
 
     /**
      * {@inheritdoc}
+     * @throws InvalidArgumentException
      */
     public function getConfigTreeBuilder(): TreeBuilder
     {
@@ -75,7 +74,6 @@ class Configuration implements ConfigurationInterface
 
     private function addTemplateNodes($rootNode)
     {
-        // @TODO update docs for config
         $defaultSubtitle = 'This page is protected against cyber attacks and your IP has been banned by our system.';
         $rootNode->children()
             ->arrayNode('color')->addDefaultsIfNotSet()
@@ -132,6 +130,7 @@ class Configuration implements ConfigurationInterface
      *
      * @param NodeDefinition|ArrayNodeDefinition $rootNode
      * @return void
+     * @throws InvalidArgumentException
      */
     private function addBouncerNodes($rootNode)
     {
@@ -162,6 +161,7 @@ class Configuration implements ConfigurationInterface
      *
      * @param NodeDefinition|ArrayNodeDefinition $rootNode
      * @return void
+     * @throws InvalidArgumentException
      */
     private function addCacheNodes($rootNode)
     {
@@ -212,5 +212,4 @@ class Configuration implements ConfigurationInterface
             ->booleanNode('display_errors')->defaultValue(false)->end()
             ->end();
     }
-
 }

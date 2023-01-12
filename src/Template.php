@@ -30,6 +30,9 @@ class Template
      * @param string $path
      * @param string $templatesDir
      * @param array $options
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     public function __construct(string $path, string $templatesDir = Constants::TEMPLATES_DIR, array $options = [])
     {

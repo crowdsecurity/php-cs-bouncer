@@ -93,7 +93,6 @@ final class GeolocationTest extends TestCase
             'api_url' => TestHelpers::getLapiUrl(),
             'geolocation' => $geolocationConfig,
             'use_curl' => $this->useCurl,
-            'api_user_agent' => 'Unit test/' . Constants::BASE_USER_AGENT,
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR,
             'stream_mode' => false
@@ -168,7 +167,6 @@ final class GeolocationTest extends TestCase
             'stream_mode' => true,
             'geolocation' => $geolocationConfig,
             'use_curl' => $this->useCurl,
-            'api_user_agent' => 'Unit test/' . Constants::BASE_USER_AGENT,
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
