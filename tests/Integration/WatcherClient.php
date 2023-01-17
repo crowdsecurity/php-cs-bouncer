@@ -20,6 +20,10 @@ class WatcherClient extends AbstractClient
 
     /** @var string */
     private $token;
+    /**
+     * @var string[]
+     */
+    private $headers;
 
     public function __construct(array $configs)
     {
@@ -84,6 +88,13 @@ class WatcherClient extends AbstractClient
         $this->addDecision($now, '24h', self::HOURS24, TestHelpers::JAPAN, 'captcha', Constants::SCOPE_COUNTRY);
         $this->addDecision($now, '24h', self::HOURS24, TestHelpers::IP_JAPAN, 'ban');
         $this->addDecision($now, '24h', self::HOURS24, TestHelpers::IP_FRANCE, 'ban');
+    }
+
+    public function setSimpleDecision(string $type= 'ban'): void
+    {
+        $this->deleteAllDecisions();
+        $now = new \DateTime();
+        $this->addDecision($now, '12h', '+12 hours', TestHelpers::BAD_IP, $type);
     }
 
     /**

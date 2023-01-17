@@ -136,24 +136,24 @@ class Configuration implements ConfigurationInterface
     {
         $rootNode->children()
             ->enumNode('bouncing_level')
-            ->values(
-                [
-                    Constants::BOUNCING_LEVEL_DISABLED,
-                    Constants::BOUNCING_LEVEL_NORMAL,
-                    Constants::BOUNCING_LEVEL_FLEX
-                ]
-            )
-            ->defaultValue(Constants::BOUNCING_LEVEL_NORMAL)
+                ->values(
+                    [
+                        Constants::BOUNCING_LEVEL_DISABLED,
+                        Constants::BOUNCING_LEVEL_NORMAL,
+                        Constants::BOUNCING_LEVEL_FLEX
+                    ]
+                )
+                ->defaultValue(Constants::BOUNCING_LEVEL_NORMAL)
             ->end()
             ->arrayNode('trust_ip_forward_array')
-            ->arrayPrototype()
-            ->scalarPrototype()->end()
-            ->end()
+                ->arrayPrototype()
+                    ->scalarPrototype()->end()
+                ->end()
             ->end()
             ->arrayNode('excluded_uris')
-            ->scalarPrototype()->end()
+                ->scalarPrototype()->end()
             ->end()
-            ->end();
+        ->end();
     }
 
     /**

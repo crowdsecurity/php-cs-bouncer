@@ -6,6 +6,11 @@ on:
     paths-ignore:
       - '**.md'
   workflow_dispatch:
+    inputs:
+      coverage_report:
+        type: boolean
+        description: Generate PHPUNIT Code Coverage report
+        default: false
 
 jobs:
   coding-standards:
@@ -80,3 +85,27 @@ jobs:
 
       - name: Run PSALM
         run: ddev psalm ./${{env.EXTENSION_PATH}}/tools/coding-standards ./${{env.EXTENSION_PATH}}/tools/coding-standards/psalm
+
+      - name: Prepare for Code Coverage
+        if: github.event.inputs.coverage_report == 'true'
+        run: |
+          cp .ddev/additional_docker_compose/docker-compose.crowdsec.yaml .ddev/docker-compose.crowdsec.yaml
+          mkdir ${{ github.workspace }}/cfssl
+          cp -r .ddev/custom_files/crowdsec/cfssl/* ${{ github.workspace }}/cfssl
+          ddev restart
+          ddev maxmind-download DEFAULT GeoLite2-City /var/www/html/${{env.EXTENSION_PATH}}/tests
+          ddev maxmind-download DEFAULT GeoLite2-Country /var/www/html/${{env.EXTENSION_PATH}}/tests
+          cd ${{env.EXTENSION_PATH}}/tests
+          sha256sum -c GeoLite2-Country.tar.gz.sha256.txt
+          sha256sum -c GeoLite2-City.tar.gz.sha256.txt
+          tar -xf GeoLite2-Country.tar.gz
+          tar -xf GeoLite2-City.tar.gz
+          rm GeoLite2-Country.tar.gz GeoLite2-Country.tar.gz.sha256.txt GeoLite2-City.tar.gz GeoLite2-City.tar.gz.sha256.txt
+          echo "BOUNCER_KEY=$(ddev create-bouncer)" >> $GITHUB_ENV
+
+      - name: Run PHPUNIT Code Coverage
+        if: github.event.inputs.coverage_report == 'true'
+        run: |
+          ddev xdebug
+          ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/tools/coding-standards/vendor/bin/phpunit --configuration ./${{env.EXTENSION_PATH}}/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./${{env.EXTENSION_PATH}}/coding-standards/phpunit/code-coverage/report.txt
+          cat ${{env.EXTENSION_PATH}}/coding-standards/phpunit/code-coverage/report.txt   

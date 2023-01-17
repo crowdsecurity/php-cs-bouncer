@@ -8,7 +8,30 @@ use CrowdSecBouncer\StandaloneBouncer;
 use CrowdSecBouncer\Constants;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-
+/**
+ * @covers \CrowdSecBouncer\StandaloneBouncer::clearCache
+ * @covers \CrowdSecBouncer\AbstractBouncer::getRemediationForIp
+ *
+ * @uses \CrowdSecBouncer\AbstractBouncer::__construct
+ * @uses \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
+ * @uses \CrowdSecBouncer\AbstractBouncer::configure
+ * @uses \CrowdSecBouncer\AbstractBouncer::getConfig
+ * @uses \CrowdSecBouncer\AbstractBouncer::getConfigs
+ * @uses \CrowdSecBouncer\AbstractBouncer::getLogger
+ * @uses \CrowdSecBouncer\AbstractBouncer::getRemediationEngine
+ * @uses \CrowdSecBouncer\AbstractBouncer::handleCache
+ * @uses \CrowdSecBouncer\AbstractBouncer::handleClient
+ * @uses \CrowdSecBouncer\AbstractBouncer::refreshBlocklistCache
+ * @uses \CrowdSecBouncer\Configuration::addBouncerNodes
+ * @uses \CrowdSecBouncer\Configuration::addCacheNodes
+ * @uses \CrowdSecBouncer\Configuration::addConnectionNodes
+ * @uses \CrowdSecBouncer\Configuration::addDebugNodes
+ * @uses \CrowdSecBouncer\Configuration::addTemplateNodes
+ * @uses \CrowdSecBouncer\Configuration::cleanConfigs
+ * @uses \CrowdSecBouncer\Configuration::getConfigTreeBuilder
+ * @uses \CrowdSecBouncer\StandaloneBouncer::__construct
+ * @uses \CrowdSecBouncer\StandaloneBouncer::handleTrustedIpsConfig
+ */
 final class GeolocationTest extends TestCase
 {
     /** @var WatcherClient */
@@ -18,6 +41,12 @@ final class GeolocationTest extends TestCase
     private $logger;
     /** @var bool  */
     private $useCurl;
+    /** @var bool */
+    private $useTls;
+    /**
+     * @var array
+     */
+    private $configs;
 
     private function addTlsConfig(&$bouncerConfigs, $tlsPath)
     {
@@ -74,9 +103,7 @@ final class GeolocationTest extends TestCase
     }
 
     /**
-     * @group integration
      * @dataProvider maxmindConfigProvider
-     * @group ignore_
      *
      * @throws \Symfony\Component\Cache\Exception\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
@@ -100,8 +127,8 @@ final class GeolocationTest extends TestCase
 
         $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
 
-        $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
-        $cacheAdapter->clear();
+        $bouncer->clearCache();
+
 
         $this->assertEquals(
             'captcha',
@@ -119,7 +146,7 @@ final class GeolocationTest extends TestCase
         $geolocationConfig['enabled'] = false;
         $bouncerConfigs['geolocation'] = $geolocationConfig;
         $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
-        $cacheAdapter->clear();
+        $bouncer->clearCache();
 
         $this->assertEquals(
             'bypass',
@@ -132,7 +159,7 @@ final class GeolocationTest extends TestCase
         $geolocationConfig['enabled'] = true;
         $bouncerConfigs['geolocation'] = $geolocationConfig;
         $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
-        $cacheAdapter->clear();
+        $bouncer->clearCache();
 
         $this->assertEquals(
             'ban',
@@ -149,9 +176,7 @@ final class GeolocationTest extends TestCase
 
     /**
      * @group integration
-     * @covers       \Bouncer
      * @dataProvider maxmindConfigProvider
-     * @group ignore_
      *
      * @throws \Symfony\Component\Cache\Exception\CacheException|\Psr\Cache\InvalidArgumentException
      */

@@ -14,8 +14,8 @@ tools/php-cs-fixer/composer.lock
 
 # App
 var/
-.bouncer-key
 .cache
+.logs
 
 # Auto prepend demo
 scripts/auto-prepend/settings.php

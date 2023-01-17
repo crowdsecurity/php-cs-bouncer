@@ -7,8 +7,8 @@ namespace CrowdSecBouncer;
 use CrowdSec\LapiClient\Bouncer as BouncerClient;
 use CrowdSec\LapiClient\RequestHandler\Curl;
 use CrowdSec\LapiClient\RequestHandler\FileGetContents;
-use CrowdSec\RemediationEngine\CacheStorage\AbstractCache;
 use CrowdSec\RemediationEngine\AbstractRemediation;
+use CrowdSec\RemediationEngine\CacheStorage\AbstractCache;
 use CrowdSec\RemediationEngine\CacheStorage\CacheStorageException;
 use CrowdSec\RemediationEngine\CacheStorage\Memcached;
 use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
@@ -33,7 +33,7 @@ use Symfony\Component\Config\Definition\Processor;
  * @copyright Copyright (c) 2021+ CrowdSec
  * @license   MIT License
  */
-abstract class AbstractBouncer implements BouncerInterface
+abstract class AbstractBouncer
 {
     /** @var array */
     protected $configs = [];
@@ -47,10 +47,12 @@ abstract class AbstractBouncer implements BouncerInterface
         AbstractRemediation $remediationEngine,
         LoggerInterface $logger = null
     ) {
+        // @codeCoverageIgnoreStart
         if (!$logger) {
             $logger = new Logger('null');
             $logger->pushHandler(new NullHandler());
         }
+        // @codeCoverageIgnoreEnd
         $this->logger = $logger;
         $this->configure($configs);
         $this->remediationEngine = $remediationEngine;
@@ -67,25 +69,30 @@ abstract class AbstractBouncer implements BouncerInterface
     }
 
     /**
-     * Build a captcha couple.
+     * Apply a bounce for current IP depending on remediation associated to this IP
+     * (e.g. display a ban wall, captcha wall or do nothing in case of a bypass)
      *
-     * @return array an array composed of two items, a "phrase" string representing the phrase and a "inlineImage"
-     *     representing the image data
+     * @return void
+     * @throws BouncerException
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
      */
-    private static function buildCaptchaCouple(): array
+    public function bounceCurrentIp(): void
     {
-        $captchaBuilder = new CaptchaBuilder();
-
-        return [
-            'phrase' => $captchaBuilder->getPhrase(),
-            'inlineImage' => $captchaBuilder->build()->inline(),
-        ];
+        // Retrieve the current IP (even if it is a proxy IP) or a testing IP
+        $forcedTestIp = $this->getConfig('forced_test_ip');
+        $ip = $forcedTestIp ?: $this->getRemoteIp();
+        $ip = $this->handleForwardedFor($ip, $this->configs);
+        $remediation = $this->getRemediationForIp($ip);
+        $this->handleRemediation($remediation, $ip);
     }
 
     /**
      * This method clear the full data in cache.
      *
      * @return bool If the cache has been successfully cleared or not
+     *
      *
      */
     public function clearCache(): bool
@@ -115,6 +122,16 @@ abstract class AbstractBouncer implements BouncerInterface
     }
 
     /**
+     * Get current http method
+     */
+    abstract public function getHttpMethod(): string;
+
+    /**
+     * Get value of an HTTP request header. Ex: "X-Forwarded-For"
+     */
+    abstract public function getHttpRequestHeader(string $name): ?string;
+
+    /**
      * Returns the logger instance.
      *
      * @return LoggerInterface the logger used by this library
@@ -124,31 +141,47 @@ abstract class AbstractBouncer implements BouncerInterface
         return $this->logger;
     }
 
+    /**
+     * Get the value of a posted field.
+     */
+    abstract public function getPostedVariable(string $name): ?string;
+
     public function getRemediationEngine(): AbstractRemediation
     {
         return $this->remediationEngine;
     }
 
     /**
-     * Get the remediation for the specified IP. This method use the cache layer.
-     * In live mode, when no remediation was found in cache,
-     * the cache system will call LAPI to check if there is a decision.
-     *
-     * @param string $ip The IP to check
+     * Get the remediation for the specified IP.
      *
      * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
      * @throws BouncerException
      */
     public function getRemediationForIp(string $ip): string
     {
-        return $this->capRemediationLevel($this->getRemediationEngine()->getIpRemediation($ip));
+        try {
+            return $this->capRemediationLevel($this->getRemediationEngine()->getIpRemediation($ip));
+        } catch (\Exception $e) {
+            throw new BouncerException($e->getMessage());
+        }
     }
+
+    /**
+     * Get the current IP, even if it's the IP of a proxy
+     */
+    abstract public function getRemoteIp(): string;
+
+    /**
+     * Get current request uri
+     */
+    abstract public function getRequestUri(): string;
 
     /**
      * This method prune the cache: it removes all the expired cache items.
      *
      * @return bool If the cache has been successfully pruned or not
      * @throws CacheStorageException
+     *
      */
     public function pruneCache(): bool
     {
@@ -161,6 +194,7 @@ abstract class AbstractBouncer implements BouncerInterface
      *
      * @return array Number of deleted and new decisions
      *
+     *
      */
     public function refreshBlocklistCache(): array
     {
@@ -168,23 +202,222 @@ abstract class AbstractBouncer implements BouncerInterface
     }
 
     /**
-     * Bounce process
+     * If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
      *
-     * @return void
+     * @return bool
      * @throws BouncerException
      * @throws CacheException
-     * @throws CacheStorageException
      * @throws InvalidArgumentException
      * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
      */
-    protected function bounceCurrentIp(): void
+    public function safelyBounce(): bool
     {
-        // Retrieve the current IP (even if it is a proxy IP) or a testing IP
-        $forcedTestIp = $this->getConfig('forced_test_ip');
-        $ip = $forcedTestIp ?: $this->getRemoteIp();
-        $ip = $this->handleForwardedFor($ip, $this->configs);
-        $remediation = $this->getRemediationForIp($ip);
-        $this->handleRemediation($remediation, $ip);
+        $result = false;
+        set_error_handler(function ($errno, $errstr) {
+            throw new BouncerException("$errstr (Error level: $errno)");
+        });
+        try {
+            if ($this->shouldBounceCurrentIp()) {
+                $this->bounceCurrentIp();
+                $result = true;
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Something went wrong during bouncing', [
+                'type' => 'EXCEPTION_WHILE_BOUNCING',
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            if (true === $this->getConfig('display_errors')) {
+                throw $e;
+            }
+        }
+        restore_error_handler();
+
+        return $result;
+    }
+
+    /**
+     * If the current IP should be bounced or not, matching custom business rules.
+     */
+    public function shouldBounceCurrentIp(): bool
+    {
+        $excludedURIs = $this->getConfig('excluded_uris') ?? [];
+        $uri = $this->getRequestUri();
+        if ($uri && \in_array($uri, $excludedURIs)) {
+            $this->logger->debug('Will not bounce as URI is excluded', [
+                'type' => 'SHOULD_NOT_BOUNCE',
+                'message' => 'This URI is excluded from bouncing: ' . $uri,
+            ]);
+
+            return false;
+        }
+        $bouncingDisabled = (Constants::BOUNCING_LEVEL_DISABLED === $this->getConfig('bouncing_level'));
+        if ($bouncingDisabled) {
+            $this->logger->debug('Will not bounce as bouncing is disabled', [
+                'type' => 'SHOULD_NOT_BOUNCE',
+                'message' => Constants::BOUNCING_LEVEL_DISABLED,
+            ]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @throws BouncerException
+     * @throws CacheStorageException
+     */
+    protected function handleCache(array $configs, LoggerInterface $logger): AbstractCache
+    {
+        $cacheSystem = $configs['cache_system'] ?? Constants::CACHE_SYSTEM_PHPFS;
+        switch ($cacheSystem) {
+            case Constants::CACHE_SYSTEM_PHPFS:
+                $cache = new PhpFiles($configs, $logger);
+                break;
+            case Constants::CACHE_SYSTEM_MEMCACHED:
+                $cache = new Memcached($configs, $logger);
+                break;
+            case Constants::CACHE_SYSTEM_REDIS:
+                $cache = new Redis($configs, $logger);
+                break;
+            // @codeCoverageIgnoreStart
+            default:
+                throw new BouncerException("Unknown selected cache technology: $cacheSystem");
+            // @codeCoverageIgnoreEnd
+        }
+
+        return $cache;
+    }
+
+    protected function handleClient(array $configs, LoggerInterface $logger): BouncerClient
+    {
+        $requestHandler = empty($configs['use_curl']) ? new FileGetContents($configs) : new Curl($configs);
+
+        return new BouncerClient($configs, $requestHandler, $logger);
+    }
+
+    /**
+     * Handle remediation for some IP.
+     *
+     * @param string $remediation
+     * @param string $ip
+     * @return void
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
+     * @throws BouncerException
+     *
+     */
+    protected function handleRemediation(string $remediation, string $ip): void
+    {
+        switch ($remediation) {
+            case Constants::REMEDIATION_CAPTCHA:
+                $this->handleCaptchaRemediation($ip);
+                break;
+            case Constants::REMEDIATION_BAN:
+                $this->handleBanRemediation();
+                break;
+            case Constants::REMEDIATION_BYPASS:
+            default:
+        }
+    }
+
+    /**
+     * @param string $redirect
+     * @return void
+     * @codeCoverageIgnore
+     */
+    protected function redirectResponse(string $redirect): void
+    {
+        header("Location: $redirect");
+        exit(0);
+    }
+
+    /**
+     * Send HTTP response.
+     * @throws BouncerException
+     * @codeCoverageIgnore
+     *
+     */
+    protected function sendResponse(string $body, int $statusCode): void
+    {
+        switch ($statusCode) {
+            case 401:
+                header('HTTP/1.0 401 Unauthorized');
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                header('Cache-Control: post-check=0, pre-check=0', false);
+                header('Pragma: no-cache');
+                break;
+            case 403:
+                header('HTTP/1.0 403 Forbidden');
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                header('Cache-Control: post-check=0, pre-check=0', false);
+                header('Pragma: no-cache');
+                break;
+            default:
+                throw new BouncerException("Unhandled code $statusCode");
+        }
+
+        echo $body;
+
+        exit(0);
+    }
+
+    /**
+     * Build a captcha couple.
+     *
+     * @return array an array composed of two items, a "phrase" string representing the phrase and a "inlineImage"
+     *     representing the image data
+     */
+    private function buildCaptchaCouple(): array
+    {
+        $captchaBuilder = new CaptchaBuilder();
+
+        return [
+            'phrase' => $captchaBuilder->getPhrase(),
+            'inlineImage' => $captchaBuilder->build()->inline(),
+        ];
+    }
+
+    /**
+     * Cap the remediation to a fixed value given by the bouncing level configuration.
+     *
+     * @param string $remediation (ex: 'ban', 'captcha', 'bypass')
+     *
+     * @return string $remediation The resulting remediation to use (ex: 'ban', 'captcha', 'bypass')
+     */
+    private function capRemediationLevel(string $remediation): string
+    {
+        $orderedRemediations = $this->getRemediationEngine()->getConfig('ordered_remediations') ?? [];
+
+        $bouncingLevel = $this->getConfig('bouncing_level') ?? Constants::BOUNCING_LEVEL_NORMAL;
+        // Compute max remediation level
+        switch ($bouncingLevel) {
+            case Constants::BOUNCING_LEVEL_DISABLED:
+                $maxRemediationLevel = Constants::REMEDIATION_BYPASS;
+                break;
+            case Constants::BOUNCING_LEVEL_FLEX:
+                $maxRemediationLevel = Constants::REMEDIATION_CAPTCHA;
+                break;
+            case Constants::BOUNCING_LEVEL_NORMAL:
+            default:
+                $maxRemediationLevel = Constants::REMEDIATION_BAN;
+                break;
+        }
+
+        $currentIndex = (int)array_search($remediation, $orderedRemediations);
+        $maxIndex = (int)array_search(
+            $maxRemediationLevel,
+            $orderedRemediations
+        );
+        if ($currentIndex < $maxIndex) {
+            return $orderedRemediations[$maxIndex];
+        }
+
+        return $remediation;
     }
 
     /**
@@ -214,10 +447,26 @@ abstract class AbstractBouncer implements BouncerInterface
     }
 
     /**
+     * Configure this instance.
+     *
+     * @param array $config An array with all configuration parameters
+     *
+     */
+    private function configure(array $config): void
+    {
+        // Process and validate input configuration.
+        $configuration = new Configuration();
+        $processor = new Processor();
+        $this->configs = $processor->processConfiguration($configuration, [$configuration->cleanConfigs($config)]);
+    }
+
+    /**
      * @param string $ip
      * @return void
-     * @throws CacheStorageException
      * @throws InvalidArgumentException
+     * @throws BouncerException
+     * @codeCoverageIgnore
+     *
      */
     private function displayCaptchaWall(string $ip): void
     {
@@ -226,7 +475,7 @@ abstract class AbstractBouncer implements BouncerInterface
             ['crowdsec_captcha_resolution_failed', 'crowdsec_captcha_inline_image'],
             $ip
         );
-        $body = $this->getCaptchaHtmlTemplate(
+        $body = $this->getCaptchaHtml(
             (bool)$captchaVariables['crowdsec_captcha_resolution_failed'],
             (string)$captchaVariables['crowdsec_captcha_inline_image'],
             ''
@@ -241,11 +490,16 @@ abstract class AbstractBouncer implements BouncerInterface
      *
      * @return string The HTML compiled template
      */
-    private function getAccessForbiddenHtmlTemplate(): string
+    private function getBanHtml(): string
     {
         $template = new Template('ban.html.twig');
 
         return $template->render($this->configs);
+    }
+
+    private function getCache(): AbstractCache
+    {
+        return $this->getRemediationEngine()->getCacheStorage();
     }
 
     /**
@@ -256,7 +510,7 @@ abstract class AbstractBouncer implements BouncerInterface
      * @param string $captchaResolutionFormUrl
      * @return string
      */
-    private function getCaptchaHtmlTemplate(
+    private function getCaptchaHtml(
         bool $error,
         string $captchaImageSrc,
         string $captchaResolutionFormUrl
@@ -284,35 +538,15 @@ abstract class AbstractBouncer implements BouncerInterface
     /**
      * @return void
      *
+     * @throws BouncerException
+     * @throws BouncerException
+     * @codeCoverageIgnore
+     *
      */
     private function handleBanRemediation(): void
     {
-        $body = $this->getAccessForbiddenHtmlTemplate();
+        $body = $this->getBanHtml();
         $this->sendResponse($body, 403);
-    }
-
-    /**
-     * @throws BouncerException
-     * @throws CacheStorageException
-     */
-    protected function handleCache(array $configs, LoggerInterface $logger): AbstractCache
-    {
-        $cacheSystem = $configs['cache_system'] ?? Constants::CACHE_SYSTEM_PHPFS;
-        switch ($cacheSystem) {
-            case Constants::CACHE_SYSTEM_PHPFS:
-                $cache = new PhpFiles($configs, $logger);
-                break;
-            case Constants::CACHE_SYSTEM_MEMCACHED:
-                $cache = new Memcached($configs, $logger);
-                break;
-            case Constants::CACHE_SYSTEM_REDIS:
-                $cache = new Redis($configs, $logger);
-                break;
-            default:
-                throw new BouncerException("Unknown selected cache technology: $cacheSystem");
-        }
-
-        return $cache;
     }
 
     /**
@@ -320,12 +554,13 @@ abstract class AbstractBouncer implements BouncerInterface
      *
      * @return void
      *
+     * @throws BouncerException
      * @throws CacheException
-     * @throws CacheStorageException
      * @throws InvalidArgumentException
      * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
+     *
      */
-    private function handleCaptchaRemediation(string $ip)
+    private function handleCaptchaRemediation(string $ip): void
     {
         // Check captcha resolution form
         $this->handleCaptchaResolutionForm($ip);
@@ -338,24 +573,7 @@ abstract class AbstractBouncer implements BouncerInterface
         if (null === $cachedCaptchaVariables['crowdsec_captcha_has_to_be_resolved']) {
             // Set up the first captcha remediation.
             $mustResolve = true;
-            $captchaCouple = $this->buildCaptchaCouple();
-            $captchaVariables = [
-                'crowdsec_captcha_phrase_to_guess' => $captchaCouple['phrase'],
-                'crowdsec_captcha_inline_image' => $captchaCouple['inlineImage'],
-                'crowdsec_captcha_has_to_be_resolved' => true,
-                'crowdsec_captcha_resolution_failed' => false,
-                'crowdsec_captcha_resolution_redirect' => 'POST' === $this->getHttpMethod() &&
-                                                          !empty($_SERVER['HTTP_REFERER'])
-                    ? $_SERVER['HTTP_REFERER'] : '/',
-            ];
-            $duration = $this->getConfig('captcha_cache_duration') ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
-            $this->getCache()->setIpVariables(
-                Constants::CACHE_TAG_CAPTCHA,
-                $captchaVariables,
-                $ip,
-                $duration,
-                Constants::CACHE_TAG_CAPTCHA
-            );
+            $this->initCaptchaResolution($ip);
         }
 
         // Display captcha page if this is required.
@@ -369,10 +587,10 @@ abstract class AbstractBouncer implements BouncerInterface
      * @return void
      *
      * @throws CacheException
-     * @throws CacheStorageException
      * @throws InvalidArgumentException
      * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
      * @SuppressWarnings(PHPMD.ElseExpression)
+     *
      */
     private function handleCaptchaResolutionForm(string $ip): void
     {
@@ -385,7 +603,7 @@ abstract class AbstractBouncer implements BouncerInterface
             ],
             $ip
         );
-        if ($this->shouldEarlyReturn($cachedCaptchaVariables, $ip)) {
+        if ($this->shouldNotCheckResolution($cachedCaptchaVariables) || $this->refreshCaptcha($ip)) {
             return;
         }
 
@@ -424,8 +642,7 @@ abstract class AbstractBouncer implements BouncerInterface
                     Constants::CACHE_TAG_CAPTCHA
                 );
                 $redirect = $cachedCaptchaVariables['crowdsec_captcha_resolution_redirect'] ?? '/';
-                header("Location: $redirect");
-                exit(0);
+                $this->redirectResponse($redirect);
             } else {
                 // The user failed to resolve the captcha.
                 $this->getCache()->setIpVariables(
@@ -437,13 +654,6 @@ abstract class AbstractBouncer implements BouncerInterface
                 );
             }
         }
-    }
-
-    protected function handleClient(array $configs, LoggerInterface $logger): BouncerClient
-    {
-        $requestHandler = empty($configs['use_curl']) ? new FileGetContents($configs) : new Curl($configs);
-
-        return new BouncerClient($configs, $requestHandler, $logger);
     }
 
     /**
@@ -471,15 +681,27 @@ abstract class AbstractBouncer implements BouncerInterface
             ]);
         } else {
             $forwardedIp = (string)$configs['forced_test_forwarded_ip'];
+            $this->logger->debug('X-Forwarded-for usage is forced', [
+                'type' => 'FORCED_X_FORWARDED_FOR_USAGE',
+                'original_ip' => $ip,
+                'x_forwarded_for_ip' => $forwardedIp,
+            ]);
         }
 
-        if (is_string($forwardedIp) && $this->shouldTrustXforwardedFor($ip)) {
-            $ip = $forwardedIp;
-        } else {
+        if (is_string($forwardedIp)) {
+            if ($this->shouldTrustXforwardedFor($ip)) {
+                $this->logger->debug('Detected IP is allowed for X-Forwarded-for usage', [
+                    'type' => 'AUTHORIZED_X_FORWARDED_FOR_USAGE',
+                    'original_ip' => $ip,
+                    'x_forwarded_for_ip' => $forwardedIp,
+                ]);
+
+                return $forwardedIp;
+            }
             $this->logger->warning('Detected IP is not allowed for X-Forwarded-for usage', [
                 'type' => 'NON_AUTHORIZED_X_FORWARDED_FOR_USAGE',
                 'original_ip' => $ip,
-                'x_forwarded_for_ip' => is_string($forwardedIp) ? $forwardedIp : 'type not as expected',
+                'x_forwarded_for_ip' => $forwardedIp,
             ]);
         }
 
@@ -487,28 +709,83 @@ abstract class AbstractBouncer implements BouncerInterface
     }
 
     /**
-     * Handle remediation for some IP.
-     *
-     * @param string $remediation
-     * @param string $ip
-     * @return void
      * @throws CacheException
-     * @throws CacheStorageException
      * @throws InvalidArgumentException
      * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
+     *
      */
-    private function handleRemediation(string $remediation, string $ip)
+    private function initCaptchaResolution(string $ip): void
     {
-        switch ($remediation) {
-            case Constants::REMEDIATION_CAPTCHA:
-                $this->handleCaptchaRemediation($ip);
-                break;
-            case Constants::REMEDIATION_BAN:
-                $this->handleBanRemediation();
-                break;
-            case Constants::REMEDIATION_BYPASS:
-            default:
+        $captchaCouple = $this->buildCaptchaCouple();
+        $referer = $this->getHttpRequestHeader('REFERER');
+        $captchaVariables = [
+            'crowdsec_captcha_phrase_to_guess' => $captchaCouple['phrase'],
+            'crowdsec_captcha_inline_image' => $captchaCouple['inlineImage'],
+            'crowdsec_captcha_has_to_be_resolved' => true,
+            'crowdsec_captcha_resolution_failed' => false,
+            'crowdsec_captcha_resolution_redirect' => 'POST' === $this->getHttpMethod() && !empty($referer)
+                ? $referer : '/',
+        ];
+        $duration = $this->getConfig('captcha_cache_duration') ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
+        $this->getCache()->setIpVariables(
+            Constants::CACHE_TAG_CAPTCHA,
+            $captchaVariables,
+            $ip,
+            $duration,
+            Constants::CACHE_TAG_CAPTCHA
+        );
+    }
+
+    /**
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
+     *
+     */
+    private function refreshCaptcha(string $ip): bool
+    {
+        if (null !== $this->getPostedVariable('refresh') && (int)$this->getPostedVariable('refresh')) {
+            // Generate new captcha image for the user
+            $captchaCouple = $this->buildCaptchaCouple();
+            $captchaVariables = [
+                'crowdsec_captcha_phrase_to_guess' => $captchaCouple['phrase'],
+                'crowdsec_captcha_inline_image' => $captchaCouple['inlineImage'],
+                'crowdsec_captcha_resolution_failed' => false,
+            ];
+            $duration = $this->getConfig('captcha_cache_duration') ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
+            $this->getCache()->setIpVariables(
+                Constants::CACHE_TAG_CAPTCHA,
+                $captchaVariables,
+                $ip,
+                $duration,
+                Constants::CACHE_TAG_CAPTCHA
+            );
+
+            return true;
         }
+
+        return false;
+    }
+
+    /**
+     * Check
+     *
+     * @param array $cachedCaptchaVariables
+     * @return bool
+     *
+     */
+    private function shouldNotCheckResolution(array $cachedCaptchaVariables): bool
+    {
+        $result = false;
+        if (\in_array($cachedCaptchaVariables['crowdsec_captcha_has_to_be_resolved'], [null, false])) {
+            // Check not needed if 'crowdsec_captcha_has_to_be_resolved' cached flag has not been saved
+            $result = true;
+        } elseif ('POST' !== $this->getHttpMethod() || null === $this->getPostedVariable('crowdsec_captcha')) {
+            // Check not needed if no form captcha form has been filled.
+            $result = true;
+        }
+
+        return $result;
     }
 
     private function shouldTrustXforwardedFor(string $ip): bool
@@ -531,107 +808,5 @@ abstract class AbstractBouncer implements BouncerInterface
         }
 
         return false;
-    }
-
-    /**
-     * Cap the remediation to a fixed value given by the bouncing level configuration.
-     *
-     * @param string $remediation (ex: 'ban', 'captcha', 'bypass')
-     *
-     * @return string $remediation The resulting remediation to use (ex: 'ban', 'captcha', 'bypass')
-     * @throws BouncerException
-     */
-    private function capRemediationLevel(string $remediation): string
-    {
-        $orderedRemediations = $this->getRemediationEngine()->getConfig('ordered_remediations') ?? [];
-
-        $bouncingLevel = $this->getConfig('bouncing_level') ?? Constants::BOUNCING_LEVEL_NORMAL;
-        // Compute max remediation level
-        switch ($bouncingLevel) {
-            case Constants::BOUNCING_LEVEL_DISABLED:
-                $maxRemediationLevel = Constants::REMEDIATION_BYPASS;
-                break;
-            case Constants::BOUNCING_LEVEL_FLEX:
-                $maxRemediationLevel = Constants::REMEDIATION_CAPTCHA;
-                break;
-            case Constants::BOUNCING_LEVEL_NORMAL:
-                $maxRemediationLevel = Constants::REMEDIATION_BAN;
-                break;
-            default:
-                throw new BouncerException("Unknown $bouncingLevel");
-        }
-
-        $currentIndex = (int)array_search($remediation, $orderedRemediations);
-        $maxIndex = (int)array_search(
-            $maxRemediationLevel,
-            $orderedRemediations
-        );
-        if ($currentIndex < $maxIndex) {
-            return $orderedRemediations[$maxIndex];
-        }
-
-        return $remediation;
-    }
-
-    /**
-     * Configure this instance.
-     *
-     * @param array $config An array with all configuration parameters
-     *
-     */
-    private function configure(array $config): void
-    {
-        // Process and validate input configuration.
-        $configuration = new Configuration();
-        $processor = new Processor();
-        $this->configs = $processor->processConfiguration($configuration, [$configuration->cleanConfigs($config)]);
-    }
-
-    private function getCache(): AbstractCache
-    {
-        return $this->getRemediationEngine()->getCacheStorage();
-    }
-
-    /**
-     * @param array $cachedCaptchaVariables
-     * @param string $ip
-     * @return bool
-     *
-     * @throws CacheException
-     * @throws CacheStorageException
-     * @throws InvalidArgumentException
-     * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
-     */
-    private function shouldEarlyReturn(array $cachedCaptchaVariables, string $ip): bool
-    {
-        $result = false;
-        if (\in_array($cachedCaptchaVariables['crowdsec_captcha_has_to_be_resolved'], [null, false])) {
-            // Early return if no captcha has to be resolved.
-            $result = true;
-        } elseif ('POST' !== $this->getHttpMethod() || null === $this->getPostedVariable('crowdsec_captcha')) {
-            // Early return if no form captcha form has been filled.
-            $result = true;
-        } elseif (null !== $this->getPostedVariable('refresh') && (int)$this->getPostedVariable('refresh')) {
-            // Handle image refresh.
-            // Generate new captcha image for the user
-            $captchaCouple = $this->buildCaptchaCouple();
-            $captchaVariables = [
-                'crowdsec_captcha_phrase_to_guess' => $captchaCouple['phrase'],
-                'crowdsec_captcha_inline_image' => $captchaCouple['inlineImage'],
-                'crowdsec_captcha_resolution_failed' => false,
-            ];
-            $duration = $this->getConfig('captcha_cache_duration') ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
-            $this->getCache()->setIpVariables(
-                Constants::CACHE_TAG_CAPTCHA,
-                $captchaVariables,
-                $ip,
-                $duration,
-                Constants::CACHE_TAG_CAPTCHA
-            );
-
-            $result = true;
-        }
-
-        return $result;
     }
 }

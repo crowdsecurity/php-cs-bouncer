@@ -5,6 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 
+## [0.36.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v0.36.0) - 2023-??-??
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v0.35.0...v0.36.0)
+
+### Changed
+- *Breaking changes*: All the code has been refactored to use `crowdsec/remediation-engine` package: 
+  - Lot of public methods have been deleted or replaced by others
+  - A bouncer should now extend an `AbstractBouncer` class and implements some new interfaced methods
+  - Some settings names have been changed
+
+---
+
+
 ## [0.35.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v0.35.0) - 2022-12-16
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v0.34.0...v0.35.0)
 
