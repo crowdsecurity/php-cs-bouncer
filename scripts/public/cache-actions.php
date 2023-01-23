@@ -7,12 +7,14 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../auto-prepend/settings.php';
 
 use CrowdSecBouncer\StandaloneBouncer;
+use CrowdSecBouncer\Constants;
 /**
  * @var $crowdSecStandaloneBouncerConfig
  */
-if (isset($_GET['action']) && in_array($_GET['action'], ['refresh', 'clear', 'prune'])) {
+if (isset($_GET['action']) && in_array($_GET['action'], ['refresh', 'clear', 'prune','captcha-phrase'])) {
     $action = $_GET['action'];
     $bouncer = new StandaloneBouncer($crowdSecStandaloneBouncerConfig);
+    $result = "<h1>Cache action has been done: $action</h1>";
 
     switch ($action) {
         case 'refresh':
@@ -23,6 +25,21 @@ if (isset($_GET['action']) && in_array($_GET['action'], ['refresh', 'clear', 'pr
             break;
         case 'prune':
             $bouncer->pruneCache();
+            break;
+        case 'captcha-phrase':
+            if(!isset($_GET['ip'])){
+                exit('You must pass an "ip" param to get the associated captcha phrase' . \PHP_EOL);
+            }
+            $ip = $_GET['ip'];
+            $cache = $bouncer->getRemediationEngine()->getCacheStorage();
+            $cacheKey = $cache->getCacheKey(Constants::CACHE_TAG_CAPTCHA, $ip);
+            $item = $cache->getItem($cacheKey);
+            $result = "<h1>No captcha for this IP: $ip</h1>";
+            if($item->isHit()){
+                $cached = $item->get();
+                $phrase = $cached['phrase_to_guess']??"No phrase to guess for this captcha (already resolved ?)";
+                $result = "<h1>$phrase</h1>";
+            }
             break;
         default:
             throw new Exception("Unknown cache action type:$action");
@@ -37,7 +54,7 @@ if (isset($_GET['action']) && in_array($_GET['action'], ['refresh', 'clear', 'pr
 </head>
 
 <body>
-    <h1>Cache action has been done: $action</h1>
+    $result
 </body>
 </html>
 ";

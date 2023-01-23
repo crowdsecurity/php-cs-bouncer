@@ -649,10 +649,10 @@ final class IpVerificationTest extends TestCase
         $cached = $item->get();
         $this->assertEquals(
             true,
-            $cached['crowdsec_captcha_has_to_be_resolved'],
+            $cached['has_to_be_resolved'],
             'The captcha variables should be cached'
         );
-        $phraseToGuess = $cached['crowdsec_captcha_phrase_to_guess'];
+        $phraseToGuess = $cached['phrase_to_guess'];
         $this->assertEquals(
             5,
             strlen($phraseToGuess),
@@ -660,15 +660,15 @@ final class IpVerificationTest extends TestCase
         );
         $this->assertEquals(
             '/',
-            $cached['crowdsec_captcha_resolution_redirect'],
+            $cached['resolution_redirect'],
             'The captcha variables should be cached'
         );
-        $this->assertNotEmpty($cached['crowdsec_captcha_inline_image'],
+        $this->assertNotEmpty($cached['inline_image'],
             'The captcha variables should be cached');
 
         $this->assertEquals(
             false,
-            $cached['crowdsec_captcha_resolution_failed'],
+            $cached['resolution_failed'],
             'The captcha variables should be cached'
         );
 
@@ -681,7 +681,7 @@ final class IpVerificationTest extends TestCase
         $cacheKeyCaptcha = $cache->getCacheKey(Constants::CACHE_TAG_CAPTCHA, TestHelpers::BAD_IP);
         $item = $cache->getItem($cacheKeyCaptcha);
         $cached = $item->get();
-        $phraseToGuess2 = $cached['crowdsec_captcha_phrase_to_guess'];
+        $phraseToGuess2 = $cached['phrase_to_guess'];
         $this->assertNotEquals(
             $phraseToGuess2,
             $phraseToGuess,
@@ -689,7 +689,7 @@ final class IpVerificationTest extends TestCase
         );
         $this->assertEquals(
             '/',
-            $cached['crowdsec_captcha_resolution_redirect'],
+            $cached['resolution_redirect'],
             'Referer is only for the first step if post'
         );
 
@@ -707,7 +707,7 @@ final class IpVerificationTest extends TestCase
 
         $this->assertEquals(
             true,
-            $cached['crowdsec_captcha_resolution_failed'],
+            $cached['resolution_failed'],
             'Failed should be cached'
         );
 
@@ -725,7 +725,7 @@ final class IpVerificationTest extends TestCase
 
         $this->assertEquals(
             false,
-            $cached['crowdsec_captcha_has_to_be_resolved'],
+            $cached['has_to_be_resolved'],
             'Resolved should be cached'
         );
     }

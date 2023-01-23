@@ -317,16 +317,16 @@ final class StandaloneBouncerTest extends TestCase
         $result = PHPUnitUtil::callMethod(
             $bouncer,
             'shouldNotCheckResolution',
-            [['crowdsec_captcha_has_to_be_resolved' => false]]
+            [['has_to_be_resolved' => false]]
         );
 
-        $this->assertEquals(true, $result, 'No check if no flagged crowdsec_captcha_has_to_be_resolved');
+        $this->assertEquals(true, $result, 'No check if no flagged has_to_be_resolved');
 
         $_SERVER['REQUEST_METHOD'] = 'GET';
         $result = PHPUnitUtil::callMethod(
             $bouncer,
             'shouldNotCheckResolution',
-            [['crowdsec_captcha_has_to_be_resolved' => true]]
+            [['has_to_be_resolved' => true]]
         );
 
         $this->assertEquals(true, $result, 'No check if method is not POST');
@@ -336,7 +336,7 @@ final class StandaloneBouncerTest extends TestCase
         $result = PHPUnitUtil::callMethod(
             $bouncer,
             'shouldNotCheckResolution',
-            [['crowdsec_captcha_has_to_be_resolved' => true]]
+            [['has_to_be_resolved' => true]]
         );
 
         $this->assertEquals(false, $result, 'Check if method is POST and posted crowdsec_captcha');
@@ -344,7 +344,7 @@ final class StandaloneBouncerTest extends TestCase
         $result = PHPUnitUtil::callMethod(
             $bouncer,
             'shouldNotCheckResolution',
-            [['crowdsec_captcha_has_to_be_resolved' => true]]
+            [['has_to_be_resolved' => true]]
         );
 
         $this->assertEquals(true, $result, 'No check if method is POST and no posted crowdsec_captcha');

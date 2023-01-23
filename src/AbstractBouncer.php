@@ -472,12 +472,12 @@ abstract class AbstractBouncer
     {
         $captchaVariables = $this->getCache()->getIpVariables(
             Constants::CACHE_TAG_CAPTCHA,
-            ['crowdsec_captcha_resolution_failed', 'crowdsec_captcha_inline_image'],
+            ['resolution_failed', 'inline_image'],
             $ip
         );
         $body = $this->getCaptchaHtml(
-            (bool)$captchaVariables['crowdsec_captcha_resolution_failed'],
-            (string)$captchaVariables['crowdsec_captcha_inline_image'],
+            (bool)$captchaVariables['resolution_failed'],
+            (string)$captchaVariables['inline_image'],
             ''
         );
         $this->sendResponse($body, 401);
@@ -566,18 +566,18 @@ abstract class AbstractBouncer
         $this->handleCaptchaResolutionForm($ip);
         $cachedCaptchaVariables = $this->getCache()->getIpVariables(
             Constants::CACHE_TAG_CAPTCHA,
-            ['crowdsec_captcha_has_to_be_resolved'],
+            ['has_to_be_resolved'],
             $ip
         );
         $mustResolve = false;
-        if (null === $cachedCaptchaVariables['crowdsec_captcha_has_to_be_resolved']) {
+        if (null === $cachedCaptchaVariables['has_to_be_resolved']) {
             // Set up the first captcha remediation.
             $mustResolve = true;
             $this->initCaptchaResolution($ip);
         }
 
         // Display captcha page if this is required.
-        if ($cachedCaptchaVariables['crowdsec_captcha_has_to_be_resolved'] || $mustResolve) {
+        if ($cachedCaptchaVariables['has_to_be_resolved'] || $mustResolve) {
             $this->displayCaptchaWall($ip);
         }
     }
@@ -597,9 +597,9 @@ abstract class AbstractBouncer
         $cachedCaptchaVariables = $this->getCache()->getIpVariables(
             Constants::CACHE_TAG_CAPTCHA,
             [
-                'crowdsec_captcha_has_to_be_resolved',
-                'crowdsec_captcha_phrase_to_guess',
-                'crowdsec_captcha_resolution_redirect',
+                'has_to_be_resolved',
+                'phrase_to_guess',
+                'resolution_redirect',
             ],
             $ip
         );
@@ -610,12 +610,12 @@ abstract class AbstractBouncer
         // Handle a captcha resolution try
         if (
             null !== $this->getPostedVariable('phrase')
-            && null !== $cachedCaptchaVariables['crowdsec_captcha_phrase_to_guess']
+            && null !== $cachedCaptchaVariables['phrase_to_guess']
         ) {
             $duration = $this->getConfig('captcha_cache_duration') ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
             if (
                 $this->checkCaptcha(
-                    (string)$cachedCaptchaVariables['crowdsec_captcha_phrase_to_guess'],
+                    (string)$cachedCaptchaVariables['phrase_to_guess'],
                     (string)$this->getPostedVariable('phrase'),
                     $ip
                 )
@@ -623,16 +623,16 @@ abstract class AbstractBouncer
                 // User has correctly filled the captcha
                 $this->getCache()->setIpVariables(
                     Constants::CACHE_TAG_CAPTCHA,
-                    ['crowdsec_captcha_has_to_be_resolved' => false],
+                    ['has_to_be_resolved' => false],
                     $ip,
                     $duration,
                     Constants::CACHE_TAG_CAPTCHA
                 );
                 $unsetVariables = [
-                    'crowdsec_captcha_phrase_to_guess',
-                    'crowdsec_captcha_inline_image',
-                    'crowdsec_captcha_resolution_failed',
-                    'crowdsec_captcha_resolution_redirect',
+                    'phrase_to_guess',
+                    'inline_image',
+                    'resolution_failed',
+                    'resolution_redirect',
                 ];
                 $this->getCache()->unsetIpVariables(
                     Constants::CACHE_TAG_CAPTCHA,
@@ -641,13 +641,13 @@ abstract class AbstractBouncer
                     $duration,
                     Constants::CACHE_TAG_CAPTCHA
                 );
-                $redirect = $cachedCaptchaVariables['crowdsec_captcha_resolution_redirect'] ?? '/';
+                $redirect = $cachedCaptchaVariables['resolution_redirect'] ?? '/';
                 $this->redirectResponse($redirect);
             } else {
                 // The user failed to resolve the captcha.
                 $this->getCache()->setIpVariables(
                     Constants::CACHE_TAG_CAPTCHA,
-                    ['crowdsec_captcha_resolution_failed' => true],
+                    ['resolution_failed' => true],
                     $ip,
                     $duration,
                     Constants::CACHE_TAG_CAPTCHA
@@ -719,11 +719,11 @@ abstract class AbstractBouncer
         $captchaCouple = $this->buildCaptchaCouple();
         $referer = $this->getHttpRequestHeader('REFERER');
         $captchaVariables = [
-            'crowdsec_captcha_phrase_to_guess' => $captchaCouple['phrase'],
-            'crowdsec_captcha_inline_image' => $captchaCouple['inlineImage'],
-            'crowdsec_captcha_has_to_be_resolved' => true,
-            'crowdsec_captcha_resolution_failed' => false,
-            'crowdsec_captcha_resolution_redirect' => 'POST' === $this->getHttpMethod() && !empty($referer)
+            'phrase_to_guess' => $captchaCouple['phrase'],
+            'inline_image' => $captchaCouple['inlineImage'],
+            'has_to_be_resolved' => true,
+            'resolution_failed' => false,
+            'resolution_redirect' => 'POST' === $this->getHttpMethod() && !empty($referer)
                 ? $referer : '/',
         ];
         $duration = $this->getConfig('captcha_cache_duration') ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
@@ -748,9 +748,9 @@ abstract class AbstractBouncer
             // Generate new captcha image for the user
             $captchaCouple = $this->buildCaptchaCouple();
             $captchaVariables = [
-                'crowdsec_captcha_phrase_to_guess' => $captchaCouple['phrase'],
-                'crowdsec_captcha_inline_image' => $captchaCouple['inlineImage'],
-                'crowdsec_captcha_resolution_failed' => false,
+                'phrase_to_guess' => $captchaCouple['phrase'],
+                'inline_image' => $captchaCouple['inlineImage'],
+                'resolution_failed' => false,
             ];
             $duration = $this->getConfig('captcha_cache_duration') ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
             $this->getCache()->setIpVariables(
@@ -777,8 +777,8 @@ abstract class AbstractBouncer
     private function shouldNotCheckResolution(array $cachedCaptchaVariables): bool
     {
         $result = false;
-        if (\in_array($cachedCaptchaVariables['crowdsec_captcha_has_to_be_resolved'], [null, false])) {
-            // Check not needed if 'crowdsec_captcha_has_to_be_resolved' cached flag has not been saved
+        if (\in_array($cachedCaptchaVariables['has_to_be_resolved'], [null, false])) {
+            // Check not needed if 'has_to_be_resolved' cached flag has not been saved
             $result = true;
         } elseif ('POST' !== $this->getHttpMethod() || null === $this->getPostedVariable('crowdsec_captcha')) {
             // Check not needed if no form captcha form has been filled.
