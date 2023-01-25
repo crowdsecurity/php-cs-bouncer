@@ -192,7 +192,7 @@ class MyCustomBouncer extends AbstractBouncer
 
 
 Once you have implemented these methods, you could retrieve all required configurations to instantiate your 
-bouncer and then call the `safelyBounce` method to apply a bounce for the current detected IP.
+bouncer and then call the `run` method to apply a bounce for the current detected IP.
 
 In order to instantiate the bouncer, you will have to create at least a `CrowdSec\RemediationEngine\LapiRemediation` 
 object too. 
@@ -211,7 +211,7 @@ $remediationEngine = new LapiRemediation($configs, $client, $cacheStorage);
 
 $bouncer = new MyCustomBouncer($configs, $remediationEngine);
 
-$bouncer->safelyBounce();
+$bouncer->run();
 
 ```
 

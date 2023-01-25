@@ -52,7 +52,7 @@ use CrowdSecBouncer\Constants;
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldTrustXforwardedFor
  * @covers \CrowdSecBouncer\StandaloneBouncer::getHttpRequestHeader
  * @covers \CrowdSecBouncer\StandaloneBouncer::getRemoteIp
- * @covers \CrowdSecBouncer\StandaloneBouncer::safelyBounce
+ * @covers \CrowdSecBouncer\StandaloneBouncer::run
  * @covers \CrowdSecBouncer\StandaloneBouncer::shouldBounceCurrentIp
  *
  * @covers \CrowdSecBouncer\StandaloneBouncer::__construct

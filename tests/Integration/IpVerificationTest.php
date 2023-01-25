@@ -46,7 +46,7 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldTrustXforwardedFor
  * @covers \CrowdSecBouncer\StandaloneBouncer::getHttpRequestHeader
  * @covers \CrowdSecBouncer\StandaloneBouncer::getRemoteIp
- * @covers \CrowdSecBouncer\StandaloneBouncer::safelyBounce
+ * @covers \CrowdSecBouncer\StandaloneBouncer::run
  * @covers \CrowdSecBouncer\StandaloneBouncer::shouldBounceCurrentIp
  * @covers \CrowdSecBouncer\StandaloneBouncer::getHttpMethod
  * @covers \CrowdSecBouncer\StandaloneBouncer::getPostedVariable
@@ -187,6 +187,7 @@ final class IpVerificationTest extends TestCase
 
     public function testConstructAndSomeMethods()
     {
+        unset($_SERVER['REMOTE_ADDR'] );
         $bouncer = new StandaloneBouncer(array_merge($this->configs, ['unexpected_config' => 'test']));
         $this->assertEquals('', $bouncer->getRemoteIp(), 'Should return empty string');
         $_SERVER['REMOTE_ADDR'] = '5.6.7.8';
@@ -730,7 +731,7 @@ final class IpVerificationTest extends TestCase
         );
     }
 
-    public function testSafelyBounce()
+    public function testRun()
     {
         $this->assertEquals(
             false,
@@ -749,7 +750,7 @@ final class IpVerificationTest extends TestCase
         // Test 2: not bouncing exclude URI
         $_SERVER['REMOTE_ADDR'] = '127.0.0.2';
         $_SERVER['REQUEST_URI'] = self::EXCLUDED_URI;
-        $this->assertEquals(false, $bouncer->safelyBounce(), 'Should not bounce excluded uri');
+        $this->assertEquals(false, $bouncer->run(), 'Should not bounce excluded uri');
         PHPUnitUtil::assertRegExp(
             $this,
             '/.*100.*Will not bounce as URI is excluded/',
@@ -760,12 +761,12 @@ final class IpVerificationTest extends TestCase
         // Test 3: bouncing URI
         $_SERVER['REMOTE_ADDR'] = '127.0.0.3';
         $_SERVER['REQUEST_URI'] = '/home';
-        $this->assertEquals(true, $bouncer->safelyBounce(), 'Should bounce uri');
+        $this->assertEquals(true, $bouncer->run(), 'Should bounce uri');
         // Test 4:  not bouncing URI if disabled
         $_SERVER['REMOTE_ADDR'] = '127.0.0.4';
         $bouncer = new StandaloneBouncer(array_merge($this->configs, ['bouncing_level' =>
             Constants::BOUNCING_LEVEL_DISABLED]), $this->logger);
-        $this->assertEquals(false, $bouncer->safelyBounce(), 'Should not bounce if disabled');
+        $this->assertEquals(false, $bouncer->run(), 'Should not bounce if disabled');
 
         PHPUnitUtil::assertRegExp(
             $this,
@@ -789,7 +790,7 @@ final class IpVerificationTest extends TestCase
         $error = '';
 
         try {
-            $bouncer->safelyBounce();
+            $bouncer->run();
         } catch (BouncerException $e) {
             $error = $e->getMessage();
         }
@@ -822,7 +823,7 @@ final class IpVerificationTest extends TestCase
         $error = '';
 
         try {
-            $bouncer->safelyBounce();
+            $bouncer->run();
         } catch (BouncerException $e) {
             $error = $e->getMessage();
         }
@@ -845,7 +846,7 @@ final class IpVerificationTest extends TestCase
             ),
             $this->logger
         );
-        $bouncer->safelyBounce();
+        $bouncer->run();
         PHPUnitUtil::assertRegExp(
             $this,
             '/.*100.*X-Forwarded-for usage is disabled/',
@@ -862,7 +863,7 @@ final class IpVerificationTest extends TestCase
                 ]
             ), $this->logger
         );
-        $bouncer->safelyBounce();
+        $bouncer->run();
         PHPUnitUtil::assertRegExp(
             $this,
             '/.*100.*X-Forwarded-for usage is forced.*"x_forwarded_for_ip":"1.2.3.5"/',
@@ -877,7 +878,7 @@ final class IpVerificationTest extends TestCase
                 $this->configs
             ), $this->logger
         );
-        $bouncer->safelyBounce();
+        $bouncer->run();
         PHPUnitUtil::assertRegExp(
             $this,
             '/.*300.*Detected IP is not allowed for X-Forwarded-for usage.*"x_forwarded_for_ip":"1.2.3.5"/',
@@ -892,7 +893,7 @@ final class IpVerificationTest extends TestCase
                 $this->configs
             ), $this->logger
         );
-        $bouncer->safelyBounce();
+        $bouncer->run();
         PHPUnitUtil::assertRegExp(
             $this,
             '/.*100.*Detected IP is allowed for X-Forwarded-for usage.*"original_ip":"5.6.7.8","x_forwarded_for_ip":"127.0.0.10"/',

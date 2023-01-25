@@ -202,7 +202,7 @@ abstract class AbstractBouncer
     }
 
     /**
-     * If there is any technical problem while bouncing, don't block the user. Bypass bouncing and log the error.
+     * Handle a bounce for current IP
      *
      * @return bool
      * @throws BouncerException
@@ -210,12 +210,9 @@ abstract class AbstractBouncer
      * @throws InvalidArgumentException
      * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
      */
-    public function safelyBounce(): bool
+    public function run(): bool
     {
         $result = false;
-        set_error_handler(function ($errno, $errstr) {
-            throw new BouncerException("$errstr (Error level: $errno)");
-        });
         try {
             if ($this->shouldBounceCurrentIp()) {
                 $this->bounceCurrentIp();
@@ -230,10 +227,9 @@ abstract class AbstractBouncer
                 'line' => $e->getLine(),
             ]);
             if (true === $this->getConfig('display_errors')) {
-                throw $e;
+                throw new BouncerException($e->getMessage());
             }
         }
-        restore_error_handler();
 
         return $result;
     }

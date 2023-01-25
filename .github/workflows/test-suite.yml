@@ -164,10 +164,77 @@ jobs:
             exit 1
           fi
 
+      - name: Run "Display error with bad settings" test
+        run: |
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
+          sed -i  's/\x27cache_system\x27 => Constants::CACHE_SYSTEM_PHPFS/\x27cache_system\x27 => 1/g' scripts/auto-prepend/settings.php
+          cat scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/6-display-error-on.js"
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi
+
+      - name: Run "No display error with bad settings" test
+        run: |
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
+          sed -i  's/\x27cache_system\x27 => Constants::CACHE_SYSTEM_PHPFS/\x27cache_system\x27 => 1/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27display_errors\x27 => true/\x27display_errors\x27 => false/g' scripts/auto-prepend/settings.php
+          cat scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/5-display-error-off.js"
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi
+
+      - name: Run "No display error with error while bouncing" test
+        run: |
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
+          sed -i  's/\x27cache_system\x27 => 1/\x27cache_system\x27 => Constants::CACHE_SYSTEM_PHPFS/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27forced_test_ip\x27 => \x27\x27/\x27forced_test_ip\x27 => \x27bad-ip\x27/g' scripts/auto-prepend/settings.php
+          cat scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/5-display-error-off.js"
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi
+
+      - name: Run "Display error with error while bouncing" test
+        run: |
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
+          sed -i  's/\x27display_errors\x27 => false/\x27display_errors\x27 => true/g' scripts/auto-prepend/settings.php
+          cat scripts/auto-prepend/settings.php
+          cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
+          ./__scripts__/run-tests.sh ci "./__tests__/6-display-error-on.js"
+          PENDING_TESTS=$(grep -oP '"numPendingTests":\K(.*),"numRuntimeErrorTestSuites"' .test-results.json | sed  's/,"numRuntimeErrorTestSuites"//g')
+          if [[ $PENDING_TESTS == "0" ]]
+          then
+            echo "No pending tests: OK"
+          else
+            echo "There are pending tests: $PENDING_TESTS (KO)"
+            exit 1
+          fi      
+
       - name: Run "live mode with cURL and without geolocation" test
         run: |
           cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}
           sed -i  's/\x27use_curl\x27 => false/\x27use_curl\x27 => true/g' scripts/auto-prepend/settings.php
+          sed -i  's/\x27forced_test_ip\x27 => \x27bad-ip\x27/\x27forced_test_ip\x27 => \x27\x27/g' scripts/auto-prepend/settings.php
           cat scripts/auto-prepend/settings.php
           cd ${{ github.workspace }}/${{env.EXTENSION_PATH}}/tests/end-to-end/
           ./__scripts__/run-tests.sh ci "./__tests__/1-live-mode.js"    
@@ -332,7 +399,6 @@ jobs:
             echo "There are pending tests: $PENDING_TESTS (KO)"
             exit 1
           fi
-          
 
       - name: Run "stream mode with TLS auth and cURL and Memcached" test
         run: |

@@ -17,7 +17,7 @@ $crowdSecStandaloneBouncerConfig = [
      */
     'bouncing_level' => Constants::BOUNCING_LEVEL_NORMAL,
 
-    /** If you use a CDN, a reverse proxy or a load balancer, you can use this setting to whitelist their IPs
+    /** If you use a CDN, a reverse proxy or a load balancer, you can use this setting to whitelist their IPs.
      *
      * For other IPs, the bouncer will not trust the X-Forwarded-For header.
      *
@@ -26,7 +26,6 @@ $crowdSecStandaloneBouncerConfig = [
      * [['001.002.003.004', '001.002.003.004'], ['005.006.007.008', '005.006.006.007']]
      *
      * If you use your own bouncer, you should have to set directly an array of comparable IPs arrays
-     *
      */
     'trust_ip_forward_array' => [],
     /**
