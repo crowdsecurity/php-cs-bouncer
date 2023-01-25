@@ -13,16 +13,12 @@ use CrowdSecBouncer\BouncerException;
 use CrowdSecBouncer\StandaloneBouncer;
 
 // If there is any technical problem while bouncing, don't block the user.
-set_error_handler(function ($errno, $errstr) {
-    throw new BouncerException("$errstr (Error level: $errno)");
-});
 try {
     $bouncer = new StandaloneBouncer($crowdSecStandaloneBouncerConfig);
     $bouncer->run();
 } catch (\Throwable $e) {
     $displayErrors = $crowdSecStandaloneBouncerConfig['display_errors'] ?? false;
     if (true === $displayErrors) {
-        throw $e;
+        throw new BouncerException($e->getMessage(), $e->getCode(), $e);
     }
 }
-restore_error_handler();
