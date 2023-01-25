@@ -50,7 +50,7 @@ A captcha wall could look like:
 
 ![Captcha wall](images/screenshots/front-captcha.jpg)
 
-With the provided Standalone bouncer, please note that it is possible to customize all the colors of these pages so 
+With the provided standalone bouncer, please note that it is possible to customize all the colors of these pages so 
 that they integrate best with your design.
 
 On the other hand, all texts are also fully customizable. This will allow you, for example, to present translated pages in your users' language.
@@ -61,7 +61,7 @@ On the other hand, all texts are also fully customizable. This will allow you, f
 This library includes the [`StandaloneBouncer`](../src/StandaloneBouncer.php) class. You can see that class as a good
 example for creating your own bouncer. 
 
-Once you set up your server as below, every browser access to a php script will be bounced by the Standalone bouncer.
+Once you set up your server as below, every browser access to a php script will be bounced by the standalone bouncer.
 
 You will have to :
 
@@ -118,6 +118,17 @@ location ~ \.php$ {
 If you are using Apache, you should add this line to your `.htaccess` file:
 
     php_value auto_prepend_file "/absolute/path/to/scripts/auto-prepend/bounce.php"
+
+or modify your `Virtual Host` accordingly:
+
+```
+<VirtualHost ...>
+    ...
+    ...
+    php_value auto_prepend_file "/absolute/path/to/scripts/auto-prepend/bounce.php"
+    
+</VirtualHost>
+```
 
 
 ## Create your own bouncer
@@ -302,17 +313,17 @@ Here is the list of available settings:
 
 ### Cache
 
-- `cache_system`: Select from `phpfs` (File system cache), `redis` or `memcached`.
+- `cache_system`: Select from `phpfs` (PHP file cache), `redis` or `memcached`.
 
 
-- `fs_cache_path`: Will be used only if you choose File system as cache_system. Important note: be sur this path
+- `fs_cache_path`: Will be used only if you choose PHP file cache as `cache_system`. Important note: be sur this path
   won't be publicly accessible.
 
 
-- `redis_dsn`:   Will be used only if you choose Redis cache as cache_system.
+- `redis_dsn`:   Will be used only if you choose Redis cache as `cache_system`.
 
 
-- `memcached_dsn`: Will be used only if you choose Memcached as cache_system.
+- `memcached_dsn`: Will be used only if you choose Memcached as `cache_system`.
 
 
 - `clean_ip_cache_duration`: Set the duration we keep in cache the fact that an IP is clean. In seconds. Defaults to 5.
