@@ -1,6 +1,7 @@
 # Composer
 vendor
 composer.lock
+composer-dev.*
 
 # Systems
 .DS_Store
@@ -13,18 +14,14 @@ tools/php-cs-fixer/composer.lock
 
 # App
 var/
-.bouncer-key
 .cache
+.logs
 
 # Auto prepend demo
 scripts/auto-prepend/settings.php
 scripts/auto-prepend/.logs
 scripts/auto-prepend/.cache
 scripts/**/*.log
-
-# Public scripts
-scripts/public/cache-actions.php
-scripts/public/geolocation-test.php
 
 # MaxMind databases
 *.mmdb

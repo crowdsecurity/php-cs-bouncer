@@ -37,7 +37,7 @@ describe(`Stream mode run`, () => {
     });
 
     it("Should display the homepage with no remediation", async () => {
-        await runCacheAction("warm-up");
+        await runCacheAction("clear");
         await publicHomepageShouldBeAccessible();
     });
 

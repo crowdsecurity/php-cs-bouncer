@@ -139,7 +139,6 @@ module.exports.addDecision = async (
     if (["Ip", "Range"].includes(scope)) {
         // IPv6
         if (value.includes(":")) {
-            // @TODO Handle IP range for Ipv6
             finalScope = "Ip";
         } else {
             let startIp;

@@ -12,9 +12,9 @@ const goToPublicPage = async (endpoint = PUBLIC_URL) => {
     return page.goto(`${PHP_URL}${endpoint}`);
 };
 
-const runCacheAction = async (actionType = "refresh") => {
+const runCacheAction = async (actionType = "refresh", otherParams = "") => {
     await goToPublicPage(
-        `/my-own-modules/crowdsec-php-lib/scripts/public/cache-actions.php?action=${actionType}`,
+        `/my-own-modules/crowdsec-php-lib/scripts/public/cache-actions.php?action=${actionType}${otherParams}`,
     );
     await page.waitForLoadState("networkidle");
     await expect(page).not.toMatchTitle(/404/);
@@ -24,7 +24,7 @@ const runCacheAction = async (actionType = "refresh") => {
 const runGeolocationTest = async (ip, saveResult, brokenDb = false) => {
     let url = `/my-own-modules/crowdsec-php-lib/scripts/public/geolocation-test.php?ip=${ip}`;
     if (saveResult) {
-        url += "&save-result=1";
+        url += "&cache-duration=120";
     }
     if (brokenDb) {
         url += "&broken-db=1";
@@ -119,6 +119,21 @@ const deleteFileContent = async (filePath) => {
     return false;
 };
 
+const fillInput = async (optionId, value) => {
+    await page.fill(`[id=${optionId}]`, `${value}`);
+};
+const fillByName = async (name, value) => {
+    await page.fill(`[name=${name}]`, `${value}`);
+};
+
+const selectElement = async (selectId, valueToSelect) => {
+    await page.selectOption(`[id=${selectId}]`, `${valueToSelect}`);
+};
+
+const selectByName = async (selectName, valueToSelect) => {
+    await page.selectOption(`[name=${selectName}]`, `${valueToSelect}`);
+};
+
 module.exports = {
     addDecision,
     wait,
@@ -135,4 +150,8 @@ module.exports = {
     deleteFileContent,
     runCacheAction,
     runGeolocationTest,
+    fillInput,
+    fillByName,
+    selectElement,
+    selectByName,
 };

@@ -4,6 +4,117 @@
 use CrowdSecBouncer\Constants;
 
 $crowdSecStandaloneBouncerConfig = [
+    // ============================================================================#
+    // Bouncer configs
+    // ============================================================================#
+
+    /** Select from 'bouncing_disabled', 'normal_bouncing' or 'flex_bouncing'.
+     *
+     * Choose if you want to apply CrowdSec directives (Normal bouncing) or be more permissive (Flex bouncing).
+     * With the `Flex mode`, it is impossible to accidentally block access to your site to people who don’t
+     * deserve it. This mode makes it possible to never ban an IP but only to offer a Captcha, in the worst-case
+     * scenario.
+     */
+    'bouncing_level' => Constants::BOUNCING_LEVEL_NORMAL,
+
+    /** If you use a CDN, a reverse proxy or a load balancer, you can use this setting to whitelist their IPs.
+     *
+     * For other IPs, the bouncer will not trust the X-Forwarded-For header.
+     *
+     * With the Standalone bouncer, you have to set an array of Ips : ['1.2.3.4', '5.6.7.8'] for example
+     * The standalone bouncer will automatically transform this array to an array of comparable IPs arrays:
+     * [['001.002.003.004', '001.002.003.004'], ['005.006.007.008', '005.006.006.007']]
+     *
+     * If you use your own bouncer, you should have to set directly an array of comparable IPs arrays
+     */
+    'trust_ip_forward_array' => [],
+    /**
+     * By default, the lib call the REST LAPI using file_get_contents method (allow_url_fopen is required).
+     * Set 'use_curl' to true in order to use cURL request instead (curl is in then required).
+     */
+    'use_curl' => false,
+
+    /**
+     * array of URIs that will not be bounced.
+     */
+    'excluded_uris' => ['/favicon.ico'],
+
+    // Select from 'phpfs' (File system cache), 'redis' or 'memcached'.
+    'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
+
+    // Set the duration we keep in cache the captcha flow variables for an IP. In seconds. Defaults to 86400.
+    'captcha_cache_duration' => Constants::CACHE_EXPIRATION_FOR_CAPTCHA,
+
+    // true to enable verbose debug log.
+    'debug_mode' => false,
+    // true to disable prod log
+    'disable_prod_log' => false,
+
+    /** Absolute path to store log files.
+     *
+     * Important note: be sur this path won't be publicly accessible
+     */
+    'log_directory_path' => __DIR__ . '/.logs',
+
+    // true to stop the process and display errors if any.
+    'display_errors' => false,
+
+    /** Only for test or debug purpose. Default to empty.
+     *
+     * If not empty, it will be used instead of the real remote ip.
+     */
+    'forced_test_ip' => '',
+
+    /** Only for test or debug purpose. Default to empty.
+     *
+     * If not empty, it will be used instead of the real forwarded ip.
+     * If set to "no_forward", the x-forwarded-for mechanism will not be used at all.
+     */
+    'forced_test_forwarded_ip' => '',
+
+    // Settings for ban and captcha walls
+    'custom_css' => '',
+    // true to hide CrowdSec mentions on ban and captcha walls.
+    'hide_mentions' => false,
+    'color' => [
+        'text' => [
+            'primary' => 'black',
+            'secondary' => '#AAA',
+            'button' => 'white',
+            'error_message' => '#b90000',
+        ],
+        'background' => [
+            'page' => '#eee',
+            'container' => 'white',
+            'button' => '#626365',
+            'button_hover' => '#333',
+        ],
+    ],
+    'text' => [
+        // Settings for captcha wall
+        'captcha_wall' => [
+            'tab_title' => 'Oops..',
+            'title' => 'Hmm, sorry but...',
+            'subtitle' => 'Please complete the security check.',
+            'refresh_image_link' => 'refresh image',
+            'captcha_placeholder' => 'Type here...',
+            'send_button' => 'CONTINUE',
+            'error_message' => 'Please try again.',
+            'footer' => '',
+        ],
+        // Settings for ban wall
+        'ban_wall' => [
+            'tab_title' => 'Oops..',
+            'title' => '🤭 Oh!',
+            'subtitle' => 'This page is protected against cyber attacks and your IP has been banned by our system.',
+            'footer' => '',
+        ],
+    ],
+
+    // ============================================================================#
+    // Client configs
+    // ============================================================================#
+
     /** Select from 'api_key' and 'tls'.
      *
      * Choose if you want to use an API-KEY or a TLS (pki) authentification
@@ -55,47 +166,9 @@ $crowdSecStandaloneBouncerConfig = [
     // In seconds. The timeout when calling LAPI. Must be greater or equal than 1. Defaults to 1 sec.
     'api_timeout' => 1,
 
-    /**
-     * By default, the lib call the REST LAPI using file_get_contents method (allow_url_fopen is required).
-     * Set 'use_curl' to true in order to use cURL request instead (curl is in then required).
-     */
-    'use_curl' => false,
-
-    // true to enable verbose debug log.
-    'debug_mode' => false,
-    // true to disable prod log
-    'disable_prod_log' => false,
-
-    /** Absolute path to store log files.
-     *
-     * Important note: be sur this path won't be publicly accessible
-     */
-    'log_directory_path' => __DIR__ . '/.logs',
-
-    // true to stop the process and display errors if any.
-    'display_errors' => false,
-
-    /** Only for test or debug purpose. Default to empty.
-     *
-     * If not empty, it will be used instead of the real remote ip.
-     */
-    'forced_test_ip' => '',
-
-    /** Only for test or debug purpose. Default to empty.
-     *
-     * If not empty, it will be used instead of the real forwarded ip.
-     * If set to "no_forward", the x-forwarded-for mechanism will not be used at all.
-     */
-    'forced_test_forwarded_ip' => '',
-
-    /** Select from 'bouncing_disabled', 'normal_bouncing' or 'flex_bouncing'.
-     *
-     * Choose if you want to apply CrowdSec directives (Normal bouncing) or be more permissive (Flex bouncing).
-     * With the `Flex mode`, it is impossible to accidentally block access to your site to people who don’t
-     * deserve it. This mode makes it possible to never ban an IP but only to offer a Captcha, in the worst-case
-     * scenario.
-     */
-    'bouncing_level' => Constants::BOUNCING_LEVEL_NORMAL,
+    // ============================================================================#
+    // Remediation engine configs
+    // ============================================================================#
 
     /** Select from 'bypass' (minimum remediation), 'captcha' or 'ban' (maximum remediation).
      * Default to 'captcha'.
@@ -104,26 +177,15 @@ $crowdSecStandaloneBouncerConfig = [
      */
     'fallback_remediation' => Constants::REMEDIATION_CAPTCHA,
 
-    /** Select from 'bypass' (minimum remediation),'captcha' or 'ban' (maximum remediation).
-     * Default to 'ban'.
-     *
-     * Cap the remediation to the selected one.
-     */
-    'max_remediation_level' => Constants::REMEDIATION_BAN,
-
-    /** If you use a CDN, a reverse proxy or a load balancer, set an array of IPs.
-     *
-     * For other IPs, the bouncer will not trust the X-Forwarded-For header.
-     */
-    'trust_ip_forward_array' => [],
-
     /**
-     * array of URIs that will not be bounced.
+     * The `ordered_remediations` setting accepts an array of remediations ordered by priority.
+     * If there are more than one decision for an IP, remediation with the highest priority will be return.
+     * The specific remediation `bypass` will always be considered as the lowest priority (there is no need to
+     * specify it in this setting).
+     * This setting is not required. If you don't set any value, `['ban']` will be used by default for CAPI remediation
+     * and `['ban', 'captcha']` for LAPI remediation.
      */
-    'excluded_uris' => ['/favicon.ico'],
-
-    // Select from 'phpfs' (File system cache), 'redis' or 'memcached'.
-    'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
+    'ordered_remediations' => [Constants::REMEDIATION_BAN, Constants::REMEDIATION_CAPTCHA],
 
     /** Will be used only if you choose File system as cache_system.
      *
@@ -142,12 +204,6 @@ $crowdSecStandaloneBouncerConfig = [
 
     // Set the duration we keep in cache the fact that an IP is bad. In seconds. Defaults to 20.
     'bad_ip_cache_duration' => Constants::CACHE_EXPIRATION_FOR_BAD_IP,
-
-    // Set the duration we keep in cache the captcha flow variables for an IP. In seconds. Defaults to 86400.
-    'captcha_cache_duration' => Constants::CACHE_EXPIRATION_FOR_CAPTCHA,
-
-    // Set the duration we keep in cache a geolocation result for an IP . In seconds. Defaults to 86400.
-    'geolocation_cache_duration' => Constants::CACHE_EXPIRATION_FOR_GEO,
 
     /** true to enable stream mode, false to enable the live mode. Default to false.
      *
@@ -168,11 +224,12 @@ $crowdSecStandaloneBouncerConfig = [
         'enabled' => false,
         // Geolocation system. Only 'maxmind' is available for the moment. Default to 'maxmind'
         'type' => Constants::GEOLOCATION_TYPE_MAXMIND,
-        /** true to store the geolocalized country in session. Default to true.
-         *
-         * Setting true will avoid multiple call to the geolocalized system (e.g. maxmind database)
+        /**
+         * This setting will be used to set the lifetime (in seconds) of a cached country
+         * associated to an IP. The purpose is to avoid multiple call to the geolocation system (e.g. maxmind database)
+         * . Default to 86400. Set 0 to disable caching.
          */
-        'save_result' => true,
+        'cache_duration' => Constants::CACHE_EXPIRATION_FOR_GEO,
         // MaxMind settings
         'maxmind' => [
             /**Select from 'country' or 'city'. Default to 'country'
@@ -184,32 +241,4 @@ $crowdSecStandaloneBouncerConfig = [
             'database_path' => '/some/path/GeoLite2-Country.mmdb',
         ],
     ],
-
-    // true to hide CrowdSec mentions on ban and captcha walls.
-    'hide_mentions' => false,
-
-    // Settings for ban and captcha walls
-    'theme_color_text_primary' => 'black',
-    'theme_color_text_secondary' => '#AAA',
-    'theme_color_text_button' => 'white',
-    'theme_color_text_error_message' => '#b90000',
-    'theme_color_background_page' => '#eee',
-    'theme_color_background_container' => 'white',
-    'theme_color_background_button' => '#626365',
-    'theme_color_background_button_hover' => '#333',
-    'theme_custom_css' => '',
-    // Settings for captcha wall
-    'theme_text_captcha_wall_tab_title' => 'Oops..',
-    'theme_text_captcha_wall_title' => 'Hmm, sorry but...',
-    'theme_text_captcha_wall_subtitle' => 'Please complete the security check.',
-    'theme_text_captcha_wall_refresh_image_link' => 'refresh image',
-    'theme_text_captcha_wall_captcha_placeholder' => 'Type here...',
-    'theme_text_captcha_wall_send_button' => 'CONTINUE',
-    'theme_text_captcha_wall_error_message' => 'Please try again.',
-    'theme_text_captcha_wall_footer' => '',
-    // Settings for ban wall
-    'theme_text_ban_wall_tab_title' => 'Oops..',
-    'theme_text_ban_wall_title' => '🤭 Oh!',
-    'theme_text_ban_wall_subtitle' => 'This page is protected against cyber attacks and your IP has been banned by our system.',
-    'theme_text_ban_wall_footer' => '',
 ];

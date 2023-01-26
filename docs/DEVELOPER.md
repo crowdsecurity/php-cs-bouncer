@@ -6,51 +6,7 @@
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
 
-- [Local development](#local-development)
-  - [DDEV-Local setup](#ddev-local-setup)
-    - [DDEV installation](#ddev-installation)
-    - [Prepare DDEV PHP environment](#prepare-ddev-php-environment)
-  - [DDEV Usage](#ddev-usage)
-    - [Add CrowdSec bouncer and watcher](#add-crowdsec-bouncer-and-watcher)
-    - [Use composer to update or install the lib](#use-composer-to-update-or-install-the-lib)
-    - [Find IP of your docker services](#find-ip-of-your-docker-services)
-    - [Unit test](#unit-test)
-    - [Auto-prepend mode (standalone mode)](#auto-prepend-mode-standalone-mode)
-    - [End-to-end tests](#end-to-end-tests)
-    - [Coding standards](#coding-standards)
-      - [PHPCS Fixer](#phpcs-fixer)
-      - [PHPSTAN](#phpstan)
-      - [PHP Mess Detector](#php-mess-detector)
-      - [PHPCS and PHPCBF](#phpcs-and-phpcbf)
-      - [PSALM](#psalm)
-      - [PHP Unit Code coverage](#php-unit-code-coverage)
-    - [Generate CrowdSec tools and settings on start](#generate-crowdsec-tools-and-settings-on-start)
-    - [Redis debug](#redis-debug)
-    - [Memcached debug](#memcached-debug)
-- [Quick start guide](#quick-start-guide)
-  - [Check IP script](#check-ip-script)
-    - [Cap remediation level](#cap-remediation-level)
-    - [Play with other cache layers](#play-with-other-cache-layers)
-  - [Clear cache script](#clear-cache-script)
-  - [Full Live mode example](#full-live-mode-example)
-    - [Set up the context](#set-up-the-context)
-    - [Get the remediation the clean IP "1.2.3.4"](#get-the-remediation-the-clean-ip-1234)
-    - [Simulate LAPI down by using a bad url](#simulate-lapi-down-by-using-a-bad-url)
-    - [Now ban range 1.2.3.4 to 1.2.3.7 for 12h](#now-ban-range-1234-to-1237-for-12h)
-    - [Clear cache and get the new remediation](#clear-cache-and-get-the-new-remediation)
-- [Discover the CrowdSec LAPI](#discover-the-crowdsec-lapi)
-  - [Use the CrowdSec cli (`cscli`)](#use-the-crowdsec-cli-cscli)
-    - [Add decision for an IP or a range of IPs](#add-decision-for-an-ip-or-a-range-of-ips)
-    - [Add decision to ban or captcha a country](#add-decision-to-ban-or-captcha-a-country)
-    - [Delete decisions](#delete-decisions)
-    - [Create a bouncer](#create-a-bouncer)
-    - [Create a watcher](#create-a-watcher)
-  - [Use the web container to call LAPI](#use-the-web-container-to-call-lapi)
-- [Commit message](#commit-message)
-  - [Allowed message `type` values](#allowed-message-type-values)
-- [Release process](#release-process)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -60,12 +16,12 @@
 
 There are many ways to install this library on a local PHP environment.
 
-We are using [DDEV-Local](https://ddev.readthedocs.io/en/stable/) because it is quite simple to use and customize.
+We are using [DDEV](https://ddev.readthedocs.io/en/stable/) because it is quite simple to use and customize.
 
 Of course, you may use your own local stack, but we provide here some useful tools that depends on DDEV.
 
 
-### DDEV-Local setup
+### DDEV setup
 
 For a quick start, follow the below steps.
 
@@ -190,8 +146,14 @@ ddev find-ip ddev-router
 ```
 
 
-
 #### Unit test
+
+
+```bash
+ddev  php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit  ./my-own-modules/crowdsec-php-lib/tests/Unit --testdox
+```
+
+#### Integration test
 
 First, create a bouncer and keep the result key.
 
@@ -222,8 +184,7 @@ and`GeoLite2-Country.mmdb`. You can download these databases by creating a maxmi
 Then, you can run:
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080  
-/usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/GeolocationTest.php
+ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/GeolocationTest.php
 ```
 
 **N.B**: If you want to test with `curl` instead of `file_get_contents` calls to LAPI, you have to add `USE_CURL=1` in 
@@ -264,14 +225,6 @@ https://phpXX.ddev.site/my-own-modules/crowdsec-php-lib/scripts/public/protected
 #### End-to-end tests
 
 In auto-prepend mode, you can run some end-to-end tests.
-
-Before running the tests, you have to copy some testing scripts:
-
-```
-cd php-project-sources
-cp .ddev/custom_files/crowdsec/cache-actions.php my-own-modules/crowdsec-php-lib/scripts/public/cache-actions.php
-cp .ddev/custom_files/crowdsec/geolocation-test.php my-own-modules/crowdsec-php-lib/scripts/public/geolocation-test.php
-```
 
 We are using a Jest/Playwright Node.js stack to launch a suite of end-to-end tests.
 
@@ -378,8 +331,7 @@ ddev xdebug
 
 To generate a html report, you can run:
 ```bash
-ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key LAPI_URL=https://crowdsec:8080
-MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php  ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml
+ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key  AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 REDIS_DSN=redis://redis:6379 MEMCACHED_DSN=memcached://memcached:11211  /usr/bin/php  ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml
 
 ```
 
@@ -455,118 +407,11 @@ the max number of keys to dump:
 - `delete <mykey>`: Delete a key
 
 
-## Quick start guide
-
-> Goal: At the end of this guide, you will understand better:
-> - the live mode as well as the stream mode for even more performance
-> - the cache layers you can use in this library (File System, Redis, Memcached, and more)
-> - the cap remediation level
-> - how to get the logged events
+## Example scripts
 
 You will find some php scripts in the `scripts` folder.
 
 **N.B** : If you are not using DDEV, you can replace all `ddev exec php ` by `php` and specify the right script paths.
-
-### Check IP script
-
-The [`check-ip`](../scripts/check-ip.php) script will get the remediation (`bypass`, `captcha` or `ban`) for some IP.
-
-To run this script, you have to know your bouncer key `<BOUNCER_KEY>` and run
-```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/check-ip.php <IP> <BOUNCER_KEY>
-```
-
-As a reminder, your bouncer key is returned by the `ddev create-bouncer` command.
-
-For example, run the php script:
-
-```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/check-ip.php 1.2.3.4 <BOUNCER_KEY>
-```
-
-As your CrowdSec instance contains no decisions, you received the result "bypass".
-
-Let's now add a new decision in CrowdSec, for example we will ban the 1.2.3.4/30 for 4h:
-
-```bash
-ddev exec -s crowdsec cscli decisions add --range 1.2.3.4/30 --duration 4h --type ban
-```
-
-Now, if you run the php script against the `1.2.3.4` IP:
-
-```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/check-ip.php 1.2.3.4 <BOUNCER_KEY>
-```
-
-LAPI will advise you to ban this IP as it's within the 1.2.3.4/30 range.
-
-#### Cap remediation level
-
-In some cases, it's a critical action to ban access to users (ex: e-commerce). We prefer to let user access to the website, even if CrowdSec says "ban it!".
-
-Fortunately, this library allows you to cap the remediation to a certain level.
-
-Let's add the `max_remediation_level` configuration with `captcha` value:
-
-```php
-$configs = [
-    'api_key' => $bouncerKey,
-    'api_url' => 'https://crowdsec:8080',
-    'fs_cache_path' => __DIR__ . '/.cache'
-    'max_remediation_level' => 'captcha' // <== ADD THIS LINE
-    ];
-```
-
-Now if you call one more time:
-
-```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/check-ip.php 1.2.3.4 <BOUNCER_KEY>
-```
-
-The library will cap the value to `captcha` level.
-
-
-#### Play with other cache layers
-
-Now update the `check-ip.php`script to replace the `PhpFilesAdapter` with the `RedisAdapter`.
-
-Replace:
-
-```php
-$configs = [
-    'api_key' => $bouncerKey,
-    'api_url' => 'https://crowdsec:8080',
-    'fs_cache_path' => __DIR__ . '/.cache',
-];
-```
-
-with:
-
-```php
-$configs = [
-    'api_key' => $bouncerKey,
-    'api_url' => 'https://crowdsec:8080',
-    'cache_system' => 'redis',
-    'redis_dsn' => 'redis://redis:6379'
-];
-```
-
-Or, if `Memcached` is more adapted than `Redis` to your needs:
-
-```php
-$configs = [
-    'api_key' => $bouncerKey,
-    'api_url' => 'https://crowdsec:8080',
-    'cache_system' => 'memcached',
-    'memcached_dsn' => 'memcached://memcached:11211'
-];
-```
-
-You will still be able to verify IPs, but the cache system will be more efficient.
-
-```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/check-ip.php 1.2.3.4 <BOUNCER_KEY>
-```
 
 ### Clear cache script
 
@@ -580,7 +425,7 @@ ddev exec php my-own-modules/crowdsec-php-lib/scripts/clear-cache.php <BOUNCER_K
 
 This example demonstrates how the PHP Lib works with cache when you are using the live mode.
 
-We will use here the [`full-example-live-mode.php`](../scripts/full-example-live-mode.php).
+We will use here the [`standalone-check-ip-live.php`](../scripts/standalone-check-ip-live.php).
 
 #### Set up the context
 
@@ -598,23 +443,12 @@ ddev create-bouncer`
 
 #### Get the remediation the clean IP "1.2.3.4"
 
-Try with the `full-example-live-mode.php` file:
+Try with the `standalone-check-ip-live.php` file:
 
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 https://crowdsec:8080
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/standalone-check-ip-live.php 1.2.3.4 <YOUR_BOUNCER_KEY>
 ```
-
-#### Simulate LAPI down by using a bad url
-
-If you run this script twice, LAPI will not be called, the cache system will relay the information.
-You can this behaviour by testing with a bad LAPI url.
-
-```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 https://crowdsec:BAD
-```
-
-As you can see, you can check the API event if LAPI is down. This is because of the caching system.
 
 #### Now ban range 1.2.3.4 to 1.2.3.7 for 12h
 
@@ -633,7 +467,7 @@ ddev exec php my-own-modules/crowdsec-php-lib/scripts/clear-cache.php <YOUR_BOUN
 One more time, get the remediation for the IP "1.2.3.4":
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/full-example-live-mode.php <YOUR_BOUNCER_KEY> 1.2.3.4 https://crowdsec:8080
+ddev exec php my-own-modules/crowdsec-php-lib/scripts/standalone-check-ip-live.php 1.2.3.4 <YOUR_BOUNCER_KEY>
 ```
 
 This is a ban (and cache miss) as you can see in your terminal logs.
@@ -788,7 +622,7 @@ Before publishing a new release, there are some manual steps to take:
 Then, you have to [run the action manually from the GitHub repository](https://github.com/crowdsecurity/php-cs-bouncer/actions/workflows/release.yml)
 
 
-Alternatively, you could use the [Github CLI](https://github.com/cli/cli): 
+Alternatively, you could use the [GitHub CLI](https://github.com/cli/cli): 
 - create a draft release: 
 ```
 gh workflow run release.yml -f tag_name=vx.y.z -f draft=true
@@ -802,7 +636,7 @@ gh workflow run release.yml -f tag_name=vx.y.z -f prerelease=true
 gh workflow run release.yml -f tag_name=vx.y.z
 ```
 
-Note that the Github action will fail if the tag `tag_name` already exits.
+Note that the GitHub action will fail if the tag `tag_name` already exits.
 
 
  

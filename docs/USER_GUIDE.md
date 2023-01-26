@@ -6,24 +6,7 @@
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**
 
-- [Description](#description)
-- [Prerequisites](#prerequisites)
-- [Features](#features)
-- [Usage](#usage)
-  - [Create your own bouncer](#create-your-own-bouncer)
-    - [Quick start](#quick-start)
-    - [Test your bouncer](#test-your-bouncer)
-    - [Configurations](#configurations)
-      - [Local API Connection](#local-api-connection)
-      - [Debug](#debug)
-      - [Bouncer behavior](#bouncer-behavior)
-      - [Cache](#cache)
-      - [Geolocation](#geolocation)
-      - [Captcha and ban wall settings](#captcha-and-ban-wall-settings)
-    - [The `Standalone` example](#the-standalone-example)
-    - [Ready to use PHP bouncers](#ready-to-use-php-bouncers)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -31,7 +14,8 @@
 ## Description
 
 This library allows you to create CrowdSec bouncers for PHP applications or frameworks like e-commerce, blog or other 
-exposed applications. It can also be used in a standalone mode using auto-prepend directive.
+exposed applications. It can also be used in a standalone mode using auto-prepend directive and the provided standalone 
+bouncer.
 
 ## Prerequisites
 
@@ -43,57 +27,207 @@ Please note that first and foremost a CrowdSec agent must be installed on a serv
 ## Features
 
 - CrowdSec Local API Support
-  - Handle IP, IP ranges and Country scoped decisions
+  - Handle `ip`, `range` and `country` scoped decisions
   - Clear, prune and refresh the Local API cache
   - `Live mode` or `Stream mode`
+- Support IpV4 and Ipv6 (Ipv6 range decisions are yet only supported in `Live mode`) 
 - Large PHP matrix compatibility: 7.2, 7.3, 7.4, 8.0, 8.1 and 8.2
-- Built-in support for the most known cache systems like Redis, Memcached, PhpFiles
-- Events logged using monolog
+- Built-in support for the most known cache systems Redis, Memcached and PhpFiles
 - Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)
 
 
 ## Usage
 
-When a user is suspected by CrowdSec to be malevolent, a bouncer will either send him/her a captcha to resolve or
-simply a page notifying that access is denied. If the user is considered as a clean user, he will access the page as normal.
+When a user is suspected by CrowdSec to be malevolent, a bouncer would either display a captcha to resolve or
+simply a page notifying that access is denied. If the user is considered as a clean user, he/she will access the page 
+as normal.
 
-By default, the ban wall is displayed as below:
+A ban wall could look like:
 
 ![Ban wall](images/screenshots/front-ban.jpg)
 
-By default, the captcha wall is displayed as below:
+A captcha wall could look like:
 
 ![Captcha wall](images/screenshots/front-captcha.jpg)
 
-Please note that it is possible to customize all the colors of these pages so that they integrate best with your design.
+With the provided standalone bouncer, please note that it is possible to customize all the colors of these pages so 
+that they integrate best with your design.
 
 On the other hand, all texts are also fully customizable. This will allow you, for example, to present translated pages in your users' language.
 
 
-### Create your own bouncer
+## Standalone bouncer set up
 
-You can use this library to develop your own PHP application bouncer. Any custom bouncer should extend the 
-[`AbstractBounce`](../src/AbstractBounce.php) class.
+This library includes the [`StandaloneBouncer`](../src/StandaloneBouncer.php) class. You can see that class as a good
+example for creating your own bouncer. 
 
-#### Quick start
+Once you set up your server as below, every browser access to a php script will be bounced by the standalone bouncer.
 
-In your PHP project, just add these lines to verify an IP:
+You will have to :
 
-```php
+- give the correct permission for the folder that contains the lib
 
-<?php
-use CrowdSecBouncer\Bouncer;
+- copy the `scripts/auto-prepend/settings.example.php` to a `scripts/auto-prepend/settings.php` file
 
-// Init bouncer
-$bouncer = new Bouncer();
-$bouncer->configure(['api_key' => 'YOUR_BOUNCER_API_KEY', 'api_url' => 'http://127.0.0.1:8080']);
+- set an `auto_prepend_file` directive in your PHP setup.
 
-// Ask remediation to API
-$remediation = $bouncer->getRemediationForIp($requestedIp);
-echo "\nResult: $remediation\n\n"; // "ban", "captcha" or "bypass"
+
+### Files permission
+
+The owner of the `/path/to/the/crowdsec-lib` should be your webserver owner (e.g. `www-data`).
+
+You can achieve it by running command like:
+
+```
+sudo chown www-data /path/to/the/crowdsec-lib
 ```
 
-#### Test your bouncer
+### Settings file
+
+Please copy the `scripts/auto-prepend/settings.example.php` to a `scripts/auto-prepend/settings.php`
+and fill the necessary settings in it (see [Configurations settings](#configurations) for more details).
+
+### `auto_prepend_file` directive
+
+We will now describe how to set an `auto_prepend_file` directive in order to call the `scripts/auto-prepend/bounce.php` for each php script access.
+
+Adding an `auto_prepend_file` directive can be done in different ways:
+
+#### `.ini` file
+
+You should add this line to a `.ini` file :
+
+    auto_prepend_file = /absolute/path/to/scripts/auto-prepend/bounce.php
+
+#### Nginx
+
+If you are using Nginx, you should modify your nginx configuration file by adding a `fastcgi_param`
+directive. The php block should look like below:
+
+```
+location ~ \.php$ {
+    ...
+    ...
+    ...
+    fastcgi_param PHP_VALUE "/absolute/path/to/scripts/auto-prepend/bounce.php";
+}
+```
+
+#### Apache
+
+If you are using Apache, you should add this line to your `.htaccess` file:
+
+    php_value auto_prepend_file "/absolute/path/to/scripts/auto-prepend/bounce.php"
+
+or modify your `Virtual Host` accordingly:
+
+```
+<VirtualHost ...>
+    ...
+    ...
+    php_value auto_prepend_file "/absolute/path/to/scripts/auto-prepend/bounce.php"
+    
+</VirtualHost>
+```
+
+
+## Create your own bouncer
+
+### Implementation
+
+You can use this library to develop your own PHP application bouncer. Any custom bouncer should extend the 
+[`AbstractBouncer`](../src/AbstractBouncer.php) class.
+
+```php
+namespace MyNameSpace;
+use CrowdSecBouncer\AbstractBouncer;
+
+class MyCustomBouncer extends AbstractBouncer
+{
+
+
+}
+```
+
+Then, you will have to implement all necessary methods :
+
+```php
+namespace MyNameSpace;
+use CrowdSecBouncer\AbstractBouncer;
+
+class MyCustomBouncer extends AbstractBouncer
+{
+
+    /**
+     * Get current http method
+     */
+    public function getHttpMethod(): string
+    {
+        // Your implementation
+    }
+
+    /**
+     * Get value of an HTTP request header. Ex: "X-Forwarded-For"
+     */
+    public function getHttpRequestHeader(string $name): ?string
+    {
+        // Your implementation
+    }
+    
+    /**
+     * Get the value of a posted field.
+     */
+    public function getPostedVariable(string $name): ?string
+    {
+        // Your implementation
+    }
+    
+    /**
+     * Get the current IP, even if it's the IP of a proxy
+     */
+    public function getRemoteIp(): string
+    {
+        // Your implementation
+    }
+
+    /**
+     * Get current request uri
+     */
+    public function getRequestUri(): string 
+    {
+        // Your implementation
+    }
+
+}
+```
+
+
+Once you have implemented these methods, you could retrieve all required configurations to instantiate your 
+bouncer and then call the `run` method to apply a bounce for the current detected IP.
+
+In order to instantiate the bouncer, you will have to create at least a `CrowdSec\RemediationEngine\LapiRemediation` 
+object too. 
+
+
+```php
+use MyNameSpace\MyCustomBouncer;
+use CrowdSec\RemediationEngine\LapiRemediation;
+use CrowdSec\LapiClient\Bouncer as BouncerClient;
+use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
+
+$configs = [...];
+$client = new BouncerClient($configs);
+$cacheStorage = new PhpFiles($configs);
+$remediationEngine = new LapiRemediation($configs, $client, $cacheStorage);
+
+$bouncer = new MyCustomBouncer($configs, $remediationEngine);
+
+$bouncer->run();
+
+```
+
+
+### Test your bouncer
 
 To test your bouncer, you could add decision to ban your own IP for 5 minutes for example:
 
@@ -109,14 +243,33 @@ cscli decisions add --ip <YOUR_IP> --duration 15m --type captcha
 ```
 
 
-#### Configurations
+To go further and learn how to include this library in your
+project, you should follow the [`DEVELOPER GUIDE`](DEVELOPER.md).
 
-You can pass an array of configurations in the `$bouncer->configure($configs)` method. 
+## Configurations
+
+You can pass an array of configurations in the bouncer constructor.
 Please look at the [Settings example file](../scripts/auto-prepend/settings.example.php) for quick overview.
 
 Here is the list of available settings:
 
-##### Local API Connection
+### Bouncer behavior
+
+- `bouncing_level`:  Select from `bouncing_disabled`, `normal_bouncing` or `flex_bouncing`. Choose if you want to apply CrowdSec directives (Normal bouncing) or be more permissive (Flex bouncing). With the `Flex mode`, it is impossible to accidentally block access to your site to people who don’t deserve it. This mode makes it possible to never ban an IP but only to offer a Captcha, in the worst-case scenario.
+
+
+- `fallback_remediation`: Select from `bypass` (minimum remediation), `captcha` or `ban` (maximum remediation). Default to 'captcha'. Handle unknown remediations as.
+
+
+- `trust_ip_forward_array`:  If you use a CDN, a reverse proxy or a load balancer, set an array of IPs. For other IPs, the bouncer will not trust the X-Forwarded-For header.
+
+
+- `excluded_uris`: array of URIs that will not be bounced.
+
+
+- `stream_mode`: true to enable stream mode, false to enable the live mode. Default to false. By default, the `live mode` is enabled. The first time a stranger connects to your website, this mode means that the IP will be checked directly by the CrowdSec API. The rest of your user’s browsing will be even more transparent thanks to the fully customizable cache system. But you can also activate the `stream mode`. This mode allows you to constantly feed the bouncer with the malicious IP list via a background task (CRON), making it to be even faster when checking the IP of your visitors. Besides, if your site has a lot of unique visitors at the same time, this will not influence the traffic to the API of your CrowdSec instance.
+
+### Local API Connection
 
 - `auth_type`: Select from `api_key` and `tls`. Choose if you want to use an API-KEY or a TLS (pki) authentification.
   TLS authentication is only available if you use CrowdSec agent with a version superior to 1.4.0.
@@ -135,7 +288,7 @@ Here is the list of available settings:
 
 
 - `tls_verify_peer`: This option determines whether request handler verifies the authenticity of the peer's certificate.
-  Only required if you choose `tls` as `auth_type`. 
+  Only required if you choose `tls` as `auth_type`.
   When negotiating a TLS or SSL connection, the server sends a certificate indicating its identity.
   If `tls_verify_peer` is set to true, request handler verifies whether the certificate is authentic.
   This trust is based on a chain of digital signatures,
@@ -149,7 +302,7 @@ Here is the list of available settings:
 - `api_url`: Define the URL to your Local API server, default to `http://localhost:8080`.
 
 
-- `api_timeout`: In seconds. The timeout when calling Local API. Default to 120 sec. If set to a negative value, 
+- `api_timeout`: In seconds. The timeout when calling Local API. Default to 120 sec. If set to a negative value,
   timeout will be unlimited.
 
 
@@ -157,57 +310,20 @@ Here is the list of available settings:
   You can set `use_curl` to `true` in order to use `cURL` request instead (`curl` is in then required)
 
 
-##### Debug
-- `debug_mode`: `true` to enable verbose debug log. Default to `false`.
+
+### Cache
+
+- `cache_system`: Select from `phpfs` (PHP file cache), `redis` or `memcached`.
 
 
-- `disable_prod_log`: `true` to disable prod log. Default to `false`.
-
-
-- `log_directory_path`: Absolute path to store log files. Important note: be sur this path won't be publicly 
-  accessible.
-
-
-- `display_errors`: true to stop the process and display errors on browser if any.
-
-
-- `forced_test_ip`: Only for test or debug purpose. Default to empty. If not empty, it will be used instead of the 
-  real remote ip.
-
-
-- `forced_test_forwarded_ip`: Only for test or debug purpose. Default to empty. If not empty, it will be used 
-  instead of the real forwarded ip. If set to `no_forward`, the x-forwarded-for mechanism will not be used at all.
-
-##### Bouncer behavior
-
-- `bouncing_level`:  Select from `bouncing_disabled`, `normal_bouncing` or `flex_bouncing`. Choose if you want to apply CrowdSec directives (Normal bouncing) or be more permissive (Flex bouncing). With the `Flex mode`, it is impossible to accidentally block access to your site to people who don’t deserve it. This mode makes it possible to never ban an IP but only to offer a Captcha, in the worst-case scenario.
-
-
-- `fallback_remediation`: Select from `bypass` (minimum remediation), `captcha` or `ban` (maximum remediation). Default to 'captcha'. Handle unknown remediations as.
-
-
-- `max_remediation_level`: Select from `bypass`,`captcha` or `ban`. Default to 'ban'. Cap the 
-  remediation to the selected one.
-
-
-- `trust_ip_forward_array`:  If you use a CDN, a reverse proxy or a load balancer, set an array of IPs. For other IPs, the bouncer will not trust the X-Forwarded-For header.
-
-
-- `excluded_uris`: array of URIs that will not be bounced.
-
-##### Cache
-
-- `cache_system`: Select from `phpfs` (File system cache), `redis` or `memcached`.
-
-
-- `fs_cache_path`: Will be used only if you choose File system as cache_system. Important note: be sur this path 
+- `fs_cache_path`: Will be used only if you choose PHP file cache as `cache_system`. Important note: be sur this path
   won't be publicly accessible.
 
 
-- `redis_dsn`:   Will be used only if you choose Redis cache as cache_system.
+- `redis_dsn`:   Will be used only if you choose Redis cache as `cache_system`.
 
 
-- `memcached_dsn`: Will be used only if you choose Memcached as cache_system.
+- `memcached_dsn`: Will be used only if you choose Memcached as `cache_system`.
 
 
 - `clean_ip_cache_duration`: Set the duration we keep in cache the fact that an IP is clean. In seconds. Defaults to 5.
@@ -216,121 +332,107 @@ Here is the list of available settings:
 - `bad_ip_cache_duration`: Set the duration we keep in cache the fact that an IP is bad. In seconds. Defaults to 20.
 
 
-- `captcha_cache_duration`: Set the duration we keep in cache the captcha flow variables for an IP. In seconds. 
+- `captcha_cache_duration`: Set the duration we keep in cache the captcha flow variables for an IP. In seconds.
   Defaults to 86400.. In seconds. Defaults to 20.
 
 
-- `geolocation_cache_duration`: Set the duration we keep in cache a geolocation result for an IP . In seconds. 
-  Defaults to 86400. Depends on the below `geolocation[save_result]` configuration.
-
-
-- `stream_mode`: true to enable stream mode, false to enable the live mode. Default to false. By default, the `live mode` is enabled. The first time a stranger connects to your website, this mode means that the IP will be checked directly by the CrowdSec API. The rest of your user’s browsing will be even more transparent thanks to the fully customizable cache system. But you can also activate the `stream mode`. This mode allows you to constantly feed the bouncer with the malicious IP list via a background task (CRON), making it to be even faster when checking the IP of your visitors. Besides, if your site has a lot of unique visitors at the same time, this will not influence the traffic to the API of your CrowdSec instance.
-
-##### Geolocation
+### Geolocation
 
 - `geolocation`: Settings for geolocation remediation (i.e. country based remediation).
 
-- `geolocation[enabled]`: true to enable remediation based on country. Default to false.
+    - `geolocation[enabled]`: true to enable remediation based on country. Default to false.
 
-- `geolocation[type]`:  Geolocation system. Only 'maxmind' is available for the moment. Default to `maxmind`.
+    - `geolocation[type]`:  Geolocation system. Only 'maxmind' is available for the moment. Default to `maxmind`.
 
-  
-- `geolocation[save_result]`: true to store the geolocalized country in cache. Default to true. Setting true 
-  will avoid multiple call to the geolocalized system (e.g. maxmind database).
+    - `geolocation[cache_duration]`: This setting will be used to set the lifetime (in seconds) of a cached country
+      associated to an IP. The purpose is to avoid multiple call to the geolocation system (e.g. maxmind database). Default to 86400. Set 0 to disable caching.
 
-- `geolocation[maxmind]`: MaxMind settings.
+    - `geolocation[maxmind]`: MaxMind settings.
 
-- `geolocation[maxmind][database_type]`: Select from `country` or `city`. Default to `country`. These are the two available MaxMind database types.
+    - `geolocation[maxmind][database_type]`: Select from `country` or `city`. Default to `country`. These are the two available MaxMind database types.
 
-- `geolocation[maxmind][database_path]`: Absolute path to the MaxMind database (e.g. mmdb file)
+    - `geolocation[maxmind][database_path]`: Absolute path to the MaxMind database (e.g. mmdb file)
 
 
-##### Captcha and ban wall settings
+### Captcha and ban wall settings
+
 
 - `hide_mentions`: true to hide CrowdSec mentions on ban and captcha walls.
 
-- Wording and css settings: 
 
-  `theme_color_text_primary`
-
-  `theme_color_text_secondary`
-
-  `theme_color_text_button`
-
-  `theme_color_text_error_message`
-
-  `theme_color_background_page`
-
-  `theme_color_background_container`
-
-  `theme_color_background_button`
-
-  `theme_color_background_button_hover`
-
-  `theme_custom_css`
-
-  `theme_text_captcha_wall_tab_title`
-
-  `theme_text_captcha_wall_title`
-
-  `theme_text_captcha_wall_subtitle`
-
-  `theme_text_captcha_wall_refresh_image_link`
-
-  `theme_text_captcha_wall_captcha_placeholder`
-
-  `theme_text_captcha_wall_send_button`
-
-  `theme_text_captcha_wall_error_message`
-
-  `theme_text_captcha_wall_footer`
-
-  `theme_text_ban_wall_tab_title`
-
-  `theme_text_ban_wall_title`
-
-  `theme_text_ban_wall_subtitle`
-
-  `theme_text_ban_wall_footer`
+- `custom_css`: Custom css directives for ban and captcha walls
 
 
-#### The `Standalone` example
+- `color`: Array of settings for ban and captcha walls colors.
 
-This library includes the [`StandaloneBounce`](../src/StandaloneBounce.php) class. You can see that class as a good 
-example for creating your own bouncer. This class extends [`AbstractBounce`](../src/AbstractBounce.php). All bouncers should do the same. In order to add the bounce logic, you 
-should first instantiate your bouncer:
+    - `color[text][primary]`
 
-```php
-use \CrowdSecBouncer\StandaloneBounce
-$bounce = new StandaloneBounce();
-```
-And then, you should initialize the bouncer by passing all the configuration array in a `init` method: 
+    - `color[text][secondary]`
 
-```php
-$configs = [...] // @See below for configuration details
-$bouncer = $bounce->init($configs)
-```
+    - `color[text][button]`
 
-Finally, you can bounce by calling:
+    - `color[text][error_message]`
 
-```php
-$bouncer->run();
-```
+    - `color[background][page]`
 
-If you have implemented a `safelyBounce` method (like in [`StandaloneBounce`](../src/StandaloneBounce.php) class), 
-you can just do:
+    - `color[background][container]`
 
-```php
-use \CrowdSecBouncer\StandaloneBounce
-$bounce = new StandaloneBounce();
-$configs = [...] // Retrieve configs from somewhere (database, static file, etc)
-$bounce->safelyBounce($configs);
-```
+    - `color[background][button]`
 
-To go further and learn how to include this library in your
-project, you should follow the [`DEVELOPER GUIDE`](DEVELOPER.md).
+    - `color[background][button_hover]`
 
-#### Ready to use PHP bouncers
+
+- `text`: Array of settings for ban and captcha walls texts.
+
+    - `text[captcha_wall][tab_title]`
+
+    - `text[captcha_wall][title]`
+
+    - `text[captcha_wall][subtitle]`
+
+    - `text[captcha_wall][refresh_image_link]`
+
+    - `text[captcha_wall][captcha_placeholder]`
+
+    - `text[captcha_wall][send_button]`
+
+    - `text[captcha_wall][error_message]`
+
+    - `text[captcha_wall][footer]`
+
+    - `text[ban_wall][tab_title]`
+
+    - `text[ban_wall][title]`
+
+    - `text[ban_wall][subtitle]`
+
+    - `text[ban_wall][footer]`
+
+
+### Debug
+- `debug_mode`: `true` to enable verbose debug log. Default to `false`.
+
+
+- `disable_prod_log`: `true` to disable prod log. Default to `false`.
+
+
+- `log_directory_path`: Absolute path to store log files. Important note: be sur this path won't be publicly
+  accessible.
+
+
+- `display_errors`: true to stop the process and display errors on browser if any.
+
+
+- `forced_test_ip`: Only for test or debug purpose. Default to empty. If not empty, it will be used instead of the
+  real remote ip.
+
+
+- `forced_test_forwarded_ip`: Only for test or debug purpose. Default to empty. If not empty, it will be used
+  instead of the real forwarded ip. If set to `no_forward`, the x-forwarded-for mechanism will not be used at all.
+
+
+
+## Other ready to use PHP bouncers
 
 To have a more concrete idea on how to develop a bouncer, you may look at the following bouncers for Magento 2 and 
 WordPress :
