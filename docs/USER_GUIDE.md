@@ -6,7 +6,30 @@
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
 
+- [Description](#description)
+- [Prerequisites](#prerequisites)
+- [Features](#features)
+- [Usage](#usage)
+- [Standalone bouncer set up](#standalone-bouncer-set-up)
+  - [Files permission](#files-permission)
+  - [Settings file](#settings-file)
+  - [`auto_prepend_file` directive](#auto_prepend_file-directive)
+    - [`.ini` file](#ini-file)
+    - [Nginx](#nginx)
+    - [Apache](#apache)
+- [Create your own bouncer](#create-your-own-bouncer)
+  - [Implementation](#implementation)
+  - [Test your bouncer](#test-your-bouncer)
+- [Configurations](#configurations)
+  - [Bouncer behavior](#bouncer-behavior)
+  - [Local API Connection](#local-api-connection)
+  - [Cache](#cache)
+  - [Geolocation](#geolocation)
+  - [Captcha and ban wall settings](#captcha-and-ban-wall-settings)
+  - [Debug](#debug)
+- [Other ready to use PHP bouncers](#other-ready-to-use-php-bouncers)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
