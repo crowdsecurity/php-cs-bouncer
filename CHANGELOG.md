@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - A bouncer should now extend an `AbstractBouncer` class and implements some abstract methods
   - Some settings names have been changed
 
+
 ---
 
 
