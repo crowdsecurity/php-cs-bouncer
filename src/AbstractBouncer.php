@@ -162,7 +162,7 @@ abstract class AbstractBouncer
         try {
             return $this->capRemediationLevel($this->getRemediationEngine()->getIpRemediation($ip));
         } catch (\Exception $e) {
-            throw new BouncerException($e->getMessage());
+            throw new BouncerException($e->getMessage(), $e->getCode(), $e);
         }
     }
 
@@ -227,7 +227,7 @@ abstract class AbstractBouncer
                 'line' => $e->getLine(),
             ]);
             if (true === $this->getConfig('display_errors')) {
-                throw new BouncerException($e->getMessage());
+                throw new BouncerException($e->getMessage(), $e->getCode(), $e);
             }
         }
 
