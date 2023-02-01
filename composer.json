@@ -40,7 +40,7 @@
     ],
     "require": {
         "php": ">=7.2.5",
-        "crowdsec/remediation-engine": "0.6.1",
+        "crowdsec/remediation-engine": "1.0.1",
         "symfony/config": "^4.4.27 || ^5.2 || ^6.0",
         "twig/twig": "^3.4.2",
         "gregwar/captcha": "^1.1",
