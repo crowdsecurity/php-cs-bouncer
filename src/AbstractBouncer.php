@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
-use CrowdSec\LapiClient\Bouncer as BouncerClient;
 use CrowdSec\Common\Client\RequestHandler\Curl;
 use CrowdSec\Common\Client\RequestHandler\FileGetContents;
+use CrowdSec\LapiClient\Bouncer as BouncerClient;
 use CrowdSec\RemediationEngine\AbstractRemediation;
 use CrowdSec\RemediationEngine\CacheStorage\AbstractCache;
 use CrowdSec\RemediationEngine\CacheStorage\CacheStorageException;
@@ -167,7 +167,7 @@ abstract class AbstractBouncer
         try {
             return $this->capRemediationLevel($this->getRemediationEngine()->getIpRemediation($ip));
         } catch (\Exception $e) {
-            throw new BouncerException($e->getMessage(), $e->getCode(), $e);
+            throw new BouncerException($e->getMessage(), (int)$e->getCode(), $e);
         }
     }
 
@@ -192,23 +192,6 @@ abstract class AbstractBouncer
     {
         try {
             return $this->getRemediationEngine()->pruneCache();
-        } catch (\Exception $e) {
-            throw new BouncerException($e->getMessage(), (int)$e->getCode(), $e);
-        }
-    }
-
-    /**
-     * Process a simple cache test
-     *
-     * @return void
-     * @throws BouncerException
-     * @throws InvalidArgumentException
-     */
-    public function testCacheConnection(): void
-    {
-        try {
-            $cache = $this->getRemediationEngine()->getCacheStorage();
-            $cache->getItem(AbstractCache::CONFIG);
         } catch (\Exception $e) {
             throw new BouncerException($e->getMessage(), (int)$e->getCode(), $e);
         }
@@ -290,6 +273,23 @@ abstract class AbstractBouncer
         }
 
         return true;
+    }
+
+    /**
+     * Process a simple cache test
+     *
+     * @return void
+     * @throws BouncerException
+     * @throws InvalidArgumentException
+     */
+    public function testCacheConnection(): void
+    {
+        try {
+            $cache = $this->getRemediationEngine()->getCacheStorage();
+            $cache->getItem(AbstractCache::CONFIG);
+        } catch (\Exception $e) {
+            throw new BouncerException($e->getMessage(), (int)$e->getCode(), $e);
+        }
     }
 
     /**

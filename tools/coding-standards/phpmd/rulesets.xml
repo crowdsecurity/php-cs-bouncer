@@ -12,6 +12,7 @@
 
     <rule ref="rulesets/codesize.xml" >
         <exclude name="ExcessiveClassComplexity"/>
+        <exclude name="TooManyMethods"/>
     </rule>
     <rule ref="rulesets/cleancode.xml">
         <exclude name="StaticAccess"/>
@@ -22,6 +23,12 @@
     <rule ref="rulesets/unusedcode.xml/UnusedLocalVariable">
         <properties>
             <property name="allow-unused-foreach-variables" value="true" />
+        </properties>
+    </rule>
+    <!-- Allow more methods -->
+    <rule ref="rulesets/codesize.xml/TooManyMethods">
+        <properties>
+            <property name="ignorepattern" value="(^(set|get|is|has|with|unset|test))i" />
         </properties>
     </rule>
     <!--The only case when static access is acceptable is when used for factory methods.-->
