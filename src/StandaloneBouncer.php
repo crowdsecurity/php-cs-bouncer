@@ -6,7 +6,7 @@ namespace CrowdSecBouncer;
 
 use CrowdSec\RemediationEngine\CacheStorage\CacheStorageException;
 use CrowdSec\RemediationEngine\LapiRemediation;
-use CrowdSec\RemediationEngine\Logger\FileLog;
+use CrowdSec\Common\Logger\FileLog;
 use IPLib\Factory;
 use Psr\Log\LoggerInterface;
 

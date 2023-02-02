@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
-use CrowdSec\RemediationEngine\Logger\FileLog;
+use CrowdSec\Common\Logger\FileLog;
 use CrowdSecBouncer\Bouncer;
 use CrowdSecBouncer\BouncerException;
 use CrowdSecBouncer\Constants;
@@ -194,7 +194,7 @@ final class IpVerificationTest extends TestCase
         $this->assertEquals('5.6.7.8', $bouncer->getRemoteIp(), 'Should remote ip');
 
         $this->assertEquals(false, $bouncer->getConfig('stream_mode'), 'Stream mode config');
-        $this->assertEquals('CrowdSec\RemediationEngine\Logger\FileLog', \get_class($bouncer->getLogger()), 'Logger Init');
+        $this->assertEquals(FileLog::class, \get_class($bouncer->getLogger()), 'Logger Init');
 
         $this->assertEquals([['005.006.007.008', '005.006.007.008']], $bouncer->getConfig('trust_ip_forward_array'), 'Forwarded array config');
 

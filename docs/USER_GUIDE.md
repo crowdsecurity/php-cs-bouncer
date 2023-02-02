@@ -88,12 +88,26 @@ Once you set up your server as below, every browser access to a php script will 
 
 You will have to :
 
+- copy sources of the lib in some `/path/to/the/crowdsec-lib` folder
+
 - give the correct permission for the folder that contains the lib
 
 - copy the `scripts/auto-prepend/settings.example.php` to a `scripts/auto-prepend/settings.php` file
 
+- run the composer installation process to retrieve all necessary dependencies
+
 - set an `auto_prepend_file` directive in your PHP setup.
 
+- Optionally, if you want to use the standalone bouncer in stream mode, you wil have to set a cron task to refresh 
+  cache periodically.
+
+### Copy sources
+
+Create a folder `crowdsec-lib` and clone the sources: 
+
+```
+mkdir -p /path/to/the/crowdsec-lib && git clone git@github.com:crowdsecurity/php-cs-bouncer.git /path/to/the/crowdsec-lib
+```
 
 ### Files permission
 
@@ -103,6 +117,14 @@ You can achieve it by running command like:
 
 ```
 sudo chown www-data /path/to/the/crowdsec-lib
+```
+
+### Composer
+
+You should run the composer installation process: 
+
+```
+cd /path/to/the/crowdsec-lib && composer install
 ```
 
 ### Settings file
@@ -153,6 +175,26 @@ or modify your `Virtual Host` accordingly:
 </VirtualHost>
 ```
 
+
+### Stream mode cron task
+
+To use the stream mode, you first have to set the `stream_mode` setting value to `true` in your 
+`scripts/auto-prepend/settings.php` file.
+
+Then, you could edit the webserver user (e.g. `www-data`) crontab: 
+
+```
+sudo -u www-data crontab -e
+
+```
+
+and add the following line
+
+```
+* * * * * /usr/bin/php /absolute/path/to/scripts/auto-prepend/refresh-cache.php
+```
+
+In this example, cache is refreshed every minute, but you can modify the cron expression depending on your needs.
 
 ## Create your own bouncer
 

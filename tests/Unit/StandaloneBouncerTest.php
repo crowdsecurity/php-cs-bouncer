@@ -15,7 +15,7 @@ namespace CrowdSecBouncer\Tests\Unit;
  * @license   MIT License
  */
 
-use CrowdSec\RemediationEngine\Logger\FileLog;
+use CrowdSec\Common\Logger\FileLog;
 use CrowdSecBouncer\BouncerException;
 use CrowdSecBouncer\Tests\PHPUnitUtil;
 use org\bovigo\vfs\vfsStream;

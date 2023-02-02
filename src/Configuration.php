@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
+use CrowdSec\Common\Configuration\AbstractConfiguration;
 use InvalidArgumentException;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
-use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 /**
  * The Library configuration. You'll find here all configuration possible. Used when instantiating the library.
@@ -20,7 +20,7 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  * @copyright Copyright (c) 2020+ CrowdSec
  * @license   MIT License
  */
-class Configuration implements ConfigurationInterface
+class Configuration extends AbstractConfiguration
 {
     /**
      * @var string[]
@@ -43,16 +43,6 @@ class Configuration implements ConfigurationInterface
         'color',
         'text',
     ];
-
-    /**
-     * Keep only necessary configs
-     * @param array $configs
-     * @return array
-     */
-    public function cleanConfigs(array $configs): array
-    {
-        return array_intersect_key($configs, array_flip($this->keys));
-    }
 
     /**
      * {@inheritdoc}

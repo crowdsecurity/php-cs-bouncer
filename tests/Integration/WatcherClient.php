@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
-use CrowdSec\LapiClient\AbstractClient;
+use CrowdSec\Common\Client\AbstractClient;
 use CrowdSec\LapiClient\ClientException;
 use CrowdSec\LapiClient\Constants;
 
