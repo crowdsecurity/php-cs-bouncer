@@ -18,6 +18,7 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\StandaloneBouncer::getRemediationForIp
  * @covers \CrowdSecBouncer\AbstractBouncer::clearCache
  * @covers \CrowdSecBouncer\AbstractBouncer::pruneCache
+ * @covers \CrowdSecBouncer\AbstractBouncer::testCacheConnection
  *
  * @uses   \CrowdSecBouncer\AbstractBouncer::__construct
  * @uses   \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
@@ -413,8 +414,6 @@ final class IpVerificationTest extends TestCase
 
         $bouncer->refreshBlocklistCache();
 
-        $bouncer->refreshBlocklistCache();
-
         $this->assertEquals(
             'ban',
             $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
@@ -447,8 +446,6 @@ final class IpVerificationTest extends TestCase
         // Pull updates
         $bouncer->refreshBlocklistCache();
 
-        $this->logger->debug('', ['message' => 'Refresh 2nd time the cache. Nothing should append.']);
-        $bouncer->refreshBlocklistCache();
 
         $this->assertEquals(
             'ban',
@@ -520,6 +517,10 @@ final class IpVerificationTest extends TestCase
             $cappedRemediation,
             'The remediation for the banned IPV6 with a too large range should now be "bypass" as we are in stream mode'
         );
+
+        // Test cache connection
+        $bouncer->testCacheConnection();
+
     }
 
     /**

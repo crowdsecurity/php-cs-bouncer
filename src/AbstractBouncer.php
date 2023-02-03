@@ -101,7 +101,7 @@ abstract class AbstractBouncer
         try {
             return $this->getRemediationEngine()->clearCache();
         } catch (\Exception $e) {
-            throw new BouncerException($e->getMessage(), (int)$e->getCode(), $e);
+            throw new BouncerException('Error while clearing cache: ' . $e->getMessage(), (int)$e->getCode(), $e);
         }
     }
 
@@ -193,7 +193,7 @@ abstract class AbstractBouncer
         try {
             return $this->getRemediationEngine()->pruneCache();
         } catch (\Exception $e) {
-            throw new BouncerException($e->getMessage(), (int)$e->getCode(), $e);
+            throw new BouncerException('Error while pruning cache: ' . $e->getMessage(), (int)$e->getCode(), $e);
         }
     }
 
@@ -210,7 +210,7 @@ abstract class AbstractBouncer
         try {
             return $this->getRemediationEngine()->refreshDecisions();
         } catch (\Exception $e) {
-            throw new BouncerException($e->getMessage(), (int)$e->getCode(), $e);
+            throw new BouncerException('Error while refreshing decisions: ' . $e->getMessage(), (int)$e->getCode(), $e);
         }
     }
 
@@ -288,7 +288,11 @@ abstract class AbstractBouncer
             $cache = $this->getRemediationEngine()->getCacheStorage();
             $cache->getItem(AbstractCache::CONFIG);
         } catch (\Exception $e) {
-            throw new BouncerException($e->getMessage(), (int)$e->getCode(), $e);
+            throw new BouncerException(
+                'Error while testing cache connection: ' . $e->getMessage(),
+                (int)$e->getCode(),
+                $e
+            );
         }
     }
 

@@ -386,11 +386,6 @@ final class StandaloneBouncerTest extends TestCase
             $error,
             'Should have throw an error'
         );
-
-
-
-
-
     }
 
 }
