@@ -42,8 +42,7 @@ bouncer.
 
 ## Prerequisites
 
-To be able to use this bouncer, the first step is to install [CrowdSec v1](https://doc.crowdsec.net/docs/getting_started/install_crowdsec/).
-CrowdSec is only in charge of the "detection", and won't block anything on its own. You need to deploy a bouncer to "apply" decisions.
+To be able to use this bouncer, the first step is to install [CrowdSec v1](https://doc.crowdsec.net/docs/getting_started/install_crowdsec/). CrowdSec is only in charge of the "detection", and won't block anything on its own. You need to deploy a bouncer to "apply" decisions.
 
 Please note that first and foremost a CrowdSec agent must be installed on a server that is accessible by this library.
 
@@ -73,27 +72,39 @@ A captcha wall could look like:
 
 ![Captcha wall](images/screenshots/front-captcha.jpg)
 
-With the provided standalone bouncer, please note that it is possible to customize all the colors of these pages so 
-that they integrate best with your design.
+With the provided standalone bouncer, please note that it is possible to customize all the colors of these pages so that they integrate best with your design.
 
 On the other hand, all texts are also fully customizable. This will allow you, for example, to present translated pages in your users' language.
 
 
 ## Standalone bouncer set up
 
-This library includes the [`StandaloneBouncer`](../src/StandaloneBouncer.php) class. You can see that class as a good
-example for creating your own bouncer. 
+This library includes the [`StandaloneBouncer`](../src/StandaloneBouncer.php) class. You can see that class as a good example for creating your own bouncer. 
 
 Once you set up your server as below, every browser access to a php script will be bounced by the standalone bouncer.
 
 You will have to :
 
+- copy sources of the lib in some `/path/to/the/crowdsec-lib` folder
+
 - give the correct permission for the folder that contains the lib
 
 - copy the `scripts/auto-prepend/settings.example.php` to a `scripts/auto-prepend/settings.php` file
 
+- run the composer installation process to retrieve all necessary dependencies
+
 - set an `auto_prepend_file` directive in your PHP setup.
 
+- Optionally, if you want to use the standalone bouncer in stream mode, you wil have to set a cron task to refresh 
+  cache periodically.
+
+### Copy sources
+
+Create a folder `crowdsec-lib` and clone the sources: 
+
+```shell
+mkdir -p /path/to/the/crowdsec-lib && git clone git@github.com:crowdsecurity/php-cs-bouncer.git /path/to/the/crowdsec-lib
+```
 
 ### Files permission
 
@@ -101,14 +112,21 @@ The owner of the `/path/to/the/crowdsec-lib` should be your webserver owner (e.g
 
 You can achieve it by running command like:
 
-```
+```shell
 sudo chown www-data /path/to/the/crowdsec-lib
+```
+
+### Composer
+
+You should run the composer installation process: 
+
+```shell
+cd /path/to/the/crowdsec-lib && composer install
 ```
 
 ### Settings file
 
-Please copy the `scripts/auto-prepend/settings.example.php` to a `scripts/auto-prepend/settings.php`
-and fill the necessary settings in it (see [Configurations settings](#configurations) for more details).
+Please copy the `scripts/auto-prepend/settings.example.php` to a `scripts/auto-prepend/settings.php` and fill the necessary settings in it (see [Configurations settings](#configurations) for more details).
 
 ### `auto_prepend_file` directive
 
@@ -124,8 +142,7 @@ You should add this line to a `.ini` file :
 
 #### Nginx
 
-If you are using Nginx, you should modify your nginx configuration file by adding a `fastcgi_param`
-directive. The php block should look like below:
+If you are using Nginx, you should modify your Nginx configuration file by adding a `fastcgi_param` directive. The php block should look like below:
 
 ```
 location ~ \.php$ {
@@ -154,21 +171,37 @@ or modify your `Virtual Host` accordingly:
 ```
 
 
+### Stream mode cron task
+
+To use the stream mode, you first have to set the `stream_mode` setting value to `true` in your `scripts/auto-prepend/settings.php` file. 
+
+Then, you could edit the web server user (e.g. `www-data`) crontab: 
+
+```shell
+sudo -u www-data crontab -e
+```
+
+and add the following line
+
+```shell
+* * * * * /usr/bin/php /absolute/path/to/scripts/auto-prepend/refresh-cache.php
+```
+
+In this example, cache is refreshed every minute, but you can modify the cron expression depending on your needs.
+
 ## Create your own bouncer
 
 ### Implementation
 
-You can use this library to develop your own PHP application bouncer. Any custom bouncer should extend the 
-[`AbstractBouncer`](../src/AbstractBouncer.php) class.
+You can use this library to develop your own PHP application bouncer. Any custom bouncer should extend the [`AbstractBouncer`](../src/AbstractBouncer.php) class.
 
 ```php
 namespace MyNameSpace;
+
 use CrowdSecBouncer\AbstractBouncer;
 
 class MyCustomBouncer extends AbstractBouncer
 {
-
-
 }
 ```
 
@@ -176,11 +209,11 @@ Then, you will have to implement all necessary methods :
 
 ```php
 namespace MyNameSpace;
+
 use CrowdSecBouncer\AbstractBouncer;
 
 class MyCustomBouncer extends AbstractBouncer
 {
-
     /**
      * Get current http method
      */
@@ -225,8 +258,7 @@ class MyCustomBouncer extends AbstractBouncer
 ```
 
 
-Once you have implemented these methods, you could retrieve all required configurations to instantiate your 
-bouncer and then call the `run` method to apply a bounce for the current detected IP.
+Once you have implemented these methods, you could retrieve all required configurations to instantiate your bouncer and then call the `run` method to apply a bounce for the current detected IP.
 
 In order to instantiate the bouncer, you will have to create at least a `CrowdSec\RemediationEngine\LapiRemediation` 
 object too. 
@@ -266,19 +298,17 @@ cscli decisions add --ip <YOUR_IP> --duration 15m --type captcha
 ```
 
 
-To go further and learn how to include this library in your
-project, you should follow the [`DEVELOPER GUIDE`](DEVELOPER.md).
+To go further and learn how to include this library in your project, you should follow the [`DEVELOPER GUIDE`](DEVELOPER.md).
 
 ## Configurations
 
-You can pass an array of configurations in the bouncer constructor.
-Please look at the [Settings example file](../scripts/auto-prepend/settings.example.php) for quick overview.
+You can pass an array of configurations in the bouncer constructor. Please look at the [Settings example file](../scripts/auto-prepend/settings.example.php) for quick overview.
 
 Here is the list of available settings:
 
 ### Bouncer behavior
 
-- `bouncing_level`:  Select from `bouncing_disabled`, `normal_bouncing` or `flex_bouncing`. Choose if you want to apply CrowdSec directives (Normal bouncing) or be more permissive (Flex bouncing). With the `Flex mode`, it is impossible to accidentally block access to your site to people who don’t deserve it. This mode makes it possible to never ban an IP but only to offer a Captcha, in the worst-case scenario.
+- `bouncing_level`:  Select from `bouncing_disabled`, `normal_bouncing` or `flex_bouncing`. Choose if you want to apply CrowdSec directives (Normal bouncing) or be more permissive (Flex bouncing). With the `Flex mode`, it is impossible to accidentally block access to your site to people who don’t deserve it. This mode makes it possible to never ban an IP but only to offer a captcha, in the worst-case scenario.
 
 
 - `fallback_remediation`: Select from `bypass` (minimum remediation), `captcha` or `ban` (maximum remediation). Default to 'captcha'. Handle unknown remediations as.
@@ -331,8 +361,6 @@ Here is the list of available settings:
 
 - `use_curl`: By default, this lib call the REST Local API using `file_get_contents` method (`allow_url_fopen` is required).
   You can set `use_curl` to `true` in order to use `cURL` request instead (`curl` is in then required)
-
-
 
 ### Cache
 
@@ -439,7 +467,7 @@ Here is the list of available settings:
 - `disable_prod_log`: `true` to disable prod log. Default to `false`.
 
 
-- `log_directory_path`: Absolute path to store log files. Important note: be sur this path won't be publicly
+- `log_directory_path`: Absolute path to store log files. Important note: be sure this path won't be publicly
   accessible.
 
 
@@ -461,5 +489,4 @@ To have a more concrete idea on how to develop a bouncer, you may look at the fo
 WordPress :
 - [CrowdSec Bouncer extension for Magento 2](https://github.com/crowdsecurity/cs-magento-bouncer)
 - [CrowdSec Bouncer plugin for WordPress ](https://github.com/crowdsecurity/cs-wordpress-bouncer)
-
 

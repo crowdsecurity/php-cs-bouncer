@@ -13,4 +13,3 @@ use CrowdSecBouncer\StandaloneBouncer;
 
 $bouncer = new StandaloneBouncer($crowdSecStandaloneBouncerConfig);
 $bouncer->refreshBlocklistCache();
-echo 'Cache has been refreshed (if stream mode is enabled)' . \PHP_EOL;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
-use CrowdSec\RemediationEngine\Logger\FileLog;
+use CrowdSec\Common\Logger\FileLog;
 use CrowdSecBouncer\Bouncer;
 use CrowdSecBouncer\BouncerException;
 use CrowdSecBouncer\Constants;
@@ -18,6 +18,7 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\StandaloneBouncer::getRemediationForIp
  * @covers \CrowdSecBouncer\AbstractBouncer::clearCache
  * @covers \CrowdSecBouncer\AbstractBouncer::pruneCache
+ * @covers \CrowdSecBouncer\AbstractBouncer::testCacheConnection
  *
  * @uses   \CrowdSecBouncer\AbstractBouncer::__construct
  * @uses   \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
@@ -194,7 +195,7 @@ final class IpVerificationTest extends TestCase
         $this->assertEquals('5.6.7.8', $bouncer->getRemoteIp(), 'Should remote ip');
 
         $this->assertEquals(false, $bouncer->getConfig('stream_mode'), 'Stream mode config');
-        $this->assertEquals('CrowdSec\RemediationEngine\Logger\FileLog', \get_class($bouncer->getLogger()), 'Logger Init');
+        $this->assertEquals(FileLog::class, \get_class($bouncer->getLogger()), 'Logger Init');
 
         $this->assertEquals([['005.006.007.008', '005.006.007.008']], $bouncer->getConfig('trust_ip_forward_array'), 'Forwarded array config');
 
@@ -413,8 +414,6 @@ final class IpVerificationTest extends TestCase
 
         $bouncer->refreshBlocklistCache();
 
-        $bouncer->refreshBlocklistCache();
-
         $this->assertEquals(
             'ban',
             $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
@@ -447,8 +446,6 @@ final class IpVerificationTest extends TestCase
         // Pull updates
         $bouncer->refreshBlocklistCache();
 
-        $this->logger->debug('', ['message' => 'Refresh 2nd time the cache. Nothing should append.']);
-        $bouncer->refreshBlocklistCache();
 
         $this->assertEquals(
             'ban',
@@ -520,6 +517,10 @@ final class IpVerificationTest extends TestCase
             $cappedRemediation,
             'The remediation for the banned IPV6 with a too large range should now be "bypass" as we are in stream mode'
         );
+
+        // Test cache connection
+        $bouncer->testCacheConnection();
+
     }
 
     /**

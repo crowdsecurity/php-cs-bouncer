@@ -19,6 +19,6 @@ try {
 } catch (\Throwable $e) {
     $displayErrors = $crowdSecStandaloneBouncerConfig['display_errors'] ?? false;
     if (true === $displayErrors) {
-        throw new BouncerException($e->getMessage(), $e->getCode(), $e);
+        throw new BouncerException($e->getMessage(), (int) $e->getCode(), $e);
     }
 }

@@ -164,7 +164,7 @@ $crowdSecStandaloneBouncerConfig = [
     'api_url' => Constants::DEFAULT_LAPI_URL,
 
     // In seconds. The timeout when calling LAPI. Must be greater or equal than 1. Defaults to 1 sec.
-    'api_timeout' => 1,
+    'api_timeout' => Constants::API_TIMEOUT,
 
     // ============================================================================#
     // Remediation engine configs
