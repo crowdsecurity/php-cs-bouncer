@@ -18,13 +18,13 @@
 ## Requirements
 
 - PHP >= 7.2.5
-- required php extensions: `ext-json`, `ext-gd`
-- suggested php extension: `ext-curl` 
+- required PHP extensions: `ext-json`, `ext-gd`
+- suggested PHP extension: `ext-curl` 
 
 ## Installation
 
 Use `Composer` by simply adding `crowdsec/bouncer` as a dependency:
 
-    composer require crowdsec/bouncer
-
-
+```shell
+composer require crowdsec/bouncer
+```

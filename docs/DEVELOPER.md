@@ -122,8 +122,7 @@ cp .ddev/additional_docker_compose/docker-compose.crowdsec.yaml .ddev/docker-com
 cp .ddev/additional_docker_compose/docker-compose.playwright.yaml .ddev/docker-compose.playwright.yaml
 ```
 
-By default, ddev will launch a PHP 7.2 container. If you want to work with another PHP version, copy the
-corresponding config file. For example:
+By default, ddev will launch a PHP 7.2 container. If you want to work with another PHP version, copy the corresponding configuration  file. For example:
 
 ```bash
 cd php-project-sources
@@ -142,7 +141,7 @@ This should take some times on the first launch as this will download all necess
 
 #### Add CrowdSec bouncer and watcher
 
-- To create a new bouncer in the crowdsec container, run:
+- To create a new bouncer in the CrowdSec container, run:
 
 ```bash
 ddev create-bouncer [name]
@@ -156,7 +155,7 @@ It will return the bouncer key.
 ddev create-watcher [name] [password]
 ```
 
-N.B : Since we are using TLS authentification for agent, you should avoid to create a watcher with this method.
+**N.B.** : Since we are using TLS authentication for agent, you should avoid to create a watcher with this method.
 
 
 #### Use composer to update or install the lib
@@ -177,8 +176,7 @@ To find it, just run:
 ddev find-ip
 ```
 
-You will have to know also the IP of the `ddev-router` container as it acts as a proxy, and you should set it in the
-`trust_ip_forward_array` setting.
+You will have to know also the IP of the `ddev-router` container as it acts as a proxy, and you should set it in the `trust_ip_forward_array` setting.
 
 To find this IP, just run:
 
@@ -191,7 +189,7 @@ ddev find-ip ddev-router
 
 
 ```bash
-ddev  php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit  ./my-own-modules/crowdsec-php-lib/tests/Unit --testdox
+ddev php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit  ./my-own-modules/crowdsec-php-lib/tests/Unit --testdox
 ```
 
 #### Integration test
@@ -203,7 +201,7 @@ ddev create-bouncer
 ```
 
 Then, as we use a TLS ready CrowdSec container, you have to copy some certificates and key:
-  
+
 ```bash
 cd php-project-sources
 mkdir cfssl
@@ -219,7 +217,7 @@ MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/
 ```
 
 For geolocation Unit Test, you should first put 2 free MaxMind databases in the `tests` folder : `GeoLite2-City.mmdb`
-and`GeoLite2-Country.mmdb`. You can download these databases by creating a maxmind account and browse to [the download page](https://www.maxmind.com/en/accounts/current/geoip/downloads).
+and `GeoLite2-Country.mmdb`. You can download these databases by creating a MaxMind account and browse to [the download page](https://www.maxmind.com/en/accounts/current/geoip/downloads).
 
 
 Then, you can run:
@@ -228,10 +226,10 @@ Then, you can run:
 ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080  /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/GeolocationTest.php
 ```
 
-**N.B**: If you want to test with `curl` instead of `file_get_contents` calls to LAPI, you have to add `USE_CURL=1` in 
+**N.B.**: If you want to test with `curl` instead of `file_get_contents` calls to LAPI, you have to add `USE_CURL=1` in 
 the previous commands.
 
-**N.B**: If you want to test with `tls` authentification, you have to add `BOUNCER_TLS_PATH` environment variable 
+**N.B**.: If you want to test with `tls` authentification, you have to add `BOUNCER_TLS_PATH` environment variable 
 and specify the path where you store certificates and keys. For example:
 
 ```bash
@@ -241,21 +239,15 @@ ddev exec USE_CURL=1 AGENT_TLS_PATH=/var/www/html/cfssl  BOUNCER_TLS_PATH=/var/w
 
 #### Auto-prepend mode (standalone mode)
 
-Before using the bouncer in a standalone mode (i.e. with an auto-prepend directive), you should copy the
-[`scripts/auto-prepend/settings.example.php`](../scripts/auto-prepend/settings.example.php) file to a `scripts/auto-prepend/settings.
-php` and edit it depending on your needs.
+Before using the bouncer in a standalone mode (i.e. with an auto-prepend directive), you should copy the [`scripts/auto-prepend/settings.example.php`](../scripts/auto-prepend/settings.example.php) file to a `scripts/auto-prepend/settings.php` and edit it depending on your needs.
 
-
-Then, to configure the Nginx service in order that it uses an auto-prepend directive pointing to the
-[`scripts/auto-prepend/bounce.php`](../scripts/auto-prepend/bounce.php) script, please run the
-following command from the `.ddev` folder:
+Then, to configure the Nginx service in order that it uses an auto-prepend directive pointing to the [`scripts/auto-prepend/bounce.php`](../scripts/auto-prepend/bounce.php) script, please run the following command from the `.ddev` folder:
 
 ```bash
 ddev crowdsec-prepend-nginx
 ```
 
-With that done, every access to your ddev url (i.e. `https://phpXX.ddev.site` where `XX` is your php version) will
-be bounce.
+With that done, every access to your ddev url (i.e. `https://phpXX.ddev.site` where `XX` is your php version) will be bounce.
 
 For example, you should try to browse the following url:
 
@@ -269,14 +261,13 @@ In auto-prepend mode, you can run some end-to-end tests.
 
 We are using a Jest/Playwright Node.js stack to launch a suite of end-to-end tests.
 
-Tests code is in the `tests/end-to-end` folder. You should have to `chmod +x` the scripts you will find in  
-`tests/end-to-end/__scripts__`.
+Tests code is in the `tests/end-to-end` folder. You should have to `chmod +x` the scripts you will find in `tests/end-to-end/__scripts__`.
 
 
 Then you can use the `run-test.sh` script to run the tests:
 
 - the first parameter specifies if you want to run the test on your machine (`host`) or in the
-  docker containers (`docker`). You can also use `ci` if you want to have the same behavior as in Github action.
+  docker containers (`docker`). You can also use `ci` if you want to have the same behavior as in GitHub action.
 - the second parameter list the test files you want to execute. If empty, all the test suite will be launched.
 
 For example:
@@ -285,8 +276,7 @@ For example:
     ./run-tests.sh docker "./__tests__/1-live-mode.js" 
     ./run-tests.sh host
 
-Before testing with the `docker` or `ci` parameter, you have to install all the required dependencies
-in the playwright container with this command :
+Before testing with the `docker` or `ci` parameter, you have to install all the required dependencies in the playwright container with this command :
 
     ./test-init.sh
 
@@ -299,8 +289,7 @@ yarn global add cross-env
 
 #### Coding standards
 
-We set up some coding standards tools that you will find in the `tools/coding-standards` folder.
-In order to use these, you will need to work with a PHP version >= 7.4 and run first:
+We set up some coding standards tools that you will find in the `tools/coding-standards` folder. In order to use these, you will need to work with a PHP version >= 7.4 and run first:
 
 ```
 ddev composer update --working-dir=./my-own-modules/crowdsec-php-lib/tools/coding-standards
@@ -308,9 +297,7 @@ ddev composer update --working-dir=./my-own-modules/crowdsec-php-lib/tools/codin
 
 ##### PHPCS Fixer
 
-We are using the [PHP Coding Standards Fixer](https://cs.symfony.com/)
-
-With ddev, you can do the following:
+We are using the [PHP Coding Standards Fixer](https://cs.symfony.com/). With ddev, you can do the following:
 
 
 ```bash
@@ -386,8 +373,6 @@ ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key LAPI_URL=https://cro
 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php  ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/code-coverage/report.txt 
 ```
 
-
-
 #### Generate CrowdSec tools and settings on start
 
 We use a post-start DDEV hook to:
@@ -400,7 +385,7 @@ Just copy the file and restart:
 ```bash
 cp .ddev/config_overrides/config.crowdsec.yaml .ddev/config.crowdsec.yaml
 ddev restart
-```   
+```
 
 #### Redis debug
 
@@ -452,7 +437,7 @@ the max number of keys to dump:
 
 You will find some php scripts in the `scripts` folder.
 
-**N.B** : If you are not using DDEV, you can replace all `ddev exec php ` by `php` and specify the right script paths.
+**N.B**. : If you are not using DDEV, you can replace all `ddev exec php ` by `php` and specify the right script paths.
 
 ### Clear cache script
 
@@ -479,7 +464,7 @@ ddev start
 Then get a bouncer API key by copying the result of:
 
 ```bash
-ddev create-bouncer`
+ddev create-bouncer
 ```
 
 #### Get the remediation the clean IP "1.2.3.4"
@@ -527,7 +512,7 @@ through a certain URL (e.g. `https://crowdsec:8080`).
 Please refer to the [CrowdSec cscli documentation](https://docs.crowdsec.net/docs/cscli/cscli/) for an exhaustive
 list of commands.
 
-**N.B**: If you are using DDEV, just replace `cscli` with `ddev exec -s crowdsec cscli`.
+**N.B**.: If you are using DDEV, just replace `cscli` with `ddev exec -s crowdsec cscli`.
 
 Here is a list of command that we often use to test the PHP library:
 
@@ -559,7 +544,7 @@ cscli decisions delete --all
 ```
 - Delete a decision with an IP scope
 ```bash
-cscli decisions delete -i <SOME_IP>>
+cscli decisions delete -i <SOME_IP>
 ```
 
 #### Create a bouncer
@@ -591,9 +576,7 @@ ddev create-watcher <SOME_LOGIN> <SOME_PASSWORD>
 
 ### Use the web container to call LAPI
 
-Please see the [CrowdSec LAPI documentation](https://crowdsecurity.github.io/api_doc/index.html?urls.primaryName=LAPI) 
-for an 
-exhaustive list of available calls.
+Please see the [CrowdSec LAPI documentation](https://crowdsecurity.github.io/api_doc/index.html?urls.primaryName=LAPI) for an exhaustive list of available calls.
 
 If you are using DDEV, you can enter the web by running:
 
@@ -619,8 +602,10 @@ In order to have an explicit commit history, we are using some commits message c
     <type>(<scope>): <subject>
 
 Allowed `type` are defined below.
+
 `scope` value intends to clarify which part of the code has been modified. It can be empty or `*` if the change is a
 global or difficult to assign to a specific part.
+
 `subject` describes what has been done using the imperative, present tense.
 
 Example:
@@ -628,7 +613,7 @@ Example:
     feat(admin): Add css for admin actions
 
 
-You can use the `commit-msg` git hook that you will find in the `.githooks` folder : 
+You can use the `commit-msg` git hook that you will find in the `.githooks` folder: 
 
 ```
 cp .githooks/commit-msg .git/hooks/commit-msg
@@ -678,6 +663,3 @@ gh workflow run release.yml -f tag_name=vx.y.z
 ```
 
 Note that the GitHub action will fail if the tag `tag_name` already exits.
-
-
- 
