@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace CrowdSecBouncer\Tests\Integration;
 
 use CrowdSec\Common\Logger\FileLog;
+use CrowdSec\RemediationEngine\CacheStorage\CacheStorageException;
 use CrowdSecBouncer\Bouncer;
 use CrowdSecBouncer\BouncerException;
 use CrowdSecBouncer\Constants;
@@ -184,6 +185,65 @@ final class IpVerificationTest extends TestCase
         $bouncerConfigs['tls_key_path'] = $tlsPath . '/bouncer-key.pem';
         $bouncerConfigs['tls_ca_cert_path'] = $tlsPath . '/ca-chain.pem';
         $bouncerConfigs['tls_verify_peer'] = true;
+    }
+
+    /**
+     * @group integration
+     * @dataProvider cacheAdapterConfigProvider
+     */
+    public function testTestCacheConnexion($cacheAdapterName, $origCacheName)
+    {
+        $bouncer = new StandaloneBouncer(array_merge($this->configs,
+                ['cache_system'=> $cacheAdapterName]));
+        $error = '';
+        try {
+            $bouncer->testCacheConnection();
+        } catch (\Exception $e){
+            $error = $e->getMessage();
+        }
+        $this->assertEquals('', $error);
+
+        // Test custom error handler for Memcached
+        if($cacheAdapterName === 'memcached'){
+            $bouncer2 = new StandaloneBouncer(array_merge($this->configs,
+                [
+                    'cache_system'=> $cacheAdapterName,
+                    'memcached_dsn' => 'memcached://memcached:21',
+                ]));
+
+            $error = '';
+            try {
+                $bouncer2->testCacheConnection();
+            } catch (BouncerException $e){
+                $error = $e->getMessage();
+            }
+            PHPUnitUtil::assertRegExp(
+                $this,
+                '/Error while testing cache connection/',
+                $error,
+                'Should have throw an error'
+            );
+        }
+        // Test bad dsn for redis
+        if($cacheAdapterName === 'redis'){
+            $error = '';
+            try {
+                $bouncer3 = new StandaloneBouncer(array_merge($this->configs,
+                    [
+                        'cache_system'=> $cacheAdapterName,
+                        'redis_dsn' => 'redis://redis:21'
+                    ]));
+            } catch (CacheStorageException $e){
+                $error = $e->getMessage();
+            }
+            PHPUnitUtil::assertRegExp(
+                $this,
+                '/Error when creating/',
+                $error,
+                'Should have throw an error'
+            );
+
+        }
     }
 
     public function testConstructAndSomeMethods()
