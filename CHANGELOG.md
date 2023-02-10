@@ -11,7 +11,7 @@ The public API of this library consists of all public or protected methods, prop
 
 ---
 
-## [1.0.1](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v1.0.0) - 2023-02-10
+## [1.0.1](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v1.0.1) - 2023-02-10
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v1.0.0...v1.0.1)
 
 ### Fixed
