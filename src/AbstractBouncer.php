@@ -359,9 +359,6 @@ abstract class AbstractBouncer
     {
         switch ($remediation) {
             case Constants::REMEDIATION_CAPTCHA:
-                $this->logger->debug('Will display a captcha wall', [
-                    'ip' => $ip,
-                ]);
                 $this->handleCaptchaRemediation($ip);
                 break;
             case Constants::REMEDIATION_BAN:
@@ -639,8 +636,14 @@ abstract class AbstractBouncer
 
         // Display captcha page if this is required.
         if ($cachedCaptchaVariables['has_to_be_resolved'] || $mustResolve) {
+            $this->logger->debug('Will display a captcha wall', [
+                'ip' => $ip,
+            ]);
             $this->displayCaptchaWall($ip);
         }
+        $this->logger->info('Captcha wall is not required (already solved)', [
+            'ip' => $ip,
+        ]);
     }
 
     /**
