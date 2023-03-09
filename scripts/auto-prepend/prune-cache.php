@@ -12,4 +12,4 @@ require_once __DIR__ . '/settings.php';
 use CrowdSecBouncer\StandaloneBouncer;
 
 $bouncer = new StandaloneBouncer($crowdSecStandaloneBouncerConfig);
-$bouncer->refreshBlocklistCache();
+$bouncer->pruneCache();

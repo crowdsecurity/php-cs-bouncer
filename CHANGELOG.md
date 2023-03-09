@@ -3,13 +3,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Public API
+## SemVer public API
 
-The purpose of this section is to declare the public API of this library as required by  [item 1 of semantic versioning specification](https://semver.org/spec/v2.0.0.html#spec-item-1).
-
-The public API of this library consists of all public or protected methods, properties and constants belonging to the `src` folder.
+The [public API](https://semver.org/spec/v2.0.0.html#spec-item-1) of this library consists of all public or protected methods, properties and constants belonging to the `src` folder.
 
 ---
+
+
+## [1.2.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v1.2.0) - 2023-03-09
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v1.1.1...v1.2.0)
+
+
+### Changed
+- Use `crowdsec/remediation` `^3.0.0` instead of `^2.0.0`
+
+### Added
+- Add a script to prune cache with a cron job (Standalone bouncer)
+
+---
+
 
 ## [1.1.1](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v1.1.1) - 2023-02-16
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v1.1.0...v1.1.1)

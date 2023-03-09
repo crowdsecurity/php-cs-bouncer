@@ -192,6 +192,23 @@ and add the following line
 
 In this example, cache is refreshed every minute, but you can modify the cron expression depending on your needs.
 
+### Cache pruning cron task
+
+To use the PHP file system as cache, you should prune the cache with a cron job:
+
+```shell
+sudo -u www-data crontab -e
+```
+
+and add the following line
+
+```shell
+0 0 * * * /usr/bin/php /absolute/path/to/scripts/auto-prepend/prune-cache.php
+```
+
+In this example, cache is pruned at midnight every day, but you can modify the cron expression depending on your needs.
+
+
 ## Create your own bouncer
 
 ### Implementation
