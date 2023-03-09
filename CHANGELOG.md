@@ -15,7 +15,7 @@ The [public API](https://semver.org/spec/v2.0.0.html#spec-item-1) of this librar
 
 
 ### Changed
-- Use `crowdsec/remediation` `^3.0.0` instead of `^2.0.0`
+- Use `crowdsec/remediation-engine` `^3.0.0` instead of `^2.0.0`
 
 ### Added
 - Add a script to prune cache with a cron job (Standalone bouncer)
