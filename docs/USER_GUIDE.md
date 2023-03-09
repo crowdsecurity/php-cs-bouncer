@@ -22,6 +22,7 @@
     - [Nginx](#nginx)
     - [Apache](#apache)
   - [Stream mode cron task](#stream-mode-cron-task)
+  - [Cache pruning cron task](#cache-pruning-cron-task)
 - [Create your own bouncer](#create-your-own-bouncer)
   - [Implementation](#implementation)
   - [Test your bouncer](#test-your-bouncer)
