@@ -54,12 +54,8 @@ jobs:
           ddev get julienloizelet/ddev-crowdsec-php
           ddev get julienloizelet/ddev-playwright 
 
+
       - name: Start DDEV
-        run: |
-          ddev start
-
-
-      - name: Start DDEV  with PHP ${{ matrix.php-version }}
         run: ddev start
 
       - name: Set BOUNCER_KEY and PROXY_IP env
