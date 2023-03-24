@@ -205,11 +205,12 @@ final class IpVerificationTest extends TestCase
 
         // Test custom error handler for Memcached
         if($cacheAdapterName === 'memcached'){
-            $bouncer2 = new StandaloneBouncer(array_merge($this->configs,
+            $configs = array_merge($this->configs,
                 [
                     'cache_system'=> $cacheAdapterName,
                     'memcached_dsn' => 'memcached://memcached:21',
-                ]));
+                ]);
+            $bouncer2 = new StandaloneBouncer($configs);
 
             $error = '';
             try {

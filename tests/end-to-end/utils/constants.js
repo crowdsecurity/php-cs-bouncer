@@ -1,7 +1,7 @@
 const { PHP_URL } = process.env;
 
 const PUBLIC_URL =
-    "/my-own-modules/crowdsec-php-lib/scripts/public/protected-page.php";
+    "/my-code/crowdsec-bouncer-lib/scripts/public/protected-page.php";
 const FORCED_TEST_FORWARDED_IP =
     process.env.FORCED_TEST_FORWARDED_IP !== ""
         ? process.env.FORCED_TEST_FORWARDED_IP

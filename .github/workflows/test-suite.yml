@@ -7,6 +7,13 @@ on:
       - '**.md'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+env:
+  # Allow ddev get to use a GitHub token to prevent rate limiting by tests
+  DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   test-suite:
     strategy:
@@ -18,46 +25,42 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !contains(github.event.head_commit.message, 'chore(') }}
     env:
-      EXTENSION_PATH: "my-own-modules/crowdsec-php-lib"
+      EXTENSION_PATH: "my-code/crowdsec-bouncer-lib"
+      DDEV_PROJECT: "crowdsec-bouncer-lib"
       JP_TEST_IP: "210.249.74.42"
       IPV6_TEST_IP: "2001:0db8:0000:85a3:0000:0000:ac1f:8001"
       IPV6_TEST_PROXY_IP: "2345:0425:2CA1:0000:0000:0567:5673:23b5"
 
     steps:
-      - name: Clone DDEV files
-        uses: actions/checkout@v3
-        with:
-          path: .ddev
-          repository: julienloizelet/ddev-php
-          ref: "main"
-
       - name: Install DDEV
-        env:
-          DDEV_VERSION: v1.21.4
+        # @see https://ddev.readthedocs.io/en/stable/#installationupgrade-script-linux-and-macos-armarm64-and-amd64-architectures
         run: |
-          # @see https://ddev.readthedocs.io/en/stable/#installationupgrade-script-linux-and-macos-armarm64-and-amd64-architectures
-          sudo apt-get -qq update
-          sudo apt-get -qq -y install libnss3-tools
-          curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh
-          bash install_ddev.sh ${{env.DDEV_VERSION}}
+          curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null
+          echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list
+          sudo apt-get -q update
+          sudo apt-get -q -y install libnss3-tools ddev
+          mkcert -install
           ddev config global --instrumentation-opt-in=false --omit-containers=dba,ddev-ssh-agent
-          rm install_ddev.sh
 
-      - name: Set PHP_VERSION_CODE env
-        # used in some directory path and conventional file naming
-        # Example : 7.4 => 74
+      - name: Create empty PHP DDEV project
+        run: ddev config --project-type=php --project-name=${{env.DDEV_PROJECT}}  --php-version=${{ matrix.php-version }}
+
+      - name: Add Redis, Memcached and Crowdsec
         run: |
-           echo "PHP_VERSION_CODE=$(echo php${{ matrix.php-version }} | sed 's/\.//g' )" >> $GITHUB_ENV
+          ddev get ddev/ddev-redis
+          ddev get ddev/ddev-memcached
+          # override redis.conf
+          ddev get julienloizelet/ddev-tools
+          ddev get julienloizelet/ddev-crowdsec-php
+          ddev get julienloizelet/ddev-playwright 
+
+      - name: Start DDEV
+        run: |
+          ddev start
 
 
       - name: Start DDEV  with PHP ${{ matrix.php-version }}
-        run: |
-          cp .ddev/config_overrides/config.${{ env.PHP_VERSION_CODE }}.yaml .ddev/config.${{ env.PHP_VERSION_CODE }}.yaml
-          cp .ddev/additional_docker_compose/docker-compose.crowdsec.yaml .ddev/docker-compose.crowdsec.yaml
-          cp .ddev/additional_docker_compose/docker-compose.playwright.yaml .ddev/docker-compose.playwright.yaml
-          mkdir ${{ github.workspace }}/cfssl
-          cp -r .ddev/custom_files/crowdsec/cfssl/* ${{ github.workspace }}/cfssl
-          ddev start
+        run: ddev start
 
       - name: Set BOUNCER_KEY and PROXY_IP env
         run: |
@@ -74,7 +77,7 @@ jobs:
       - name: Clone PHP lib Crowdsec files
         uses: actions/checkout@v3
         with:
-          path: my-own-modules/crowdsec-php-lib
+          path: my-code/crowdsec-bouncer-lib
 
       - name: Validate composer.json
         run: ddev composer validate --strict --working-dir ./${{env.EXTENSION_PATH}}
@@ -89,6 +92,8 @@ jobs:
 
       - name: Prepare PHP Integration and end-to-end tests
         run: |
+          mkdir ${{ github.workspace }}/cfssl
+          cp -r .ddev/okaeli-add-on/custom_files/crowdsec/cfssl/* ${{ github.workspace }}/cfssl
           ddev maxmind-download DEFAULT GeoLite2-City /var/www/html/${{env.EXTENSION_PATH}}/tests
           ddev maxmind-download DEFAULT GeoLite2-Country /var/www/html/${{env.EXTENSION_PATH}}/tests
           cd ${{env.EXTENSION_PATH}}/tests
@@ -121,7 +126,7 @@ jobs:
       - name: Prepare Standalone Bouncer end-to-end tests
         run: |
           cd ${{ github.workspace }}/.ddev
-          ddev nginx-config custom_files/crowdsec-prepend-nginx-site.conf
+          ddev nginx-config okaeli-add-on/native/custom_files/crowdsec/crowdsec-prepend-nginx-site.conf
           cd ${{ github.workspace }}
           cp ${{env.EXTENSION_PATH}}/tests/end-to-end/settings/base.php.dist crowdsec-lib-settings.php
           sed -i -e 's/REPLACE_API_KEY/${{ env.BOUNCER_KEY }}/g' crowdsec-lib-settings.php
@@ -137,10 +142,10 @@ jobs:
       - name: Verify auto_prepend_file directive
         run: |
           cd ${{ github.workspace }}
-          cp .ddev/custom_files/phpinfo.php ${{env.EXTENSION_PATH}}/scripts/public/phpinfo.php
-          curl -v https://${{ env.PHP_VERSION_CODE }}.ddev.site/${{env.EXTENSION_PATH}}/scripts/public/phpinfo.php
-          PREPENDVERIF=$(curl https://${{ env.PHP_VERSION_CODE }}.ddev.site/${{env.EXTENSION_PATH}}/scripts/public/phpinfo.php | grep -o -E "auto_prepend_file=(.*)php(.*)" | sed 's/<\/tr>//g; s/<\/td>//g;' | tr '\n' '#')
-          if [[ $PREPENDVERIF == "auto_prepend_file=/var/www/html/${{env.EXTENSION_PATH}}/scripts/auto-prepend/bounce.php#auto_prepend_file=/var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/bounce.php#" ]]
+          cp .ddev/okaeli-add-on/common/custom_files/phpinfo.php ${{env.EXTENSION_PATH}}/scripts/public/phpinfo.php
+          curl -v https://${{env.DDEV_PROJECT}}.ddev.site/${{env.EXTENSION_PATH}}/scripts/public/phpinfo.php
+          PREPENDVERIF=$(curl https://${{env.DDEV_PROJECT}}.ddev.site/${{env.EXTENSION_PATH}}/scripts/public/phpinfo.php | grep -o -E "auto_prepend_file=(.*)php(.*)" | sed 's/<\/tr>//g; s/<\/td>//g;' | tr '\n' '#')
+          if [[ $PREPENDVERIF == "auto_prepend_file=/var/www/html/${{env.EXTENSION_PATH}}/scripts/auto-prepend/bounce.php#auto_prepend_file=/var/www/html/my-code/crowdsec-bouncer-lib/scripts/auto-prepend/bounce.php#" ]]
           then
               echo "AUTO PREPEND FILE OK"
           else
