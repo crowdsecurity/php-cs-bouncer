@@ -78,18 +78,18 @@ For the DDEV installation, please follow the [official instructions](https://dde
 The final structure of the project will look like below.
 
 ```
-php-project-sources (choose the name you want for this folder)
+crowdsec-bouncer-project (choose the name you want for this folder)
 │   
 │ (your php project sources; could be a simple index.php file)    
 │
-└───.ddev (do not change this folder name)
+└───.ddev
 │   │   
-│   │ (Cloned sources of a PHP specific ddev repo)
+│   │ (DDEV files)
 │   
-└───my-own-modules (do not change this folder name)
+└───my-code (do not change this folder name)
     │
     │
-    └───crowdsec-php-lib (do not change this folder name)
+    └───crowdsec-bouncer-lib (do not change this folder name)
        │   
        │ (Clone of this repo)
          
@@ -97,37 +97,32 @@ php-project-sources (choose the name you want for this folder)
 
 - Create an empty folder that will contain all necessary sources:
 ```bash
-mkdir php-project-sources
+mkdir crowdsec-bouncer-project
 ```
 
-- Create a `crowdsec-php-lib` folder with sources of this repo:
+- Create a DDEV php project:
 
 ```bash
-cd php-project-sources
-mkdir my-own-modules && mkdir my-own-modules/crowdsec-php-lib
-cd my-own-modules/crowdsec-php-lib && git clone git@github.com:crowdsecurity/php-cs-bouncer.git ./
+cd crowdsec-bouncer-project
+ddev config --project-type=php --php-version=8.2 --project-name=crowdsec-bouncer-lib
 ```
 
-- Create an empty `.ddev` folder for DDEV and clone our pre-configured DDEV repo:
+- Add some DDEV add-ons:
 
 ```bash
-cd php-project-sources
-mkdir .ddev && cd .ddev && git clone git@github.com:julienloizelet/ddev-php.git ./
+ddev get ddev/ddev-redis
+ddev get ddev/ddev-memcached
+ddev get julienloizelet/ddev-tools
+ddev get julienloizelet/ddev-crowdsec-php
 ```
-- Copy some configurations file:
+
+- Clone this repo sources in a `my-code/crowdsec-bouncer-lib` folder:
 
 ```bash
-cd php-project-sources
-cp .ddev/additional_docker_compose/docker-compose.crowdsec.yaml .ddev/docker-compose.crowdsec.yaml
-cp .ddev/additional_docker_compose/docker-compose.playwright.yaml .ddev/docker-compose.playwright.yaml
+mkdir -p my-code/crowdsec-bouncer-lib
+cd my-code/crowdsec-bouncer-lib && git clone git@github.com:crowdsecurity/php-cs-bouncer.git ./
 ```
 
-By default, ddev will launch a PHP 7.2 container. If you want to work with another PHP version, copy the corresponding configuration  file. For example:
-
-```bash
-cd php-project-sources
-cp .ddev/config_overrides/config.php74.yaml .ddev/config.php74.yaml
-```
 - Launch DDEV
 
 ```bash
@@ -163,7 +158,7 @@ ddev create-watcher [name] [password]
 Run:
 
 ```bash
-ddev composer update --working-dir ./my-own-modules/crowdsec-php-lib
+ddev composer update --working-dir ./my-code/crowdsec-bouncer-lib
 ```
 
 #### Find IP of your docker services
@@ -189,7 +184,7 @@ ddev find-ip ddev-router
 
 
 ```bash
-ddev php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit  ./my-own-modules/crowdsec-php-lib/tests/Unit --testdox
+ddev php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit  ./my-code/crowdsec-bouncer-lib/tests/Unit --testdox
 ```
 
 #### Integration test
@@ -203,9 +198,9 @@ ddev create-bouncer
 Then, as we use a TLS ready CrowdSec container, you have to copy some certificates and key:
 
 ```bash
-cd php-project-sources
+cd crowdsec-bouncer-project
 mkdir cfssl
-cp -r ../.ddev/custom_files/crowdsec/cfssl/* cfssl
+cp -r ../.ddev/okaeli-add-on/custom_files/crowdsec/cfssl/* cfssl
 ```
 
 Finally, run
@@ -213,7 +208,7 @@ Finally, run
 
 ```bash
 ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 
-MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/IpVerificationTest.php
+MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/IpVerificationTest.php
 ```
 
 For geolocation Unit Test, you should first put 2 free MaxMind databases in the `tests` folder : `GeoLite2-City.mmdb`
@@ -224,7 +219,7 @@ Then, you can run:
 
 ```bash
 ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080  
-MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/GeolocationTest.php
+MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/GeolocationTest.php
 ```
 
 **N.B.**: If you want to test with `curl` instead of `file_get_contents` calls to LAPI, you have to add `USE_CURL=1` in 
@@ -234,7 +229,7 @@ the previous commands.
 and specify the path where you store certificates and keys. For example:
 
 ```bash
-ddev exec USE_CURL=1 AGENT_TLS_PATH=/var/www/html/cfssl  BOUNCER_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-own-modules/crowdsec-php-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-own-modules/crowdsec-php-lib/tests/Integration/IpVerificationTest.php
+ddev exec USE_CURL=1 AGENT_TLS_PATH=/var/www/html/cfssl  BOUNCER_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/IpVerificationTest.php
 ```
 
 
@@ -253,7 +248,7 @@ With that done, every access to your ddev url (i.e. `https://phpXX.ddev.site` wh
 For example, you should try to browse the following url:
 
 ```
-https://phpXX.ddev.site/my-own-modules/crowdsec-php-lib/scripts/public/protected-page.php
+https://phpXX.ddev.site/my-code/crowdsec-bouncer-lib/scripts/public/protected-page.php
 ```
 
 #### End-to-end tests
@@ -264,6 +259,11 @@ We are using a Jest/Playwright Node.js stack to launch a suite of end-to-end tes
 
 Tests code is in the `tests/end-to-end` folder. You should have to `chmod +x` the scripts you will find in `tests/end-to-end/__scripts__`.
 
+
+```
+cd crowdsec-bouncer-project
+cp -r .ddev/okaeli-add-on/custom_files/crowdsec/cfssl/* cfssl
+```
 
 Then you can use the `run-test.sh` script to run the tests:
 
@@ -293,7 +293,7 @@ yarn global add cross-env
 We set up some coding standards tools that you will find in the `tools/coding-standards` folder. In order to use these, you will need to work with a PHP version >= 7.4 and run first:
 
 ```
-ddev composer update --working-dir=./my-own-modules/crowdsec-php-lib/tools/coding-standards
+ddev composer update --working-dir=./my-code/crowdsec-bouncer-lib/tools/coding-standards
 ```
 
 ##### PHPCS Fixer
@@ -302,7 +302,7 @@ We are using the [PHP Coding Standards Fixer](https://cs.symfony.com/). With dde
 
 
 ```bash
-ddev phpcsfixer my-own-modules/crowdsec-php-lib/tools/coding-standards/php-cs-fixer ../
+ddev phpcsfixer my-code/crowdsec-bouncer-lib/tools/coding-standards/php-cs-fixer ../
 
 ```
 
@@ -312,7 +312,7 @@ To use the [PHPSTAN](https://github.com/phpstan/phpstan) tool, you can run:
 
 
 ```bash
-ddev phpstan /var/www/html/my-own-modules/crowdsec-php-lib/tools/coding-standards phpstan/phpstan.neon /var/www/html/my-own-modules/crowdsec-php-lib/src
+ddev phpstan /var/www/html/my-code/crowdsec-bouncer-lib/tools/coding-standards phpstan/phpstan.neon /var/www/html/my-code/crowdsec-bouncer-lib/src
 
 ```
 
@@ -322,7 +322,7 @@ ddev phpstan /var/www/html/my-own-modules/crowdsec-php-lib/tools/coding-standard
 To use the [PHPMD](https://github.com/phpmd/phpmd) tool, you can run:
 
 ```bash
-ddev phpmd ./my-own-modules/crowdsec-php-lib/tools/coding-standards phpmd/rulesets.xml ../../src
+ddev phpmd ./my-code/crowdsec-bouncer-lib/tools/coding-standards phpmd/rulesets.xml ../../src
 
 ```
 
@@ -331,13 +331,13 @@ ddev phpmd ./my-own-modules/crowdsec-php-lib/tools/coding-standards phpmd/rulese
 To use [PHP Code Sniffer](https://github.com/squizlabs/PHP_CodeSniffer) tools, you can run:
 
 ```bash
-ddev phpcs ./my-own-modules/crowdsec-php-lib/tools/coding-standards my-own-modules/crowdsec-php-lib/src PSR12
+ddev phpcs ./my-code/crowdsec-bouncer-lib/tools/coding-standards my-code/crowdsec-php-lib/src PSR12
 ```
 
 and:
 
 ```bash
-ddev phpcbf  ./my-own-modules/crowdsec-php-lib/tools/coding-standards my-own-modules/crowdsec-php-lib/src PSR12
+ddev phpcbf  ./my-code/crowdsec-php-lib/tools/coding-standards my-code/crowdsec-php-lib/src PSR12
 ```
 
 
@@ -346,7 +346,7 @@ ddev phpcbf  ./my-own-modules/crowdsec-php-lib/tools/coding-standards my-own-mod
 To use [PSALM](https://github.com/vimeo/psalm) tools, you can run:
 
 ```bash
-ddev psalm ./my-own-modules/crowdsec-php-lib/tools/coding-standards ./my-own-modules/crowdsec-php-lib/tools/coding-standards/psalm
+ddev psalm ./my-code/crowdsec-php-lib/tools/coding-standards ./my-code/crowdsec-php-lib/tools/coding-standards/psalm
 ```
 
 ##### PHP Unit Code coverage
@@ -360,7 +360,7 @@ ddev xdebug
 
 To generate a html report, you can run:
 ```bash
-ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key  AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 REDIS_DSN=redis://redis:6379 MEMCACHED_DSN=memcached://memcached:11211  /usr/bin/php  ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml
+ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key  AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 REDIS_DSN=redis://redis:6379 MEMCACHED_DSN=memcached://memcached:11211  /usr/bin/php  ./my-code/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-code/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml
 
 ```
 
@@ -371,7 +371,7 @@ If you want to generate a text report in the same folder:
 
 ```bash
 ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key LAPI_URL=https://crowdsec:8080
-MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php  ./my-own-modules/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./my-own-modules/crowdsec-php-lib/tools/coding-standards/phpunit/code-coverage/report.txt 
+MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php  ./my-code/crowdsec-php-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-code/crowdsec-php-lib/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./my-code/crowdsec-php-lib/tools/coding-standards/phpunit/code-coverage/report.txt 
 ```
 
 #### Generate CrowdSec tools and settings on start
@@ -445,7 +445,7 @@ You will find some php scripts in the `scripts` folder.
 To clear your LAPI cache, you can use the [`clear-php`](../scripts/clear-cache.php) script: 
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/clear-cache.php <BOUNCER_KEY>
+ddev exec php my-code/crowdsec-php-lib/scripts/clear-cache.php <BOUNCER_KEY>
 ```
 
 ### Full Live mode example
@@ -474,7 +474,7 @@ Try with the `standalone-check-ip-live.php` file:
 
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/standalone-check-ip-live.php 1.2.3.4 <YOUR_BOUNCER_KEY>
+ddev exec php my-code/crowdsec-php-lib/scripts/standalone-check-ip-live.php 1.2.3.4 <YOUR_BOUNCER_KEY>
 ```
 
 #### Now ban range 1.2.3.4 to 1.2.3.7 for 12h
@@ -488,13 +488,13 @@ ddev exec -s crowdsec cscli decisions add --range 1.2.3.4/30 --duration 12h --ty
 Clear the cache:
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/clear-cache.php <YOUR_BOUNCER_KEY>
+ddev exec php my-code/crowdsec-php-lib/scripts/clear-cache.php <YOUR_BOUNCER_KEY>
 ```
 
 One more time, get the remediation for the IP "1.2.3.4":
 
 ```bash
-ddev exec php my-own-modules/crowdsec-php-lib/scripts/standalone-check-ip-live.php 1.2.3.4 <YOUR_BOUNCER_KEY>
+ddev exec php my-code/crowdsec-php-lib/scripts/standalone-check-ip-live.php 1.2.3.4 <YOUR_BOUNCER_KEY>
 ```
 
 This is a ban (and cache miss) as you can see in your terminal logs.

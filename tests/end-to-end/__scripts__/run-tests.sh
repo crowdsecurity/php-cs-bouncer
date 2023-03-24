@@ -43,10 +43,10 @@ HOSTNAME=$(ddev exec printenv DDEV_HOSTNAME | sed 's/\r//g')
 PHPVERSION=$(ddev exec printenv DDEV_PROJECT | sed 's/\r//g')
 PHP_URL=https://$HOSTNAME
 PROXY_IP=$(ddev find-ip ddev-router)
-BOUNCER_KEY=$(ddev exec grep "'api_key'" /var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/settings.php | tail -1 | sed 's/api_key//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
-GEOLOC_ENABLED=$(ddev exec grep -E "'enabled'.*,$" /var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/settings.php | sed 's/enabled//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
-FORCED_TEST_FORWARDED_IP=$(ddev exec grep -E "'forced_test_forwarded_ip'.*,$" /var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/settings.php | sed 's/forced_test_forwarded_ip//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
-STREAM_MODE=$(ddev exec grep -E "'stream_mode'.*,$" /var/www/html/my-own-modules/crowdsec-php-lib/scripts/auto-prepend/settings.php | sed 's/stream_mode//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
+BOUNCER_KEY=$(ddev exec grep "'api_key'" /var/www/html/my-code/crowdsec-bouncer-lib/scripts/auto-prepend/settings.php | tail -1 | sed 's/api_key//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
+GEOLOC_ENABLED=$(ddev exec grep -E "'enabled'.*,$" /var/www/html/my-code/crowdsec-bouncer-lib/scripts/auto-prepend/settings.php | sed 's/enabled//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
+FORCED_TEST_FORWARDED_IP=$(ddev exec grep -E "'forced_test_forwarded_ip'.*,$" /var/www/html/my-code/crowdsec-bouncer-lib/scripts/auto-prepend/settings.php | sed 's/forced_test_forwarded_ip//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
+STREAM_MODE=$(ddev exec grep -E "'stream_mode'.*,$" /var/www/html/my-code/crowdsec-bouncer-lib/scripts/auto-prepend/settings.php | sed 's/stream_mode//g' | sed -e 's|[=>,"'\'']||g'  | sed s/'\s'//g)
 JEST_PARAMS="--bail=true  --runInBand --verbose"
 # If FAIL_FAST, will exit on first individual test fail
 # @see CustomEnvironment.js
@@ -69,7 +69,7 @@ case $TYPE in
 
   "docker")
     DEBUG_STRING=""
-    YARN_PATH="./var/www/html/my-own-modules/crowdsec-php-lib/tests/end-to-end"
+    YARN_PATH="./var/www/html/my-code/crowdsec-bouncer-lib/tests/end-to-end"
     COMMAND="ddev exec -s playwright yarn --cwd ${YARN_PATH} cross-env"
     LAPI_URL_FROM_PLAYWRIGHT=https://crowdsec:8080
     CURRENT_IP=$(ddev find-ip playwright)
@@ -81,7 +81,7 @@ case $TYPE in
 
   "ci")
     DEBUG_STRING="DEBUG=pw:api"
-    YARN_PATH="./var/www/html/my-own-modules/crowdsec-php-lib/tests/end-to-end"
+    YARN_PATH="./var/www/html/my-code/crowdsec-bouncer-lib/tests/end-to-end"
     COMMAND="ddev exec -s playwright xvfb-run --auto-servernum -- yarn --cwd ${YARN_PATH} cross-env"
     LAPI_URL_FROM_PLAYWRIGHT=https://crowdsec:8080
     CURRENT_IP=$(ddev find-ip playwright)

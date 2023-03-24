@@ -14,7 +14,7 @@ const goToPublicPage = async (endpoint = PUBLIC_URL) => {
 
 const runCacheAction = async (actionType = "refresh", otherParams = "") => {
     await goToPublicPage(
-        `/my-own-modules/crowdsec-php-lib/scripts/public/cache-actions.php?action=${actionType}${otherParams}`,
+        `/my-code/crowdsec-bouncer-lib/scripts/public/cache-actions.php?action=${actionType}${otherParams}`,
     );
     await page.waitForLoadState("networkidle");
     await expect(page).not.toMatchTitle(/404/);
@@ -22,7 +22,7 @@ const runCacheAction = async (actionType = "refresh", otherParams = "") => {
 };
 
 const runGeolocationTest = async (ip, saveResult, brokenDb = false) => {
-    let url = `/my-own-modules/crowdsec-php-lib/scripts/public/geolocation-test.php?ip=${ip}`;
+    let url = `/my-code/crowdsec-bouncer-lib/scripts/public/geolocation-test.php?ip=${ip}`;
     if (saveResult) {
         url += "&cache-duration=120";
     }

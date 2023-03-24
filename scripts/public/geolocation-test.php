@@ -21,12 +21,12 @@ if (isset($_GET['ip'])) {
         'type' => 'maxmind',
         'maxmind' => [
             'database_type' => $dbType,
-            'database_path' => '/var/www/html/my-own-modules/crowdsec-php-lib/tests/' . $dbName,
+            'database_path' => '/var/www/html/my-code/crowdsec-bouncer-lib/tests/' . $dbName,
         ],
     ];
 
     if ($fakeBrokenDb) {
-        $geolocConfig['maxmind']['database_path'] = '/var/www/html/my-own-modules/crowdsec-php-lib/tests/broken.mmdb';
+        $geolocConfig['maxmind']['database_path'] = '/var/www/html/my-code/crowdsec-bouncer-lib/tests/broken.mmdb';
     }
 
     $finalConfig = array_merge($crowdSecStandaloneBouncerConfig, ['geolocation' => $geolocConfig]);
