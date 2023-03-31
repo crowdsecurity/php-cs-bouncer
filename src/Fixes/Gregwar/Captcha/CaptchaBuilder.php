@@ -7,8 +7,6 @@ use Gregwar\Captcha\CaptchaBuilder as GregwarCaptchaBuilder;
 /**
  * Override to :
  * - fix "implicit conversion error on PHP  8.1"
- * - fix "creation of dynamic property $background error on PHP 8.2"
- *
  *
  * @see https://github.com/crowdsecurity/php-cs-bouncer/issues/62 and
  * @see https://github.com/Gregwar/Captcha/pull/101/files
@@ -18,10 +16,6 @@ use Gregwar\Captcha\CaptchaBuilder as GregwarCaptchaBuilder;
  */
 class CaptchaBuilder extends GregwarCaptchaBuilder
 {
-    /**
-     * @var false|int
-     */
-    protected $background = false;
     /**
      * Writes the phrase on the image
      */
@@ -59,27 +53,5 @@ class CaptchaBuilder extends GregwarCaptchaBuilder
         }
 
         return $col;
-    }
-
-
-    /**
-     * Returns a random number or the next number in the
-     * fingerprint
-     */
-    protected function rand($min, $max)
-    {
-        if (!is_array($this->fingerprint)) {
-            $this->fingerprint = array();
-        }
-
-        if ($this->useFingerprint) {
-            $value = current($this->fingerprint);
-            next($this->fingerprint);
-        } else {
-            $value = mt_rand((int) $min, (int) $max);
-            $this->fingerprint[] = $value;
-        }
-
-        return $value;
     }
 }

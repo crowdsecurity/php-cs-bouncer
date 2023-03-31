@@ -60,7 +60,6 @@ use CrowdSecBouncer\Constants;
  * @covers \CrowdSecBouncer\StandaloneBouncer::getPostedVariable
  * @covers \CrowdSecBouncer\AbstractBouncer::checkCaptcha
  * @covers \CrowdSecBouncer\AbstractBouncer::buildCaptchaCouple
- * @covers \CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder::rand
  * @covers \CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder::writePhrase
  * @covers \CrowdSecBouncer\AbstractBouncer::getCache
  * @covers \CrowdSecBouncer\AbstractBouncer::getBanHtml
