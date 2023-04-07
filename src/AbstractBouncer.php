@@ -316,10 +316,8 @@ abstract class AbstractBouncer
             case Constants::CACHE_SYSTEM_REDIS:
                 $cache = new Redis($configs, $logger);
                 break;
-            // @codeCoverageIgnoreStart
             default:
                 throw new BouncerException("Unknown selected cache technology: $cacheSystem");
-            // @codeCoverageIgnoreEnd
         }
 
         return $cache;
@@ -821,16 +819,16 @@ abstract class AbstractBouncer
     }
 
     /**
-     * Check
+     * Check if captcha resolution is required or not
      *
-     * @param array $cachedCaptchaVariables
+     * @param array $captchaData
      * @return bool
      *
      */
-    private function shouldNotCheckResolution(array $cachedCaptchaVariables): bool
+    private function shouldNotCheckResolution(array $captchaData): bool
     {
         $result = false;
-        if (\in_array($cachedCaptchaVariables['has_to_be_resolved'], [null, false])) {
+        if (\in_array($captchaData['has_to_be_resolved'], [null, false])) {
             // Check not needed if 'has_to_be_resolved' cached flag has not been saved
             $result = true;
         } elseif ('POST' !== $this->getHttpMethod() || null === $this->getPostedVariable('crowdsec_captcha')) {

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
-use CrowdSecBouncer\StandaloneBouncer;
+use CrowdSec\RemediationEngine\LapiRemediation;
+use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
+use CrowdSec\LapiClient\Bouncer as BouncerClient;
+use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\Constants;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 /**
- * @covers \CrowdSecBouncer\StandaloneBouncer::clearCache
  * @covers \CrowdSecBouncer\AbstractBouncer::getRemediationForIp
  *
  * @uses \CrowdSecBouncer\AbstractBouncer::__construct
@@ -29,8 +31,8 @@ use Psr\Log\LoggerInterface;
  * @uses \CrowdSecBouncer\Configuration::addTemplateNodes
  * @uses \CrowdSecBouncer\Configuration::cleanConfigs
  * @uses \CrowdSecBouncer\Configuration::getConfigTreeBuilder
- * @uses \CrowdSecBouncer\StandaloneBouncer::__construct
- * @uses \CrowdSecBouncer\StandaloneBouncer::handleTrustedIpsConfig
+ * @uses \CrowdSecBouncer\AbstractBouncer::clearCache
+ *
  */
 final class GeolocationTest extends TestCase
 {
@@ -125,7 +127,12 @@ final class GeolocationTest extends TestCase
             'stream_mode' => false
         ];
 
-        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
+        $client = new BouncerClient($bouncerConfigs);
+        $cache = new PhpFiles($bouncerConfigs);
+        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
+
+
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
 
         $bouncer->clearCache();
 
@@ -145,7 +152,12 @@ final class GeolocationTest extends TestCase
         // Disable Geolocation feature
         $geolocationConfig['enabled'] = false;
         $bouncerConfigs['geolocation'] = $geolocationConfig;
-        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
+        $client = new BouncerClient($bouncerConfigs);
+        $cache = new PhpFiles($bouncerConfigs);
+        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
+
+
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
         $bouncer->clearCache();
 
         $this->assertEquals(
@@ -158,7 +170,10 @@ final class GeolocationTest extends TestCase
         $this->watcherClient->setSecondState();
         $geolocationConfig['enabled'] = true;
         $bouncerConfigs['geolocation'] = $geolocationConfig;
-        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
+        $client = new BouncerClient($bouncerConfigs);
+        $cache = new PhpFiles($bouncerConfigs);
+        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
         $bouncer->clearCache();
 
         $this->assertEquals(
@@ -196,7 +211,12 @@ final class GeolocationTest extends TestCase
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
         ];
 
-        $bouncer = new StandaloneBouncer($bouncerConfigs, $this->logger);
+        $client = new BouncerClient($bouncerConfigs);
+        $cache = new PhpFiles($bouncerConfigs);
+        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
+
+
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
         $cacheAdapter= $bouncer->getRemediationEngine()->getCacheStorage();
         $cacheAdapter->clear();
 

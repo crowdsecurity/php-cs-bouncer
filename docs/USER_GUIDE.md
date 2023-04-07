@@ -41,8 +41,7 @@
 ## Description
 
 This library allows you to create CrowdSec bouncers for PHP applications or frameworks like e-commerce, blog or other 
-exposed applications. It can also be used in a standalone mode using auto-prepend directive and the provided standalone 
-bouncer.
+exposed applications.
 
 ## Prerequisites
 
@@ -79,136 +78,6 @@ A captcha wall could look like:
 With the provided standalone bouncer, please note that it is possible to customize all the colors of these pages so that they integrate best with your design.
 
 On the other hand, all texts are also fully customizable. This will allow you, for example, to present translated pages in your users' language.
-
-
-## Standalone bouncer set up
-
-This library includes the [`StandaloneBouncer`](../src/StandaloneBouncer.php) class. You can see that class as a good example for creating your own bouncer. 
-
-Once you set up your server as below, every browser access to a php script will be bounced by the standalone bouncer.
-
-You will have to :
-
-- copy sources of the lib in some `/path/to/the/crowdsec-lib` folder
-
-- give the correct permission for the folder that contains the lib
-
-- copy the `scripts/auto-prepend/settings.example.php` to a `scripts/auto-prepend/settings.php` file
-
-- run the composer installation process to retrieve all necessary dependencies
-
-- set an `auto_prepend_file` directive in your PHP setup.
-
-- Optionally, if you want to use the standalone bouncer in stream mode, you wil have to set a cron task to refresh 
-  cache periodically.
-
-### Copy sources
-
-Create a folder `crowdsec-lib` and clone the sources: 
-
-```shell
-mkdir -p /path/to/the/crowdsec-lib && git clone git@github.com:crowdsecurity/php-cs-bouncer.git /path/to/the/crowdsec-lib
-```
-
-### Files permission
-
-The owner of the `/path/to/the/crowdsec-lib` should be your webserver owner (e.g. `www-data`).
-
-You can achieve it by running command like:
-
-```shell
-sudo chown www-data /path/to/the/crowdsec-lib
-```
-
-### Composer
-
-You should run the composer installation process: 
-
-```shell
-cd /path/to/the/crowdsec-lib && composer install
-```
-
-### Settings file
-
-Please copy the `scripts/auto-prepend/settings.example.php` to a `scripts/auto-prepend/settings.php` and fill the necessary settings in it (see [Configurations settings](#configurations) for more details).
-
-### `auto_prepend_file` directive
-
-We will now describe how to set an `auto_prepend_file` directive in order to call the `scripts/auto-prepend/bounce.php` for each php script access.
-
-Adding an `auto_prepend_file` directive can be done in different ways:
-
-#### `.ini` file
-
-You should add this line to a `.ini` file :
-
-    auto_prepend_file = /absolute/path/to/scripts/auto-prepend/bounce.php
-
-#### Nginx
-
-If you are using Nginx, you should modify your Nginx configuration file by adding a `fastcgi_param` directive. The php block should look like below:
-
-```
-location ~ \.php$ {
-    ...
-    ...
-    ...
-    fastcgi_param PHP_VALUE "/absolute/path/to/scripts/auto-prepend/bounce.php";
-}
-```
-
-#### Apache
-
-If you are using Apache, you should add this line to your `.htaccess` file:
-
-    php_value auto_prepend_file "/absolute/path/to/scripts/auto-prepend/bounce.php"
-
-or modify your `Virtual Host` accordingly:
-
-```
-<VirtualHost ...>
-    ...
-    ...
-    php_value auto_prepend_file "/absolute/path/to/scripts/auto-prepend/bounce.php"
-    
-</VirtualHost>
-```
-
-
-### Stream mode cron task
-
-To use the stream mode, you first have to set the `stream_mode` setting value to `true` in your `scripts/auto-prepend/settings.php` file. 
-
-Then, you could edit the web server user (e.g. `www-data`) crontab: 
-
-```shell
-sudo -u www-data crontab -e
-```
-
-and add the following line
-
-```shell
-* * * * * /usr/bin/php /absolute/path/to/scripts/auto-prepend/refresh-cache.php
-```
-
-In this example, cache is refreshed every minute, but you can modify the cron expression depending on your needs.
-
-### Cache pruning cron task
-
-To use the PHP file system as cache, you should prune the cache with a cron job:
-
-```shell
-sudo -u www-data crontab -e
-```
-
-and add the following line
-
-```shell
-0 0 * * * /usr/bin/php /absolute/path/to/scripts/auto-prepend/prune-cache.php
-```
-
-In this example, cache is pruned at midnight every day, but you can modify the cron expression depending on your needs.
-
 
 ## Create your own bouncer
 
@@ -299,7 +168,6 @@ $remediationEngine = new LapiRemediation($configs, $client, $cacheStorage);
 $bouncer = new MyCustomBouncer($configs, $remediationEngine);
 
 $bouncer->run();
-
 ```
 
 
@@ -322,8 +190,6 @@ cscli decisions add --ip <YOUR_IP> --duration 15m --type captcha
 To go further and learn how to include this library in your project, you should follow the [`DEVELOPER GUIDE`](DEVELOPER.md).
 
 ## Configurations
-
-You can pass an array of configurations in the bouncer constructor. Please look at the [Settings example file](../scripts/auto-prepend/settings.example.php) for quick overview.
 
 Here is the list of available settings:
 
@@ -506,8 +372,8 @@ Here is the list of available settings:
 
 ## Other ready to use PHP bouncers
 
-To have a more concrete idea on how to develop a bouncer, you may look at the following bouncers for Magento 2 and 
-WordPress :
+To have a more concrete idea on how to develop a bouncer, you may look at the following bouncers :
 - [CrowdSec Bouncer extension for Magento 2](https://github.com/crowdsecurity/cs-magento-bouncer)
 - [CrowdSec Bouncer plugin for WordPress ](https://github.com/crowdsecurity/cs-wordpress-bouncer)
+- [CrowdSec Standalone Bouncer ](https://github.com/crowdsecurity/cs-php-bouncer)
 
