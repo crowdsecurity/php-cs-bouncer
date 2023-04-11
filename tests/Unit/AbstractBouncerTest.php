@@ -19,10 +19,10 @@ use CrowdSec\Common\Logger\FileLog;
 use CrowdSec\RemediationEngine\LapiRemediation;
 use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\BouncerException;
+use CrowdSecBouncer\Constants;
 use CrowdSecBouncer\Tests\PHPUnitUtil;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
-use CrowdSecBouncer\Constants;
 
 /**
  * @covers \CrowdSecBouncer\AbstractBouncer::__construct
@@ -41,16 +41,16 @@ use CrowdSecBouncer\Constants;
  * @covers \CrowdSecBouncer\Configuration::cleanConfigs
  * @covers \CrowdSecBouncer\Configuration::getConfigTreeBuilder
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldNotCheckResolution
- *
  * @covers \CrowdSecBouncer\AbstractBouncer::bounceCurrentIp
  * @covers \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
  * @covers \CrowdSecBouncer\AbstractBouncer::getRemediationForIp
  * @covers \CrowdSecBouncer\AbstractBouncer::getTrustForwardedIpBoundsList
  * @covers \CrowdSecBouncer\AbstractBouncer::handleForwardedFor
+ *
  * @uses \CrowdSecBouncer\AbstractBouncer::handleRemediation
+ *
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldTrustXforwardedFor
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldBounceCurrentIp
- *
  * @covers \CrowdSecBouncer\AbstractBouncer::checkCaptcha
  * @covers \CrowdSecBouncer\AbstractBouncer::buildCaptchaCouple
  * @covers \CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder::writePhrase
@@ -63,9 +63,7 @@ use CrowdSecBouncer\Constants;
  * @covers \CrowdSecBouncer\AbstractBouncer::pruneCache
  * @covers \CrowdSecBouncer\AbstractBouncer::refreshBlocklistCache
  * @covers \CrowdSecBouncer\AbstractBouncer::testCacheConnection
- *
  */
-
 final class AbstractBouncerTest extends TestCase
 {
     private const EXCLUDED_URI = '/favicon.ico';
@@ -87,9 +85,9 @@ final class AbstractBouncerTest extends TestCase
     private $root;
 
     protected $configs = [
-        #============================================================================#
-        # Bouncer configs
-        #============================================================================#
+        // ============================================================================#
+        // Bouncer configs
+        // ============================================================================#
         'use_curl' => false,
         'debug_mode' => true,
         'disable_prod_log' => false,
@@ -136,9 +134,9 @@ final class AbstractBouncerTest extends TestCase
                 'footer' => '',
             ],
         ],
-        #============================================================================#
-        # Client configs
-        #============================================================================#
+        // ============================================================================#
+        // Client configs
+        // ============================================================================#
         'auth_type' => Constants::AUTH_KEY,
         'tls_cert_path' => '',
         'tls_key_path' => '',
@@ -147,9 +145,9 @@ final class AbstractBouncerTest extends TestCase
         'api_key' => 'unit-test',
         'api_url' => Constants::DEFAULT_LAPI_URL,
         'api_timeout' => 1,
-        #============================================================================#
-        # Remediation engine configs
-        #============================================================================#
+        // ============================================================================#
+        // Remediation engine configs
+        // ============================================================================#
         'fallback_remediation' => Constants::REMEDIATION_CAPTCHA,
         'ordered_remediations' => [Constants::REMEDIATION_BAN, Constants::REMEDIATION_CAPTCHA],
         'fs_cache_path' => __DIR__ . '/.cache',
@@ -169,7 +167,6 @@ final class AbstractBouncerTest extends TestCase
         ],
     ];
 
-
     protected function setUp(): void
     {
         unset($_SERVER['REMOTE_ADDR']);
@@ -182,7 +179,6 @@ final class AbstractBouncerTest extends TestCase
         $this->logger = new FileLog(['log_directory_path' => $this->root->url(), 'debug_mode' => true]);
     }
 
-
     public function testPrivateAndProtectedMethods()
     {
         // shouldNotCheckResolution
@@ -193,8 +189,6 @@ final class AbstractBouncerTest extends TestCase
             ->getMock();
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
             true, true, ['getHttpMethod', 'getPostedVariable']);
-
-
 
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -212,10 +206,8 @@ final class AbstractBouncerTest extends TestCase
         // has_to_be_resolved = null
         $this->assertEquals(true, $result);
 
-
         $bouncer->method('getHttpMethod')->willReturnOnConsecutiveCalls('POST', 'GET');
         $bouncer->method('getPostedVariable')->willReturnOnConsecutiveCalls('1');
-
 
         // has_to_be_resolved = true and POST method and crowdsec_captcha = 1
         $result = PHPUnitUtil::callMethod(
@@ -240,12 +232,6 @@ final class AbstractBouncerTest extends TestCase
         );
         $this->assertEquals(true, $result);
 
-
-
-
-
-
-        // handleForwardedFor
         // Classic tests
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
@@ -254,7 +240,6 @@ final class AbstractBouncerTest extends TestCase
             ->getMock();
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
             true, true, ['getHttpRequestHeader']);
-
 
         $bouncer->method('getHttpRequestHeader')->willReturnOnConsecutiveCalls('1.2.3.4', '1.2.3.4');
 
@@ -265,7 +250,6 @@ final class AbstractBouncerTest extends TestCase
         );
         // 4.5.6.7 is not a trusted ip, so the result is passed ip
         $this->assertEquals('4.5.6.7', $result);
-
 
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -284,7 +268,6 @@ final class AbstractBouncerTest extends TestCase
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
             true, true, ['getHttpRequestHeader']);
 
-
         $bouncer->method('getHttpRequestHeader')->willReturnOnConsecutiveCalls('1.2.3.4', '1.2.3.4');
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -293,7 +276,6 @@ final class AbstractBouncerTest extends TestCase
         );
         // 4.5.6.7 is not a trusted ip, so the result is passed ip
         $this->assertEquals('4.5.6.7', $result);
-
 
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -312,7 +294,6 @@ final class AbstractBouncerTest extends TestCase
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
             true, true, ['getHttpRequestHeader']);
 
-
         $bouncer->method('getHttpRequestHeader')->willReturnOnConsecutiveCalls('1.2.3.4', '1.2.3.4');
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -329,14 +310,7 @@ final class AbstractBouncerTest extends TestCase
         // 5.6.7.8 is a trusted ip, so the result should be the forwarded ip but the setting is a forced ip
         $this->assertEquals('120.130.140.150', $result);
 
-
-
-
-
-
-
-
-        //getTrustForwardedIpBoundsList
+        // getTrustForwardedIpBoundsList
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
             ->disableOriginalConstructor()
@@ -344,14 +318,12 @@ final class AbstractBouncerTest extends TestCase
             ->getMock();
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
 
-
         $result = PHPUnitUtil::callMethod(
             $bouncer,
             'getTrustForwardedIpBoundsList',
             []
         );
         $this->assertEquals([['005.006.007.008', '005.006.007.008']], $result);
-
 
         // capRemediationLevel
         $configs = $this->configs;
@@ -379,7 +351,7 @@ final class AbstractBouncerTest extends TestCase
         $mockRemediation->method('getConfig')->will(
             $this->returnValueMap(
                 [
-                    ['ordered_remediations',['ban', 'captcha', 'bypass']]
+                    ['ordered_remediations', ['ban', 'captcha', 'bypass']],
                 ]
             )
         );
@@ -402,7 +374,7 @@ final class AbstractBouncerTest extends TestCase
         $mockRemediation->method('getConfig')->will(
             $this->returnValueMap(
                 [
-                    ['ordered_remediations',['ban', 'captcha', 'bypass']]
+                    ['ordered_remediations', ['ban', 'captcha', 'bypass']],
                 ]
             )
         );
@@ -455,7 +427,6 @@ final class AbstractBouncerTest extends TestCase
         $this->assertIsString($result['phrase'], 'Captcha phrase should be ok');
         $this->assertEquals(5, strlen($result['phrase']), 'Captcha phrase should be of length 5');
 
-
         $this->assertStringStartsWith('data:image/jpeg;base64', $result['inlineImage'], 'Captcha image should be ok');
 
         // getCache
@@ -465,14 +436,14 @@ final class AbstractBouncerTest extends TestCase
             []
         );
 
-        $this->assertTrue($result instanceof \CrowdSec\RemediationEngine\CacheStorage\AbstractCache, 'Get cache should return remediation cache');
+        $this->assertInstanceOf(\CrowdSec\RemediationEngine\CacheStorage\AbstractCache::class, $result, 'Get cache should return remediation cache');
         // getBanHtml
         $this->configs = array_merge($this->configs, [
             'text' => [
                 'ban_wall' => [
-                    'title' => 'BAN TEST TITLE'
-                ]
-            ]
+                    'title' => 'BAN TEST TITLE',
+                ],
+            ],
         ]);
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
@@ -492,9 +463,9 @@ final class AbstractBouncerTest extends TestCase
         $this->configs = array_merge($this->configs, [
             'text' => [
                 'captcha_wall' => [
-                    'title' => 'CAPTCHA TEST TITLE'
-                ]
-            ]
+                    'title' => 'CAPTCHA TEST TITLE',
+                ],
+            ],
         ]);
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
@@ -506,7 +477,6 @@ final class AbstractBouncerTest extends TestCase
             $bouncer,
             'getCaptchaHtml',
             [false, 'fake-inline-image', 'fake-url']
-
         );
         $this->assertStringContainsString('CAPTCHA TEST TITLE', $result, 'Captcha rendering should be as expected');
         $this->assertStringNotContainsString('<p class="error">', $result, 'Should be no error message');
@@ -515,7 +485,6 @@ final class AbstractBouncerTest extends TestCase
             $bouncer,
             'getCaptchaHtml',
             [true, 'fake-inline-image', 'fake-url']
-
         );
         $this->assertStringContainsString('<p class="error">', $result, 'Should be no error message');
 
@@ -553,9 +522,7 @@ final class AbstractBouncerTest extends TestCase
 
         $this->assertEquals(123, $errorCode);
         $this->assertEquals('Error in unit test', $errorMessage);
-
     }
-
 
     public function testShouldBounceCurrentIp()
     {
@@ -579,7 +546,6 @@ final class AbstractBouncerTest extends TestCase
         $result = $bouncer->shouldBounceCurrentIp();
         $this->assertEquals(false, $result);
 
-
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
             ->disableOriginalConstructor()
@@ -588,14 +554,12 @@ final class AbstractBouncerTest extends TestCase
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
             true, true, ['getRequestUri']);
 
-
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls(self::EXCLUDED_URI, '/good-uri');
         $result = $bouncer->shouldBounceCurrentIp();
         $this->assertEquals(false, $result);
 
         $result = $bouncer->shouldBounceCurrentIp();
         $this->assertEquals(true, $result);
-
     }
 
     public function testCacheMethodsException()
@@ -666,5 +630,4 @@ final class AbstractBouncerTest extends TestCase
         $this->assertEquals(101112, $errorCode);
         $this->assertEquals('Error while testing cache connection: unit test get cache storage', $errorMessage);
     }
-
 }

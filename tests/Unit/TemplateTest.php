@@ -15,26 +15,25 @@ namespace CrowdSecBouncer\Tests\Unit;
  * @license   MIT License
  */
 
-use PHPUnit\Framework\TestCase;
 use CrowdSecBouncer\Template;
+use PHPUnit\Framework\TestCase;
 
 /**
- * @covers CrowdSecBouncer\Template::__construct
- * @covers CrowdSecBouncer\Template::render
- *
+ * @covers \CrowdSecBouncer\Template::__construct
+ * @covers \CrowdSecBouncer\Template::render
  */
 final class TemplateTest extends TestCase
 {
     public function testRender()
     {
-        $template = new Template('ban.html.twig', __DIR__ . "/../../src/templates");
+        $template = new Template('ban.html.twig', __DIR__ . '/../../src/templates');
         $render = $template->render(
             [
                 'text' => [
                     'ban_wall' => [
-                        'title' => 'BAN TEST TITLE'
-                    ]
-                ]
+                        'title' => 'BAN TEST TITLE',
+                    ],
+                ],
             ]
         );
 
@@ -46,23 +45,22 @@ final class TemplateTest extends TestCase
                 'text' => [
                     'ban_wall' => [
                         'title' => 'BAN TEST TITLE',
-                        'footer' => 'This is a footer test'
-                    ]
-                ]
+                        'footer' => 'This is a footer test',
+                    ],
+                ],
             ]
         );
 
         $this->assertStringContainsString('<p class="footer">This is a footer test</p>', $render, 'Ban rendering should contain footer');
 
-
-        $template = new Template('captcha.html.twig', __DIR__ . "/../../src/templates");
+        $template = new Template('captcha.html.twig', __DIR__ . '/../../src/templates');
         $render = $template->render(
             [
                 'text' => [
                     'captcha_wall' => [
-                        'title' => 'CAPTCHA TEST TITLE'
-                    ]
-                ]
+                        'title' => 'CAPTCHA TEST TITLE',
+                    ],
+                ],
             ]
         );
 

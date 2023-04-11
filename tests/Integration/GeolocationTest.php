@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
-use CrowdSec\RemediationEngine\LapiRemediation;
-use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
 use CrowdSec\LapiClient\Bouncer as BouncerClient;
+use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
+use CrowdSec\RemediationEngine\LapiRemediation;
 use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\Constants;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+
 /**
  * @covers \CrowdSecBouncer\AbstractBouncer::getRemediationForIp
  *
@@ -32,7 +33,6 @@ use Psr\Log\LoggerInterface;
  * @uses \CrowdSecBouncer\Configuration::cleanConfigs
  * @uses \CrowdSecBouncer\Configuration::getConfigTreeBuilder
  * @uses \CrowdSecBouncer\AbstractBouncer::clearCache
- *
  */
 final class GeolocationTest extends TestCase
 {
@@ -41,7 +41,7 @@ final class GeolocationTest extends TestCase
 
     /** @var LoggerInterface */
     private $logger;
-    /** @var bool  */
+    /** @var bool */
     private $useCurl;
     /** @var bool */
     private $useTls;
@@ -124,18 +124,16 @@ final class GeolocationTest extends TestCase
             'use_curl' => $this->useCurl,
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR,
-            'stream_mode' => false
+            'stream_mode' => false,
         ];
 
         $client = new BouncerClient($bouncerConfigs);
         $cache = new PhpFiles($bouncerConfigs);
         $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
 
-
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
 
         $bouncer->clearCache();
-
 
         $this->assertEquals(
             'captcha',
@@ -155,7 +153,6 @@ final class GeolocationTest extends TestCase
         $client = new BouncerClient($bouncerConfigs);
         $cache = new PhpFiles($bouncerConfigs);
         $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
-
 
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
         $bouncer->clearCache();
@@ -191,6 +188,7 @@ final class GeolocationTest extends TestCase
 
     /**
      * @group integration
+     *
      * @dataProvider maxmindConfigProvider
      *
      * @throws \Symfony\Component\Cache\Exception\CacheException|\Psr\Cache\InvalidArgumentException
@@ -208,16 +206,15 @@ final class GeolocationTest extends TestCase
             'geolocation' => $geolocationConfig,
             'use_curl' => $this->useCurl,
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
-            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR
+            'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR,
         ];
 
         $client = new BouncerClient($bouncerConfigs);
         $cache = new PhpFiles($bouncerConfigs);
         $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
 
-
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
-        $cacheAdapter= $bouncer->getRemediationEngine()->getCacheStorage();
+        $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
         $cacheAdapter->clear();
 
         // Warm BlockList cache up

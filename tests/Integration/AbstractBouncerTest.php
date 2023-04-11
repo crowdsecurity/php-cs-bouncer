@@ -8,7 +8,6 @@ use CrowdSec\Common\Client\RequestHandler\Curl;
 use CrowdSec\Common\Client\RequestHandler\FileGetContents;
 use CrowdSec\Common\Logger\FileLog;
 use CrowdSec\LapiClient\Bouncer as BouncerClient;
-use CrowdSec\RemediationEngine\CacheStorage\CacheStorageException;
 use CrowdSec\RemediationEngine\CacheStorage\Memcached;
 use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
 use CrowdSec\RemediationEngine\CacheStorage\Redis;
@@ -34,9 +33,11 @@ use Psr\Log\LoggerInterface;
  * @uses   \CrowdSecBouncer\AbstractBouncer::getConfigs
  * @uses   \CrowdSecBouncer\AbstractBouncer::getLogger
  * @uses   \CrowdSecBouncer\AbstractBouncer::getRemediationEngine
+ *
  * @covers   \CrowdSecBouncer\AbstractBouncer::handleCache
  * @covers   \CrowdSecBouncer\AbstractBouncer::handleClient
  * @covers \CrowdSecBouncer\AbstractBouncer::refreshBlocklistCache
+ *
  * @uses   \CrowdSecBouncer\Configuration::addBouncerNodes
  * @uses   \CrowdSecBouncer\Configuration::addCacheNodes
  * @uses   \CrowdSecBouncer\Configuration::addConnectionNodes
@@ -51,17 +52,18 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\AbstractBouncer::handleRemediation
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldTrustXforwardedFor
  *
- *
  * @uses \CrowdSecBouncer\AbstractBouncer::getBanHtml
  * @uses \CrowdSecBouncer\AbstractBouncer::handleBanRemediation
  * @uses \CrowdSecBouncer\AbstractBouncer::sendResponse
  * @uses \CrowdSecBouncer\Template::__construct
  * @uses \CrowdSecBouncer\Template::render
- *
  * @uses \CrowdSecBouncer\AbstractBouncer::buildCaptchaCouple
  * @uses \CrowdSecBouncer\AbstractBouncer::displayCaptchaWall
+ *
  * @covers \CrowdSecBouncer\AbstractBouncer::getCache
+ *
  * @uses \CrowdSecBouncer\AbstractBouncer::getCaptchaHtml
+ *
  * @covers \CrowdSecBouncer\AbstractBouncer::handleCaptchaRemediation
  * @covers \CrowdSecBouncer\AbstractBouncer::handleCaptchaResolutionForm
  * @covers \CrowdSecBouncer\AbstractBouncer::initCaptchaResolution
@@ -71,15 +73,12 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\AbstractBouncer::getRemediationForIp
  * @covers \CrowdSecBouncer\AbstractBouncer::run
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldBounceCurrentIp
- *
  */
 final class AbstractBouncerTest extends TestCase
 {
-
     private const EXCLUDED_URI = '/favicon.ico';
     /** @var WatcherClient */
     private $watcherClient;
-
 
     /** @var bool */
     private $useTls;
@@ -107,7 +106,7 @@ final class AbstractBouncerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->useTls = (string)getenv('BOUNCER_TLS_PATH');
+        $this->useTls = (string) getenv('BOUNCER_TLS_PATH');
 
         $this->root = vfsStream::setup('/tmp');
         $this->configs['log_directory_path'] = $this->root->url();
@@ -127,7 +126,7 @@ final class AbstractBouncerTest extends TestCase
             'memcached_dsn' => getenv('MEMCACHED_DSN'),
             'excluded_uris' => [self::EXCLUDED_URI],
             'stream_mode' => false,
-            'trust_ip_forward_array' => [['005.006.007.008', '005.006.007.008']]
+            'trust_ip_forward_array' => [['005.006.007.008', '005.006.007.008']],
         ];
         if ($this->useTls) {
             $this->addTlsConfig($bouncerConfigs, $this->useTls);
@@ -139,8 +138,6 @@ final class AbstractBouncerTest extends TestCase
         $this->watcherClient->deleteAllDecisions();
     }
 
-
-
     private function addTlsConfig(&$bouncerConfigs, $tlsPath)
     {
         $bouncerConfigs['tls_cert_path'] = $tlsPath . '/bouncer.pem';
@@ -148,8 +145,6 @@ final class AbstractBouncerTest extends TestCase
         $bouncerConfigs['tls_ca_cert_path'] = $tlsPath . '/ca-chain.pem';
         $bouncerConfigs['tls_verify_peer'] = true;
     }
-
-
 
     public function testConstructAndSomeMethods()
     {
@@ -175,18 +170,16 @@ final class AbstractBouncerTest extends TestCase
 
         $this->assertEquals(null, $bouncer->getConfig('unexpected_config'), 'Should clean config');
 
-
         $configs = $bouncer->getConfigs();
         $this->assertArrayHasKey('text', $configs, 'Config should have text key');
         $this->assertArrayHasKey('color', $configs, 'Config should have color key');
     }
 
-
-
     /**
      * @group captcha
      *
      * @return void
+     *
      * @throws BouncerException
      * @throws \CrowdSec\RemediationEngine\CacheStorage\CacheStorageException
      * @throws \PHPUnit\Framework\ExpectationFailedException
@@ -203,7 +196,7 @@ final class AbstractBouncerTest extends TestCase
             'stream_mode' => false,
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => $this->root->url() . '/.cache',
-            'forced_test_ip' => TestHelpers::BAD_IP
+            'forced_test_ip' => TestHelpers::BAD_IP,
         ];
         if ($this->useTls) {
             $this->addTlsConfig($bouncerConfigs, $this->useTls);
@@ -220,7 +213,7 @@ final class AbstractBouncerTest extends TestCase
                 'redirectResponse',
                 'getHttpMethod',
                 'getPostedVariable',
-                'getHttpRequestHeader'
+                'getHttpRequestHeader',
             ]);
 
         $bouncer->clearCache();
@@ -294,8 +287,7 @@ final class AbstractBouncerTest extends TestCase
 
         // Step 2 :refresh
         $bouncer->method('getHttpMethod')->willReturnOnConsecutiveCalls('POST', 'POST', 'POST', 'POST');
-        $bouncer->method('getPostedVariable')->willReturnOnConsecutiveCalls('1','1','1','1', '1', 'bad-phrase', 'bad-phrase');
-
+        $bouncer->method('getPostedVariable')->willReturnOnConsecutiveCalls('1', '1', '1', '1', '1', 'bad-phrase', 'bad-phrase');
 
         $_SERVER['HTTP_REFERER'] = 'UNIT-TEST';
         $_SERVER['REQUEST_METHOD'] = 'POST';
@@ -324,7 +316,6 @@ final class AbstractBouncerTest extends TestCase
         $_POST['crowdsec_captcha'] = '1';
         $bouncer->bounceCurrentIp();
 
-
         $cacheKeyCaptcha = $cache->getCacheKey(Constants::CACHE_TAG_CAPTCHA, TestHelpers::BAD_IP);
         $item = $cache->getItem($cacheKeyCaptcha);
         $cached = $item->get();
@@ -347,11 +338,11 @@ final class AbstractBouncerTest extends TestCase
                 'redirectResponse',
                 'getHttpMethod',
                 'getPostedVariable',
-                'getHttpRequestHeader'
+                'getHttpRequestHeader',
             ]);
 
         $bouncer->method('getHttpMethod')->willReturnOnConsecutiveCalls('POST');
-        $bouncer->method('getPostedVariable')->willReturnOnConsecutiveCalls('1', null,'1',$phraseToGuess2);
+        $bouncer->method('getPostedVariable')->willReturnOnConsecutiveCalls('1', null, '1', $phraseToGuess2);
 
         $_SERVER['REQUEST_METHOD'] = 'POST';
         $_POST['phrase'] = $phraseToGuess2;
@@ -370,11 +361,11 @@ final class AbstractBouncerTest extends TestCase
         );
     }
 
-
     /**
      * @group ban
      *
      * @return void
+     *
      * @throws BouncerException
      * @throws \CrowdSec\RemediationEngine\CacheStorage\CacheStorageException
      * @throws \PHPUnit\Framework\ExpectationFailedException
@@ -391,7 +382,7 @@ final class AbstractBouncerTest extends TestCase
             'stream_mode' => false,
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => $this->root->url() . '/.cache',
-            'forced_test_ip' => TestHelpers::BAD_IP
+            'forced_test_ip' => TestHelpers::BAD_IP,
         ];
         if ($this->useTls) {
             $this->addTlsConfig($bouncerConfigs, $this->useTls);
@@ -408,7 +399,7 @@ final class AbstractBouncerTest extends TestCase
                 'redirectResponse',
                 'getHttpMethod',
                 'getPostedVariable',
-                'getHttpRequestHeader'
+                'getHttpRequestHeader',
             ]);
 
         $bouncer->clearCache();
@@ -421,7 +412,6 @@ final class AbstractBouncerTest extends TestCase
             $item->isHit(),
             'The remediation should not be cached'
         );
-
 
         $bouncer->bounceCurrentIp();
 
@@ -460,11 +450,11 @@ final class AbstractBouncerTest extends TestCase
                 'getPostedVariable',
                 'getHttpRequestHeader',
                 'getRemoteIp',
-                'getRequestUri'
+                'getRequestUri',
             ]);
 
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls(self::EXCLUDED_URI);
-        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls( '127.0.0.2');
+        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.2');
         $this->assertEquals(false, $bouncer->run(), 'Should not bounce excluded uri');
         PHPUnitUtil::assertRegExp(
             $this,
@@ -487,19 +477,15 @@ final class AbstractBouncerTest extends TestCase
                 'getPostedVariable',
                 'getHttpRequestHeader',
                 'getRemoteIp',
-                'getRequestUri'
+                'getRequestUri',
             ]);
 
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
-        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls( '127.0.0.3');
+        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.3');
         $this->assertEquals(true, $bouncer->run(), 'Should bounce uri');
 
-
-
-
         // Test 4:  not bouncing URI if disabled
-        $bouncerConfigs = array_merge($this->configs, ['bouncing_level' =>
-            Constants::BOUNCING_LEVEL_DISABLED]);
+        $bouncerConfigs = array_merge($this->configs, ['bouncing_level' => Constants::BOUNCING_LEVEL_DISABLED]);
         $client = new BouncerClient($bouncerConfigs, null, $this->logger);
         $cache = new PhpFiles($bouncerConfigs, $this->logger);
         $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
@@ -513,11 +499,11 @@ final class AbstractBouncerTest extends TestCase
                 'getPostedVariable',
                 'getHttpRequestHeader',
                 'getRemoteIp',
-                'getRequestUri'
+                'getRequestUri',
             ]);
 
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
-        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls( '127.0.0.4');
+        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.4');
         $this->assertEquals(false, $bouncer->run(), 'Should not bounce if disabled');
 
         PHPUnitUtil::assertRegExp(
@@ -528,11 +514,11 @@ final class AbstractBouncerTest extends TestCase
         );
 
         // Test 5: throw error if config says so
-        $bouncerConfigs =  array_merge(
+        $bouncerConfigs = array_merge(
             $this->configs,
             [
                 'display_errors' => true,
-                'api_url' => 'bad-url'
+                'api_url' => 'bad-url',
             ]
         );
         $client = new BouncerClient($bouncerConfigs, null, $this->logger);
@@ -548,12 +534,11 @@ final class AbstractBouncerTest extends TestCase
                 'getPostedVariable',
                 'getHttpRequestHeader',
                 'getRemoteIp',
-                'getRequestUri'
+                'getRequestUri',
             ]);
 
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
-        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls( '127.0.0.5');
-
+        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.5');
 
         $error = '';
 
@@ -577,13 +562,12 @@ final class AbstractBouncerTest extends TestCase
             'Prod log content should be correct'
         );
 
-
         // Test 6: NOT throw error if config says so
         $bouncerConfigs = array_merge(
             $this->configs,
             [
                 'display_errors' => false,
-                'api_url' => 'bad-url'
+                'api_url' => 'bad-url',
             ]
         );
         $client = new BouncerClient($bouncerConfigs, null, $this->logger);
@@ -599,11 +583,11 @@ final class AbstractBouncerTest extends TestCase
                 'getPostedVariable',
                 'getHttpRequestHeader',
                 'getRemoteIp',
-                'getRequestUri'
+                'getRequestUri',
             ]);
 
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
-        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls( '127.0.0.6');
+        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.6');
 
         $error = '';
 
@@ -620,9 +604,6 @@ final class AbstractBouncerTest extends TestCase
             file_get_contents($this->root->url() . '/' . $this->prodFile),
             'Prod log content should be correct'
         );
-
-
-
 
         // Test 7 : no-forward
         $bouncerConfigs = array_merge(
@@ -644,12 +625,11 @@ final class AbstractBouncerTest extends TestCase
                 'getPostedVariable',
                 'getHttpRequestHeader',
                 'getRemoteIp',
-                'getRequestUri'
+                'getRequestUri',
             ]);
 
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
-        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls( '127.0.0.7');
-
+        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.7');
 
         $bouncer->run();
         PHPUnitUtil::assertRegExp(
@@ -658,8 +638,6 @@ final class AbstractBouncerTest extends TestCase
             file_get_contents($this->root->url() . '/' . $this->debugFile),
             'Debug log content should be correct'
         );
-
-
 
         // Test 8 : forced X-Forwarded-for usage
         $bouncerConfigs = array_merge(
@@ -681,12 +659,11 @@ final class AbstractBouncerTest extends TestCase
                 'getPostedVariable',
                 'getHttpRequestHeader',
                 'getRemoteIp',
-                'getRequestUri'
+                'getRequestUri',
             ]);
 
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
-        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls( '127.0.0.8');
-
+        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.8');
 
         $bouncer->run();
         PHPUnitUtil::assertRegExp(
@@ -711,12 +688,12 @@ final class AbstractBouncerTest extends TestCase
                 'getPostedVariable',
                 'getHttpRequestHeader',
                 'getRemoteIp',
-                'getRequestUri'
+                'getRequestUri',
             ]);
 
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
-        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls( '127.0.0.9');
-        $bouncer->method('getHttpRequestHeader')->willReturnOnConsecutiveCalls( '1.2.3.5');//HTTP_X_FORWARDED_FOR
+        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.9');
+        $bouncer->method('getHttpRequestHeader')->willReturnOnConsecutiveCalls('1.2.3.5'); // HTTP_X_FORWARDED_FOR
 
         $bouncer->run();
         PHPUnitUtil::assertRegExp(
@@ -741,12 +718,12 @@ final class AbstractBouncerTest extends TestCase
                 'getPostedVariable',
                 'getHttpRequestHeader',
                 'getRemoteIp',
-                'getRequestUri'
+                'getRequestUri',
             ]);
 
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
-        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls( '5.6.7.8');
-        $bouncer->method('getHttpRequestHeader')->willReturnOnConsecutiveCalls( '127.0.0.10');//HTTP_X_FORWARDED_FOR
+        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('5.6.7.8');
+        $bouncer->method('getHttpRequestHeader')->willReturnOnConsecutiveCalls('127.0.0.10'); // HTTP_X_FORWARDED_FOR
         $bouncer->run();
         PHPUnitUtil::assertRegExp(
             $this,
@@ -755,7 +732,6 @@ final class AbstractBouncerTest extends TestCase
             'Debug log content should be correct'
         );
     }
-
 
     public function testPrivateAndProtectedMethods()
     {
@@ -773,7 +749,7 @@ final class AbstractBouncerTest extends TestCase
             [$configs, new FileLog()]
         );
 
-        $this->assertTrue($result instanceof Redis);
+        $this->assertInstanceOf(Redis::class, $result);
 
         $configs = array_merge($this->configs, ['cache_system' => 'memcached']);
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
@@ -788,7 +764,7 @@ final class AbstractBouncerTest extends TestCase
             [$configs, new FileLog()]
         );
 
-        $this->assertTrue($result instanceof Memcached);
+        $this->assertInstanceOf(Memcached::class, $result);
 
         $configs = array_merge($this->configs, ['cache_system' => 'phpfs']);
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
@@ -803,7 +779,7 @@ final class AbstractBouncerTest extends TestCase
             [$configs, new FileLog()]
         );
 
-        $this->assertTrue($result instanceof PhpFiles);
+        $this->assertInstanceOf(PhpFiles::class, $result);
 
         $error = '';
 
@@ -818,11 +794,9 @@ final class AbstractBouncerTest extends TestCase
             PHPUnitUtil::callMethod(
                 $bouncer,
                 'handleCache',
-                [array_merge($configs,['cache_system' => 'bad-cache-name']), new FileLog()]
+                [array_merge($configs, ['cache_system' => 'bad-cache-name']), new FileLog()]
             );
-
-        }
-        catch (BouncerException $e){
+        } catch (BouncerException $e) {
             $error = $e->getMessage();
         }
 
@@ -832,7 +806,6 @@ final class AbstractBouncerTest extends TestCase
             $error,
             'Should have throw an error'
         );
-
 
         // handleClient
         $configs = $this->configs;
@@ -882,7 +855,7 @@ final class AbstractBouncerTest extends TestCase
             'redis_dsn' => getenv('REDIS_DSN'),
             'memcached_dsn' => getenv('MEMCACHED_DSN'),
             'fs_cache_path' => $this->root->url() . '/.cache',
-            'stream_mode' => false
+            'stream_mode' => false,
         ];
         if ($this->useTls) {
             $this->addTlsConfig($bouncerConfigs, $this->useTls);
@@ -919,7 +892,6 @@ final class AbstractBouncerTest extends TestCase
         // Call the same thing for the second time (now it should be a cache hit)
         $cleanRemediation2ndCall = $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP);
         $this->assertEquals('bypass', $cleanRemediation2ndCall);
-
 
         // Clear cache
         $this->assertTrue($bouncer->clearCache(), 'The cache should be clearable');
@@ -1006,7 +978,7 @@ final class AbstractBouncerTest extends TestCase
             'stream_mode' => true,
             'redis_dsn' => getenv('REDIS_DSN'),
             'memcached_dsn' => getenv('MEMCACHED_DSN'),
-            'fs_cache_path' => $this->root->url() . '/.cache'
+            'fs_cache_path' => $this->root->url() . '/.cache',
         ];
         if ($this->useTls) {
             $this->addTlsConfig($bouncerConfigs, $this->useTls);
@@ -1062,7 +1034,6 @@ final class AbstractBouncerTest extends TestCase
         // Pull updates
         $bouncer->refreshBlocklistCache();
 
-
         $this->assertEquals(
             'ban',
             $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP),
@@ -1083,7 +1054,7 @@ final class AbstractBouncerTest extends TestCase
             'stream_mode' => true,
             'redis_dsn' => getenv('REDIS_DSN'),
             'memcached_dsn' => getenv('MEMCACHED_DSN'),
-            'fs_cache_path' => $this->root->url() . '/.cache'
+            'fs_cache_path' => $this->root->url() . '/.cache',
         ];
         if ($this->useTls) {
             $bouncerConfigs['tls_cert_path'] = $this->useTls . '/bouncer.pem';
@@ -1136,6 +1107,5 @@ final class AbstractBouncerTest extends TestCase
 
         // Test cache connection
         $bouncer->testCacheConnection();
-
     }
 }
