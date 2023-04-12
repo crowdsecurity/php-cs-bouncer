@@ -75,7 +75,7 @@ A captcha wall could look like:
 
 ![Captcha wall](images/screenshots/front-captcha.jpg)
 
-With the provided standalone bouncer, please note that it is possible to customize all the colors of these pages so that they integrate best with your design.
+Please note that it is possible to customize all the colors of these pages so that they integrate best with your design.
 
 On the other hand, all texts are also fully customizable. This will allow you, for example, to present translated pages in your users' language.
 
@@ -148,7 +148,9 @@ class MyCustomBouncer extends AbstractBouncer
 ```
 
 
-Once you have implemented these methods, you could retrieve all required configurations to instantiate your bouncer and then call the `run` method to apply a bounce for the current detected IP.
+Once you have implemented these methods, you could retrieve all required configurations to instantiate your bouncer 
+and then call the `run` method to apply a bounce for the current detected IP. Please see below for the list of 
+available configurations.
 
 In order to instantiate the bouncer, you will have to create at least a `CrowdSec\RemediationEngine\LapiRemediation` 
 object too. 
@@ -161,8 +163,8 @@ use CrowdSec\LapiClient\Bouncer as BouncerClient;
 use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
 
 $configs = [...];
-$client = new BouncerClient($configs);
-$cacheStorage = new PhpFiles($configs);
+$client = new BouncerClient($configs);// @see AbstractBouncer::handleClient method for a basic client creation
+$cacheStorage = new PhpFiles($configs);// @see AbstractBouncer::handleCache method for a basic cache storage creation
 $remediationEngine = new LapiRemediation($configs, $client, $cacheStorage);
 
 $bouncer = new MyCustomBouncer($configs, $remediationEngine);
@@ -201,7 +203,8 @@ Here is the list of available settings:
 - `fallback_remediation`: Select from `bypass` (minimum remediation), `captcha` or `ban` (maximum remediation). Default to 'captcha'. Handle unknown remediations as.
 
 
-- `trust_ip_forward_array`:  If you use a CDN, a reverse proxy or a load balancer, set an array of IPs. For other IPs, the bouncer will not trust the X-Forwarded-For header.
+- `trust_ip_forward_array`:  If you use a CDN, a reverse proxy or a load balancer, set an array of comparable IPs arrays:
+  (example: `[['001.002.003.004', '001.002.003.004'], ['005.006.007.008', '005.006.007.008']]` for CDNs with IPs `1.2.3.4` and `5.6.7.8`). For other IPs, the bouncer will not trust the X-Forwarded-For header.
 
 
 - `excluded_uris`: array of URIs that will not be bounced.
@@ -246,22 +249,17 @@ Here is the list of available settings:
   timeout will be unlimited.
 
 
-- `use_curl`: By default, this lib call the REST Local API using `file_get_contents` method (`allow_url_fopen` is required).
-  You can set `use_curl` to `true` in order to use `cURL` request instead (`curl` is in then required)
-
 ### Cache
 
-- `cache_system`: Select from `phpfs` (PHP file cache), `redis` or `memcached`.
 
-
-- `fs_cache_path`: Will be used only if you choose PHP file cache as `cache_system`. Important note: be sur this path
+- `fs_cache_path`: Will be used only if you choose PHP file cache as cache storage. Important note: be sur this path
   won't be publicly accessible.
 
 
-- `redis_dsn`:   Will be used only if you choose Redis cache as `cache_system`.
+- `redis_dsn`:   Will be used only if you choose Redis cache as cache storage.
 
 
-- `memcached_dsn`: Will be used only if you choose Memcached as `cache_system`.
+- `memcached_dsn`: Will be used only if you choose Memcached as cache storage.
 
 
 - `clean_ip_cache_duration`: Set the duration we keep in cache the fact that an IP is clean. In seconds. Defaults to 5.
