@@ -9,11 +9,12 @@ The [public API](https://semver.org/spec/v2.0.0.html#spec-item-1) of this librar
 
 ---
 
-## [2.0.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v2.0.0) - 2023-??-??
+## [2.0.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v2.0.0) - 2023-04-13
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v1.4.0...v2.0.0)
 
 
 ### Changed
+
 - Update `gregwar/captcha` from `1.1.9` to `1.2.0` and remove some override fixes
 
 ### Removed
