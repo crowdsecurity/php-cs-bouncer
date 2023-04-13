@@ -385,7 +385,7 @@ through a certain URL (e.g. `https://crowdsec:8080`).
 ### Use the CrowdSec cli (`cscli`)
 
 
-Please refer to the [CrowdSec cscli documentation](https://docs.crowdsec.net/docs/cscli/cscli/) for an exhaustive
+Please refer to the [CrowdSec cscli documentation](https://docs.crowdsec.net/docs/cscli/) for an exhaustive
 list of commands.
 
 **N.B**.: If you are using DDEV, just replace `cscli` with `ddev exec -s crowdsec cscli`.
