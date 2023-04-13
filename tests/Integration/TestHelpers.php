@@ -43,14 +43,12 @@ class TestHelpers
      */
     public static function cacheAdapterConfigProvider(): array
     {
-
         return [
             'PhpFilesAdapter' => [Constants::CACHE_SYSTEM_PHPFS, 'PhpFilesAdapter'],
             'RedisAdapter' => [Constants::CACHE_SYSTEM_REDIS, 'RedisAdapter'],
             'MemcachedAdapter' => [Constants::CACHE_SYSTEM_MEMCACHED, 'MemcachedAdapter'],
         ];
     }
-
 
     public static function maxmindConfigProvider(): array
     {

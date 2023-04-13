@@ -41,8 +41,7 @@
 ## Description
 
 This library allows you to create CrowdSec bouncers for PHP applications or frameworks like e-commerce, blog or other 
-exposed applications. It can also be used in a standalone mode using auto-prepend directive and the provided standalone 
-bouncer.
+exposed applications.
 
 ## Prerequisites
 
@@ -54,11 +53,11 @@ Please note that first and foremost a CrowdSec agent must be installed on a serv
 
 - CrowdSec Local API Support
   - Handle `ip`, `range` and `country` scoped decisions
-  - Clear, prune and refresh the Local API cache
   - `Live mode` or `Stream mode`
 - Support IpV4 and Ipv6 (Ipv6 range decisions are yet only supported in `Live mode`) 
 - Large PHP matrix compatibility: 7.2, 7.3, 7.4, 8.0, 8.1 and 8.2
 - Built-in support for the most known cache systems Redis, Memcached and PhpFiles
+  - Clear, prune and refresh the bouncer cache
 - Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)
 
 
@@ -76,139 +75,9 @@ A captcha wall could look like:
 
 ![Captcha wall](images/screenshots/front-captcha.jpg)
 
-With the provided standalone bouncer, please note that it is possible to customize all the colors of these pages so that they integrate best with your design.
+Please note that it is possible to customize all the colors of these pages so that they integrate best with your design.
 
 On the other hand, all texts are also fully customizable. This will allow you, for example, to present translated pages in your users' language.
-
-
-## Standalone bouncer set up
-
-This library includes the [`StandaloneBouncer`](../src/StandaloneBouncer.php) class. You can see that class as a good example for creating your own bouncer. 
-
-Once you set up your server as below, every browser access to a php script will be bounced by the standalone bouncer.
-
-You will have to :
-
-- copy sources of the lib in some `/path/to/the/crowdsec-lib` folder
-
-- give the correct permission for the folder that contains the lib
-
-- copy the `scripts/auto-prepend/settings.example.php` to a `scripts/auto-prepend/settings.php` file
-
-- run the composer installation process to retrieve all necessary dependencies
-
-- set an `auto_prepend_file` directive in your PHP setup.
-
-- Optionally, if you want to use the standalone bouncer in stream mode, you wil have to set a cron task to refresh 
-  cache periodically.
-
-### Copy sources
-
-Create a folder `crowdsec-lib` and clone the sources: 
-
-```shell
-mkdir -p /path/to/the/crowdsec-lib && git clone git@github.com:crowdsecurity/php-cs-bouncer.git /path/to/the/crowdsec-lib
-```
-
-### Files permission
-
-The owner of the `/path/to/the/crowdsec-lib` should be your webserver owner (e.g. `www-data`).
-
-You can achieve it by running command like:
-
-```shell
-sudo chown www-data /path/to/the/crowdsec-lib
-```
-
-### Composer
-
-You should run the composer installation process: 
-
-```shell
-cd /path/to/the/crowdsec-lib && composer install
-```
-
-### Settings file
-
-Please copy the `scripts/auto-prepend/settings.example.php` to a `scripts/auto-prepend/settings.php` and fill the necessary settings in it (see [Configurations settings](#configurations) for more details).
-
-### `auto_prepend_file` directive
-
-We will now describe how to set an `auto_prepend_file` directive in order to call the `scripts/auto-prepend/bounce.php` for each php script access.
-
-Adding an `auto_prepend_file` directive can be done in different ways:
-
-#### `.ini` file
-
-You should add this line to a `.ini` file :
-
-    auto_prepend_file = /absolute/path/to/scripts/auto-prepend/bounce.php
-
-#### Nginx
-
-If you are using Nginx, you should modify your Nginx configuration file by adding a `fastcgi_param` directive. The php block should look like below:
-
-```
-location ~ \.php$ {
-    ...
-    ...
-    ...
-    fastcgi_param PHP_VALUE "/absolute/path/to/scripts/auto-prepend/bounce.php";
-}
-```
-
-#### Apache
-
-If you are using Apache, you should add this line to your `.htaccess` file:
-
-    php_value auto_prepend_file "/absolute/path/to/scripts/auto-prepend/bounce.php"
-
-or modify your `Virtual Host` accordingly:
-
-```
-<VirtualHost ...>
-    ...
-    ...
-    php_value auto_prepend_file "/absolute/path/to/scripts/auto-prepend/bounce.php"
-    
-</VirtualHost>
-```
-
-
-### Stream mode cron task
-
-To use the stream mode, you first have to set the `stream_mode` setting value to `true` in your `scripts/auto-prepend/settings.php` file. 
-
-Then, you could edit the web server user (e.g. `www-data`) crontab: 
-
-```shell
-sudo -u www-data crontab -e
-```
-
-and add the following line
-
-```shell
-* * * * * /usr/bin/php /absolute/path/to/scripts/auto-prepend/refresh-cache.php
-```
-
-In this example, cache is refreshed every minute, but you can modify the cron expression depending on your needs.
-
-### Cache pruning cron task
-
-To use the PHP file system as cache, you should prune the cache with a cron job:
-
-```shell
-sudo -u www-data crontab -e
-```
-
-and add the following line
-
-```shell
-0 0 * * * /usr/bin/php /absolute/path/to/scripts/auto-prepend/prune-cache.php
-```
-
-In this example, cache is pruned at midnight every day, but you can modify the cron expression depending on your needs.
-
 
 ## Create your own bouncer
 
@@ -279,7 +148,9 @@ class MyCustomBouncer extends AbstractBouncer
 ```
 
 
-Once you have implemented these methods, you could retrieve all required configurations to instantiate your bouncer and then call the `run` method to apply a bounce for the current detected IP.
+Once you have implemented these methods, you could retrieve all required configurations to instantiate your bouncer 
+and then call the `run` method to apply a bounce for the current detected IP. Please see below for the list of 
+available configurations.
 
 In order to instantiate the bouncer, you will have to create at least a `CrowdSec\RemediationEngine\LapiRemediation` 
 object too. 
@@ -292,14 +163,13 @@ use CrowdSec\LapiClient\Bouncer as BouncerClient;
 use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
 
 $configs = [...];
-$client = new BouncerClient($configs);
-$cacheStorage = new PhpFiles($configs);
+$client = new BouncerClient($configs);// @see AbstractBouncer::handleClient method for a basic client creation
+$cacheStorage = new PhpFiles($configs);// @see AbstractBouncer::handleCache method for a basic cache storage creation
 $remediationEngine = new LapiRemediation($configs, $client, $cacheStorage);
 
 $bouncer = new MyCustomBouncer($configs, $remediationEngine);
 
 $bouncer->run();
-
 ```
 
 
@@ -323,8 +193,6 @@ To go further and learn how to include this library in your project, you should 
 
 ## Configurations
 
-You can pass an array of configurations in the bouncer constructor. Please look at the [Settings example file](../scripts/auto-prepend/settings.example.php) for quick overview.
-
 Here is the list of available settings:
 
 ### Bouncer behavior
@@ -335,7 +203,8 @@ Here is the list of available settings:
 - `fallback_remediation`: Select from `bypass` (minimum remediation), `captcha` or `ban` (maximum remediation). Default to 'captcha'. Handle unknown remediations as.
 
 
-- `trust_ip_forward_array`:  If you use a CDN, a reverse proxy or a load balancer, set an array of IPs. For other IPs, the bouncer will not trust the X-Forwarded-For header.
+- `trust_ip_forward_array`:  If you use a CDN, a reverse proxy or a load balancer, set an array of comparable IPs arrays:
+  (example: `[['001.002.003.004', '001.002.003.004'], ['005.006.007.008', '005.006.007.008']]` for CDNs with IPs `1.2.3.4` and `5.6.7.8`). For other IPs, the bouncer will not trust the X-Forwarded-For header.
 
 
 - `excluded_uris`: array of URIs that will not be bounced.
@@ -355,10 +224,12 @@ Here is the list of available settings:
 
 - `tls_cert_path`: absolute path to the bouncer certificate (e.g. pem file).
   Only required if you choose `tls` as `auth_type`.
+  **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 
 
 - `tls_key_path`: Absolute path to the bouncer key (e.g. pem file).
   Only required if you choose `tls` as `auth_type`.
+  **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 
 
 - `tls_verify_peer`: This option determines whether request handler verifies the authenticity of the peer's certificate.
@@ -371,6 +242,7 @@ Here is the list of available settings:
 
 - `tls_ca_cert_path`: Absolute path to the CA used to process peer verification.
   Only required if you choose `tls` as `auth_type` and `tls_verify_peer` is set to true.
+  **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 
 
 - `api_url`: Define the URL to your Local API server, default to `http://localhost:8080`.
@@ -380,22 +252,17 @@ Here is the list of available settings:
   timeout will be unlimited.
 
 
-- `use_curl`: By default, this lib call the REST Local API using `file_get_contents` method (`allow_url_fopen` is required).
-  You can set `use_curl` to `true` in order to use `cURL` request instead (`curl` is in then required)
-
 ### Cache
 
-- `cache_system`: Select from `phpfs` (PHP file cache), `redis` or `memcached`.
+
+- `fs_cache_path`: Will be used only if you choose PHP file cache as cache storage.
+  **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 
 
-- `fs_cache_path`: Will be used only if you choose PHP file cache as `cache_system`. Important note: be sur this path
-  won't be publicly accessible.
+- `redis_dsn`:   Will be used only if you choose Redis cache as cache storage.
 
 
-- `redis_dsn`:   Will be used only if you choose Redis cache as `cache_system`.
-
-
-- `memcached_dsn`: Will be used only if you choose Memcached as `cache_system`.
+- `memcached_dsn`: Will be used only if you choose Memcached as cache storage.
 
 
 - `clean_ip_cache_duration`: Set the duration we keep in cache the fact that an IP is clean. In seconds. Defaults to 5.
@@ -424,6 +291,7 @@ Here is the list of available settings:
     - `geolocation[maxmind][database_type]`: Select from `country` or `city`. Default to `country`. These are the two available MaxMind database types.
 
     - `geolocation[maxmind][database_path]`: Absolute path to the MaxMind database (e.g. mmdb file)
+      **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 
 
 ### Captcha and ban wall settings
@@ -488,8 +356,8 @@ Here is the list of available settings:
 - `disable_prod_log`: `true` to disable prod log. Default to `false`.
 
 
-- `log_directory_path`: Absolute path to store log files. Important note: be sure this path won't be publicly
-  accessible.
+- `log_directory_path`: Absolute path to store log files. 
+  **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 
 
 - `display_errors`: true to stop the process and display errors on browser if any.
@@ -502,12 +370,48 @@ Here is the list of available settings:
 - `forced_test_forwarded_ip`: Only for test or debug purpose. Default to empty. If not empty, it will be used
   instead of the real forwarded ip. If set to `no_forward`, the x-forwarded-for mechanism will not be used at all.
 
+### Security note
 
+Some files should not be publicly accessible because they may contain sensitive data:
+
+- Log files
+- Cache files of the File system cache
+- TLS authentication files
+- Geolocation database files
+
+If you define publicly accessible folders in the settings, be sure to add rules to deny access to these files.
+
+In the following example, we will suppose that you use a folder `crowdsec` with sub-folders `logs`, `cache`, `tls` and `geolocation`.
+
+If you are using Nginx, you could use the following snippet to modify your website configuration file: 
+
+```nginx
+server {
+   ...
+   ...
+   ...
+   # Deny all attempts to access some folders of the crowdsec bouncer lib
+   location ~ /crowdsec/(logs|cache|tls|geolocation) {
+           deny all;
+   }
+   ...
+   ...
+}
+```
+
+If you are using Apache, you could add this kind of directive in a `.htaccess` file:
+
+```htaccess
+Redirectmatch 403 crowdsec/logs/
+Redirectmatch 403 crowdsec/cache/
+Redirectmatch 403 crowdsec/tls/
+Redirectmatch 403 crowdsec/geolocation/
+```
 
 ## Other ready to use PHP bouncers
 
-To have a more concrete idea on how to develop a bouncer, you may look at the following bouncers for Magento 2 and 
-WordPress :
+To have a more concrete idea on how to develop a bouncer, you may look at the following bouncers :
 - [CrowdSec Bouncer extension for Magento 2](https://github.com/crowdsecurity/cs-magento-bouncer)
 - [CrowdSec Bouncer plugin for WordPress ](https://github.com/crowdsecurity/cs-wordpress-bouncer)
+- [CrowdSec Standalone Bouncer ](https://github.com/crowdsecurity/cs-php-bouncer)
 

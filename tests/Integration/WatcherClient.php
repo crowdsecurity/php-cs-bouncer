@@ -90,7 +90,7 @@ class WatcherClient extends AbstractClient
         $this->addDecision($now, '24h', self::HOURS24, TestHelpers::IP_FRANCE, 'ban');
     }
 
-    public function setSimpleDecision(string $type= 'ban'): void
+    public function setSimpleDecision(string $type = 'ban'): void
     {
         $this->deleteAllDecisions();
         $now = new \DateTime();
@@ -131,16 +131,15 @@ class WatcherClient extends AbstractClient
 
     protected function getFinalScope($scope, $value)
     {
-
         $scope = (Constants::SCOPE_IP === $scope && 2 === count(explode('/', $value))) ? Constants::SCOPE_RANGE :
             $scope;
         /**
          * Must use capital first letter as the crowdsec agent seems to query with first capital letter
-         * during getStreamDecisions
+         * during getStreamDecisions.
+         *
          * @see https://github.com/crowdsecurity/crowdsec/blob/ae6bf3949578a5f3aa8ec415e452f15b404ba5af/pkg/database/decisions.go#L56
          */
         return ucfirst($scope);
-
     }
 
     public function addDecision(
