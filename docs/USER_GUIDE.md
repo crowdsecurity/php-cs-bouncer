@@ -224,10 +224,12 @@ Here is the list of available settings:
 
 - `tls_cert_path`: absolute path to the bouncer certificate (e.g. pem file).
   Only required if you choose `tls` as `auth_type`.
+  **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 
 
 - `tls_key_path`: Absolute path to the bouncer key (e.g. pem file).
   Only required if you choose `tls` as `auth_type`.
+  **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 
 
 - `tls_verify_peer`: This option determines whether request handler verifies the authenticity of the peer's certificate.
@@ -240,6 +242,7 @@ Here is the list of available settings:
 
 - `tls_ca_cert_path`: Absolute path to the CA used to process peer verification.
   Only required if you choose `tls` as `auth_type` and `tls_verify_peer` is set to true.
+  **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 
 
 - `api_url`: Define the URL to your Local API server, default to `http://localhost:8080`.
@@ -252,8 +255,8 @@ Here is the list of available settings:
 ### Cache
 
 
-- `fs_cache_path`: Will be used only if you choose PHP file cache as cache storage. Important note: be sur this path
-  won't be publicly accessible.
+- `fs_cache_path`: Will be used only if you choose PHP file cache as cache storage.
+  **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 
 
 - `redis_dsn`:   Will be used only if you choose Redis cache as cache storage.
@@ -288,6 +291,7 @@ Here is the list of available settings:
     - `geolocation[maxmind][database_type]`: Select from `country` or `city`. Default to `country`. These are the two available MaxMind database types.
 
     - `geolocation[maxmind][database_path]`: Absolute path to the MaxMind database (e.g. mmdb file)
+      **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 
 
 ### Captcha and ban wall settings
@@ -352,8 +356,8 @@ Here is the list of available settings:
 - `disable_prod_log`: `true` to disable prod log. Default to `false`.
 
 
-- `log_directory_path`: Absolute path to store log files. Important note: be sure this path won't be publicly
-  accessible.
+- `log_directory_path`: Absolute path to store log files. 
+  **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 
 
 - `display_errors`: true to stop the process and display errors on browser if any.
@@ -366,7 +370,43 @@ Here is the list of available settings:
 - `forced_test_forwarded_ip`: Only for test or debug purpose. Default to empty. If not empty, it will be used
   instead of the real forwarded ip. If set to `no_forward`, the x-forwarded-for mechanism will not be used at all.
 
+### Security note
 
+Some files should not be publicly accessible because they may contain sensitive data:
+
+- Log files
+- Cache files of the File system cache
+- TLS authentication files
+- Geolocation database files
+
+If you define publicly accessible folders in the settings, be sure to add rules to deny access to these files.
+
+In the following example, we will suppose that you use a folder `crowdsec` with sub-folders `logs`, `cache`, `tls` and `geolocation`.
+
+If you are using Nginx, you could use the following snippet to modify your website configuration file: 
+
+```nginx
+server {
+   ...
+   ...
+   ...
+   # Deny all attempts to access some folders of the crowdsec bouncer lib
+   location ~ /crowdsec/(logs|cache|tls|geolocation) {
+           deny all;
+   }
+   ...
+   ...
+}
+```
+
+If you are using Apache, you could add this kind of directive in a `.htaccess` file:
+
+```htaccess
+Redirectmatch 403 crowdsec/logs/
+Redirectmatch 403 crowdsec/cache/
+Redirectmatch 403 crowdsec/tls/
+Redirectmatch 403 crowdsec/geolocation/
+```
 
 ## Other ready to use PHP bouncers
 
