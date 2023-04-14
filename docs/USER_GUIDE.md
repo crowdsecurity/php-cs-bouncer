@@ -35,13 +35,13 @@ exposed applications.
 
 ## Prerequisites
 
-To be able to use this bouncer, the first step is to install [CrowdSec v1](https://doc.crowdsec.net/docs/getting_started/install_crowdsec/). CrowdSec is only in charge of the "detection", and won't block anything on its own. You need to deploy a bouncer to "apply" decisions.
+To be able to use a bouncer based on this library, the first step is to install [CrowdSec v1](https://doc.crowdsec.net/docs/getting_started/install_crowdsec/). CrowdSec is only in charge of the "detection", and won't block anything on its own. You need to deploy a bouncer to "apply" decisions.
 
 Please note that first and foremost a CrowdSec agent must be installed on a server that is accessible by this library.
 
 ## Features
 
-- CrowdSec Local API Support
+- CrowdSec Local API support
   - Handle `ip`, `range` and `country` scoped decisions
   - `Live mode` or `Stream mode`
 - Support IpV4 and Ipv6 (Ipv6 range decisions are yet only supported in `Live mode`) 
@@ -183,7 +183,9 @@ To go further and learn how to include this library in your project, you should 
 
 ## Configurations
 
-Here is the list of available settings:
+The first parameter of the `AbstractBouncer` class constructor method is an array of settings.
+
+Below is the list of available settings:
 
 ### Bouncer behavior
 
@@ -398,10 +400,16 @@ Redirectmatch 403 crowdsec/tls/
 Redirectmatch 403 crowdsec/geolocation/
 ```
 
+**N.B.:**
+- There is no need to protect the `cache` folder if you are using Redis or Memcached cache systems.
+- There is no need to protect the `logs` folder if you disable debug and prod logging.
+- There is no need to protect the `tls` folder if you use Bouncer API key authentication type.
+- There is no need to protect the `geolocation` folder if you don't use the geolocation feature.
+
 ## Other ready to use PHP bouncers
 
-To have a more concrete idea on how to develop a bouncer, you may look at the following bouncers :
+To have a more concrete idea on how to develop a bouncer from this library, you may look at the following bouncers :
 - [CrowdSec Bouncer extension for Magento 2](https://github.com/crowdsecurity/cs-magento-bouncer)
 - [CrowdSec Bouncer plugin for WordPress ](https://github.com/crowdsecurity/cs-wordpress-bouncer)
-- [CrowdSec Standalone Bouncer ](https://github.com/crowdsecurity/cs-php-bouncer)
+- [CrowdSec Standalone Bouncer ](https://github.com/crowdsecurity/cs-standalone-php-bouncer)
 

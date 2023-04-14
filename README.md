@@ -4,6 +4,7 @@
 
 > The official PHP bouncer library for the CrowdSec LAPI
 
+![project is maintained](https://img.shields.io/maintenance/yes/2023.svg)
 ![Version](https://img.shields.io/github/v/release/crowdsecurity/php-cs-bouncer?include_prereleases)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=crowdsecurity_php-cs-bouncer&metric=alert_status)](https://sonarcloud.io/dashboard?id=crowdsecurity_php-cs-bouncer)
 [![Test suite](https://github.com/crowdsecurity/php-cs-bouncer/actions/workflows/test-suite.yml/badge.svg)](https://github.com/crowdsecurity/php-cs-bouncer/actions/workflows/test-suite.yml)
@@ -15,6 +16,10 @@
 :diamond_shape_with_a_dot_inside: <a href="https://hub.crowdsec.net">Hub</a>
 :speech_balloon: <a href="https://discourse.crowdsec.net">Discourse Forum</a>
 
+
+## Overview
+
+This library allows you to create CrowdSec bouncers for PHP applications or frameworks like e-commerce, blog or other exposed applications.
 
 ## Usage
 
