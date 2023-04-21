@@ -18,7 +18,7 @@
 ## Requirements
 
 - PHP >= 7.2.5
-- required PHP extensions: `ext-curl`, `ext-gd`, `ext-json`
+- required PHP extensions: `ext-curl`, `ext-gd`, `ext-json`, `ext-mbstring`
 
 ## Installation
 
