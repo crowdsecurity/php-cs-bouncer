@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
+use CrowdSec\CapiClient\Client\CapiHandler\Curl as CapiCurl;
+use CrowdSec\CapiClient\Client\CapiHandler\FileGetContents as CapiFileGetContents;
+use CrowdSec\CapiClient\Constants as CapiConstants;
+use CrowdSec\CapiClient\Storage\StorageInterface;
+use CrowdSec\CapiClient\Storage\FileStorage;
+use CrowdSec\CapiClient\Watcher as WatcherClient;
 use CrowdSec\Common\Client\RequestHandler\Curl;
 use CrowdSec\Common\Client\RequestHandler\FileGetContents;
+use CrowdSec\Common\Client\AbstractClient;
 use CrowdSec\LapiClient\Bouncer as BouncerClient;
 use CrowdSec\RemediationEngine\AbstractRemediation;
 use CrowdSec\RemediationEngine\CacheStorage\AbstractCache;
@@ -22,6 +29,8 @@ use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Config\Definition\Processor;
+use CrowdSec\RemediationEngine\LapiRemediation;
+use CrowdSec\RemediationEngine\CapiRemediation;
 
 /**
  * The class that apply a bounce.
@@ -102,7 +111,7 @@ abstract class AbstractBouncer
         try {
             return $this->getRemediationEngine()->clearCache();
         } catch (\Exception $e) {
-            throw new BouncerException('Error while clearing cache: ' . $e->getMessage(), (int) $e->getCode(), $e);
+            throw new BouncerException('Error while clearing cache: ' . $e->getMessage(), (int)$e->getCode(), $e);
         }
     }
 
@@ -166,7 +175,7 @@ abstract class AbstractBouncer
         try {
             return $this->capRemediationLevel($this->getRemediationEngine()->getIpRemediation($ip));
         } catch (\Exception $e) {
-            throw new BouncerException($e->getMessage(), (int) $e->getCode(), $e);
+            throw new BouncerException($e->getMessage(), (int)$e->getCode(), $e);
         }
     }
 
@@ -192,7 +201,7 @@ abstract class AbstractBouncer
         try {
             return $this->getRemediationEngine()->pruneCache();
         } catch (\Exception $e) {
-            throw new BouncerException('Error while pruning cache: ' . $e->getMessage(), (int) $e->getCode(), $e);
+            throw new BouncerException('Error while pruning cache: ' . $e->getMessage(), (int)$e->getCode(), $e);
         }
     }
 
@@ -210,7 +219,7 @@ abstract class AbstractBouncer
             return $this->getRemediationEngine()->refreshDecisions();
         } catch (\Exception $e) {
             $message = 'Error while refreshing decisions: ' . $e->getMessage();
-            throw new BouncerException($message, (int) $e->getCode(), $e);
+            throw new BouncerException($message, (int)$e->getCode(), $e);
         }
     }
 
@@ -239,7 +248,7 @@ abstract class AbstractBouncer
                 'line' => $e->getLine(),
             ]);
             if (true === $this->getConfig('display_errors')) {
-                throw new BouncerException($e->getMessage(), (int) $e->getCode(), $e);
+                throw new BouncerException($e->getMessage(), (int)$e->getCode(), $e);
             }
         }
 
@@ -287,7 +296,7 @@ abstract class AbstractBouncer
             $cache->getItem(AbstractCache::CONFIG);
         } catch (\Exception $e) {
             $message = 'Error while testing cache connection: ' . $e->getMessage();
-            throw new BouncerException($message, (int) $e->getCode(), $e);
+            throw new BouncerException($message, (int)$e->getCode(), $e);
         }
     }
 
@@ -315,11 +324,39 @@ abstract class AbstractBouncer
         return $cache;
     }
 
-    protected function handleClient(array $configs, LoggerInterface $logger): BouncerClient
-    {
+    protected function handleClient(
+        array $configs,
+        LoggerInterface $logger,
+        ?StorageInterface $storage = null
+    ): AbstractClient {
+        if (!empty($configs['use_capi'])) {
+            $requestHandler = empty($configs['use_curl']) ?
+                new CapiFileGetContents($configs) :
+                new CapiCurl($configs);
+            if (!$storage) {
+                $storagePath = !empty($configs['log_directory_path']) ?
+                    $configs['log_directory_path'] . '../.storage' : __DIR__;
+                $storage = new FileStorage($storagePath, $configs['env']);
+            }
+
+            return new WatcherClient($configs, $storage, $requestHandler, $logger);
+        }
+
         $requestHandler = empty($configs['use_curl']) ? new FileGetContents($configs) : new Curl($configs);
 
         return new BouncerClient($configs, $requestHandler, $logger);
+    }
+
+    protected function handleRemediationEngine(
+        array $configs,
+        AbstractClient $client,
+        AbstractCache $cache,
+        LoggerInterface $logger
+
+    ): AbstractRemediation {
+        return ($client instanceof WatcherClient) ?
+            new CapiRemediation($configs, $client, $cache, $logger) :
+            new LapiRemediation($configs, $client, $cache, $logger);
     }
 
     /**
@@ -429,8 +466,8 @@ abstract class AbstractBouncer
                 break;
         }
 
-        $currentIndex = (int) array_search($remediation, $orderedRemediations);
-        $maxIndex = (int) array_search(
+        $currentIndex = (int)array_search($remediation, $orderedRemediations);
+        $maxIndex = (int)array_search(
             $maxRemediationLevel,
             $orderedRemediations
         );
@@ -456,8 +493,8 @@ abstract class AbstractBouncer
      * - (0 is interpreted as "o" and 1 in interpreted as "l").
      *
      * @param string $expected The expected phrase
-     * @param string $try      The phrase to check (the user input)
-     * @param string $ip       The IP of the use (for logging purpose)
+     * @param string $try The phrase to check (the user input)
+     * @param string $ip The IP of the use (for logging purpose)
      *
      * @return bool If the captcha input was correct or not
      *
@@ -502,8 +539,8 @@ abstract class AbstractBouncer
             $ip
         );
         $body = $this->getCaptchaHtml(
-            (bool) $captchaVariables['resolution_failed'],
-            (string) $captchaVariables['inline_image'],
+            (bool)$captchaVariables['resolution_failed'],
+            (string)$captchaVariables['inline_image'],
             ''
         );
         $this->sendResponse($body, 401);
@@ -634,8 +671,8 @@ abstract class AbstractBouncer
             $duration = $this->getConfig('captcha_cache_duration') ?? Constants::CACHE_EXPIRATION_FOR_CAPTCHA;
             if (
                 $this->checkCaptcha(
-                    (string) $cachedCaptchaVariables['phrase_to_guess'],
-                    (string) $this->getPostedVariable('phrase'),
+                    (string)$cachedCaptchaVariables['phrase_to_guess'],
+                    (string)$this->getPostedVariable('phrase'),
                     $ip
                 )
             ) {
@@ -695,7 +732,7 @@ abstract class AbstractBouncer
                 'original_ip' => $ip,
             ]);
         } else {
-            $forwardedIp = (string) $configs['forced_test_forwarded_ip'];
+            $forwardedIp = (string)$configs['forced_test_forwarded_ip'];
             $this->logger->debug('X-Forwarded-for usage is forced', [
                 'type' => 'FORCED_X_FORWARDED_FOR_USAGE',
                 'original_ip' => $ip,
@@ -757,7 +794,7 @@ abstract class AbstractBouncer
      */
     private function refreshCaptcha(string $ip): bool
     {
-        if (null !== $this->getPostedVariable('refresh') && (int) $this->getPostedVariable('refresh')) {
+        if (null !== $this->getPostedVariable('refresh') && (int)$this->getPostedVariable('refresh')) {
             // Generate new captcha image for the user
             $captchaCouple = $this->buildCaptchaCouple();
             $captchaVariables = [

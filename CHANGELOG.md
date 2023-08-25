@@ -9,6 +9,25 @@ The [public API](https://semver.org/spec/v2.0.0.html#spec-item-1) of this librar
 
 ---
 
+## [x.y.z](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v2.0.0) - 2023-??-??
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v2.0.0...vx.y.z)
+
+
+### Changed
+
+- Update `AbstractBouncer::handleClient` to return a `CapiClient/Watcher` or `LapiClient/Bouncer` instance
+
+### Added
+
+- Add `use_capi` boolean setting
+- Add `AbstractBouncer::handleRemediationEngine` protected method
+
+
+
+---
+
+
+
 ## [2.0.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v2.0.0) - 2023-04-13
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v1.4.0...v2.0.0)
 

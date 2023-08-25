@@ -498,7 +498,7 @@ final class AbstractBouncerTest extends TestCase
         $this->assertEquals(false, $result, 'Should return false if ip is invalid');
     }
 
-    public function testGetRemediationForIpExeption()
+    public function testGetRemediationForIpException()
     {
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)

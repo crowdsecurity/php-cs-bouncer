@@ -190,7 +190,7 @@ Then, as we use a TLS ready CrowdSec container, you have to copy some certificat
 ```bash
 cd crowdsec-bouncer-project
 mkdir cfssl
-cp -r ../.ddev/okaeli-add-on/custom_files/crowdsec/cfssl/* cfssl
+cp -r .ddev/okaeli-add-on/custom_files/crowdsec/cfssl/* cfssl
 ```
 
 Finally, run

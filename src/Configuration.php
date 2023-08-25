@@ -8,6 +8,7 @@ use CrowdSec\Common\Configuration\AbstractConfiguration;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
+use CrowdSec\CapiClient\Constants as CapiConstants;
 
 /**
  * The Library configuration. You'll find here all configuration possible. Used when instantiating the library.
@@ -25,6 +26,7 @@ class Configuration extends AbstractConfiguration
      * @var string[]
      */
     protected $keys = [
+        'use_capi',
         'use_curl',
         'forced_test_ip',
         'forced_test_forwarded_ip',
@@ -124,7 +126,7 @@ class Configuration extends AbstractConfiguration
     }
 
     /**
-     * LAPI connection settings.
+     * Connection settings.
      *
      * @param NodeDefinition|ArrayNodeDefinition $rootNode
      *
@@ -134,6 +136,7 @@ class Configuration extends AbstractConfiguration
     {
         $rootNode->children()
             ->booleanNode('use_curl')->defaultValue(false)->end()
+            ->booleanNode('use_capi')->defaultValue(false)->end()
         ->end();
     }
 
