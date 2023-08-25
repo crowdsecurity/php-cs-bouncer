@@ -42,7 +42,7 @@ jobs:
           sudo apt-get -q update
           sudo apt-get -q -y install libnss3-tools ddev
           mkcert -install
-          ddev config global --instrumentation-opt-in=false --omit-containers=dba,ddev-ssh-agent
+          ddev config global --instrumentation-opt-in=false --omit-containers=ddev-ssh-agent
 
       - name: Create empty PHP DDEV project
         run: ddev config --project-type=php --project-name=crowdsec-bouncer-lib  --php-version=${{ matrix.php-version }}
