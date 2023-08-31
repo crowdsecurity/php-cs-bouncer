@@ -8,7 +8,6 @@ use CrowdSec\Common\Configuration\AbstractConfiguration;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
-use CrowdSec\CapiClient\Constants as CapiConstants;
 
 /**
  * The Library configuration. You'll find here all configuration possible. Used when instantiating the library.
@@ -46,8 +45,6 @@ class Configuration extends AbstractConfiguration
     ];
 
     /**
-     * {@inheritdoc}
-     *
      * @throws \InvalidArgumentException
      */
     public function getConfigTreeBuilder(): TreeBuilder
@@ -160,7 +157,6 @@ class Configuration extends AbstractConfiguration
     }
 
     /**
-     * @param $rootNode
      * @return void
      */
     private function addTemplateNodes($rootNode)

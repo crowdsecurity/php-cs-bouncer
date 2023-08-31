@@ -56,10 +56,9 @@ jobs:
       - name: Start DDEV
         run: ddev start
 
-      - name: Set BOUNCER_KEY and PROXY_IP env
+      - name: Set BOUNCER_KEY env
         run: |
           echo "BOUNCER_KEY=$(ddev create-bouncer)" >> $GITHUB_ENV
-          echo "PROXY_IP=$(ddev find-ip ddev-router)" >> $GITHUB_ENV
 
       - name: Some DEBUG information
         run: |
