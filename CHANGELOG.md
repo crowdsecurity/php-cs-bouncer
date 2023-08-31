@@ -15,15 +15,16 @@ The [public API](https://semver.org/spec/v2.0.0.html#spec-item-1) of this librar
 
 ### Changed
 
-- *Breaking changes*: Change `handleClient` and `handleCache` visibility from protected to private
-- Update `AbstractBouncer::handleClient` to return a `CapiClient/Watcher` or `LapiClient/Bouncer` instance
+- *Breaking changes*: 
+  - Change `AbstractBouncer::__construct` parameter signature:
+    - remove remediation parameter
+    - add a CAPI storage optional parameter
+  - Change `handleClient` and `handleCache` visibility from protected to private
+
 
 ### Added
 
-- Add `use_capi` boolean setting
-- Add `AbstractBouncer::buildRemediationEngine` protected method
-
-
+- Add the possibility of using CAPI remediation 
 
 ---
 

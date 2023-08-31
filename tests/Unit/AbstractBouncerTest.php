@@ -15,9 +15,10 @@ namespace CrowdSecBouncer\Tests\Unit;
  * @license   MIT License
  */
 
+use CrowdSec\CapiClient\Storage\FileStorage;
 use CrowdSec\Common\Logger\FileLog;
-use CrowdSec\RemediationEngine\LapiRemediation;
 use CrowdSec\RemediationEngine\CapiRemediation;
+use CrowdSec\RemediationEngine\LapiRemediation;
 use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\BouncerException;
 use CrowdSecBouncer\Constants;
@@ -189,8 +190,10 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
-            true, true, ['getHttpMethod', 'getPostedVariable']);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getHttpMethod', 'getPostedVariable', 'getRemediationEngine']);
+
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -240,10 +243,11 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
-            true, true, ['getHttpRequestHeader']);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getHttpRequestHeader', 'getRemediationEngine']);
 
         $bouncer->method('getHttpRequestHeader')->willReturnOnConsecutiveCalls('1.2.3.4', '1.2.3.4');
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -267,10 +271,11 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
-            true, true, ['getHttpRequestHeader']);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getHttpRequestHeader', 'getRemediationEngine']);
 
         $bouncer->method('getHttpRequestHeader')->willReturnOnConsecutiveCalls('1.2.3.4', '1.2.3.4');
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
         $result = PHPUnitUtil::callMethod(
             $bouncer,
             'handleForwardedFor',
@@ -293,10 +298,11 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
-            true, true, ['getHttpRequestHeader']);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getHttpRequestHeader', 'getRemediationEngine']);
 
         $bouncer->method('getHttpRequestHeader')->willReturnOnConsecutiveCalls('1.2.3.4', '1.2.3.4');
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
         $result = PHPUnitUtil::callMethod(
             $bouncer,
             'handleForwardedFor',
@@ -318,7 +324,9 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -333,7 +341,9 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
         $this->assertInstanceOf(LapiRemediation::class, $bouncer->getRemediationEngine());
 
@@ -358,7 +368,9 @@ final class AbstractBouncerTest extends TestCase
             )
         );
 
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
         $result = PHPUnitUtil::callMethod(
             $bouncer,
             'capRemediationLevel',
@@ -372,7 +384,9 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage', 'getConfig'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
         $mockRemediation->method('getConfig')->will(
             $this->returnValueMap(
                 [
@@ -452,7 +466,9 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -474,7 +490,9 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
         $result = PHPUnitUtil::callMethod(
             $bouncer,
             'getCaptchaHtml',
@@ -498,58 +516,6 @@ final class AbstractBouncerTest extends TestCase
             ['not-an-ip']
         );
         $this->assertEquals(false, $result, 'Should return false if ip is invalid');
-
-        // buildRemediationEngine
-        $configs = $this->configs;
-        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getCacheStorage', 'getClient'])
-            ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
-        $result = PHPUnitUtil::callMethod(
-            $bouncer,
-            'buildRemediationEngine',
-            [
-                $configs,
-                $bouncer->getLogger()]
-        );
-        $this->assertInstanceOf(\CrowdSec\RemediationEngine\LapiRemediation::class, $result, 'Handle remediation engine should return LAPI remediation');
-        $this->assertInstanceOf(\CrowdSec\LapiClient\Bouncer::class, $result->getClient());
-
-        $configs = array_merge($this->configs, ['use_capi' => true, 'scenarios' => ['test/test']]);
-        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getCacheStorage', 'getClient'])
-            ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
-        $result = PHPUnitUtil::callMethod(
-            $bouncer,
-            'buildRemediationEngine',
-            [
-                $configs,
-                $bouncer->getLogger()]
-        );
-        $this->assertInstanceOf(\CrowdSec\RemediationEngine\CapiRemediation::class, $result, 'Handle remediation engine should return CAPI remediation');
-        $this->assertInstanceOf(\CrowdSec\CapiClient\Watcher::class, $result->getClient());
-        $this->assertInstanceOf(\CrowdSec\CapiClient\Client\CapiHandler\FileGetContents::class, $result->getClient()->getRequestHandler());
-
-        $configs = array_merge($this->configs, ['use_capi' => true, 'use_curl' => true, 'scenarios' => ['test/test']]);
-        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getCacheStorage', 'getClient'])
-            ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
-        $result = PHPUnitUtil::callMethod(
-            $bouncer,
-            'buildRemediationEngine',
-            [
-                $configs,
-                $bouncer->getLogger()]
-        );
-        $this->assertInstanceOf(\CrowdSec\RemediationEngine\CapiRemediation::class, $result, 'Handle remediation engine should return CAPI remediation');
-        $this->assertInstanceOf(\CrowdSec\CapiClient\Watcher::class, $result->getClient());
-        $this->assertInstanceOf(\CrowdSec\CapiClient\Client\CapiHandler\Curl::class, $result->getClient()
-            ->getRequestHandler());
     }
 
     public function testGetLapiRemediationForIpException()
@@ -559,7 +525,9 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
         $this->assertInstanceOf(LapiRemediation::class, $bouncer->getRemediationEngine());
 
@@ -585,7 +553,10 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
+
 
         $this->assertInstanceOf(CapiRemediation::class, $bouncer->getRemediationEngine());
 
@@ -611,7 +582,10 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
+
 
         $result = $bouncer->shouldBounceCurrentIp();
         $this->assertEquals(true, $result);
@@ -621,7 +595,10 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
+
 
         $result = $bouncer->shouldBounceCurrentIp();
         $this->assertEquals(false, $result);
@@ -631,10 +608,11 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
-            true, true, ['getRequestUri']);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getRequestUri', 'getRemediationEngine']);
 
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls(self::EXCLUDED_URI, '/good-uri');
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
         $result = $bouncer->shouldBounceCurrentIp();
         $this->assertEquals(false, $result);
 
@@ -649,7 +627,9 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, null, new FileStorage()], '', true,
+            true, true, ['getRequestUri', 'getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
         $result = $bouncer->shouldBounceCurrentIp();
         $this->assertEquals(true, $result);
@@ -659,7 +639,9 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, null, new FileStorage()], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
         $result = $bouncer->shouldBounceCurrentIp();
         $this->assertEquals(false, $result);
@@ -669,9 +651,9 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
-            true, true, ['getRequestUri']);
-
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, null, new FileStorage()], '', true,
+            true, true, ['getRequestUri', 'getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls(self::EXCLUDED_URI, '/good-uri');
         $result = $bouncer->shouldBounceCurrentIp();
         $this->assertEquals(false, $result);
@@ -687,7 +669,9 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
         $this->assertInstanceOf(LapiRemediation::class, $bouncer->getRemediationEngine());
 
@@ -756,7 +740,9 @@ final class AbstractBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, null, new FileStorage()], '', true,
+            true, true, ['getRemediationEngine']);
+        $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
         $this->assertInstanceOf(CapiRemediation::class, $bouncer->getRemediationEngine());
 

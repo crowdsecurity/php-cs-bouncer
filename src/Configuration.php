@@ -25,7 +25,6 @@ class Configuration extends AbstractConfiguration
      * @var string[]
      */
     protected $keys = [
-        'use_capi',
         'use_curl',
         'forced_test_ip',
         'forced_test_forwarded_ip',
@@ -133,7 +132,6 @@ class Configuration extends AbstractConfiguration
     {
         $rootNode->children()
             ->booleanNode('use_curl')->defaultValue(false)->end()
-            ->booleanNode('use_capi')->defaultValue(false)->end()
         ->end();
     }
 
