@@ -198,7 +198,7 @@ Finally, run
 
 ```bash
 ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 
-MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/AbstractBouncerTest.php
+MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/AbstractLapiBouncerTest.php
 ```
 
 For geolocation Unit Test, you should first put 2 free MaxMind databases in the `tests` folder : `GeoLite2-City.mmdb`
@@ -217,7 +217,7 @@ MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/
 and specify the path where you store certificates and keys. For example:
 
 ```bash
-ddev exec USE_CURL=1 AGENT_TLS_PATH=/var/www/html/cfssl  BOUNCER_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/AbstractBouncerTest.php
+ddev exec USE_CURL=1 AGENT_TLS_PATH=/var/www/html/cfssl  BOUNCER_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration
 ```
 
 #### Coding standards

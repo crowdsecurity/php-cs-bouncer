@@ -117,7 +117,7 @@ final class GeolocationTest extends TestCase
 
         // Init bouncer
         $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
-        $bouncerConfigs = [
+        $bouncerConfigs = array_merge($this->configs, [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'geolocation' => $geolocationConfig,
@@ -125,7 +125,7 @@ final class GeolocationTest extends TestCase
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR,
             'stream_mode' => false,
-        ];
+        ]);
 
         $client = new BouncerClient($bouncerConfigs);
         $cache = new PhpFiles($bouncerConfigs);
@@ -199,7 +199,7 @@ final class GeolocationTest extends TestCase
         $this->watcherClient->setInitialState();
         // Init bouncer
         $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
-        $bouncerConfigs = [
+        $bouncerConfigs = array_merge($this->configs,[
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'stream_mode' => true,
@@ -207,7 +207,7 @@ final class GeolocationTest extends TestCase
             'use_curl' => $this->useCurl,
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR,
-        ];
+        ]);
 
         $client = new BouncerClient($bouncerConfigs);
         $cache = new PhpFiles($bouncerConfigs);

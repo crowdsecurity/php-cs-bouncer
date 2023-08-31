@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace CrowdSecBouncer\Tests\Integration;
 
 use CrowdSecBouncer\Constants;
+use CrowdSec\RemediationEngine\CacheStorage\AbstractCache;
+use CrowdSec\RemediationEngine\Decision;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -76,5 +78,21 @@ class TestHelpers
         }
 
         return '';
+    }
+
+    public static function addLocalDecision(AbstractCache $cache, string $value, string $type, string $scope = Constants::SCOPE_IP)
+    {
+        $duration = 5;
+        $origin = 'crowdsec';
+        $decision = new Decision(
+            $origin . Decision::ID_SEP . $type . Decision::ID_SEP .
+            $scope . Decision::ID_SEP . $value,
+            $scope,
+            $value,
+            $type,
+            $origin,
+            time() + $duration);
+        $cache->storeDecision($decision);
+        $cache->commit();
     }
 }

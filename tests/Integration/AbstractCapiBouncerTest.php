@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
+use CrowdSec\CapiClient\Watcher;
 use CrowdSec\Common\Client\RequestHandler\Curl;
 use CrowdSec\Common\Client\RequestHandler\FileGetContents;
 use CrowdSec\Common\Logger\FileLog;
-use CrowdSec\LapiClient\Bouncer as BouncerClient;
+use CrowdSec\CapiClient\Watcher as CapiClient;
+use CrowdSec\CapiClient\Storage\FileStorage;
 use CrowdSec\RemediationEngine\CacheStorage\Memcached;
 use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
 use CrowdSec\RemediationEngine\CacheStorage\Redis;
-use CrowdSec\RemediationEngine\LapiRemediation;
+use CrowdSec\RemediationEngine\CapiRemediation;
+use CrowdSec\RemediationEngine\Constants as RemConstants;
 use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\Bouncer;
 use CrowdSecBouncer\BouncerException;
@@ -74,14 +77,10 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\AbstractBouncer::run
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldBounceCurrentIp
  */
-final class AbstractBouncerTest extends TestCase
+
+final class AbstractCapiBouncerTest extends TestCase
 {
     private const EXCLUDED_URI = '/favicon.ico';
-    /** @var WatcherClient */
-    private $watcherClient;
-
-    /** @var bool */
-    private $useTls;
     /**
      * @var LoggerInterface
      */
@@ -106,7 +105,6 @@ final class AbstractBouncerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->useTls = (string) getenv('BOUNCER_TLS_PATH');
 
         $this->root = vfsStream::setup('/tmp');
         $this->configs['log_directory_path'] = $this->root->url();
@@ -117,43 +115,28 @@ final class AbstractBouncerTest extends TestCase
         $this->logger = new FileLog(['log_directory_path' => $this->root->url(), 'debug_mode' => true]);
 
         $bouncerConfigs = [
-            'auth_type' => $this->useTls ? \CrowdSec\LapiClient\Constants::AUTH_TLS : Constants::AUTH_KEY,
-            'api_key' => getenv('BOUNCER_KEY'),
-            'api_url' => getenv('LAPI_URL'),
+            'use_capi' => true,
+            'ordered_remediations' => [RemConstants::REMEDIATION_BAN, RemConstants::REMEDIATION_CAPTCHA],
+            'scenarios' => ['crowdsecurity/http-backdoors-attempts', 'crowdsecurity/http-bad-user-agent'],
             'user_agent_suffix' => 'testphpbouncer',
             'fs_cache_path' => $this->root->url() . '/.cache',
             'redis_dsn' => getenv('REDIS_DSN'),
             'memcached_dsn' => getenv('MEMCACHED_DSN'),
             'excluded_uris' => [self::EXCLUDED_URI],
-            'stream_mode' => false,
             'trust_ip_forward_array' => [['005.006.007.008', '005.006.007.008']],
         ];
-        if ($this->useTls) {
-            $this->addTlsConfig($bouncerConfigs, $this->useTls);
-        }
 
         $this->configs = $bouncerConfigs;
-        $this->watcherClient = new WatcherClient($this->configs);
-        // Delete all decisions
-        $this->watcherClient->deleteAllDecisions();
-    }
-
-    private function addTlsConfig(&$bouncerConfigs, $tlsPath)
-    {
-        $bouncerConfigs['tls_cert_path'] = $tlsPath . '/bouncer.pem';
-        $bouncerConfigs['tls_key_path'] = $tlsPath . '/bouncer-key.pem';
-        $bouncerConfigs['tls_ca_cert_path'] = $tlsPath . '/ca-chain.pem';
-        $bouncerConfigs['tls_verify_peer'] = true;
     }
 
     public function testConstructAndSomeMethods()
     {
         $bouncerConfigs = array_merge($this->configs, ['unexpected_config' => 'test']);
-        $client = new BouncerClient($bouncerConfigs);
+        $client = new CapiClient($bouncerConfigs, new FileStorage());
         $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache);
         $logger = new FileLog();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation, $logger]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation, $logger]);
 
         $this->assertEquals(false, $bouncer->getConfig('stream_mode'), 'Stream mode config');
         $this->assertEquals(FileLog::class, \get_class($bouncer->getLogger()), 'Logger Init');
@@ -161,7 +144,7 @@ final class AbstractBouncerTest extends TestCase
         $this->assertEquals([['005.006.007.008', '005.006.007.008']], $bouncer->getConfig('trust_ip_forward_array'), 'Forwarded array config');
 
         $remediation = $bouncer->getRemediationEngine();
-        $this->assertEquals('CrowdSec\RemediationEngine\LapiRemediation', \get_class($remediation), 'Remediation Init');
+        $this->assertEquals('CrowdSec\RemediationEngine\CapiRemediation', \get_class($remediation), 'Remediation Init');
         $this->assertEquals('CrowdSec\RemediationEngine\CacheStorage\PhpFiles', \get_class($remediation->getCacheStorage()), 'Remediation cache Init');
 
         $this->assertEquals([['005.006.007.008', '005.006.007.008']], $bouncer->getConfig('trust_ip_forward_array'), 'Forwarded array config');
@@ -185,29 +168,19 @@ final class AbstractBouncerTest extends TestCase
      * @throws \PHPUnit\Framework\ExpectationFailedException
      * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
      */
-    public function testCaptchaFlow()
+   public function testCaptchaFlow()
     {
-        $this->watcherClient->setSimpleDecision('captcha');
         // Init bouncer
-        $bouncerConfigs = [
-            'auth_type' => $this->useTls ? Constants::AUTH_TLS : Constants::AUTH_KEY,
-            'api_key' => TestHelpers::getBouncerKey(),
-            'api_url' => TestHelpers::getLapiUrl(),
-            'stream_mode' => false,
-            'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
-            'fs_cache_path' => $this->root->url() . '/.cache',
+        $bouncerConfigs = array_merge($this->configs,[
             'forced_test_ip' => TestHelpers::BAD_IP,
-        ];
-        if ($this->useTls) {
-            $this->addTlsConfig($bouncerConfigs, $this->useTls);
-        }
+        ]);
 
-        $client = new BouncerClient($bouncerConfigs);
+        $client = new CapiClient($bouncerConfigs, new FileStorage());
         $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache);
 
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation], '', true,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation], '', true,
             true, true, [
                 'sendResponse',
                 'redirectResponse',
@@ -235,6 +208,9 @@ final class AbstractBouncerTest extends TestCase
             'The captcha variables should not be cached'
         );
 
+        // Add a captcha decision for BAD IP
+        TestHelpers::addLocalDecision($cache, TestHelpers::BAD_IP, RemConstants::REMEDIATION_CAPTCHA);
+
         // Step 1 : access a page should display a captcha wall
         $bouncer->bounceCurrentIp();
 
@@ -247,12 +223,6 @@ final class AbstractBouncerTest extends TestCase
 
         $cacheKeyCaptcha = $cache->getCacheKey(Constants::CACHE_TAG_CAPTCHA, TestHelpers::BAD_IP);
         $item = $cache->getItem($cacheKeyCaptcha);
-        $this->assertEquals(
-            true,
-            $item->isHit(),
-            'The captcha variables should be cached'
-        );
-
         $this->assertEquals(
             true,
             $item->isHit(),
@@ -327,12 +297,12 @@ final class AbstractBouncerTest extends TestCase
         );
 
         // STEP 4 : resolve captcha success
-        $client = new BouncerClient($bouncerConfigs);
+        $client = new CapiClient($bouncerConfigs, new FileStorage());
         $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache);
 
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation], '', true,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation], '', true,
             true, true, [
                 'sendResponse',
                 'redirectResponse',
@@ -373,27 +343,17 @@ final class AbstractBouncerTest extends TestCase
      */
     public function testBanFlow()
     {
-        $this->watcherClient->setSimpleDecision('ban');
         // Init bouncer
-        $bouncerConfigs = [
-            'auth_type' => $this->useTls ? Constants::AUTH_TLS : Constants::AUTH_KEY,
-            'api_key' => TestHelpers::getBouncerKey(),
-            'api_url' => TestHelpers::getLapiUrl(),
-            'stream_mode' => false,
-            'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
-            'fs_cache_path' => $this->root->url() . '/.cache',
+        $bouncerConfigs = array_merge($this->configs,[
             'forced_test_ip' => TestHelpers::BAD_IP,
-        ];
-        if ($this->useTls) {
-            $this->addTlsConfig($bouncerConfigs, $this->useTls);
-        }
+        ]);
 
-        $client = new BouncerClient($bouncerConfigs);
+        $client = new CapiClient($bouncerConfigs, new FileStorage());
         $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache);
 
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation], '', true,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation], '', true,
             true, true, [
                 'sendResponse',
                 'redirectResponse',
@@ -413,6 +373,9 @@ final class AbstractBouncerTest extends TestCase
             'The remediation should not be cached'
         );
 
+        // Add a ban
+        TestHelpers::addLocalDecision($cache, TestHelpers::BAD_IP, RemConstants::REMEDIATION_BAN);
+
         $bouncer->bounceCurrentIp();
 
         $item = $cache->getItem($cacheKey);
@@ -423,6 +386,12 @@ final class AbstractBouncerTest extends TestCase
         );
     }
 
+    /**
+     *
+     * @return void
+     * @throws \Psr\Cache\CacheException
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
     public function testRun()
     {
         $this->assertEquals(
@@ -437,11 +406,12 @@ final class AbstractBouncerTest extends TestCase
         );
 
         // Test 2: not bouncing exclude URI
-        $client = new BouncerClient($this->configs, null, $this->logger);
+        $client = new CapiClient($this->configs, new FileStorage(), null, $this->logger);
         $cache = new PhpFiles($this->configs, $this->logger);
-        $lapiRemediation = new LapiRemediation($this->configs, $client, $cache, $this->logger);
+        $capiRemediation = new CapiRemediation($this->configs, $client, $cache, $this->logger);
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$this->configs, $lapiRemediation, $this->logger],
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$this->configs, $capiRemediation,
+            $this->logger],
             '', true,
             true, true, [
                 'sendResponse',
@@ -464,11 +434,12 @@ final class AbstractBouncerTest extends TestCase
         );
 
         // Test 3: bouncing URI
-        $client = new BouncerClient($this->configs, null, $this->logger);
+        $client = new CapiClient($this->configs, new FileStorage(), null, $this->logger);
         $cache = new PhpFiles($this->configs, $this->logger);
-        $lapiRemediation = new LapiRemediation($this->configs, $client, $cache, $this->logger);
+        $capiRemediation = new CapiRemediation($this->configs, $client, $cache, $this->logger);
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$this->configs, $lapiRemediation, $this->logger],
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$this->configs, $capiRemediation,
+            $this->logger],
             '', true,
             true, true, [
                 'sendResponse',
@@ -486,11 +457,12 @@ final class AbstractBouncerTest extends TestCase
 
         // Test 4:  not bouncing URI if disabled
         $bouncerConfigs = array_merge($this->configs, ['bouncing_level' => Constants::BOUNCING_LEVEL_DISABLED]);
-        $client = new BouncerClient($bouncerConfigs, null, $this->logger);
+        $client = new CapiClient($bouncerConfigs, new FileStorage(), null, $this->logger);
         $cache = new PhpFiles($bouncerConfigs, $this->logger);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation, $this->logger],
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation,
+            $this->logger],
             '', true,
             true, true, [
                 'sendResponse',
@@ -513,98 +485,6 @@ final class AbstractBouncerTest extends TestCase
             'Debug log content should be correct'
         );
 
-        // Test 5: throw error if config says so
-        $bouncerConfigs = array_merge(
-            $this->configs,
-            [
-                'display_errors' => true,
-                'api_url' => 'bad-url',
-            ]
-        );
-        $client = new BouncerClient($bouncerConfigs, null, $this->logger);
-        $cache = new PhpFiles($bouncerConfigs, $this->logger);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
-        // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation, $this->logger],
-            '', true,
-            true, true, [
-                'sendResponse',
-                'redirectResponse',
-                'getHttpMethod',
-                'getPostedVariable',
-                'getHttpRequestHeader',
-                'getRemoteIp',
-                'getRequestUri',
-            ]);
-
-        $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
-        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.5');
-
-        $error = '';
-
-        try {
-            $bouncer->run();
-        } catch (BouncerException $e) {
-            $error = $e->getMessage();
-        }
-
-        $errorExpected = '/Could not resolve host/';
-        PHPUnitUtil::assertRegExp(
-            $this,
-            $errorExpected,
-            $error,
-            'Should have throw an error'
-        );
-        PHPUnitUtil::assertRegExp(
-            $this,
-            '/.*400.*EXCEPTION_WHILE_BOUNCING/',
-            file_get_contents($this->root->url() . '/' . $this->prodFile),
-            'Prod log content should be correct'
-        );
-
-        // Test 6: NOT throw error if config says so
-        $bouncerConfigs = array_merge(
-            $this->configs,
-            [
-                'display_errors' => false,
-                'api_url' => 'bad-url',
-            ]
-        );
-        $client = new BouncerClient($bouncerConfigs, null, $this->logger);
-        $cache = new PhpFiles($bouncerConfigs, $this->logger);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
-        // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation, $this->logger],
-            '', true,
-            true, true, [
-                'sendResponse',
-                'redirectResponse',
-                'getHttpMethod',
-                'getPostedVariable',
-                'getHttpRequestHeader',
-                'getRemoteIp',
-                'getRequestUri',
-            ]);
-
-        $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
-        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.6');
-
-        $error = '';
-
-        try {
-            $bouncer->run();
-        } catch (BouncerException $e) {
-            $error = $e->getMessage();
-        }
-
-        $this->assertEquals('', $error, 'Should not throw error');
-        PHPUnitUtil::assertRegExp(
-            $this,
-            '/.*400.*EXCEPTION_WHILE_BOUNCING/',
-            file_get_contents($this->root->url() . '/' . $this->prodFile),
-            'Prod log content should be correct'
-        );
-
         // Test 7 : no-forward
         $bouncerConfigs = array_merge(
             $this->configs,
@@ -612,11 +492,12 @@ final class AbstractBouncerTest extends TestCase
                 'forced_test_forwarded_ip' => Constants::X_FORWARDED_DISABLED,
             ]
         );
-        $client = new BouncerClient($bouncerConfigs, null, $this->logger);
+        $client = new CapiClient($bouncerConfigs, new FileStorage(), null, $this->logger);
         $cache = new PhpFiles($bouncerConfigs, $this->logger);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation, $this->logger],
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation,
+            $this->logger],
             '', true,
             true, true, [
                 'sendResponse',
@@ -646,11 +527,12 @@ final class AbstractBouncerTest extends TestCase
                 'forced_test_forwarded_ip' => '1.2.3.5',
             ]
         );
-        $client = new BouncerClient($bouncerConfigs, null, $this->logger);
+        $client = new CapiClient($bouncerConfigs, new FileStorage(), null, $this->logger);
         $cache = new PhpFiles($bouncerConfigs, $this->logger);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation, $this->logger],
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation,
+            $this->logger],
             '', true,
             true, true, [
                 'sendResponse',
@@ -675,11 +557,12 @@ final class AbstractBouncerTest extends TestCase
 
         // Test 9 non-authorized
         $bouncerConfigs = $this->configs;
-        $client = new BouncerClient($bouncerConfigs, null, $this->logger);
+        $client = new CapiClient($bouncerConfigs, new FileStorage(), null, $this->logger);
         $cache = new PhpFiles($bouncerConfigs, $this->logger);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation, $this->logger],
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation,
+            $this->logger],
             '', true,
             true, true, [
                 'sendResponse',
@@ -705,11 +588,12 @@ final class AbstractBouncerTest extends TestCase
 
         // Test 10 authorized
         $bouncerConfigs = $this->configs;
-        $client = new BouncerClient($bouncerConfigs, null, $this->logger);
+        $client = new CapiClient($bouncerConfigs, new FileStorage(), null, $this->logger);
         $cache = new PhpFiles($bouncerConfigs, $this->logger);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation, $this->logger],
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation,
+            $this->logger],
             '', true,
             true, true, [
                 'sendResponse',
@@ -737,7 +621,7 @@ final class AbstractBouncerTest extends TestCase
     {
         // handleCache
         $configs = array_merge($this->configs, ['cache_system' => 'redis']);
-        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
+        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
             ->getMock();
@@ -752,7 +636,7 @@ final class AbstractBouncerTest extends TestCase
         $this->assertInstanceOf(Redis::class, $result);
 
         $configs = array_merge($this->configs, ['cache_system' => 'memcached']);
-        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
+        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
             ->getMock();
@@ -767,7 +651,7 @@ final class AbstractBouncerTest extends TestCase
         $this->assertInstanceOf(Memcached::class, $result);
 
         $configs = array_merge($this->configs, ['cache_system' => 'phpfs']);
-        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
+        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
             ->getMock();
@@ -785,7 +669,7 @@ final class AbstractBouncerTest extends TestCase
 
         try {
             $configs = array_merge($this->configs, ['cache_system' => 'phpfs']);
-            $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
+            $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
                 ->disableOriginalConstructor()
                 ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
                 ->getMock();
@@ -809,7 +693,7 @@ final class AbstractBouncerTest extends TestCase
 
         // handleClient
         $configs = $this->configs;
-        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
+        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
             ->getMock();
@@ -821,10 +705,10 @@ final class AbstractBouncerTest extends TestCase
             [$configs, new FileLog()]
         );
 
-        $this->assertEquals(FileGetContents::class, \get_class($result->getRequestHandler()));
+        $this->assertEquals('CrowdSec\CapiClient\Client\CapiHandler\FileGetContents', \get_class($result->getRequestHandler()));
 
         $configs = array_merge($this->configs, ['use_curl' => true]);
-        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
+        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
             ->getMock();
@@ -836,165 +720,29 @@ final class AbstractBouncerTest extends TestCase
             [$configs, new FileLog()]
         );
 
-        $this->assertEquals(Curl::class, \get_class($result->getRequestHandler()));
+        $this->assertEquals('CrowdSec\CapiClient\Client\CapiHandler\Curl', \get_class($result->getRequestHandler()));
     }
+
+
 
     /**
      * @group integration
      */
-    public function testCanVerifyIpInLiveMode(): void
+    public function testCanVerifyIp(): void
     {
-        // Init context
-        $this->watcherClient->setInitialState();
 
         // Init bouncer
-        $bouncerConfigs = [
-            'auth_type' => $this->useTls ? Constants::AUTH_TLS : Constants::AUTH_KEY,
-            'api_key' => TestHelpers::getBouncerKey(),
-            'api_url' => TestHelpers::getLapiUrl(),
-            'redis_dsn' => getenv('REDIS_DSN'),
-            'memcached_dsn' => getenv('MEMCACHED_DSN'),
-            'fs_cache_path' => $this->root->url() . '/.cache',
-            'stream_mode' => false,
-        ];
-        if ($this->useTls) {
-            $this->addTlsConfig($bouncerConfigs, $this->useTls);
-        }
+        $bouncerConfigs = $this->configs;
 
-        $client = new BouncerClient($bouncerConfigs);
+        $client = new CapiClient($bouncerConfigs, new FileStorage());
         $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
-
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation]);
         // Test cache adapter
         $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
         $cacheAdapter->clear();
-
-        $this->assertEquals(
-            'ban',
-            $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
-            'Get decisions for a bad IP (for the first time, it should be a cache miss)'
-        );
-
-        $this->assertEquals(
-            'ban',
-            $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
-            'Call the same thing for the second time (now it should be a cache hit)'
-        );
-
-        $cleanRemediation1stCall = $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP);
-        $this->assertEquals(
-            'bypass',
-            $cleanRemediation1stCall,
-            'Get decisions for a clean IP for the first time (it should be a cache miss)'
-        );
-
-        // Call the same thing for the second time (now it should be a cache hit)
-        $cleanRemediation2ndCall = $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP);
-        $this->assertEquals('bypass', $cleanRemediation2ndCall);
-
-        // Clear cache
-        $this->assertTrue($bouncer->clearCache(), 'The cache should be clearable');
-
-        // Call one more time (should miss as the cache has been cleared)
-
-        $remediation3rdCall = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
-        $this->assertEquals('ban', $remediation3rdCall);
-
-        // Reconfigure the bouncer to set maximum remediation level to "captcha"
-        $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_FLEX;
-        $client = new BouncerClient($bouncerConfigs);
-        $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
-        $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
-        $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
-        // Reset the max remediation level to its origin state
-        $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
-        $client = new BouncerClient($bouncerConfigs);
-        $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
-
-        $this->logger->info('', ['message' => 'set "Large IPV4 range banned" state']);
-        $this->watcherClient->deleteAllDecisions();
-        $this->watcherClient->addDecision(
-            new \DateTime(),
-            '24h',
-            WatcherClient::HOURS24,
-            TestHelpers::BAD_IP . '/' . TestHelpers::LARGE_IPV4_RANGE,
-            'ban'
-        );
-        $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
-        $this->assertEquals(
-            'ban',
-            $cappedRemediation,
-            'The remediation for the banned IPv4 range should be ban'
-        );
-
-        $this->logger->info('', ['message' => 'set "IPV6 range banned" state']);
-        $this->watcherClient->deleteAllDecisions();
-        $this->watcherClient->addDecision(
-            new \DateTime(),
-            '24h',
-            WatcherClient::HOURS24,
-            TestHelpers::BAD_IPV6 . '/' . TestHelpers::IPV6_RANGE,
-            'ban'
-        );
-        $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
-        $this->assertEquals(
-            'ban',
-            $cappedRemediation,
-            'The remediation for a banned IPv6 range should be ban in live mode'
-        );
-        $this->watcherClient->deleteAllDecisions();
-        $this->watcherClient->addDecision(
-            new \DateTime(),
-            '24h',
-            WatcherClient::HOURS24,
-            TestHelpers::BAD_IPV6,
-            'ban'
-        );
-        $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
-        $this->assertEquals(
-            'ban',
-            $cappedRemediation,
-            'The remediation for a banned IPv6 should be ban'
-        );
-    }
-
-    /**
-     * @group integration
-     */
-    public function testCanVerifyIpInStreamMode(): void
-    {
-        // Init context
-        $this->watcherClient->setInitialState();
-        // Init bouncer
-        $bouncerConfigs = [
-            'auth_type' => $this->useTls ? Constants::AUTH_TLS : Constants::AUTH_KEY,
-            'api_key' => TestHelpers::getBouncerKey(),
-            'api_url' => TestHelpers::getLapiUrl(),
-            'stream_mode' => true,
-            'redis_dsn' => getenv('REDIS_DSN'),
-            'memcached_dsn' => getenv('MEMCACHED_DSN'),
-            'fs_cache_path' => $this->root->url() . '/.cache',
-        ];
-        if ($this->useTls) {
-            $this->addTlsConfig($bouncerConfigs, $this->useTls);
-        }
-
-        $client = new BouncerClient($bouncerConfigs);
-        $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
-        // Test cache adapter
-        $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
-        $cacheAdapter->clear();
-        // As we are in stream mode, no live call should be done to the API.
-        // Warm BlockList cache up
-
-        $bouncer->refreshBlocklistCache();
+        // Add a ban
+        TestHelpers::addLocalDecision($cache, TestHelpers::BAD_IP, RemConstants::REMEDIATION_BAN);
 
         $this->assertEquals(
             'ban',
@@ -1004,17 +752,17 @@ final class AbstractBouncerTest extends TestCase
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
         $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_FLEX;
-        $client = new BouncerClient($bouncerConfigs);
+        $client = new Watcher($bouncerConfigs, new FileStorage());
         $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation]);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
         $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
-        $client = new BouncerClient($bouncerConfigs);
+        $client = new CapiClient($bouncerConfigs, new FileStorage());
         $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation]);
         $this->assertEquals(
             'bypass',
             $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP),
@@ -1028,11 +776,10 @@ final class AbstractBouncerTest extends TestCase
             'Preload the bypass remediation to prepare the next tests'
         );
 
-        // Add and remove decision
-        $this->watcherClient->setSecondState();
-
-        // Pull updates
-        $bouncer->refreshBlocklistCache();
+        // Remove old decisions and add a ban
+        $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
+        $cacheAdapter->clear();
+        TestHelpers::addLocalDecision($cache, TestHelpers::NEWLY_BAD_IP, RemConstants::REMEDIATION_BAN);
 
         $this->assertEquals(
             'ban',
@@ -1047,26 +794,10 @@ final class AbstractBouncerTest extends TestCase
         );
 
         // Set up a new instance.
-        $bouncerConfigs = [
-            'auth_type' => $this->useTls ? Constants::AUTH_TLS : Constants::AUTH_KEY,
-            'api_key' => TestHelpers::getBouncerKey(),
-            'api_url' => TestHelpers::getLapiUrl(),
-            'stream_mode' => true,
-            'redis_dsn' => getenv('REDIS_DSN'),
-            'memcached_dsn' => getenv('MEMCACHED_DSN'),
-            'fs_cache_path' => $this->root->url() . '/.cache',
-        ];
-        if ($this->useTls) {
-            $bouncerConfigs['tls_cert_path'] = $this->useTls . '/bouncer.pem';
-            $bouncerConfigs['tls_key_path'] = $this->useTls . '/bouncer-key.pem';
-            $bouncerConfigs['tls_ca_cert_path'] = $this->useTls . '/ca-chain.pem';
-            $bouncerConfigs['tls_verify_peer'] = true;
-        }
-
-        $client = new BouncerClient($bouncerConfigs);
+        $client = new CapiClient($bouncerConfigs, new FileStorage());
         $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
+        $capiRemediation = new CapiRemediation($bouncerConfigs, $client, $cache);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $capiRemediation]);
 
         $this->assertEquals(
             'ban',
@@ -1074,23 +805,14 @@ final class AbstractBouncerTest extends TestCase
         );
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" + "IPV6 range banned" state']);
-        $this->watcherClient->deleteAllDecisions();
-        $this->watcherClient->addDecision(
-            new \DateTime(),
-            '24h',
-            WatcherClient::HOURS24,
-            TestHelpers::BAD_IP . '/' . TestHelpers::LARGE_IPV4_RANGE,
-            'ban'
-        );
-        $this->watcherClient->addDecision(
-            new \DateTime(),
-            '24h',
-            WatcherClient::HOURS24,
-            TestHelpers::BAD_IPV6 . '/' . TestHelpers::IPV6_RANGE,
-            'ban'
-        );
-        // Pull updates
-        $bouncer->refreshBlocklistCache();
+
+        // Remove old decisions and add a range ban
+        $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
+        $cacheAdapter->clear();
+        TestHelpers::addLocalDecision($cache, TestHelpers::BAD_IP . '/' . TestHelpers::LARGE_IPV4_RANGE ,
+            RemConstants::REMEDIATION_BAN, RemConstants::SCOPE_RANGE);
+        TestHelpers::addLocalDecision($cache, TestHelpers::BAD_IPV6 . '/' . TestHelpers::IPV6_RANGE ,
+            RemConstants::REMEDIATION_BAN, RemConstants::SCOPE_RANGE);
 
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals(

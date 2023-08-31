@@ -17,6 +17,7 @@ namespace CrowdSecBouncer\Tests\Unit;
 
 use CrowdSec\Common\Logger\FileLog;
 use CrowdSec\RemediationEngine\LapiRemediation;
+use CrowdSec\RemediationEngine\CapiRemediation;
 use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\BouncerException;
 use CrowdSecBouncer\Constants;
@@ -46,6 +47,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \CrowdSecBouncer\AbstractBouncer::getRemediationForIp
  * @covers \CrowdSecBouncer\AbstractBouncer::getTrustForwardedIpBoundsList
  * @covers \CrowdSecBouncer\AbstractBouncer::handleForwardedFor
+ * @covers \CrowdSecBouncer\AbstractBouncer::buildRemediationEngine
  *
  * @uses \CrowdSecBouncer\AbstractBouncer::handleRemediation
  *
@@ -496,9 +498,61 @@ final class AbstractBouncerTest extends TestCase
             ['not-an-ip']
         );
         $this->assertEquals(false, $result, 'Should return false if ip is invalid');
+
+        // buildRemediationEngine
+        $configs = $this->configs;
+        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getCacheStorage', 'getClient'])
+            ->getMock();
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'buildRemediationEngine',
+            [
+                $configs,
+                $bouncer->getLogger()]
+        );
+        $this->assertInstanceOf(\CrowdSec\RemediationEngine\LapiRemediation::class, $result, 'Handle remediation engine should return LAPI remediation');
+        $this->assertInstanceOf(\CrowdSec\LapiClient\Bouncer::class, $result->getClient());
+
+        $configs = array_merge($this->configs, ['use_capi' => true, 'scenarios' => ['test/test']]);
+        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getCacheStorage', 'getClient'])
+            ->getMock();
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'buildRemediationEngine',
+            [
+                $configs,
+                $bouncer->getLogger()]
+        );
+        $this->assertInstanceOf(\CrowdSec\RemediationEngine\CapiRemediation::class, $result, 'Handle remediation engine should return CAPI remediation');
+        $this->assertInstanceOf(\CrowdSec\CapiClient\Watcher::class, $result->getClient());
+        $this->assertInstanceOf(\CrowdSec\CapiClient\Client\CapiHandler\FileGetContents::class, $result->getClient()->getRequestHandler());
+
+        $configs = array_merge($this->configs, ['use_capi' => true, 'use_curl' => true, 'scenarios' => ['test/test']]);
+        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getCacheStorage', 'getClient'])
+            ->getMock();
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'buildRemediationEngine',
+            [
+                $configs,
+                $bouncer->getLogger()]
+        );
+        $this->assertInstanceOf(\CrowdSec\RemediationEngine\CapiRemediation::class, $result, 'Handle remediation engine should return CAPI remediation');
+        $this->assertInstanceOf(\CrowdSec\CapiClient\Watcher::class, $result->getClient());
+        $this->assertInstanceOf(\CrowdSec\CapiClient\Client\CapiHandler\Curl::class, $result->getClient()
+            ->getRequestHandler());
     }
 
-    public function testGetRemediationForIpException()
+    public function testGetLapiRemediationForIpException()
     {
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
@@ -524,7 +578,33 @@ final class AbstractBouncerTest extends TestCase
         $this->assertEquals('Error in unit test', $errorMessage);
     }
 
-    public function testShouldBounceCurrentIp()
+    public function testGetCapiRemediationForIpException()
+    {
+        $configs = array_merge($this->configs, ['use_capi' => true, 'scenarios' => ['test/test']]);
+        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getIpRemediation'])
+            ->getMock();
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+
+        $this->assertInstanceOf(CapiRemediation::class, $bouncer->getRemediationEngine());
+
+        $mockRemediation->method('getIpRemediation')->willThrowException(new \Exception('Error in unit test', 123));
+
+        $errorMessage = '';
+        $errorCode = 0;
+        try {
+            $bouncer->getRemediationForIp('1.2.3.3');
+        } catch (BouncerException $e) {
+            $errorMessage = $e->getMessage();
+            $errorCode = $e->getCode();
+        }
+
+        $this->assertEquals(123, $errorCode);
+        $this->assertEquals('Error in unit test', $errorMessage);
+    }
+
+    public function testShouldBounceCurrentIpWithLapi()
     {
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
@@ -562,7 +642,45 @@ final class AbstractBouncerTest extends TestCase
         $this->assertEquals(true, $result);
     }
 
-    public function testCacheMethodsException()
+    public function testShouldBounceCurrentIpWithCapi()
+    {
+        $configs = array_merge($this->configs, ['use_capi' => true, 'scenarios' => ['test/test']]);
+        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getIpRemediation'])
+            ->getMock();
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+
+        $result = $bouncer->shouldBounceCurrentIp();
+        $this->assertEquals(true, $result);
+
+        $configs = array_merge($configs, ['bouncing_level' => 'bouncing_disabled']);
+        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getIpRemediation'])
+            ->getMock();
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+
+        $result = $bouncer->shouldBounceCurrentIp();
+        $this->assertEquals(false, $result);
+
+        $configs = array_merge($this->configs, ['use_capi' => true, 'scenarios' => ['test/test']]);
+        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getIpRemediation'])
+            ->getMock();
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
+            true, true, ['getRequestUri']);
+
+        $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls(self::EXCLUDED_URI, '/good-uri');
+        $result = $bouncer->shouldBounceCurrentIp();
+        $this->assertEquals(false, $result);
+
+        $result = $bouncer->shouldBounceCurrentIp();
+        $this->assertEquals(true, $result);
+    }
+
+    public function testCacheMethodsExceptionWithLapi()
     {
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
@@ -572,6 +690,75 @@ final class AbstractBouncerTest extends TestCase
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
 
         $this->assertInstanceOf(LapiRemediation::class, $bouncer->getRemediationEngine());
+
+        $mockRemediation->method('pruneCache')->willThrowException(new \Exception('unit test prune cache', 123));
+
+        $errorMessage = '';
+        $errorCode = 0;
+        try {
+            $bouncer->pruneCache();
+        } catch (BouncerException $e) {
+            $errorMessage = $e->getMessage();
+            $errorCode = $e->getCode();
+        }
+
+        $this->assertEquals(123, $errorCode);
+        $this->assertEquals('Error while pruning cache: unit test prune cache', $errorMessage);
+
+        $mockRemediation->method('clearCache')->willThrowException(new \Exception('unit test clear cache', 456));
+
+        $errorMessage = '';
+        $errorCode = 0;
+        try {
+            $bouncer->clearCache();
+        } catch (BouncerException $e) {
+            $errorMessage = $e->getMessage();
+            $errorCode = $e->getCode();
+        }
+
+        $this->assertEquals(456, $errorCode);
+        $this->assertEquals('Error while clearing cache: unit test clear cache', $errorMessage);
+
+        $mockRemediation->method('refreshDecisions')->willThrowException(new \Exception('unit test refresh', 789));
+
+        $errorMessage = '';
+        $errorCode = 0;
+        try {
+            $bouncer->refreshBlocklistCache();
+        } catch (BouncerException $e) {
+            $errorMessage = $e->getMessage();
+            $errorCode = $e->getCode();
+        }
+
+        $this->assertEquals(789, $errorCode);
+        $this->assertEquals('Error while refreshing decisions: unit test refresh', $errorMessage);
+
+        $mockRemediation->method('getCacheStorage')->willThrowException(new \Exception('unit test get cache storage',
+            101112));
+
+        $errorMessage = '';
+        $errorCode = 0;
+        try {
+            $bouncer->testCacheConnection();
+        } catch (BouncerException $e) {
+            $errorMessage = $e->getMessage();
+            $errorCode = $e->getCode();
+        }
+
+        $this->assertEquals(101112, $errorCode);
+        $this->assertEquals('Error while testing cache connection: unit test get cache storage', $errorMessage);
+    }
+
+    public function testCacheMethodsExceptionWithCapi()
+    {
+        $configs = array_merge($this->configs, ['use_capi' => true, 'scenarios' => ['test/test']]);
+        $mockRemediation = $this->getMockBuilder(CapiRemediation::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
+            ->getMock();
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+
+        $this->assertInstanceOf(CapiRemediation::class, $bouncer->getRemediationEngine());
 
         $mockRemediation->method('pruneCache')->willThrowException(new \Exception('unit test prune cache', 123));
 

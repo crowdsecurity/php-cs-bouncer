@@ -9,18 +9,19 @@ The [public API](https://semver.org/spec/v2.0.0.html#spec-item-1) of this librar
 
 ---
 
-## [x.y.z](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v2.0.0) - 2023-??-??
+## [3.0.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v2.0.0) - 2023-??-??
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v2.0.0...vx.y.z)
 
 
 ### Changed
 
+- *Breaking changes*: Change `handleClient` and `handleCache` visibility from protected to private
 - Update `AbstractBouncer::handleClient` to return a `CapiClient/Watcher` or `LapiClient/Bouncer` instance
 
 ### Added
 
 - Add `use_capi` boolean setting
-- Add `AbstractBouncer::handleRemediationEngine` protected method
+- Add `AbstractBouncer::buildRemediationEngine` protected method
 
 
 
