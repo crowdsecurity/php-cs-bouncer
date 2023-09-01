@@ -21,6 +21,7 @@ The [public API](https://semver.org/spec/v2.0.0.html#spec-item-1) of this librar
 ### Deprecated
 
 - Deprecate `AbstractBouncer::handleClient`
+- Deprecate `AbstractBouncer:getConfigs`
 
 ---
 

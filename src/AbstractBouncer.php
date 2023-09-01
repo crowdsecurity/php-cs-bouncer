@@ -124,7 +124,7 @@ abstract class AbstractBouncer
     /**
      * Retrieve Bouncer configurations.
      *
-     * @deprecated since 2.1.0 . Will be removed in 3.0.0.
+     * @deprecated since 2.1.0 . Will be removed in 3.0.0. Use getConfig instead.
      *
      * @codeCoverageIgnore
      */
