@@ -62,6 +62,7 @@ abstract class AbstractBouncer
         unset($configs['text'], $configs['color']);
         $this->logger->debug('Instantiate bouncer', [
             'type' => 'BOUNCER_INIT',
+            'bouncer' => \get_class($this),
             'logger' => \get_class($this->getLogger()),
             'remediation' => \get_class($this->getRemediationEngine()),
             'configs' => $configs,
