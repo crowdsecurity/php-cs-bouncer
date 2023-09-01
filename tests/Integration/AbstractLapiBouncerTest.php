@@ -7,7 +7,6 @@ namespace CrowdSecBouncer\Tests\Integration;
 use CrowdSec\Common\Client\RequestHandler\Curl;
 use CrowdSec\Common\Client\RequestHandler\FileGetContents;
 use CrowdSec\Common\Logger\FileLog;
-use CrowdSec\LapiClient\Bouncer as BouncerClient;
 use CrowdSec\RemediationEngine\CacheStorage\Memcached;
 use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
 use CrowdSec\RemediationEngine\CacheStorage\Redis;
@@ -32,8 +31,8 @@ use Psr\Log\LoggerInterface;
  * @uses   \CrowdSecBouncer\AbstractBouncer::getConfig
  * @uses   \CrowdSecBouncer\AbstractBouncer::getConfigs
  * @uses   \CrowdSecBouncer\AbstractBouncer::getLogger
- * @covers   \CrowdSecBouncer\AbstractBouncer::getRemediationEngine
  *
+ * @covers   \CrowdSecBouncer\AbstractBouncer::getRemediationEngine
  * @covers   \CrowdSecBouncer\AbstractBouncer::handleCache
  * @covers   \CrowdSecBouncer\AbstractBouncer::handleClient
  * @covers \CrowdSecBouncer\AbstractBouncer::refreshBlocklistCache
@@ -373,7 +372,6 @@ final class AbstractLapiBouncerTest extends TestCase
             $this->addTlsConfig($bouncerConfigs, $this->useTls);
         }
 
-
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs], '', true,
             true, true, [
@@ -492,7 +490,7 @@ final class AbstractLapiBouncerTest extends TestCase
             [
                 'display_errors' => true,
                 'api_url' => 'bad-url',
-                'use_curl' => true
+                'use_curl' => true,
             ]
         );
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
@@ -539,7 +537,7 @@ final class AbstractLapiBouncerTest extends TestCase
             [
                 'display_errors' => false,
                 'api_url' => 'bad-url',
-                'use_curl' => true
+                'use_curl' => true,
             ]
         );
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error

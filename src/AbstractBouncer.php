@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer;
 
-use CrowdSec\CapiClient\Client\CapiHandler\Curl as CapiCurl;
-use CrowdSec\CapiClient\Client\CapiHandler\FileGetContents as CapiFileGetContents;
-use CrowdSec\CapiClient\Storage\StorageInterface;
-use CrowdSec\CapiClient\Watcher as WatcherClient;
-use CrowdSec\Common\Client\AbstractClient;
 use CrowdSec\Common\Client\RequestHandler\Curl;
 use CrowdSec\Common\Client\RequestHandler\FileGetContents;
 use CrowdSec\LapiClient\Bouncer as BouncerClient;
@@ -18,8 +13,6 @@ use CrowdSec\RemediationEngine\CacheStorage\CacheStorageException;
 use CrowdSec\RemediationEngine\CacheStorage\Memcached;
 use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
 use CrowdSec\RemediationEngine\CacheStorage\Redis;
-use CrowdSec\RemediationEngine\CapiRemediation;
-use CrowdSec\RemediationEngine\LapiRemediation;
 use CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder;
 use Gregwar\Captcha\PhraseBuilder;
 use IPLib\Factory;
@@ -31,7 +24,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Config\Definition\Processor;
 
 /**
- * The class that apply a bounce.
+ * The class that apply a bounce from a remediation engine.
  *
  * @author    CrowdSec team
  *
@@ -51,8 +44,8 @@ abstract class AbstractBouncer
 
     public function __construct(
         array $configs,
-        LoggerInterface $logger = null,
-        StorageInterface $capiStorage = null
+        AbstractRemediation $remediationEngine,
+        LoggerInterface $logger = null
     ) {
         // @codeCoverageIgnoreStart
         if (!$logger) {
@@ -61,10 +54,10 @@ abstract class AbstractBouncer
         }
         // @codeCoverageIgnoreEnd
         $this->logger = $logger;
-        // We build the remediation engine before cleaning configs
-        $this->remediationEngine = $this->buildRemediationEngine($configs, $this->logger, $capiStorage);
         $this->configure($configs);
-        $configs = $this->getConfigs();
+        $this->remediationEngine = $remediationEngine;
+
+        $configs = $this->getConfig();
         // Clean configs for lighter log
         unset($configs['text'], $configs['color']);
         $this->logger->debug('Instantiate bouncer', [
@@ -114,15 +107,26 @@ abstract class AbstractBouncer
     }
 
     /**
-     * Retrieve Bouncer configuration by name.
+     * Retrieve Bouncer configuration.
+     *
+     * If $name is not defined will return all the configs as an array.
+     * Otherwise, it will return value of the element specified by $name.
      */
-    public function getConfig(string $name)
+    public function getConfig(string $name = '')
     {
+        if ('' === $name) {
+            return $this->configs;
+        }
+
         return (isset($this->configs[$name])) ? $this->configs[$name] : null;
     }
 
     /**
      * Retrieve Bouncer configurations.
+     *
+     * @deprecated since 2.1.0 . Will be removed in 3.0.0.
+     *
+     * @codeCoverageIgnore
      */
     public function getConfigs(): array
     {
@@ -294,19 +298,6 @@ abstract class AbstractBouncer
             $message = 'Error while testing cache connection: ' . $e->getMessage();
             throw new BouncerException($message, (int) $e->getCode(), $e);
         }
-    }
-
-    private function buildRemediationEngine(
-        array $configs,
-        LoggerInterface $logger,
-        ?StorageInterface $capiStorage
-    ): AbstractRemediation {
-        $client = $this->handleClient($configs, $logger, $capiStorage);
-        $cache = $this->handleCache($configs, $logger);
-
-        return ($client instanceof WatcherClient) ?
-            new CapiRemediation($configs, $client, $cache, $logger) :
-            new LapiRemediation($configs, $client, $cache, $logger);
     }
 
     /**
@@ -558,7 +549,7 @@ abstract class AbstractBouncer
      * @throws BouncerException
      * @throws CacheStorageException
      */
-    private function handleCache(array $configs, LoggerInterface $logger): AbstractCache
+    protected function handleCache(array $configs, LoggerInterface $logger = null): AbstractCache
     {
         $cacheSystem = $configs['cache_system'] ?? Constants::CACHE_SYSTEM_PHPFS;
         switch ($cacheSystem) {
@@ -686,19 +677,13 @@ abstract class AbstractBouncer
         }
     }
 
-    private function handleClient(
-        array $configs,
-        LoggerInterface $logger,
-        ?StorageInterface $capiStorage
-    ): AbstractClient {
-        if ($capiStorage) {
-            $requestHandler = empty($configs['use_curl']) ?
-                new CapiFileGetContents($configs) :
-                new CapiCurl($configs);
-
-            return new WatcherClient($configs, $capiStorage, $requestHandler, $logger);
-        }
-
+    /**
+     * @deprecated since 2.1.0 . Will be removed in 3.0.0.
+     *
+     * @codeCoverageIgnore
+     */
+    protected function handleClient(array $configs, LoggerInterface $logger): BouncerClient
+    {
         $requestHandler = empty($configs['use_curl']) ? new FileGetContents($configs) : new Curl($configs);
 
         return new BouncerClient($configs, $requestHandler, $logger);

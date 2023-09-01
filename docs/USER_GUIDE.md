@@ -33,22 +33,26 @@
 This library allows you to create CrowdSec bouncers for PHP applications or frameworks like e-commerce, blog or other 
 exposed applications.
 
-## Prerequisites
-
-To be able to use a bouncer based on this library, the first step is to install [CrowdSec v1](https://doc.crowdsec.net/docs/getting_started/install_crowdsec/). CrowdSec is only in charge of the "detection", and won't block anything on its own. You need to deploy a bouncer to "apply" decisions.
-
-Please note that first and foremost a CrowdSec agent must be installed on a server that is accessible by this library.
 
 ## Features
 
-- CrowdSec Local API support
+- CrowdSec Local API (`LAPI`) support
   - Handle `ip`, `range` and `country` scoped decisions
   - `Live mode` or `Stream mode`
-- Support IpV4 and Ipv6 (Ipv6 range decisions are yet only supported in `Live mode`) 
+  - Api key and TLS authentication
+- CrowdSec Central API (`CAPI`) support
+  - Handle `ip` and `range` scoped decisions
+- Support IpV4 and Ipv6 (Ipv6 range decisions are yet only supported in `LAPI`'s `Live mode`) 
 - Large PHP matrix compatibility: 7.2, 7.3, 7.4, 8.0, 8.1 and 8.2
 - Built-in support for the most known cache systems Redis, Memcached and PhpFiles
   - Clear, prune and refresh the bouncer cache
 - Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)
+
+## Prerequisites for `LAPI`
+
+To be able to use a `LAPI` bouncer based on this library, the first step is to install [CrowdSec v1](https://doc.crowdsec.net/docs/getting_started/install_crowdsec/). CrowdSec is only in charge of the "detection", and won't block anything on its own. You need to deploy a bouncer to "apply" decisions.
+
+Please note that first and foremost a CrowdSec agent must be installed on a server that is accessible by this library.
 
 
 ## Usage
@@ -142,30 +146,46 @@ Once you have implemented these methods, you could retrieve all required configu
 and then call the `run` method to apply a bounce for the current detected IP. Please see below for the list of 
 available configurations.
 
-In order to instantiate the bouncer, you will have to create at least a `CrowdSec\RemediationEngine\LapiRemediation` 
-object too. 
+#### Bouncer using `LAPI` remediation
 
+To use `LAPI` as remediation source, simply instantiate your class with the appropriate configuration.
 
 ```php
 use MyNameSpace\MyCustomBouncer;
-use CrowdSec\RemediationEngine\LapiRemediation;
-use CrowdSec\LapiClient\Bouncer as BouncerClient;
-use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
 
 $configs = [...];
-$client = new BouncerClient($configs);// @see AbstractBouncer::handleClient method for a basic client creation
-$cacheStorage = new PhpFiles($configs);// @see AbstractBouncer::handleCache method for a basic cache storage creation
-$remediationEngine = new LapiRemediation($configs, $client, $cacheStorage);
 
-$bouncer = new MyCustomBouncer($configs, $remediationEngine);
+$bouncer = new MyCustomBouncer($configs);
 
 $bouncer->run();
 ```
 
 
-### Test your bouncer
+#### Bouncer using `CAPI` remediation
 
-To test your bouncer, you could add decision to ban your own IP for 5 minutes for example:
+
+In order to instantiate a `CAPI` bouncer, you will have to implement the `CrowdSec\CapiClient\Storage\StorageInterface` 
+interface. 
+
+As an example, you could use the development implementation `CrowdSec\CapiClient\Storage\FileStorage`.
+
+
+```php
+use MyNameSpace\MyCustomBouncer;
+use CrowdSec\CapiClient\Storage\FileStorage;
+
+$configs = [...];
+
+$capiStorage = new FileStorage();
+$bouncer = new MyCustomBouncer($configs, null, $capiStorage);
+
+$bouncer->run();
+```
+
+
+### Test your `LAPI` bouncer
+
+To test your `LAPI` bouncer, you could add decision to ban your own IP for 5 minutes for example:
 
 ```bash
 cscli decisions add --ip <YOUR_IP> --duration 5m --type ban

@@ -557,7 +557,6 @@ final class AbstractBouncerTest extends TestCase
             true, true, ['getRemediationEngine']);
         $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
-
         $this->assertInstanceOf(CapiRemediation::class, $bouncer->getRemediationEngine());
 
         $mockRemediation->method('getIpRemediation')->willThrowException(new \Exception('Error in unit test', 123));
@@ -586,7 +585,6 @@ final class AbstractBouncerTest extends TestCase
             true, true, ['getRemediationEngine']);
         $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
-
         $result = $bouncer->shouldBounceCurrentIp();
         $this->assertEquals(true, $result);
 
@@ -598,7 +596,6 @@ final class AbstractBouncerTest extends TestCase
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs], '', true,
             true, true, ['getRemediationEngine']);
         $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
-
 
         $result = $bouncer->shouldBounceCurrentIp();
         $this->assertEquals(false, $result);

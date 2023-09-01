@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
-use CrowdSec\LapiClient\Bouncer as BouncerClient;
-use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
-use CrowdSec\RemediationEngine\LapiRemediation;
 use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\Constants;
 use PHPUnit\Framework\TestCase;
@@ -128,7 +125,6 @@ final class GeolocationTest extends TestCase
             'stream_mode' => false,
         ]);
 
-
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs]);
 
         $bouncer->clearCache();
@@ -200,7 +196,6 @@ final class GeolocationTest extends TestCase
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR,
         ]);
-
 
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs]);
         $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();

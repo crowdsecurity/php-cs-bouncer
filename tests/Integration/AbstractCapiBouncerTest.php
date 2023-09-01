@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace CrowdSecBouncer\Tests\Integration;
 
 use CrowdSec\CapiClient\Storage\FileStorage;
-use CrowdSec\CapiClient\Watcher;
 use CrowdSec\CapiClient\Watcher as CapiClient;
 use CrowdSec\Common\Logger\FileLog;
 use CrowdSec\RemediationEngine\CacheStorage\Memcached;
@@ -33,7 +32,9 @@ use Psr\Log\LoggerInterface;
  * @uses   \CrowdSecBouncer\AbstractBouncer::getConfig
  * @uses   \CrowdSecBouncer\AbstractBouncer::getConfigs
  * @uses   \CrowdSecBouncer\AbstractBouncer::getLogger
+ *
  * @covers   \CrowdSecBouncer\AbstractBouncer::getRemediationEngine
+ *
  * @uses \CrowdSecBouncer\AbstractBouncer::buildRemediationEngine
  *
  * @covers   \CrowdSecBouncer\AbstractBouncer::handleCache

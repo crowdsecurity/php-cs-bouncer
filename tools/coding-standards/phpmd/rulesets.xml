@@ -29,7 +29,6 @@
     <rule ref="rulesets/codesize.xml/TooManyMethods">
         <properties>
             <property name="ignorepattern" value="(^(set|get|is|has|with|unset|test))i" />
-            <property name="maxmethods" value="30" />
         </properties>
     </rule>
     <!--The only case when static access is acceptable is when used for factory methods.-->
