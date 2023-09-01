@@ -19,15 +19,14 @@ use CrowdSec\CapiClient\Storage\FileStorage;
 use CrowdSec\Common\Logger\FileLog;
 use CrowdSec\RemediationEngine\CapiRemediation;
 use CrowdSec\RemediationEngine\LapiRemediation;
-use CrowdSecBouncer\AbstractCapiBouncer;
+use CrowdSecBouncer\AbstractBouncerBuilder;
 use CrowdSecBouncer\BouncerException;
 use CrowdSecBouncer\Constants;
-use CrowdSecBouncer\Tests\PHPUnitUtil;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \CrowdSecBouncer\AbstractCapiBouncer::__construct
+ * @covers \CrowdSecBouncer\AbstractBouncerBuilder::__construct
  * @covers \CrowdSecBouncer\AbstractBouncer::configure
  * @covers \CrowdSecBouncer\AbstractBouncer::getConfig
  * @covers \CrowdSecBouncer\AbstractBouncer::getConfigs
@@ -48,11 +47,10 @@ use PHPUnit\Framework\TestCase;
  * @covers \CrowdSecBouncer\AbstractBouncer::getRemediationForIp
  * @covers \CrowdSecBouncer\AbstractBouncer::getTrustForwardedIpBoundsList
  * @covers \CrowdSecBouncer\AbstractBouncer::handleForwardedFor
+ *
  * @uses \CrowdSecBouncer\AbstractBouncer::__construct
- * @uses \CrowdSecBouncer\AbstractCapiBouncer::buildClient
- * @uses \CrowdSecBouncer\AbstractCapiBouncer::buildRemediationEngine
- *
- *
+ * @uses \CrowdSecBouncer\AbstractBouncerBuilder::buildClient
+ * @uses \CrowdSecBouncer\AbstractBouncerBuilder::buildRemediationEngine
  * @uses \CrowdSecBouncer\AbstractBouncer::handleRemediation
  *
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldTrustXforwardedFor
@@ -190,7 +188,6 @@ final class AbstractCapiBouncerTest extends TestCase
         $this->storage = new FileStorage();
     }
 
-
     public function testGetCapiRemediationForIpException()
     {
         $configs = array_merge($this->configs, ['use_capi' => true, 'scenarios' => ['test/test']]);
@@ -198,7 +195,7 @@ final class AbstractCapiBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractCapiBouncer::class, [$configs, $this->storage], '', true,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$configs, $this->storage], '', true,
             true, true, ['getRemediationEngine']);
         $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
@@ -219,7 +216,6 @@ final class AbstractCapiBouncerTest extends TestCase
         $this->assertEquals('Error in unit test', $errorMessage);
     }
 
-
     public function testShouldBounceCurrentIpWithCapi()
     {
         $configs = array_merge($this->configs, ['use_capi' => true, 'scenarios' => ['test/test']]);
@@ -227,7 +223,7 @@ final class AbstractCapiBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractCapiBouncer::class, [$configs, $this->storage], '', true,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$configs, $this->storage], '', true,
             true, true, ['getRequestUri', 'getRemediationEngine']);
         $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
@@ -239,7 +235,7 @@ final class AbstractCapiBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractCapiBouncer::class, [$configs, $this->storage], '', true,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$configs, $this->storage], '', true,
             true, true, ['getRemediationEngine']);
         $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 
@@ -251,7 +247,7 @@ final class AbstractCapiBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['getIpRemediation'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractCapiBouncer::class, [$configs, $this->storage], '', true,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$configs, $this->storage], '', true,
             true, true, ['getRequestUri', 'getRemediationEngine']);
         $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls(self::EXCLUDED_URI, '/good-uri');
@@ -269,7 +265,7 @@ final class AbstractCapiBouncerTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
             ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractCapiBouncer::class, [$configs, $this->storage], '', true,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$configs, $this->storage], '', true,
             true, true, ['getRemediationEngine']);
         $bouncer->method('getRemediationEngine')->willReturn($mockRemediation);
 

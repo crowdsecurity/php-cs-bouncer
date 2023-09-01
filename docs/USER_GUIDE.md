@@ -41,6 +41,7 @@ exposed applications.
   - Api key and TLS authentication
 - CrowdSec Central API (`CAPI`) support
   - Handle `ip` and `range` scoped decisions
+  - Support CrowdSec community blocklist and subscribed third party blocklists
 - Support IpV4 and Ipv6 (Ipv6 range decisions are yet only supported in `LAPI`'s `Live mode`) 
 - Large PHP matrix compatibility: 7.2, 7.3, 7.4, 8.0, 8.1 and 8.2
 - Built-in support for the most known cache systems Redis, Memcached and PhpFiles
@@ -78,26 +79,14 @@ On the other hand, all texts are also fully customizable. This will allow you, f
 
 You can use this library to develop your own PHP application bouncer. 
 
-If you want to create a `LAPI` based bouncer, your custom bouncer should extend the [`AbstractLapiBouncer`](../src/AbstractLapiBouncer.php) class.
+If you want to create a `LAPI` or a `CAPI` based custom bouncer, it should extend the [`AbstractBouncerBuilder`](../src/AbstractBouncerBuilder.php) class.
 
 ```php
 namespace MyNameSpace;
 
-use CrowdSecBouncer\AbstractLapiBouncer;
+use CrowdSecBouncer\AbstractBouncerBuilder;
 
-class MyCustomLapiBouncer extends AbstractLapiBouncer
-{
-}
-```
-
-If you want to create a `CAPI` based bouncer, your custom bouncer should extend the [`AbstractCapiBouncer`](../src/AbstractLapiBouncer.php) class.
-
-```php
-namespace MyNameSpace;
-
-use CrowdSecBouncer\AbstractCapiBouncer;
-
-class MyCustomCapiBouncer extends AbstractCapiBouncer
+class MyCustomBouncer extends AbstractBouncerBuilder
 {
 }
 ```
@@ -105,7 +94,11 @@ class MyCustomCapiBouncer extends AbstractCapiBouncer
 In both cases (`LAPI` and `CAPI`), you'll need to implement all necessary methods:
 
 ```php
-class MyCustomBouncer extends ...
+namespace MyNameSpace;
+
+use CrowdSecBouncer\AbstractBouncerBuilder;
+
+class MyCustomBouncer extends AbstractBouncerBuilder
 {
     /**
      * Get current http method
@@ -159,11 +152,11 @@ available configurations.
 To use `LAPI` as remediation source, simply instantiate your class with the appropriate configuration.
 
 ```php
-use MyNameSpace\MyCustomLapiBouncer;
+use MyNameSpace\MyCustomBouncer;
 
 $configs = [...];
 
-$bouncer = new MyCustomLapiBouncer($configs);
+$bouncer = new MyCustomBouncer($configs);
 
 $bouncer->run();
 ```
@@ -179,13 +172,13 @@ As an example, you could use the development implementation `CrowdSec\CapiClient
 
 
 ```php
-use MyNameSpace\MyCustomCapiBouncer;
+use MyNameSpace\MyCustomBouncer;
 use CrowdSec\CapiClient\Storage\FileStorage;
 
 $configs = [...];
 
 $capiStorage = new FileStorage();
-$bouncer = new MyCustomCapiBouncer($configs, $capiStorage);
+$bouncer = new MyCustomBouncer($configs, $capiStorage);
 
 $bouncer->run();
 ```
@@ -246,8 +239,10 @@ Below is the list of available settings:
 
 - `stream_mode`: (**only configurable for LAPI bouncer as CAPI bouncer only works in stream mode**) 
 
-  true to enable stream mode, false to enable the live mode. Default to false for `LAPI` bouncer. In other word, by default, the `live mode` is enabled. The first time a stranger connects to your website, this mode means that the IP will be checked directly by the CrowdSec LAPI. The rest of your user’s browsing will be even more transparent thanks to the fully customizable cache system. But you can also activate the `stream mode`. This mode allows you to constantly feed the bouncer with the malicious IP list via a background task (CRON), making it to be even faster when checking the IP of your visitors. Besides, if your site has a lot of unique visitors at the same time, this will not influence the traffic to the API of your CrowdSec instance.
-  **N.B.:** `CAPI` bouncer always use the stream mode. That's why this setting is only used with a `LAPI` bouncer. 
+  `true` to enable stream mode, `false` to enable the live mode. Default to false for `LAPI` bouncer. Always `true` for `CAPI` bouncer.
+
+  -  `live mode`: The first time a stranger connects to your website, its IP will be checked directly by the CrowdSec LAPI. The rest of your user’s browsing will be even more transparent thanks to the fully customizable cache system. 
+  - `stream mode`: This mode allows you to constantly feed the bouncer with the malicious IP list via a background task (CRON), making it to be even faster when checking the IP of your visitors. Besides, if your site has a lot of unique visitors at the same time, this will not influence the traffic to the `LAPI` of your CrowdSec instance.
 
 ### API Connection
 
@@ -353,19 +348,18 @@ Below is the list of available settings:
 
 ### Geolocation
 
-- `geolocation`: Settings for geolocation remediation (i.e. country based remediation).
-
+- `geolocation`: Settings for geolocation remediation (i.e. country based remediation). **Only available for LAPI bouncer.**
     - `geolocation[enabled]`: true to enable remediation based on country. Default to false.
-
+    
     - `geolocation[type]`:  Geolocation system. Only 'maxmind' is available for the moment. Default to `maxmind`.
-
+    
     - `geolocation[cache_duration]`: This setting will be used to set the lifetime (in seconds) of a cached country
       associated to an IP. The purpose is to avoid multiple call to the geolocation system (e.g. maxmind database). Default to 86400. Set 0 to disable caching.
-
+    
     - `geolocation[maxmind]`: MaxMind settings.
-
+    
     - `geolocation[maxmind][database_type]`: Select from `country` or `city`. Default to `country`. These are the two available MaxMind database types.
-
+    
     - `geolocation[maxmind][database_path]`: Absolute path to the MaxMind database (e.g. mmdb file)
       **Make sure this path is not publicly accessible.** [See security note below](#security-note).
 

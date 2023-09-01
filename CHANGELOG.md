@@ -15,7 +15,7 @@ The [public API](https://semver.org/spec/v2.0.0.html#spec-item-1) of this librar
 
 ### Add
 
-- Add `AbstractLapiBouncer` and `AbstractCapiBouncer` classes
+- Add `AbstractBouncerBuilder` class to allow `LAPI` or `CAPI` bouncer creation
 
 
 ### Deprecated

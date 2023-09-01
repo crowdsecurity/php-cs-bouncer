@@ -8,16 +8,17 @@ use CrowdSec\CapiClient\Client\CapiHandler\Curl as CapiCurl;
 use CrowdSec\CapiClient\Client\CapiHandler\FileGetContents as CapiFileGetContents;
 use CrowdSec\CapiClient\Storage\StorageInterface;
 use CrowdSec\CapiClient\Watcher as WatcherClient;
+use CrowdSec\Common\Client\AbstractClient;
 use CrowdSec\Common\Client\RequestHandler\Curl;
 use CrowdSec\Common\Client\RequestHandler\FileGetContents;
 use CrowdSec\LapiClient\Bouncer as BouncerClient;
 use CrowdSec\RemediationEngine\AbstractRemediation;
-use CrowdSec\Common\Client\AbstractClient;
 use CrowdSec\RemediationEngine\LapiRemediation;
+use CrowdSec\RemediationEngine\CapiRemediation;
 use Psr\Log\LoggerInterface;
 
 /**
- * The class to create a LAPI or CAPI bouncer
+ * The class to create a LAPI or CAPI bouncer.
  *
  * @author    CrowdSec team
  *
