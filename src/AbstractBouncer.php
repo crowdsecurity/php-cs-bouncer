@@ -110,7 +110,7 @@ abstract class AbstractBouncer
     /**
      * Retrieve Bouncer configuration.
      *
-     * If $name is not defined will return all the configs as an array.
+     * If $name is not defined, will return all the configs as an array.
      * Otherwise, it will return value of the element specified by $name.
      */
     public function getConfig(string $name = '')
@@ -299,6 +299,42 @@ abstract class AbstractBouncer
             $message = 'Error while testing cache connection: ' . $e->getMessage();
             throw new BouncerException($message, (int) $e->getCode(), $e);
         }
+    }
+
+    /**
+     * @throws BouncerException
+     * @throws CacheStorageException
+     */
+    protected function handleCache(array $configs, LoggerInterface $logger = null): AbstractCache
+    {
+        $cacheSystem = $configs['cache_system'] ?? Constants::CACHE_SYSTEM_PHPFS;
+        switch ($cacheSystem) {
+            case Constants::CACHE_SYSTEM_PHPFS:
+                $cache = new PhpFiles($configs, $logger);
+                break;
+            case Constants::CACHE_SYSTEM_MEMCACHED:
+                $cache = new Memcached($configs, $logger);
+                break;
+            case Constants::CACHE_SYSTEM_REDIS:
+                $cache = new Redis($configs, $logger);
+                break;
+            default:
+                throw new BouncerException("Unknown selected cache technology: $cacheSystem");
+        }
+
+        return $cache;
+    }
+
+    /**
+     * @deprecated since 2.1.0 . Will be removed in 3.0.0.
+     *
+     * @codeCoverageIgnore
+     */
+    protected function handleClient(array $configs, LoggerInterface $logger): BouncerClient
+    {
+        $requestHandler = empty($configs['use_curl']) ? new FileGetContents($configs) : new Curl($configs);
+
+        return new BouncerClient($configs, $requestHandler, $logger);
     }
 
     /**
@@ -548,30 +584,6 @@ abstract class AbstractBouncer
 
     /**
      * @throws BouncerException
-     * @throws CacheStorageException
-     */
-    protected function handleCache(array $configs, LoggerInterface $logger = null): AbstractCache
-    {
-        $cacheSystem = $configs['cache_system'] ?? Constants::CACHE_SYSTEM_PHPFS;
-        switch ($cacheSystem) {
-            case Constants::CACHE_SYSTEM_PHPFS:
-                $cache = new PhpFiles($configs, $logger);
-                break;
-            case Constants::CACHE_SYSTEM_MEMCACHED:
-                $cache = new Memcached($configs, $logger);
-                break;
-            case Constants::CACHE_SYSTEM_REDIS:
-                $cache = new Redis($configs, $logger);
-                break;
-            default:
-                throw new BouncerException("Unknown selected cache technology: $cacheSystem");
-        }
-
-        return $cache;
-    }
-
-    /**
-     * @throws BouncerException
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
@@ -676,18 +688,6 @@ abstract class AbstractBouncer
                 );
             }
         }
-    }
-
-    /**
-     * @deprecated since 2.1.0 . Will be removed in 3.0.0.
-     *
-     * @codeCoverageIgnore
-     */
-    protected function handleClient(array $configs, LoggerInterface $logger): BouncerClient
-    {
-        $requestHandler = empty($configs['use_curl']) ? new FileGetContents($configs) : new Curl($configs);
-
-        return new BouncerClient($configs, $requestHandler, $logger);
     }
 
     /**

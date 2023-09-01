@@ -13,8 +13,8 @@ use CrowdSec\Common\Client\RequestHandler\Curl;
 use CrowdSec\Common\Client\RequestHandler\FileGetContents;
 use CrowdSec\LapiClient\Bouncer as BouncerClient;
 use CrowdSec\RemediationEngine\AbstractRemediation;
-use CrowdSec\RemediationEngine\LapiRemediation;
 use CrowdSec\RemediationEngine\CapiRemediation;
+use CrowdSec\RemediationEngine\LapiRemediation;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -29,26 +29,16 @@ use Psr\Log\LoggerInterface;
  */
 abstract class AbstractBouncerBuilder extends AbstractBouncer
 {
+    /**
+     * Create a bouncer based on LAPI or CAPI remediation.
+     *
+     * If $storage is null, it will create a LAPI bouncer.
+     * Otherwise, it will create a CAPI bouncer using the specified $storage.
+     */
     public function __construct(array $configs, StorageInterface $storage = null, LoggerInterface $logger = null)
     {
         $remediationEngine = $this->buildRemediationEngine($configs, $storage, $logger);
         parent::__construct($configs, $remediationEngine, $logger);
-    }
-
-    private function buildRemediationEngine(
-        array $configs,
-        StorageInterface $storage = null,
-        LoggerInterface $logger = null
-    ): AbstractRemediation {
-        $cache = $this->handleCache($configs, $logger);
-
-        $client = $this->buildClient($configs, $storage, $logger);
-
-        if ($client instanceof WatcherClient) {
-            return new CapiRemediation($configs, $client, $cache, $logger);
-        }
-
-        return new LapiRemediation($configs, $client, $cache, $logger);
     }
 
     private function buildClient(
@@ -67,5 +57,21 @@ abstract class AbstractBouncerBuilder extends AbstractBouncer
         $requestHandler = $useCurl ? new Curl($configs) : new FileGetContents($configs);
 
         return new BouncerClient($configs, $requestHandler, $logger);
+    }
+
+    private function buildRemediationEngine(
+        array $configs,
+        StorageInterface $storage = null,
+        LoggerInterface $logger = null
+    ): AbstractRemediation {
+        $cache = $this->handleCache($configs, $logger);
+
+        $client = $this->buildClient($configs, $storage, $logger);
+
+        if ($client instanceof WatcherClient) {
+            return new CapiRemediation($configs, $client, $cache, $logger);
+        }
+
+        return new LapiRemediation($configs, $client, $cache, $logger);
     }
 }
