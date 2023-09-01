@@ -3,7 +3,6 @@
 
 ## User Guide
 
-
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
@@ -77,26 +76,36 @@ On the other hand, all texts are also fully customizable. This will allow you, f
 
 ### Implementation
 
-You can use this library to develop your own PHP application bouncer. Any custom bouncer should extend the [`AbstractBouncer`](../src/AbstractBouncer.php) class.
+You can use this library to develop your own PHP application bouncer. 
+
+If you want to create a `LAPI` based bouncer, your custom bouncer should extend the [`AbstractLapiBouncer`](../src/AbstractLapiBouncer.php) class.
 
 ```php
 namespace MyNameSpace;
 
-use CrowdSecBouncer\AbstractBouncer;
+use CrowdSecBouncer\AbstractLapiBouncer;
 
-class MyCustomBouncer extends AbstractBouncer
+class MyCustomLapiBouncer extends AbstractLapiBouncer
 {
 }
 ```
 
-Then, you will have to implement all necessary methods :
+If you want to create a `CAPI` based bouncer, your custom bouncer should extend the [`AbstractCapiBouncer`](../src/AbstractLapiBouncer.php) class.
 
 ```php
 namespace MyNameSpace;
 
-use CrowdSecBouncer\AbstractBouncer;
+use CrowdSecBouncer\AbstractCapiBouncer;
 
-class MyCustomBouncer extends AbstractBouncer
+class MyCustomCapiBouncer extends AbstractCapiBouncer
+{
+}
+```
+
+In both cases (`LAPI` and `CAPI`), you'll need to implement all necessary methods:
+
+```php
+class MyCustomBouncer extends ...
 {
     /**
      * Get current http method
@@ -141,7 +150,6 @@ class MyCustomBouncer extends AbstractBouncer
 }
 ```
 
-
 Once you have implemented these methods, you could retrieve all required configurations to instantiate your bouncer 
 and then call the `run` method to apply a bounce for the current detected IP. Please see below for the list of 
 available configurations.
@@ -151,11 +159,11 @@ available configurations.
 To use `LAPI` as remediation source, simply instantiate your class with the appropriate configuration.
 
 ```php
-use MyNameSpace\MyCustomBouncer;
+use MyNameSpace\MyCustomLapiBouncer;
 
 $configs = [...];
 
-$bouncer = new MyCustomBouncer($configs);
+$bouncer = new MyCustomLapiBouncer($configs);
 
 $bouncer->run();
 ```
@@ -171,13 +179,13 @@ As an example, you could use the development implementation `CrowdSec\CapiClient
 
 
 ```php
-use MyNameSpace\MyCustomBouncer;
+use MyNameSpace\MyCustomCapiBouncer;
 use CrowdSec\CapiClient\Storage\FileStorage;
 
 $configs = [...];
 
 $capiStorage = new FileStorage();
-$bouncer = new MyCustomBouncer($configs, null, $capiStorage);
+$bouncer = new MyCustomCapiBouncer($configs, $capiStorage);
 
 $bouncer->run();
 ```
@@ -203,7 +211,7 @@ To go further and learn how to include this library in your project, you should 
 
 ## Configurations
 
-The first parameter of the `AbstractBouncer` class constructor method is an array of settings.
+The first parameter of the bouncer's constructor method is an array of settings.
 
 Below is the list of available settings:
 
@@ -211,8 +219,22 @@ Below is the list of available settings:
 
 - `bouncing_level`:  Select from `bouncing_disabled`, `normal_bouncing` or `flex_bouncing`. Choose if you want to apply CrowdSec directives (Normal bouncing) or be more permissive (Flex bouncing). With the `Flex mode`, it is impossible to accidentally block access to your site to people who don’t deserve it. This mode makes it possible to never ban an IP but only to offer a captcha, in the worst-case scenario.
 
+- `ordered_remediations`: array of handled remediations ordered by priority. 
 
-- `fallback_remediation`: Select from `bypass` (minimum remediation), `captcha` or `ban` (maximum remediation). Default to 'captcha'. Handle unknown remediations as.
+  If there are more than one decision for an IP, remediation with the highest priority will be return.
+
+  The specific remediation `bypass` will always be considered as the lowest priority (there is no need to specify it 
+  in this setting).
+
+  This setting is not required. If you don't set any value, `['ban']` will be used by default for `CAPI` bouncer and
+  `['ban', 'captcha']` for `LAPI` bouncer.
+
+
+- `fallback_remediation`: determine which remediation to use in case a decision has a type that does not belong to the above `ordered_remediations` setting.
+
+  This setting is not required. If you don't set any value, `bypass` will be used by default.
+
+  If you set some custom value, be aware to include this value in the `ordered_remediations` setting too.
 
 
 - `trust_ip_forward_array`:  If you use a CDN, a reverse proxy or a load balancer, set an array of comparable IPs arrays:
@@ -222,9 +244,29 @@ Below is the list of available settings:
 - `excluded_uris`: array of URIs that will not be bounced.
 
 
-- `stream_mode`: true to enable stream mode, false to enable the live mode. Default to false. By default, the `live mode` is enabled. The first time a stranger connects to your website, this mode means that the IP will be checked directly by the CrowdSec API. The rest of your user’s browsing will be even more transparent thanks to the fully customizable cache system. But you can also activate the `stream mode`. This mode allows you to constantly feed the bouncer with the malicious IP list via a background task (CRON), making it to be even faster when checking the IP of your visitors. Besides, if your site has a lot of unique visitors at the same time, this will not influence the traffic to the API of your CrowdSec instance.
+- `stream_mode`: (**only configurable for LAPI bouncer as CAPI bouncer only works in stream mode**) 
 
-### Local API Connection
+  true to enable stream mode, false to enable the live mode. Default to false for `LAPI` bouncer. In other word, by default, the `live mode` is enabled. The first time a stranger connects to your website, this mode means that the IP will be checked directly by the CrowdSec LAPI. The rest of your user’s browsing will be even more transparent thanks to the fully customizable cache system. But you can also activate the `stream mode`. This mode allows you to constantly feed the bouncer with the malicious IP list via a background task (CRON), making it to be even faster when checking the IP of your visitors. Besides, if your site has a lot of unique visitors at the same time, this will not influence the traffic to the API of your CrowdSec instance.
+  **N.B.:** `CAPI` bouncer always use the stream mode. That's why this setting is only used with a `LAPI` bouncer. 
+
+### API Connection
+
+- `api_timeout`: In seconds. The timeout when calling `LAPI` or `CAPI`. Default to 120 sec. If set to a negative value,
+  timeout will be unlimited.
+
+- `user_agent_suffix`: This setting is not required.
+
+  Sending a `User-Agent` header during a `CAPI` or `LAPI` call is mandatory. By default, user agent will be `csphpcapi/vX.Y.Z` or `csphplapi/vX.Y.Z`.
+
+  You can add a custom suffix to this value by using the `user_agent_suffix` setting.  It must be a string matching the regular expression `#^[a-z0-9]{0,16}$#`. At the end, user agent will be like `csphp(c|l)api_MySuffix/vX.Y.Z`.
+
+- `user_agent_version`: This setting is not required.
+
+  As mentioned above, default user agent is `csphp(c|l)api/vX.Y.Z` where `vX.Y.Z` is the current release version of some dependencies of this library.
+
+  You can add a custom version to this value by using the `user_agent_version` setting. It must be a string matching the regular expression `#^v\d{1,4}(\.\d{1,4}){2}$#`.
+
+#### LAPI connection specificities
 
 - `auth_type`: Select from `api_key` and `tls`. Choose if you want to use an API-KEY or a TLS (pki) authentification.
   TLS authentication is only available if you use CrowdSec agent with a version superior to 1.4.0.
@@ -259,10 +301,32 @@ Below is the list of available settings:
 
 - `api_url`: Define the URL to your Local API server, default to `http://localhost:8080`.
 
+#### CAPI connection specificities
 
-- `api_timeout`: In seconds. The timeout when calling Local API. Default to 120 sec. If set to a negative value,
-  timeout will be unlimited.
+- `env`: only accepts two values : `dev` and `prod`. 
 
+  This setting is not required. If you don't set any value, `dev` will be used by default.
+
+  It will mainly change the called CAPI url:
+  - `https://api.dev.crowdsec.net/v2/` for the `dev` environment
+  - `https://api.crowdsec.net/v2/` for the `prod` one.
+
+- `scenarios`: This `scenarios` setting **is required**.
+
+  You have to pass an array of CrowdSec scenarios that will be used to log in your watcher. 
+  You should find a list of available scenarios on the [CrowdSec hub collections page](https://hub.crowdsec.net/browse/).
+
+
+  Each scenario must match the regular expression `#^[A-Za-z0-9]{0,16}\/[A-Za-z0-9_-]{0,64}$#`.
+
+- `machine_id_prefix`: This setting is not required.
+
+  When you make your first call with a `CAPI` client, a `machine_id` will be generated and stored through your storage 
+  implementation. This `machine_id` is a string of length 48 composed of characters matching the regular expression `#^[a-z0-9]+$#`.
+
+  The `machine_id_prefix` setting allows to set a custom prefix to this `machine_id`. It must be a string matching the regular expression `#^[a-z0-9]{0,16}$#`. 
+
+  The final generated `machine_id` will still have a length of 48.
 
 ### Cache
 
