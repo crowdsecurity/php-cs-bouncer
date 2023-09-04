@@ -79,14 +79,14 @@ On the other hand, all texts are also fully customizable. This will allow you, f
 
 You can use this library to develop your own PHP application bouncer. 
 
-If you want to create a `LAPI` or a `CAPI` based custom bouncer, it should extend the [`AbstractBouncerBuilder`](../src/AbstractBouncerBuilder.php) class.
+If you want to create a `LAPI` or a `CAPI` based custom bouncer, it should extend the [`AbstractBouncer`](../src/AbstractBouncer.php) class.
 
 ```php
 namespace MyNameSpace;
 
-use CrowdSecBouncer\AbstractBouncerBuilder;
+use CrowdSecBouncer\AbstractBouncer;
 
-class MyCustomBouncer extends AbstractBouncerBuilder
+class MyCustomBouncer extends AbstractBouncer
 {
 }
 ```
@@ -96,9 +96,9 @@ In both cases (`LAPI` and `CAPI`), you'll need to implement all necessary method
 ```php
 namespace MyNameSpace;
 
-use CrowdSecBouncer\AbstractBouncerBuilder;
+use CrowdSecBouncer\AbstractBouncer;
 
-class MyCustomBouncer extends AbstractBouncerBuilder
+class MyCustomBouncer extends AbstractBouncer
 {
     /**
      * Get current http method
