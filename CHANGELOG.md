@@ -9,19 +9,23 @@ The [public API](https://semver.org/spec/v2.0.0.html#spec-item-1) of this librar
 
 ---
 
-## [2.1.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v2.0.0) - 2023-??-??
-[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v2.0.0...v2.1.0)
+## [3.0.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v2.0.0) - 2023-??-??
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v2.0.0...v3.0.0)
 
 
-### Add
+### Changed
 
-- Add `AbstractBouncerBuilder` class to allow `LAPI` or `CAPI` bouncer creation
+- *Breaking changes*:
+  - Change `AbstractBouncer::__construct` parameter signature: the second parameter is now an optional 
+    `CrowdSec\CapiClient\Storage\StorageInterface` object instead of a 
+    `CrowdSec\RemediationEngine\AbstractRemediation` object. If the storage param is null, a `LAPI` bouncer will be 
+    created as before. Otherwise, a `CAPI` bouncer will be created.
 
 
-### Deprecated
+### Removed
 
-- Deprecate `AbstractBouncer::handleClient`
-- Deprecate `AbstractBouncer:getConfigs`
+- Remove `AbstractBouncer:getConfigs`
+- Remove `AbstractBouncer::handleClient`
 
 ---
 

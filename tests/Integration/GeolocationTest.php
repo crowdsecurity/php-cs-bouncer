@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
-use CrowdSecBouncer\AbstractBouncerBuilder;
+use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\Constants;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -16,7 +16,6 @@ use Psr\Log\LoggerInterface;
  * @uses \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
  * @uses \CrowdSecBouncer\AbstractBouncer::configure
  * @uses \CrowdSecBouncer\AbstractBouncer::getConfig
- * @uses \CrowdSecBouncer\AbstractBouncer::getConfigs
  * @uses \CrowdSecBouncer\AbstractBouncer::getLogger
  * @uses \CrowdSecBouncer\AbstractBouncer::getRemediationEngine
  * @uses \CrowdSecBouncer\AbstractBouncer::handleCache
@@ -30,9 +29,9 @@ use Psr\Log\LoggerInterface;
  * @uses \CrowdSecBouncer\Configuration::cleanConfigs
  * @uses \CrowdSecBouncer\Configuration::getConfigTreeBuilder
  * @uses \CrowdSecBouncer\AbstractBouncer::clearCache
- * @uses \CrowdSecBouncer\AbstractBouncerBuilder::__construct
- * @uses \CrowdSecBouncer\AbstractBouncerBuilder::buildClient
- * @uses \CrowdSecBouncer\AbstractBouncerBuilder::buildRemediationEngine
+ * @uses \CrowdSecBouncer\AbstractBouncer::__construct
+ * @uses \CrowdSecBouncer\AbstractBouncer::buildClient
+ * @uses \CrowdSecBouncer\AbstractBouncer::buildRemediationEngine
  */
 final class GeolocationTest extends TestCase
 {
@@ -127,7 +126,7 @@ final class GeolocationTest extends TestCase
             'stream_mode' => false,
         ]);
 
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs]);
 
         $bouncer->clearCache();
 
@@ -147,7 +146,7 @@ final class GeolocationTest extends TestCase
         $geolocationConfig['enabled'] = false;
         $bouncerConfigs['geolocation'] = $geolocationConfig;
 
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs]);
         $bouncer->clearCache();
 
         $this->assertEquals(
@@ -160,7 +159,7 @@ final class GeolocationTest extends TestCase
         $this->watcherClient->setSecondState();
         $geolocationConfig['enabled'] = true;
         $bouncerConfigs['geolocation'] = $geolocationConfig;
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs]);
         $bouncer->clearCache();
 
         $this->assertEquals(
@@ -199,7 +198,7 @@ final class GeolocationTest extends TestCase
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR,
         ]);
 
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs]);
         $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
         $cacheAdapter->clear();
 

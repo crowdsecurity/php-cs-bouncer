@@ -10,7 +10,7 @@ use CrowdSec\RemediationEngine\CacheStorage\Memcached;
 use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
 use CrowdSec\RemediationEngine\CacheStorage\Redis;
 use CrowdSec\RemediationEngine\Constants as RemConstants;
-use CrowdSecBouncer\AbstractBouncerBuilder;
+use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\Bouncer;
 use CrowdSecBouncer\BouncerException;
 use CrowdSecBouncer\Constants;
@@ -28,14 +28,12 @@ use Psr\Log\LoggerInterface;
  * @uses   \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
  * @uses   \CrowdSecBouncer\AbstractBouncer::configure
  * @uses   \CrowdSecBouncer\AbstractBouncer::getConfig
- * @uses   \CrowdSecBouncer\AbstractBouncer::getConfigs
  * @uses   \CrowdSecBouncer\AbstractBouncer::getLogger
  *
  * @covers   \CrowdSecBouncer\AbstractBouncer::getRemediationEngine
+ * @covers \CrowdSecBouncer\AbstractBouncer::buildClient
+ * @covers \CrowdSecBouncer\AbstractBouncer::buildRemediationEngine
  * @covers \CrowdSecBouncer\AbstractBouncer::__construct
- * @covers \CrowdSecBouncer\AbstractBouncerBuilder::buildClient
- * @covers \CrowdSecBouncer\AbstractBouncerBuilder::buildRemediationEngine
- * @covers \CrowdSecBouncer\AbstractBouncerBuilder::__construct
  * @covers   \CrowdSecBouncer\AbstractBouncer::handleCache
  * @covers   \CrowdSecBouncer\AbstractBouncer::handleClient
  * @covers \CrowdSecBouncer\AbstractBouncer::refreshBlocklistCache
@@ -135,7 +133,7 @@ final class AbstractCapiBouncerTest extends TestCase
     {
         $bouncerConfigs = array_merge($this->configs, ['unexpected_config' => 'test']);
         $logger = new FileLog();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs, $this->storage,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $this->storage,
             $logger]);
 
         $this->assertEquals(false, $bouncer->getConfig('stream_mode'), 'Stream mode config');
@@ -153,7 +151,7 @@ final class AbstractCapiBouncerTest extends TestCase
 
         $this->assertEquals(null, $bouncer->getConfig('unexpected_config'), 'Should clean config');
 
-        $configs = $bouncer->getConfigs();
+        $configs = $bouncer->getConfig();
         $this->assertArrayHasKey('text', $configs, 'Config should have text key');
         $this->assertArrayHasKey('color', $configs, 'Config should have color key');
     }
@@ -175,7 +173,7 @@ final class AbstractCapiBouncerTest extends TestCase
             'forced_test_ip' => TestHelpers::BAD_IP,
         ]);
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs, $this->storage], '', true,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $this->storage], '', true,
             true, true, [
                 'sendResponse',
                 'redirectResponse',
@@ -294,7 +292,7 @@ final class AbstractCapiBouncerTest extends TestCase
         // STEP 4 : resolve captcha success
 
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs, $this->storage], '', true,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $this->storage], '', true,
             true, true, [
                 'sendResponse',
                 'redirectResponse',
@@ -341,7 +339,7 @@ final class AbstractCapiBouncerTest extends TestCase
         ]);
 
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs, $this->storage], '', true,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $this->storage], '', true,
             true, true, [
                 'sendResponse',
                 'redirectResponse',
@@ -395,7 +393,7 @@ final class AbstractCapiBouncerTest extends TestCase
 
         // Test 2: not bouncing exclude URI
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$this->configs,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$this->configs,
             $this->storage, $this->logger],
             '', true,
             true, true, [
@@ -420,7 +418,7 @@ final class AbstractCapiBouncerTest extends TestCase
 
         // Test 3: bouncing URI
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$this->configs,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$this->configs,
             $this->storage, $this->logger],
             '', true,
             true, true, [
@@ -440,7 +438,7 @@ final class AbstractCapiBouncerTest extends TestCase
         // Test 4:  not bouncing URI if disabled
         $bouncerConfigs = array_merge($this->configs, ['bouncing_level' => Constants::BOUNCING_LEVEL_DISABLED]);
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs,
             $this->storage, $this->logger],
             '', true,
             true, true, [
@@ -472,7 +470,7 @@ final class AbstractCapiBouncerTest extends TestCase
             ]
         );
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs,
             $this->storage, $this->logger],
             '', true,
             true, true, [
@@ -504,7 +502,7 @@ final class AbstractCapiBouncerTest extends TestCase
             ]
         );
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs,
             $this->storage, $this->logger],
             '', true,
             true, true, [
@@ -531,7 +529,7 @@ final class AbstractCapiBouncerTest extends TestCase
         // Test 9 non-authorized
         $bouncerConfigs = $this->configs;
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs,
             $this->storage, $this->logger],
             '', true,
             true, true, [
@@ -559,7 +557,7 @@ final class AbstractCapiBouncerTest extends TestCase
         // Test 10 authorized
         $bouncerConfigs = $this->configs;
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs,
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs,
             $this->storage, $this->logger],
             '', true,
             true, true, [
@@ -588,7 +586,7 @@ final class AbstractCapiBouncerTest extends TestCase
     {
         // handleCache
         $configs = array_merge($this->configs, ['cache_system' => 'redis']);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$configs, $this->storage]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $this->storage]);
 
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -599,7 +597,7 @@ final class AbstractCapiBouncerTest extends TestCase
         $this->assertInstanceOf(Redis::class, $result);
 
         $configs = array_merge($this->configs, ['cache_system' => 'memcached']);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$configs, $this->storage]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $this->storage]);
 
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -610,7 +608,7 @@ final class AbstractCapiBouncerTest extends TestCase
         $this->assertInstanceOf(Memcached::class, $result);
 
         $configs = array_merge($this->configs, ['cache_system' => 'phpfs']);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$configs, $this->storage]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $this->storage]);
 
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -624,7 +622,7 @@ final class AbstractCapiBouncerTest extends TestCase
 
         try {
             $configs = array_merge($this->configs, ['cache_system' => 'phpfs']);
-            $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$configs, $this->storage]);
+            $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $this->storage]);
 
             PHPUnitUtil::callMethod(
                 $bouncer,
@@ -644,7 +642,7 @@ final class AbstractCapiBouncerTest extends TestCase
 
         // buildClient
         $configs = $this->configs;
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$configs, $this->storage]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $this->storage]);
 
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -655,7 +653,7 @@ final class AbstractCapiBouncerTest extends TestCase
         $this->assertEquals('CrowdSec\CapiClient\Client\CapiHandler\FileGetContents', \get_class($result->getRequestHandler()));
 
         $configs = array_merge($this->configs, ['use_curl' => true]);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$configs, $this->storage]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $this->storage]);
 
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -674,7 +672,7 @@ final class AbstractCapiBouncerTest extends TestCase
         // Init bouncer
         $bouncerConfigs = $this->configs;
 
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs, $this->storage]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $this->storage]);
         // Test cache adapter
         $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
         $cacheAdapter->clear();
@@ -689,11 +687,11 @@ final class AbstractCapiBouncerTest extends TestCase
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
         $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_FLEX;
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs, $this->storage]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $this->storage]);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
         $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs, $this->storage]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $this->storage]);
         $this->assertEquals(
             'bypass',
             $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP),
@@ -725,7 +723,7 @@ final class AbstractCapiBouncerTest extends TestCase
         );
 
         // Set up a new instance.
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncerBuilder::class, [$bouncerConfigs, $this->storage]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $this->storage]);
 
         $this->assertEquals(
             'ban',
