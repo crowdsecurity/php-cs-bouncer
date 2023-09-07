@@ -44,7 +44,7 @@ class Configuration extends AbstractConfiguration
     ];
 
     /**
-     * @throws \InvalidArgumentException
+     * @throws \InvalidArgumentException|\RuntimeException
      */
     public function getConfigTreeBuilder(): TreeBuilder
     {
@@ -67,7 +67,7 @@ class Configuration extends AbstractConfiguration
      *
      * @return void
      *
-     * @throws \InvalidArgumentException
+     * @throws \InvalidArgumentException|\RuntimeException
      */
     private function addBouncerNodes($rootNode)
     {
@@ -100,7 +100,7 @@ class Configuration extends AbstractConfiguration
      *
      * @return void
      *
-     * @throws \InvalidArgumentException
+     * @throws \InvalidArgumentException|\RuntimeException
      */
     private function addCacheNodes($rootNode)
     {
@@ -127,6 +127,8 @@ class Configuration extends AbstractConfiguration
      * @param NodeDefinition|ArrayNodeDefinition $rootNode
      *
      * @return void
+     *
+     * @throws \RuntimeException
      */
     private function addConnectionNodes($rootNode)
     {
@@ -141,6 +143,8 @@ class Configuration extends AbstractConfiguration
      * @param NodeDefinition|ArrayNodeDefinition $rootNode
      *
      * @return void
+     *
+     * @throws \RuntimeException
      */
     private function addDebugNodes($rootNode)
     {

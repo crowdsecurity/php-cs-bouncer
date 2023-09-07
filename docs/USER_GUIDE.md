@@ -241,7 +241,7 @@ Below is the list of available settings:
 
   `true` to enable stream mode, `false` to enable the live mode. Default to false for `LAPI` bouncer. Always `true` for `CAPI` bouncer.
 
-  -  `live mode`: The first time a stranger connects to your website, its IP will be checked directly by the CrowdSec LAPI. The rest of your user’s browsing will be even more transparent thanks to the fully customizable cache system. 
+  - `live mode`: The first time a stranger connects to your website, its IP will be checked directly by the CrowdSec LAPI. The rest of your user’s browsing will be even more transparent thanks to the fully customizable cache system. 
   - `stream mode`: This mode allows you to constantly feed the bouncer with the malicious IP list via a background task (CRON), making it to be even faster when checking the IP of your visitors. Besides, if your site has a lot of unique visitors at the same time, this will not influence the traffic to the `LAPI` of your CrowdSec instance.
 
 ### API Connection

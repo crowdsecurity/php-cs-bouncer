@@ -1,5 +1,7 @@
 <?php
 
+/** @noinspection PhpMultipleClassDeclarationsInspection */
+
 declare(strict_types=1);
 
 namespace CrowdSecBouncer;
@@ -54,6 +56,10 @@ abstract class AbstractBouncer
      *
      * If $storage is null, it will create a LAPI bouncer.
      * Otherwise, it will create a CAPI bouncer using the specified $storage.
+     *
+     * @throws BouncerException
+     * @throws CacheStorageException
+     * @throws \RuntimeException
      */
     public function __construct(
         array $configs,
@@ -407,6 +413,8 @@ abstract class AbstractBouncer
      *
      * @return array an array composed of two items, a "phrase" string representing the phrase and a "inlineImage"
      *               representing the image data
+     *
+     * @throws \Exception
      */
     private function buildCaptchaCouple(): array
     {
@@ -436,6 +444,10 @@ abstract class AbstractBouncer
         return new BouncerClient($configs, $requestHandler, $logger);
     }
 
+    /**
+     * @throws BouncerException
+     * @throws CacheStorageException
+     */
     private function buildRemediationEngine(
         array $configs,
         StorageInterface $storage = null,
@@ -528,6 +540,8 @@ abstract class AbstractBouncer
      * Configure this instance.
      *
      * @param array $config An array with all configuration parameters
+     *
+     * @throws \RuntimeException
      */
     private function configure(array $config): void
     {
@@ -776,6 +790,7 @@ abstract class AbstractBouncer
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
+     * @throws \Exception
      */
     private function initCaptchaResolution(string $ip): void
     {
@@ -803,6 +818,7 @@ abstract class AbstractBouncer
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws \Symfony\Component\Cache\Exception\InvalidArgumentException
+     * @throws \Exception
      */
     private function refreshCaptcha(string $ip): bool
     {
