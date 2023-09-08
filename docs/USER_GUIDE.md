@@ -36,8 +36,8 @@ exposed applications.
 ## Features
 
 - Apply a `ban` or `captcha` remediation
-  - Block user access for a `ban` remediation with a 403 customizable page (ban wall).
-  - Display a 401 customizable captcha page (captcha wall) for a `captcha` remediation.
+  - Block user access for a `ban` remediation with a 403 customizable page (*ban wall*).
+  - Display a 401 customizable captcha page (*captcha wall*) for a `captcha` remediation.
 - CrowdSec Local API (`LAPI`) support
   - Handle `ip`, `range` and `country` scoped decisions
   - `Live mode` or `Stream mode`
@@ -58,9 +58,7 @@ To be able to use a `LAPI` bouncer, the first step is to install [CrowdSec v1](h
 
 ## Usage
 
-When a user is suspected by CrowdSec to be malevolent, a bouncer would either display a captcha to resolve or
-simply a page notifying that access is denied. If the user is considered as a clean user, he/she will access the page 
-as normal.
+When a user is suspected by CrowdSec to be malevolent, a bouncer would either display a captcha to resolve or simply a page notifying that access is denied. If the user is considered as a clean user, he/she will access the page as normal.
 
 A ban wall could look like:
 
@@ -144,9 +142,7 @@ class MyCustomBouncer extends AbstractBouncer
 }
 ```
 
-Once you have implemented these methods, you could retrieve all required configurations to instantiate your bouncer 
-and then call the `run` method to apply a bounce for the current detected IP. Please see below for the list of 
-available configurations.
+Once you have implemented these methods, you could retrieve all required configurations to instantiate your bouncer and then call the `run` method to apply a bounce for the current detected IP. Please see below for the list of available configurations.
 
 #### Bouncer using `LAPI` remediation
 
@@ -166,8 +162,7 @@ $bouncer->run();
 #### Bouncer using `CAPI` remediation
 
 
-In order to instantiate a `CAPI` bouncer, you will have to implement the `CrowdSec\CapiClient\Storage\StorageInterface` 
-interface. 
+In order to instantiate a `CAPI` bouncer, you will have to implement the `CrowdSec\CapiClient\Storage\StorageInterface` interface. 
 
 As an example, you could use the development implementation `CrowdSec\CapiClient\Storage\FileStorage`.
 
