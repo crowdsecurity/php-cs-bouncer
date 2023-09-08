@@ -53,9 +53,7 @@ exposed applications.
 
 ## Prerequisites for `LAPI`
 
-To be able to use a `LAPI` bouncer based on this library, the first step is to install [CrowdSec v1](https://doc.crowdsec.net/docs/getting_started/install_crowdsec/). CrowdSec is only in charge of the "detection", and won't block anything on its own. You need to deploy a bouncer to "apply" decisions.
-
-Please note that first and foremost a CrowdSec agent must be installed on a server that is accessible by this library.
+To be able to use a `LAPI` bouncer, the first step is to install [CrowdSec v1](https://doc.crowdsec.net/docs/getting_started/install_crowdsec/) on a server that is accessible by this library.
 
 
 ## Usage
