@@ -20,6 +20,7 @@ The [public API](https://semver.org/spec/v2.0.0.html#spec-item-1) of this librar
     `CrowdSec\CapiClient\Storage\StorageInterface` object instead of a 
     `CrowdSec\RemediationEngine\AbstractRemediation` object. If the storage param is null, a `LAPI` bouncer will be 
     created as before. Otherwise, a `CAPI` bouncer will be created.
+  - Change `AbstractBouncer::redirectResponse` visibility from protected to private
 
 
 ### Removed

@@ -332,18 +332,6 @@ abstract class AbstractBouncer
     }
 
     /**
-     * @deprecated since 2.1.0 . Will be removed in 3.0.0.
-     *
-     * @codeCoverageIgnore
-     */
-    protected function handleClient(array $configs, LoggerInterface $logger): BouncerClient
-    {
-        $requestHandler = empty($configs['use_curl']) ? new FileGetContents($configs) : new Curl($configs);
-
-        return new BouncerClient($configs, $requestHandler, $logger);
-    }
-
-    /**
      * Handle remediation for some IP.
      *
      * @throws CacheException
@@ -366,15 +354,6 @@ abstract class AbstractBouncer
             case Constants::REMEDIATION_BYPASS:
             default:
         }
-    }
-
-    /**
-     * @codeCoverageIgnore
-     */
-    protected function redirectResponse(string $redirect): void
-    {
-        header("Location: $redirect");
-        exit(0);
     }
 
     /**
@@ -454,7 +433,6 @@ abstract class AbstractBouncer
         LoggerInterface $logger = null
     ): AbstractRemediation {
         $cache = $this->handleCache($configs, $logger);
-
         $client = $this->buildClient($configs, $storage, $logger);
 
         if ($client instanceof WatcherClient) {
@@ -812,6 +790,15 @@ abstract class AbstractBouncer
             $duration,
             [Constants::CACHE_TAG_CAPTCHA]
         );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    private function redirectResponse(string $redirect): void
+    {
+        header("Location: $redirect");
+        exit(0);
     }
 
     /**

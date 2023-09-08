@@ -35,6 +35,9 @@ exposed applications.
 
 ## Features
 
+- Apply a `ban` or `captcha` remediation
+  - Block user access for a `ban` remediation with a 403 customizable page (ban wall).
+  - Display a 401 customizable captcha page (captcha wall) for a `captcha` remediation.
 - CrowdSec Local API (`LAPI`) support
   - Handle `ip`, `range` and `country` scoped decisions
   - `Live mode` or `Stream mode`
@@ -248,6 +251,9 @@ Below is the list of available settings:
 
 - `api_timeout`: In seconds. The timeout when calling `LAPI` or `CAPI`. Default to 120 sec. If set to a negative value,
   timeout will be unlimited.
+
+- `use_curl`: By default, this lib call the REST LAPI and CAPI  endpoints using `file_get_contents` method (`allow_url_fopen` is required).
+  You can set `use_curl` to `true` in order to use `cURL` request instead (`ext-curl` is in then required)
 
 - `user_agent_suffix`: This setting is not required.
 
