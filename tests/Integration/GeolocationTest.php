@@ -19,7 +19,6 @@ use Psr\Log\LoggerInterface;
  * @uses \CrowdSecBouncer\AbstractBouncer::getLogger
  * @uses \CrowdSecBouncer\AbstractBouncer::getRemediationEngine
  * @uses \CrowdSecBouncer\AbstractBouncer::handleCache
- * @uses \CrowdSecBouncer\AbstractBouncer::handleClient
  * @uses \CrowdSecBouncer\AbstractBouncer::refreshBlocklistCache
  * @uses \CrowdSecBouncer\Configuration::addBouncerNodes
  * @uses \CrowdSecBouncer\Configuration::addCacheNodes

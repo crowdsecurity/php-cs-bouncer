@@ -35,7 +35,6 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\AbstractBouncer::buildRemediationEngine
  * @covers \CrowdSecBouncer\AbstractBouncer::__construct
  * @covers   \CrowdSecBouncer\AbstractBouncer::handleCache
- * @covers   \CrowdSecBouncer\AbstractBouncer::handleClient
  * @covers \CrowdSecBouncer\AbstractBouncer::refreshBlocklistCache
  *
  * @uses   \CrowdSecBouncer\Configuration::addBouncerNodes
