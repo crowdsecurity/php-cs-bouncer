@@ -357,6 +357,15 @@ abstract class AbstractBouncer
     }
 
     /**
+     * @codeCoverageIgnore
+     */
+    protected function redirectResponse(string $redirect): void
+    {
+        header("Location: $redirect");
+        exit(0);
+    }
+
+    /**
      * Send HTTP response.
      *
      * @throws BouncerException
@@ -790,15 +799,6 @@ abstract class AbstractBouncer
             $duration,
             [Constants::CACHE_TAG_CAPTCHA]
         );
-    }
-
-    /**
-     * @codeCoverageIgnore
-     */
-    private function redirectResponse(string $redirect): void
-    {
-        header("Location: $redirect");
-        exit(0);
     }
 
     /**
