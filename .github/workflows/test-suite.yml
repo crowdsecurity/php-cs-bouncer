@@ -40,7 +40,7 @@ jobs:
           sudo apt-get -q update
           sudo apt-get -q -y install libnss3-tools ddev
           mkcert -install
-          ddev config global --instrumentation-opt-in=false --omit-containers=dba,ddev-ssh-agent
+          ddev config global --instrumentation-opt-in=false --omit-containers=ddev-ssh-agent
 
       - name: Create empty PHP DDEV project
         run: ddev config --project-type=php --project-name=${{env.DDEV_PROJECT}}  --php-version=${{ matrix.php-version }}
@@ -56,10 +56,9 @@ jobs:
       - name: Start DDEV
         run: ddev start
 
-      - name: Set BOUNCER_KEY and PROXY_IP env
+      - name: Set BOUNCER_KEY env
         run: |
           echo "BOUNCER_KEY=$(ddev create-bouncer)" >> $GITHUB_ENV
-          echo "PROXY_IP=$(ddev find-ip ddev-router)" >> $GITHUB_ENV
 
       - name: Some DEBUG information
         run: |
@@ -97,14 +96,18 @@ jobs:
           tar -xf GeoLite2-City.tar.gz
           rm GeoLite2-Country.tar.gz GeoLite2-Country.tar.gz.sha256.txt GeoLite2-City.tar.gz GeoLite2-City.tar.gz.sha256.txt
 
-      - name: Run "IP verification" test
+      - name: Run "IP verification with LAPI" test
         run: |
-          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/AbstractBouncerTest.php
+          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/AbstractLapiBouncerTest.php
 
-      - name: Run "IP verification with TLS" test
+      - name: Run "IP verification with LAPI and TLS" test
         run: |
-          ddev exec AGENT_TLS_PATH=/var/www/html/cfssl BOUNCER_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/AbstractBouncerTest.php    
+          ddev exec AGENT_TLS_PATH=/var/www/html/cfssl BOUNCER_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/AbstractLapiBouncerTest.php    
 
       - name: Run "Geolocation with cURL" test
         run: |
-          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080  /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/GeolocationTest.php    
+          ddev exec BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080  /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/GeolocationTest.php
+
+      - name: Run "IP verification with CAPI" test
+        run: |
+          ddev exec MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Integration/AbstractCapiBouncerTest.php    

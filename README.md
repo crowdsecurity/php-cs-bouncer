@@ -2,7 +2,7 @@
 
 # CrowdSec Bouncer PHP library
 
-> The official PHP bouncer library for the CrowdSec LAPI
+> The official PHP bouncer library for CrowdSec's LAPI and CAPI
 
 ![project is maintained](https://img.shields.io/maintenance/yes/2023.svg)
 ![Version](https://img.shields.io/github/v/release/crowdsecurity/php-cs-bouncer?include_prereleases)

@@ -1,6 +1,6 @@
 {
     "name": "crowdsec/bouncer",
-    "description": "The official PHP bouncer library for the CrowdSec Local API",
+    "description": "The official PHP bouncer library for CrowdSec's LAPI and CAPI",
     "type": "library",
     "license": "MIT",
     "minimum-stability": "stable",

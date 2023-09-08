@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace CrowdSecBouncer\Tests\Integration;
 
-use CrowdSec\LapiClient\Bouncer as BouncerClient;
-use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
-use CrowdSec\RemediationEngine\LapiRemediation;
 use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\Constants;
 use PHPUnit\Framework\TestCase;
@@ -19,11 +16,9 @@ use Psr\Log\LoggerInterface;
  * @uses \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
  * @uses \CrowdSecBouncer\AbstractBouncer::configure
  * @uses \CrowdSecBouncer\AbstractBouncer::getConfig
- * @uses \CrowdSecBouncer\AbstractBouncer::getConfigs
  * @uses \CrowdSecBouncer\AbstractBouncer::getLogger
  * @uses \CrowdSecBouncer\AbstractBouncer::getRemediationEngine
  * @uses \CrowdSecBouncer\AbstractBouncer::handleCache
- * @uses \CrowdSecBouncer\AbstractBouncer::handleClient
  * @uses \CrowdSecBouncer\AbstractBouncer::refreshBlocklistCache
  * @uses \CrowdSecBouncer\Configuration::addBouncerNodes
  * @uses \CrowdSecBouncer\Configuration::addCacheNodes
@@ -33,6 +28,9 @@ use Psr\Log\LoggerInterface;
  * @uses \CrowdSecBouncer\Configuration::cleanConfigs
  * @uses \CrowdSecBouncer\Configuration::getConfigTreeBuilder
  * @uses \CrowdSecBouncer\AbstractBouncer::clearCache
+ * @uses \CrowdSecBouncer\AbstractBouncer::__construct
+ * @uses \CrowdSecBouncer\AbstractBouncer::buildClient
+ * @uses \CrowdSecBouncer\AbstractBouncer::buildRemediationEngine
  */
 final class GeolocationTest extends TestCase
 {
@@ -117,7 +115,7 @@ final class GeolocationTest extends TestCase
 
         // Init bouncer
         $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
-        $bouncerConfigs = [
+        $bouncerConfigs = array_merge($this->configs, [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'geolocation' => $geolocationConfig,
@@ -125,13 +123,9 @@ final class GeolocationTest extends TestCase
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR,
             'stream_mode' => false,
-        ];
+        ]);
 
-        $client = new BouncerClient($bouncerConfigs);
-        $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
-
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs]);
 
         $bouncer->clearCache();
 
@@ -150,11 +144,8 @@ final class GeolocationTest extends TestCase
         // Disable Geolocation feature
         $geolocationConfig['enabled'] = false;
         $bouncerConfigs['geolocation'] = $geolocationConfig;
-        $client = new BouncerClient($bouncerConfigs);
-        $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
 
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs]);
         $bouncer->clearCache();
 
         $this->assertEquals(
@@ -167,10 +158,7 @@ final class GeolocationTest extends TestCase
         $this->watcherClient->setSecondState();
         $geolocationConfig['enabled'] = true;
         $bouncerConfigs['geolocation'] = $geolocationConfig;
-        $client = new BouncerClient($bouncerConfigs);
-        $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs]);
         $bouncer->clearCache();
 
         $this->assertEquals(
@@ -199,7 +187,7 @@ final class GeolocationTest extends TestCase
         $this->watcherClient->setInitialState();
         // Init bouncer
         $geolocationConfig = $this->handleMaxMindConfig($maxmindConfig);
-        $bouncerConfigs = [
+        $bouncerConfigs = array_merge($this->configs, [
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
             'stream_mode' => true,
@@ -207,13 +195,9 @@ final class GeolocationTest extends TestCase
             'use_curl' => $this->useCurl,
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => TestHelpers::PHP_FILES_CACHE_ADAPTER_DIR,
-        ];
+        ]);
 
-        $client = new BouncerClient($bouncerConfigs);
-        $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
-
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs]);
         $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
         $cacheAdapter->clear();
 
