@@ -44,7 +44,7 @@
         "crowdsec/common": "^2.1.0",
         "symfony/config": "^4.4.27 || ^5.2 || ^6.0",
         "twig/twig": "^3.4.2",
-        "gregwar/captcha": "^1.2.0",
+        "gregwar/captcha": "^1.2.1",
         "mlocati/ip-lib": "^1.18",
         "ext-json": "*",
         "ext-gd": "*"
