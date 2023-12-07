@@ -9,6 +9,20 @@ The [public API](https://semver.org/spec/v2.0.0.html#spec-item-1) of this librar
 
 ---
 
+
+## [2.1.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v2.1.0) - 202?-??-??
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v2.0.0...v2.1.0)
+
+
+### Changed
+
+- Update `gregwar/captcha` from `1.2.0` to `1.2.1` and remove override fixes
+- Update `crowdsec/common` dependency to `v2.2.0` (`api_connect_timeout` setting)
+- Update `crowdsec/remediation-engine` dependency to `v3.2.0` (`api_connect_timeout` setting)
+
+
+---
+
 ## [2.0.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v2.0.0) - 2023-04-13
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v1.4.0...v2.0.0)
 
