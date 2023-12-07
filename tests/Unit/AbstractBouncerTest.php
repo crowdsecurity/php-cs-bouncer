@@ -53,7 +53,6 @@ use PHPUnit\Framework\TestCase;
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldBounceCurrentIp
  * @covers \CrowdSecBouncer\AbstractBouncer::checkCaptcha
  * @covers \CrowdSecBouncer\AbstractBouncer::buildCaptchaCouple
- * @covers \CrowdSecBouncer\Fixes\Gregwar\Captcha\CaptchaBuilder::writePhrase
  * @covers \CrowdSecBouncer\AbstractBouncer::getCache
  * @covers \CrowdSecBouncer\AbstractBouncer::getBanHtml
  * @covers \CrowdSecBouncer\Template::__construct

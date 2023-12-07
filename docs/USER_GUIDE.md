@@ -45,7 +45,7 @@ Please note that first and foremost a CrowdSec agent must be installed on a serv
   - Handle `ip`, `range` and `country` scoped decisions
   - `Live mode` or `Stream mode`
 - Support IpV4 and Ipv6 (Ipv6 range decisions are yet only supported in `Live mode`) 
-- Large PHP matrix compatibility: 7.2, 7.3, 7.4, 8.0, 8.1 and 8.2
+- Large PHP matrix compatibility: 7.2, 7.3, 7.4, 8.0, 8.1, 8.2 and 8.3
 - Built-in support for the most known cache systems Redis, Memcached and PhpFiles
   - Clear, prune and refresh the bouncer cache
 - Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)
@@ -240,8 +240,12 @@ Below is the list of available settings:
 - `api_url`: Define the URL to your Local API server, default to `http://localhost:8080`.
 
 
-- `api_timeout`: In seconds. The timeout when calling Local API. Default to 120 sec. If set to a negative value,
-  timeout will be unlimited.
+- `api_timeout`: In seconds. The global timeout when calling Local API. Default to 120 sec. If set to a negative value 
+  or 0, timeout will be unlimited.
+
+
+- `api_connect_timeout`: In seconds. **Only for curl**. The timeout for the connection phase when calling Local API. 
+  Default to 300 sec. If set to a 0, timeout will be unlimited.
 
 
 ### Cache

@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['7.2', '7.3', '7.4', '8.0', '8.1', '8.2']
+        php-version: ['7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3']
 
     name: Test suite
     runs-on: ubuntu-latest
@@ -40,7 +40,7 @@ jobs:
           sudo apt-get -q update
           sudo apt-get -q -y install libnss3-tools ddev
           mkcert -install
-          ddev config global --instrumentation-opt-in=false --omit-containers=dba,ddev-ssh-agent
+          ddev config global --instrumentation-opt-in=false --omit-containers=ddev-ssh-agent
 
       - name: Create empty PHP DDEV project
         run: ddev config --project-type=php --project-name=${{env.DDEV_PROJECT}}  --php-version=${{ matrix.php-version }}
@@ -52,6 +52,11 @@ jobs:
           # override redis.conf
           ddev get julienloizelet/ddev-tools
           ddev get julienloizelet/ddev-crowdsec-php
+
+      - name: Add Redis, Memcached and X-Debug
+        if: ${{ matrix.php-version == '8.3' }}
+        run: |
+          cp .ddev/okaeli-add-on/common/custom_files/config.php83missing.yaml .ddev/config.php83missing.yaml     
 
       - name: Start DDEV
         run: ddev start
