@@ -243,8 +243,9 @@ Below is the list of available settings:
 - `api_timeout`: In seconds. The global timeout when calling Local API. Default to 120 sec. If set to a negative value 
   or 0, timeout will be unlimited.
 
-- `api_connection_timeout`: In seconds. The timeout for the connection phase when calling Local API. Default to 300 sec.
-  If set to a 0, timeout will be unlimited.
+
+- `api_connect_timeout`: In seconds. **Only for curl**. The timeout for the connection phase when calling Local API. 
+  Default to 300 sec. If set to a 0, timeout will be unlimited.
 
 
 ### Cache

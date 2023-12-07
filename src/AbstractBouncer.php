@@ -108,8 +108,6 @@ abstract class AbstractBouncer
 
     /**
      * Retrieve Bouncer configuration by name.
-     *
-     * @return mixed
      */
     public function getConfig(string $name)
     {
