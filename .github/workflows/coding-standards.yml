@@ -55,11 +55,6 @@ jobs:
           ddev get julienloizelet/ddev-tools
           ddev get julienloizelet/ddev-crowdsec-php
 
-      - name: Add Redis, Memcached and X-Debug
-        if: ${{ matrix.php-version == '8.3' }}
-        run: |
-          cp .ddev/okaeli-add-on/common/custom_files/config.php83missing.yaml .ddev/config.php83missing.yaml    
-
       - name: Start DDEV
         run: |
           ddev start
