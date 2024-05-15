@@ -6,6 +6,8 @@ on:
     paths-ignore:
       - '**.md'
   workflow_dispatch:
+  schedule:
+    - cron: '15 3 * * 4'
 
 permissions:
   contents: read
@@ -69,7 +71,7 @@ jobs:
           ddev php -r "echo phpversion('memcached');"
 
       - name: Clone PHP lib Crowdsec files
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: my-code/crowdsec-bouncer-lib
 
