@@ -38,6 +38,7 @@
   - [Use the web container to call LAPI](#use-the-web-container-to-call-lapi)
 - [Commit message](#commit-message)
   - [Allowed message `type` values](#allowed-message-type-values)
+- [Update documentation table of contents](#update-documentation-table-of-contents)
 - [Release process](#release-process)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -197,8 +198,7 @@ Finally, run
 
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 
-MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/AbstractBouncerTest.php
+ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/AbstractBouncerTest.php
 ```
 
 For geolocation Unit Test, you should first put 2 free MaxMind databases in the `tests` folder : `GeoLite2-City.mmdb`
@@ -499,6 +499,23 @@ chmod +x .git/hooks/commit-msg
 - style (formatting; no production code change)
 - test (adding missing tests, refactoring tests; no production code change)
 
+## Update documentation table of contents
+
+To update the table of contents in the documentation, you can use [the `doctoc` tool](https://github.com/thlorenz/doctoc).
+
+First, install it:
+
+```bash
+npm install -g doctoc
+```
+
+Then, run it in the documentation folder:
+
+```bash
+doctoc docs/*
+```
+
+
 ## Release process
 
 We are using [semantic versioning](https://semver.org/) to determine a version number. To verify the current tag, 
@@ -530,3 +547,5 @@ gh workflow run release.yml -f tag_name=vx.y.z
 ```
 
 Note that the GitHub action will fail if the tag `tag_name` already exits.
+
+
