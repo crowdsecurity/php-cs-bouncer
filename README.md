@@ -12,7 +12,7 @@
 
 
 :books: <a href="https://doc.crowdsec.net">Documentation</a>
-:diamond_shape_with_a_dot_inside: <a href="https://app.crowdsec.net/hub/">Hub</a>
+:diamond_shape_with_a_dot_inside: <a href="https://app.crowdsec.net/hub">Hub</a>
 :speech_balloon: <a href="https://discourse.crowdsec.net">Discourse Forum</a>
 
 
