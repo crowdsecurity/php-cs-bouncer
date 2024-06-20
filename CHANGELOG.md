@@ -7,6 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/) and th
 
 The [public API](https://semver.org/spec/v2.0.0.html#spec-item-1) of this library consists of all public or protected methods, properties and constants belonging to the `src` folder.
 
+As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com/doc/current/contributing/code/bc.html#working-on-symfony-code) when deciding whether a change is a breaking change or not.
+
+---
+
+## [2.2.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v2.2.0) - 2024-06-20
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v2.1.0...v2.2.0)
+
+
+### Changed
+
+- Change the visibility of `AbstractBouncer::getBanHtml` and `AbstractBouncer::getCaptchaHtml` to `protected` to enable custom html rendering implementation
+
+
 ---
 
 
