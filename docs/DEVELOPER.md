@@ -340,7 +340,7 @@ Then, you could play with the `redis-cli` command line tool:
 
 #### Memcached debug
 
-@see https://lzone.de/cheat-sheet/memcached
+@see https://lzone.de/#/LZone%20Cheat%20Sheets/DevOps%20Services/memcached
 
 First, find the IP of the `Memcached` container:
 
