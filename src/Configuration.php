@@ -26,6 +26,7 @@ class Configuration extends AbstractConfiguration
      */
     protected $keys = [
         'use_curl',
+        'use_app_sec',
         'forced_test_ip',
         'forced_test_forwarded_ip',
         'debug_mode',
@@ -90,6 +91,7 @@ class Configuration extends AbstractConfiguration
             ->arrayNode('excluded_uris')
                 ->scalarPrototype()->end()
             ->end()
+            ->booleanNode('use_app_sec')->defaultValue(false)->end()
         ->end();
     }
 

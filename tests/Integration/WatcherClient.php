@@ -18,6 +18,9 @@ class WatcherClient extends AbstractClient
 
     public const HOURS24 = '+24 hours';
 
+    public const WATCHER_LOGIN = 'watcherLogin';
+    public const WATCHER_PASSWORD = 'watcherPassword';
+
     /** @var string */
     private $token;
     /**
@@ -30,14 +33,12 @@ class WatcherClient extends AbstractClient
         $this->configs = $configs;
         $this->headers = ['User-Agent' => 'LAPI_WATCHER_TEST/' . Constants::VERSION];
         $agentTlsPath = getenv('AGENT_TLS_PATH');
-        if (!$agentTlsPath) {
-            throw new \Exception('Using TLS auth for agent is required. Please set AGENT_TLS_PATH env.');
+        if ($agentTlsPath) {
+            $this->configs['auth_type'] = Constants::AUTH_TLS;
+            $this->configs['tls_cert_path'] = $agentTlsPath . '/agent.pem';
+            $this->configs['tls_key_path'] = $agentTlsPath . '/agent-key.pem';
+            $this->configs['tls_verify_peer'] = false;
         }
-        $this->configs['auth_type'] = Constants::AUTH_TLS;
-        $this->configs['tls_cert_path'] = $agentTlsPath . '/agent.pem';
-        $this->configs['tls_key_path'] = $agentTlsPath . '/agent-key.pem';
-        $this->configs['tls_verify_peer'] = false;
-
         parent::__construct($this->configs);
     }
 
@@ -105,7 +106,13 @@ class WatcherClient extends AbstractClient
         if (!$this->token) {
             $data = [
                 'scenarios' => [],
+                'machine_id' => self::WATCHER_LOGIN,
+                'password' => self::WATCHER_PASSWORD,
             ];
+            if(getenv('AGENT_TLS_PATH')){
+                unset($data['password'], $data['machine_id']);
+            }
+
             $credentials = $this->manageRequest(
                 'POST',
                 self::WATCHER_LOGIN_ENDPOINT,

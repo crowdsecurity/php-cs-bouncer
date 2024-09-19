@@ -8,6 +8,7 @@ use CrowdSec\Common\Client\RequestHandler\Curl;
 use CrowdSec\Common\Client\RequestHandler\FileGetContents;
 use CrowdSec\Common\Logger\FileLog;
 use CrowdSec\LapiClient\Bouncer as BouncerClient;
+use CrowdSec\RemediationEngine\CacheStorage\AbstractCache;
 use CrowdSec\RemediationEngine\CacheStorage\Memcached;
 use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
 use CrowdSec\RemediationEngine\CacheStorage\Redis;
@@ -25,6 +26,9 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\AbstractBouncer::clearCache
  * @covers \CrowdSecBouncer\AbstractBouncer::pruneCache
  * @covers \CrowdSecBouncer\AbstractBouncer::testCacheConnection
+ * @covers \CrowdSecBouncer\AbstractBouncer::getRemediation
+ * @covers \CrowdSecBouncer\AbstractBouncer::getAppSecRemediationForIp
+ * @covers \CrowdSecBouncer\AbstractBouncer::getAppSecHeaders
  *
  * @uses   \CrowdSecBouncer\AbstractBouncer::__construct
  * @uses   \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
@@ -120,6 +124,7 @@ final class AbstractBouncerTest extends TestCase
             'auth_type' => $this->useTls ? \CrowdSec\LapiClient\Constants::AUTH_TLS : Constants::AUTH_KEY,
             'api_key' => getenv('BOUNCER_KEY'),
             'api_url' => getenv('LAPI_URL'),
+            'app_sec_url' => getenv('APP_SEC_URL'),
             'user_agent_suffix' => 'testphpbouncer',
             'fs_cache_path' => $this->root->url() . '/.cache',
             'redis_dsn' => getenv('REDIS_DSN'),
@@ -362,7 +367,7 @@ final class AbstractBouncerTest extends TestCase
     }
 
     /**
-     * @group ban
+     * @group appsec
      *
      * @return void
      *
@@ -371,6 +376,136 @@ final class AbstractBouncerTest extends TestCase
      * @throws \PHPUnit\Framework\ExpectationFailedException
      * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
      */
+    public function testAppSecFlow()
+    {
+        $this->watcherClient->setSimpleDecision('ban');
+        // Init bouncer
+        $bouncerConfigs = [
+            'auth_type' => $this->useTls ? Constants::AUTH_TLS : Constants::AUTH_KEY,
+            'api_key' => TestHelpers::getBouncerKey(),
+            'api_url' => TestHelpers::getLapiUrl(),
+            'app_sec_url' => TestHelpers::getAppSecUrl(),
+            'use_app_sec' => true,
+            'stream_mode' => false,
+            'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
+            'fs_cache_path' => $this->root->url() . '/.cache',
+            'forced_test_ip' => TestHelpers::BAD_IP,
+        ];
+        if ($this->useTls) {
+            $this->addTlsConfig($bouncerConfigs, $this->useTls);
+        }
+
+        $client = new BouncerClient($bouncerConfigs);
+        $cache = new PhpFiles($bouncerConfigs);
+        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
+
+        // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation], '', true,
+            true, true, [
+                'sendResponse',
+                'redirectResponse',
+                'getHttpMethod',
+                'getPostedVariable',
+                'getHttpRequestHeader',
+                'getRequestHeaders',
+                'getRequestUri',
+                'getRequestHost',
+                'getRequestUserAgent',
+                'getRequestRawBody'
+            ]);
+
+        // On test 1, these methods won't be called because LAPI returns a ban
+        // On test 2, these methods will be called (malicious POST request)
+        // On test 3, these methods will be called (clean request)
+        $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/login', '/home');
+        $bouncer->method('getRequestHost')->willReturnOnConsecutiveCalls('example.com', 'example.com');
+        $bouncer->method('getRequestUserAgent')->willReturnOnConsecutiveCalls('Mozilla/5.0', 'Mozilla/5.0');
+        $bouncer->method('getRequestHeaders')->willReturnOnConsecutiveCalls(['Content-Type'=>'application/x-www-form-urlencoded'], ['Content-Type'=>'application/x-www-form-urlencoded']);
+        $bouncer->method('getHttpMethod')->willReturnOnConsecutiveCalls('POST', 'GET');
+        $bouncer->method('getRequestRawBody')->willReturnOnConsecutiveCalls('class.module.classLoader.resources.', '');
+
+        $bouncer->clearCache();
+
+        // TEST 1 : ban from LAPI
+
+        $cache = $bouncer->getRemediationEngine()->getCacheStorage();
+        $cacheKey = $cache->getCacheKey(Constants::SCOPE_IP, TestHelpers::BAD_IP);
+        $item = $cache->getItem($cacheKey);
+        $this->assertEquals(
+            false,
+            $item->isHit(),
+            'The remediation should not be cached'
+        );
+
+        $bouncer->bounceCurrentIp();
+
+        $item = $cache->getItem($cacheKey);
+        $this->assertEquals(
+            true,
+            $item->isHit(),
+            'The remediation should be cached'
+        );
+        $cachedItem = $item->get();
+        $this->assertEquals(
+            'ban',
+            $cachedItem[0][0],
+            'The remediation should be ban'
+        );
+
+        // Test 2: ban from APP SEC
+        $this->watcherClient->deleteAllDecisions();
+        $bouncer->clearCache();
+
+        $bouncer->bounceCurrentIp();
+        $cache = $bouncer->getRemediationEngine()->getCacheStorage();
+        $cacheKey = $cache->getCacheKey(Constants::SCOPE_IP, TestHelpers::BAD_IP);
+        $item = $cache->getItem($cacheKey);
+        $cachedItem = $item->get();
+        $this->assertEquals(
+            'bypass',
+            $cachedItem[0][0],
+            'The LAPI remediation should be bypass and has been stored'
+        );
+
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            1,
+            $originCountItem['appsec'],
+            'The origin count for appsec should be 1'
+        );
+        $this->assertEquals(
+            1,
+            $originCountItem['clean'],
+            'The origin count for clean should be 1'
+        );
+
+        // Test 3: clean IP and clean request
+        $bouncer->clearCache();
+        $bouncer->bounceCurrentIp();
+        $cache = $bouncer->getRemediationEngine()->getCacheStorage();
+        $cacheKey = $cache->getCacheKey(Constants::SCOPE_IP, TestHelpers::BAD_IP);
+        $item = $cache->getItem($cacheKey);
+        $cachedItem = $item->get();
+        $this->assertEquals(
+            'bypass',
+            $cachedItem[0][0],
+            'The LAPI remediation should be bypass and has been stored'
+        );
+
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            1,
+            $originCountItem['clean_appsec'],
+            'The origin count for clean_appsec should be 1'
+        );
+        $this->assertEquals(
+            1,
+            $originCountItem['clean'],
+            'The origin count for clean should be 1'
+        );
+
+    }
+
     public function testBanFlow()
     {
         $this->watcherClient->setSimpleDecision('ban');
@@ -421,6 +556,82 @@ final class AbstractBouncerTest extends TestCase
             $item->isHit(),
             'The remediation should be cached'
         );
+    }
+
+    /**
+     * This test requires to have some App Sec rules installed in the Crowdsec server:
+     * /etc/crowdsec/appsec-rules/vpatch-CVE-2022-22965.yaml (POST with class.module.classLoader.resources. body)
+     * and crowdsecurity/appsec-generic-rules (GET /.env file))
+     *
+     * @group appsec
+     */
+    public function testAppSecRemediation(){
+        if (empty($this->configs['app_sec_url'])) {
+            $this->fail('There must be an App Sec Url defined with APP_SEC_URL env');
+        }
+
+        $client = new BouncerClient($this->configs, null, $this->logger);
+        $cache = new PhpFiles($this->configs, $this->logger);
+        $lapiRemediation = new LapiRemediation($this->configs, $client, $cache, $this->logger);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$this->configs, $lapiRemediation, $this->logger],
+            '', true,
+            true, true, [
+                'getHttpMethod',
+                'getRequestHeaders',
+                'getRequestUri',
+                'getRequestHost',
+                'getRequestUserAgent',
+                'getRequestRawBody',
+            ]);
+        $ip = '1.2.3.4';
+        $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/login', '/login', '/.env', 'home.php');
+        $bouncer->method('getRequestHost')->willReturnOnConsecutiveCalls('example.com', 'example.com', 'example.com', 'example.com');
+        $bouncer->method('getRequestUserAgent')->willReturnOnConsecutiveCalls('Mozilla/5.0', 'Mozilla/5.0', 'Mozilla/5.0', 'Method...');
+        $bouncer->method('getRequestHeaders')->willReturnOnConsecutiveCalls(['Content-Type'=>'application/x-www-form-urlencoded'], ['Content-Type'=>'application/x-www-form-urlencoded'], [], []);
+        $bouncer->method('getHttpMethod')->willReturnOnConsecutiveCalls('POST', 'POST', 'GET', 'GET');
+        $bouncer->method('getRequestRawBody')->willReturnOnConsecutiveCalls('class.module.classLoader.resources.', 'admin=test', '', '');
+
+        // Test 1: POST request with malicious body
+        $this->assertEquals('ban', $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine()), 'Should get a ban remediation');
+        // Test 2: POST request with normal body
+        $this->assertEquals('bypass', $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine()), 'Should get a ban remediation');
+        // Test 3: GET request with malicious behavior
+        $this->assertEquals('ban', $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine()), 'Should get a ban remediation');
+        // Test 4: GET request with clean behavior
+        $this->assertEquals('bypass', $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine()), 'Should get a ban remediation');
+
+        // Test 5: 401 because of bad API-KEY
+        $bouncerConfigs = array_merge($this->configs, ['api_key' => 'bad-key']);
+        $client = new BouncerClient($bouncerConfigs, null, $this->logger);
+        $cache = new PhpFiles($bouncerConfigs, $this->logger);
+        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
+        // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation, $this->logger],
+            '', true,
+            true, true, [
+                'getHttpMethod',
+                'getRequestHeaders',
+                'getRequestUri',
+                'getRequestHost',
+                'getRequestUserAgent',
+                'getRequestRawBody',
+            ]);
+        // Same mock as for the first test (malicious POST request)
+        $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/login');
+        $bouncer->method('getRequestHost')->willReturnOnConsecutiveCalls('example.com');
+        $bouncer->method('getRequestUserAgent')->willReturnOnConsecutiveCalls('Mozilla/5.0');
+        $bouncer->method('getRequestHeaders')->willReturnOnConsecutiveCalls(['Content-Type'=>'application/x-www-form-urlencoded']);
+        $bouncer->method('getHttpMethod')->willReturnOnConsecutiveCalls('POST');
+        $bouncer->method('getRequestRawBody')->willReturnOnConsecutiveCalls('class.module.classLoader.resources.');
+
+        $error = '';
+        try {
+            $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine());
+        } catch (BouncerException $e) {
+            $error = $e->getMessage();
+        }
+        $this->assertEquals('Unexpected response status code: 401. Body was: ', $error, 'Should get a 401 error');
+
     }
 
     public function testRun()

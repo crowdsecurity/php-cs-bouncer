@@ -42,7 +42,7 @@
     <!-- Allow more complexity -->
     <rule ref="rulesets/codesize.xml/ExcessiveClassComplexity">
         <properties>
-            <property name="maximum" value="100" />
+            <property name="maximum" value="120" />
         </properties>
     </rule>
 </ruleset>
