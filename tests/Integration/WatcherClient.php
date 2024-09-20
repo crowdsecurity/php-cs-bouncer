@@ -109,7 +109,7 @@ class WatcherClient extends AbstractClient
                 'machine_id' => self::WATCHER_LOGIN,
                 'password' => self::WATCHER_PASSWORD,
             ];
-            if(getenv('AGENT_TLS_PATH')){
+            if (getenv('AGENT_TLS_PATH')) {
                 unset($data['password'], $data['machine_id']);
             }
 

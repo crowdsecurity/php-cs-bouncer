@@ -55,9 +55,8 @@ abstract class AbstractBouncer
         }
         // @codeCoverageIgnoreEnd
         $this->logger = $logger;
-        $this->configure($configs);
         $this->remediationEngine = $remediationEngine;
-
+        $this->configure($configs);
         $configs = $this->getConfigs();
         // Clean configs for lighter log
         unset($configs['text'], $configs['color']);
@@ -89,24 +88,6 @@ abstract class AbstractBouncer
         ]);
         $remediation = $this->getRemediation($ip);
         $this->handleRemediation($remediation, $ip);
-    }
-
-    /**
-     * @throws CacheException
-     * @throws InvalidArgumentException
-     */
-    private function getRemediation(string $ip): string
-    {
-        $remediation = $this->getRemediationForIp($ip);
-        // In case of bypass, we can use AppSec to test also the current request
-        if (
-            $this->getConfig('use_app_sec') && Constants::REMEDIATION_BYPASS === $remediation
-            && $this->remediationEngine instanceof LapiRemediation
-        ) {
-            $remediation = $this->getAppSecRemediationForIp($ip, $this->remediationEngine);
-        }
-
-        return $remediation;
     }
 
     /**
@@ -619,6 +600,20 @@ abstract class AbstractBouncer
     }
 
     /**
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     */
+    private function getRemediation(string $ip): string
+    {
+        $remediation = $this->getRemediationForIp($ip);
+        if ($this->shouldUseAppSec($remediation)) {
+            $remediation = $this->getAppSecRemediationForIp($ip, $this->remediationEngine);
+        }
+
+        return $remediation;
+    }
+
+    /**
      * @return array [[string, string], ...] Returns IP ranges to trust as proxies as an array of comparables ip bounds
      */
     private function getTrustForwardedIpBoundsList(): array
@@ -888,5 +883,35 @@ abstract class AbstractBouncer
         }
 
         return false;
+    }
+
+    private function shouldUseAppSec(string $remediation): bool
+    {
+        $useAppSec = $this->getConfig('use_app_sec');
+        if (!$useAppSec || Constants::REMEDIATION_BYPASS !== $remediation) {
+            return false;
+        }
+        if (!($this->remediationEngine instanceof LapiRemediation)) {
+            $this->logger->warning('Calling AppSec is only supported with Lapi remediation engine.', [
+                'type' => 'APPSEC_LAPI_REMEDIATION_ONLY_SUPPORTED',
+                'message' => 'Please use Lapi remediation for calling AppSec.',
+            ]);
+
+            return false;
+        }
+
+        $authType = $this->remediationEngine->getClient()->getConfig('auth_type');
+        if (Constants::AUTH_TLS === $authType) {
+            $this->logger->warning('Calling AppSec with a TLS-authenticated bouncer is not supported.', [
+                'type' => 'APPSEC_LAPI_TLS_AUTH_UNSUPPORTED',
+                'auth_type_config' => $authType,
+                'use_app_sec_config' => $useAppSec,
+                'message' => 'Please use API key authentication for calling AppSec.',
+            ]);
+
+            return false;
+        }
+
+        return true;
     }
 }

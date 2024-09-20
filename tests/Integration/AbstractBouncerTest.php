@@ -29,6 +29,7 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\AbstractBouncer::getRemediation
  * @covers \CrowdSecBouncer\AbstractBouncer::getAppSecRemediationForIp
  * @covers \CrowdSecBouncer\AbstractBouncer::getAppSecHeaders
+ * @covers \CrowdSecBouncer\AbstractBouncer::shouldUseAppSec
  *
  * @uses   \CrowdSecBouncer\AbstractBouncer::__construct
  * @uses   \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
@@ -411,7 +412,7 @@ final class AbstractBouncerTest extends TestCase
                 'getRequestUri',
                 'getRequestHost',
                 'getRequestUserAgent',
-                'getRequestRawBody'
+                'getRequestRawBody',
             ]);
 
         // On test 1, these methods won't be called because LAPI returns a ban
@@ -420,7 +421,7 @@ final class AbstractBouncerTest extends TestCase
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/login', '/home');
         $bouncer->method('getRequestHost')->willReturnOnConsecutiveCalls('example.com', 'example.com');
         $bouncer->method('getRequestUserAgent')->willReturnOnConsecutiveCalls('Mozilla/5.0', 'Mozilla/5.0');
-        $bouncer->method('getRequestHeaders')->willReturnOnConsecutiveCalls(['Content-Type'=>'application/x-www-form-urlencoded'], ['Content-Type'=>'application/x-www-form-urlencoded']);
+        $bouncer->method('getRequestHeaders')->willReturnOnConsecutiveCalls(['Content-Type' => 'application/x-www-form-urlencoded'], ['Content-Type' => 'application/x-www-form-urlencoded']);
         $bouncer->method('getHttpMethod')->willReturnOnConsecutiveCalls('POST', 'GET');
         $bouncer->method('getRequestRawBody')->willReturnOnConsecutiveCalls('class.module.classLoader.resources.', '');
 
@@ -503,7 +504,6 @@ final class AbstractBouncerTest extends TestCase
             $originCountItem['clean'],
             'The origin count for clean should be 1'
         );
-
     }
 
     public function testBanFlow()
@@ -565,7 +565,8 @@ final class AbstractBouncerTest extends TestCase
      *
      * @group appsec
      */
-    public function testAppSecRemediation(){
+    public function testAppSecRemediation()
+    {
         if (empty($this->configs['app_sec_url'])) {
             $this->fail('There must be an App Sec Url defined with APP_SEC_URL env');
         }
@@ -587,7 +588,7 @@ final class AbstractBouncerTest extends TestCase
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/login', '/login', '/.env', 'home.php');
         $bouncer->method('getRequestHost')->willReturnOnConsecutiveCalls('example.com', 'example.com', 'example.com', 'example.com');
         $bouncer->method('getRequestUserAgent')->willReturnOnConsecutiveCalls('Mozilla/5.0', 'Mozilla/5.0', 'Mozilla/5.0', 'Method...');
-        $bouncer->method('getRequestHeaders')->willReturnOnConsecutiveCalls(['Content-Type'=>'application/x-www-form-urlencoded'], ['Content-Type'=>'application/x-www-form-urlencoded'], [], []);
+        $bouncer->method('getRequestHeaders')->willReturnOnConsecutiveCalls(['Content-Type' => 'application/x-www-form-urlencoded'], ['Content-Type' => 'application/x-www-form-urlencoded'], [], []);
         $bouncer->method('getHttpMethod')->willReturnOnConsecutiveCalls('POST', 'POST', 'GET', 'GET');
         $bouncer->method('getRequestRawBody')->willReturnOnConsecutiveCalls('class.module.classLoader.resources.', 'admin=test', '', '');
 
@@ -620,7 +621,7 @@ final class AbstractBouncerTest extends TestCase
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/login');
         $bouncer->method('getRequestHost')->willReturnOnConsecutiveCalls('example.com');
         $bouncer->method('getRequestUserAgent')->willReturnOnConsecutiveCalls('Mozilla/5.0');
-        $bouncer->method('getRequestHeaders')->willReturnOnConsecutiveCalls(['Content-Type'=>'application/x-www-form-urlencoded']);
+        $bouncer->method('getRequestHeaders')->willReturnOnConsecutiveCalls(['Content-Type' => 'application/x-www-form-urlencoded']);
         $bouncer->method('getHttpMethod')->willReturnOnConsecutiveCalls('POST');
         $bouncer->method('getRequestRawBody')->willReturnOnConsecutiveCalls('class.module.classLoader.resources.');
 
@@ -631,7 +632,6 @@ final class AbstractBouncerTest extends TestCase
             $error = $e->getMessage();
         }
         $this->assertEquals('Unexpected response status code: 401. Body was: ', $error, 'Should get a 401 error');
-
     }
 
     public function testRun()
