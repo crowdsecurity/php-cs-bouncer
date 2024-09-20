@@ -30,6 +30,10 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 - Update `crowdsec/common` dependency to `v2.3.0`
 - Update `crowdsec/remediation-engine` dependency to `v3.4.0`
 
+### Removed
+
+- *Breaking change*: Remove `DEFAULT_LAPI_URL` constant as it already exists in `crowdsec/lapi-client` package
+
 
 ---
 

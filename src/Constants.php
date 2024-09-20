@@ -34,10 +34,6 @@ class Constants extends RemConstants
     public const CACHE_SYSTEM_REDIS = 'redis';
     /** @var string Cache tag for captcha flow */
     public const CACHE_TAG_CAPTCHA = 'captcha';
-    /** @var string The Default URL of the CrowdSec LAPI */
-    public const DEFAULT_LAPI_URL = 'http://localhost:8080';
-    /** @var string The Default URL of the CrowdSec AppSec endpoint */
-    public const DEFAULT_APPSEC_URL = 'http://localhost:7422';
     /** @var string Path for html templates folder (e.g. ban and captcha wall) */
     public const TEMPLATES_DIR = __DIR__ . '/templates';
     /** @var string The last version of this library */
