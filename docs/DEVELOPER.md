@@ -198,7 +198,7 @@ Finally, run
 
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl APP_SEC_URL=http://crowdsec:7422 LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/AbstractBouncerTest.php
+ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl APPSEC_URL=http://crowdsec:7422 LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/AbstractBouncerTest.php
 ```
 
 For geolocation Unit Test, you should first put 2 free MaxMind databases in the `tests` folder : `GeoLite2-City.mmdb`
@@ -208,7 +208,7 @@ and `GeoLite2-Country.mmdb`. You can download these databases by creating a MaxM
 Then, you can run:
 
 ```bash
-ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl APP_SEC_URL=http://crowdsec:7422 LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/GeolocationTest.php
+ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl APPSEC_URL=http://crowdsec:7422 LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/GeolocationTest.php
 ```
 
 
@@ -216,7 +216,7 @@ ddev exec BOUNCER_KEY=your-bouncer-key AGENT_TLS_PATH=/var/www/html/cfssl APP_SE
 and specify the path where you store certificates and keys. For example:
 
 ```bash
-ddev exec USE_CURL=1 AGENT_TLS_PATH=/var/www/html/cfssl  BOUNCER_TLS_PATH=/var/www/html/cfssl APP_SEC_URL=http://crowdsec:7422 LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/AbstractBouncerTest.php
+ddev exec USE_CURL=1 AGENT_TLS_PATH=/var/www/html/cfssl  BOUNCER_TLS_PATH=/var/www/html/cfssl APPSEC_URL=http://crowdsec:7422 LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./my-code/crowdsec-bouncer-lib/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./my-code/crowdsec-bouncer-lib/tests/Integration/AbstractBouncerTest.php
 ```
 
 
@@ -292,7 +292,7 @@ ddev xdebug
 
 To generate a html report, you can run:
 ```bash
-ddev exec XDEBUG_MODE=coverage APP_SEC_URL=http://crowdsec:7422 BOUNCER_KEY=your-bouncer-key  
+ddev exec XDEBUG_MODE=coverage APPSEC_URL=http://crowdsec:7422 BOUNCER_KEY=your-bouncer-key  
 AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 
 REDIS_DSN=redis://redis:6379 MEMCACHED_DSN=memcached://memcached:11211  /usr/bin/php  ./my-code/crowdsec-bouncer-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-code/crowdsec-bouncer-lib/tools/coding-standards/phpunit/phpunit.xml
 
@@ -311,7 +311,7 @@ MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/
 With AppSec integration tests:
 
 ```bash
-ddev exec XDEBUG_MODE=coverage APP_SEC_URL=http://crowdsec:7422  BOUNCER_KEY=your-bouncer-key  
+ddev exec XDEBUG_MODE=coverage APPSEC_URL=http://crowdsec:7422  BOUNCER_KEY=your-bouncer-key  
 LAPI_URL=http://crowdsec:8080 REDIS_DSN=redis://redis:6379 MEMCACHED_DSN=memcached://memcached:11211  /usr/bin/php  ./my-code/crowdsec-bouncer-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-code/crowdsec-bouncer-lib/tools/coding-standards/phpunit/phpunit.xml   
  ```
 

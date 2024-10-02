@@ -150,8 +150,8 @@ final class AbstractBouncerTest extends TestCase
         'tls_ca_cert_path' => '',
         'api_key' => 'unit-test',
         'api_url' => LapiConstants::DEFAULT_LAPI_URL,
-        'app_sec_url' => LapiConstants::DEFAULT_APPSEC_URL,
-        'use_app_sec' => false,
+        'appsec_url' => LapiConstants::DEFAULT_APPSEC_URL,
+        'use_appsec' => false,
         'api_timeout' => 1,
         // ============================================================================#
         // Remediation engine configs
@@ -197,7 +197,7 @@ final class AbstractBouncerTest extends TestCase
             'tls_key_path' => 'some_value',
             'tls_ca_cert_path' => 'some_value',
             'tls_verify_peer' => true,
-            'use_app_sec' => true]);
+            'use_appsec' => true]);
         $client = new BouncerClient($configs);
         $cache = new PhpFiles($configs);
         $lapiRemediation = new LapiRemediation($configs, $client, $cache);
@@ -211,7 +211,7 @@ final class AbstractBouncerTest extends TestCase
         $this->assertEquals(false, $result, 'AppSec should not be used with TLS');
         // Test with CAPI
         $configs = array_merge($this->configs, [
-            'use_app_sec' => true,
+            'use_appsec' => true,
             'env' => 'dev',
             'scenarios' => ['test/test'],
         ]);
@@ -230,7 +230,7 @@ final class AbstractBouncerTest extends TestCase
         $this->assertEquals(false, $result, 'AppSec should not be used if not Lapi client');
         // Test OK if bypass
         $configs = array_merge($this->configs, [
-            'use_app_sec' => true,
+            'use_appsec' => true,
         ]);
         $client = new BouncerClient($configs);
         $cache = new PhpFiles($configs);
@@ -245,7 +245,7 @@ final class AbstractBouncerTest extends TestCase
         $this->assertEquals(true, $result, 'AppSec should be used if bypass');
         // Test if not bypass
         $configs = array_merge($this->configs, [
-            'use_app_sec' => true,
+            'use_appsec' => true,
         ]);
         $client = new BouncerClient($configs);
         $cache = new PhpFiles($configs);

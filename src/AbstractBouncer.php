@@ -887,7 +887,7 @@ abstract class AbstractBouncer
 
     private function shouldUseAppSec(string $remediation): bool
     {
-        $useAppSec = $this->getConfig('use_app_sec');
+        $useAppSec = $this->getConfig('use_appsec');
         if (!$useAppSec || Constants::REMEDIATION_BYPASS !== $remediation) {
             return false;
         }
@@ -905,7 +905,7 @@ abstract class AbstractBouncer
             $this->logger->warning('Calling AppSec with a TLS-authenticated bouncer is not supported.', [
                 'type' => 'APPSEC_LAPI_TLS_AUTH_UNSUPPORTED',
                 'auth_type_config' => $authType,
-                'use_app_sec_config' => $useAppSec,
+                'use_appsec_config' => $useAppSec,
                 'message' => 'Please use API key authentication for calling AppSec.',
             ]);
 

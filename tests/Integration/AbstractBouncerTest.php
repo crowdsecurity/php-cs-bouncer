@@ -125,7 +125,7 @@ final class AbstractBouncerTest extends TestCase
             'auth_type' => $this->useTls ? \CrowdSec\LapiClient\Constants::AUTH_TLS : Constants::AUTH_KEY,
             'api_key' => getenv('BOUNCER_KEY'),
             'api_url' => getenv('LAPI_URL'),
-            'app_sec_url' => getenv('APP_SEC_URL'),
+            'appsec_url' => getenv('APPSEC_URL'),
             'user_agent_suffix' => 'testphpbouncer',
             'fs_cache_path' => $this->root->url() . '/.cache',
             'redis_dsn' => getenv('REDIS_DSN'),
@@ -385,8 +385,8 @@ final class AbstractBouncerTest extends TestCase
             'auth_type' => $this->useTls ? Constants::AUTH_TLS : Constants::AUTH_KEY,
             'api_key' => TestHelpers::getBouncerKey(),
             'api_url' => TestHelpers::getLapiUrl(),
-            'app_sec_url' => TestHelpers::getAppSecUrl(),
-            'use_app_sec' => true,
+            'appsec_url' => TestHelpers::getAppSecUrl(),
+            'use_appsec' => true,
             'stream_mode' => false,
             'cache_system' => Constants::CACHE_SYSTEM_PHPFS,
             'fs_cache_path' => $this->root->url() . '/.cache',
@@ -567,8 +567,8 @@ final class AbstractBouncerTest extends TestCase
      */
     public function testAppSecRemediation()
     {
-        if (empty($this->configs['app_sec_url'])) {
-            $this->fail('There must be an App Sec Url defined with APP_SEC_URL env');
+        if (empty($this->configs['appsec_url'])) {
+            $this->fail('There must be an App Sec Url defined with APPSEC_URL env');
         }
 
         $client = new BouncerClient($this->configs, null, $this->logger);
