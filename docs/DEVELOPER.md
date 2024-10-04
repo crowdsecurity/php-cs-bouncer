@@ -19,12 +19,6 @@
     - [Unit test](#unit-test)
     - [Integration test](#integration-test)
     - [Coding standards](#coding-standards)
-      - [PHPCS Fixer](#phpcs-fixer)
-      - [PHPSTAN](#phpstan)
-      - [PHP Mess Detector](#php-mess-detector)
-      - [PHPCS and PHPCBF](#phpcs-and-phpcbf)
-      - [PSALM](#psalm)
-      - [PHP Unit Code coverage](#php-unit-code-coverage)
     - [Generate CrowdSec tools and settings on start](#generate-crowdsec-tools-and-settings-on-start)
     - [Redis debug](#redis-debug)
     - [Memcached debug](#memcached-debug)
@@ -312,7 +306,8 @@ With AppSec integration tests:
 
 ```bash
 ddev exec XDEBUG_MODE=coverage APPSEC_URL=http://crowdsec:7422  BOUNCER_KEY=your-bouncer-key  
-LAPI_URL=http://crowdsec:8080 REDIS_DSN=redis://redis:6379 MEMCACHED_DSN=memcached://memcached:11211  /usr/bin/php  ./my-code/crowdsec-bouncer-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-code/crowdsec-bouncer-lib/tools/coding-standards/phpunit/phpunit.xml   
+LAPI_URL=https://crowdsec:8080 REDIS_DSN=redis://redis:6379 MEMCACHED_DSN=memcached://memcached:11211  /usr/bin/php  
+./my-code/crowdsec-bouncer-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-code/crowdsec-bouncer-lib/tools/coding-standards/phpunit/phpunit.xml   
  ```
 
 

@@ -44,6 +44,7 @@ Please note that first and foremost a CrowdSec agent must be installed on a serv
 - CrowdSec Local API support
   - Handle `ip`, `range` and `country` scoped decisions
   - `Live mode` or `Stream mode`
+  - AppSec support
 - Support IpV4 and Ipv6 (Ipv6 range decisions are yet only supported in `Live mode`) 
 - Large PHP matrix compatibility: 7.2, 7.3, 7.4, 8.0, 8.1, 8.2 and 8.3
 - Built-in support for the most known cache systems Redis, Memcached and PhpFiles
@@ -191,16 +192,14 @@ Below is the list of available settings:
 
 - `bouncing_level`:  Select from `bouncing_disabled`, `normal_bouncing` or `flex_bouncing`. Choose if you want to apply CrowdSec directives (Normal bouncing) or be more permissive (Flex bouncing). With the `Flex mode`, it is impossible to accidentally block access to your site to people who don’t deserve it. This mode makes it possible to never ban an IP but only to offer a captcha, in the worst-case scenario.
 
+- `use_appsec`: true to enable AppSec support. Default to false. If enabled, the bouncer will check the AppSec decisions if the IP is not found in the Local API decisions.
 
 - `fallback_remediation`: Select from `bypass` (minimum remediation), `captcha` or `ban` (maximum remediation). Default to 'captcha'. Handle unknown remediations as.
-
 
 - `trust_ip_forward_array`:  If you use a CDN, a reverse proxy or a load balancer, set an array of comparable IPs arrays:
   (example: `[['001.002.003.004', '001.002.003.004'], ['005.006.007.008', '005.006.007.008']]` for CDNs with IPs `1.2.3.4` and `5.6.7.8`). For other IPs, the bouncer will not trust the X-Forwarded-For header.
 
-
 - `excluded_uris`: array of URIs that will not be bounced.
-
 
 - `stream_mode`: true to enable stream mode, false to enable the live mode. Default to false. By default, the `live mode` is enabled. The first time a stranger connects to your website, this mode means that the IP will be checked directly by the CrowdSec API. The rest of your user’s browsing will be even more transparent thanks to the fully customizable cache system. But you can also activate the `stream mode`. This mode allows you to constantly feed the bouncer with the malicious IP list via a background task (CRON), making it to be even faster when checking the IP of your visitors. Besides, if your site has a lot of unique visitors at the same time, this will not influence the traffic to the API of your CrowdSec instance.
 
