@@ -15,7 +15,13 @@ namespace CrowdSecBouncer\Tests\Unit;
  * @license   MIT License
  */
 
+use CrowdSec\CapiClient\Storage\FileStorage;
+use CrowdSec\CapiClient\Watcher as WatcherClient;
 use CrowdSec\Common\Logger\FileLog;
+use CrowdSec\LapiClient\Bouncer as BouncerClient;
+use CrowdSec\LapiClient\Constants as LapiConstants;
+use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
+use CrowdSec\RemediationEngine\CapiRemediation;
 use CrowdSec\RemediationEngine\LapiRemediation;
 use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\BouncerException;
@@ -46,8 +52,9 @@ use PHPUnit\Framework\TestCase;
  * @covers \CrowdSecBouncer\AbstractBouncer::getRemediationForIp
  * @covers \CrowdSecBouncer\AbstractBouncer::getTrustForwardedIpBoundsList
  * @covers \CrowdSecBouncer\AbstractBouncer::handleForwardedFor
+ * @covers \CrowdSecBouncer\AbstractBouncer::shouldUseAppSec
  *
- * @uses \CrowdSecBouncer\AbstractBouncer::handleRemediation
+ * @uses   \CrowdSecBouncer\AbstractBouncer::handleRemediation
  *
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldTrustXforwardedFor
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldBounceCurrentIp
@@ -142,7 +149,9 @@ final class AbstractBouncerTest extends TestCase
         'tls_verify_peer' => true,
         'tls_ca_cert_path' => '',
         'api_key' => 'unit-test',
-        'api_url' => Constants::DEFAULT_LAPI_URL,
+        'api_url' => LapiConstants::DEFAULT_LAPI_URL,
+        'appsec_url' => LapiConstants::DEFAULT_APPSEC_URL,
+        'use_appsec' => false,
         'api_timeout' => 1,
         // ============================================================================#
         // Remediation engine configs
@@ -180,6 +189,76 @@ final class AbstractBouncerTest extends TestCase
 
     public function testPrivateAndProtectedMethods()
     {
+        // shouldUseAppSec
+        // Test with TLS
+        $configs = array_merge($this->configs, [
+            'auth_type' => 'tls',
+            'tls_cert_path' => 'some_value',
+            'tls_key_path' => 'some_value',
+            'tls_ca_cert_path' => 'some_value',
+            'tls_verify_peer' => true,
+            'use_appsec' => true]);
+        $client = new BouncerClient($configs);
+        $cache = new PhpFiles($configs);
+        $lapiRemediation = new LapiRemediation($configs, $client, $cache);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $lapiRemediation]);
+
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'shouldUseAppSec',
+            ['bypass']
+        );
+        $this->assertEquals(false, $result, 'AppSec should not be used with TLS');
+        // Test with CAPI
+        $configs = array_merge($this->configs, [
+            'use_appsec' => true,
+            'env' => 'dev',
+            'scenarios' => ['test/test'],
+        ]);
+
+        $capiStorage = new FileStorage();
+        $client = new WatcherClient($configs, $capiStorage);
+        $cache = new PhpFiles($configs);
+        $capiRemediation = new CapiRemediation($configs, $client, $cache);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $capiRemediation]);
+
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'shouldUseAppSec',
+            ['bypass']
+        );
+        $this->assertEquals(false, $result, 'AppSec should not be used if not Lapi client');
+        // Test OK if bypass
+        $configs = array_merge($this->configs, [
+            'use_appsec' => true,
+        ]);
+        $client = new BouncerClient($configs);
+        $cache = new PhpFiles($configs);
+        $lapiRemediation = new LapiRemediation($configs, $client, $cache);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $lapiRemediation]);
+
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'shouldUseAppSec',
+            ['bypass']
+        );
+        $this->assertEquals(true, $result, 'AppSec should be used if bypass');
+        // Test if not bypass
+        $configs = array_merge($this->configs, [
+            'use_appsec' => true,
+        ]);
+        $client = new BouncerClient($configs);
+        $cache = new PhpFiles($configs);
+        $lapiRemediation = new LapiRemediation($configs, $client, $cache);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $lapiRemediation]);
+
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'shouldUseAppSec',
+            ['somevalue']
+        );
+        $this->assertEquals(false, $result, 'AppSec should not be used if ban');
+
         // shouldNotCheckResolution
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
@@ -497,7 +576,7 @@ final class AbstractBouncerTest extends TestCase
         $this->assertEquals(false, $result, 'Should return false if ip is invalid');
     }
 
-    public function testGetRemediationForIpExeption()
+    public function testGetRemediationForIpException()
     {
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)

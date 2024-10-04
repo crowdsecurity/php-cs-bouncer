@@ -11,6 +11,32 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 
 ---
 
+## [3.0.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v3.0.0) - 2024-??-??
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v2.2.0...v3.0.0)
+
+
+### Added
+
+- Add `use_appsec` configuration
+
+### Changed
+
+- *Breaking change*: Add abstract methods that must be implemented to use AppSec:
+    - `getRequestHost`
+    - `getRequestHeaders`
+    - `getRequestRawBody`
+    - `getRequestUserAgent`
+- `bounceCurrentIp` method asks for AppSec remediation if `use_appsec` is true and IP remediation is `bypass` 
+- Update `crowdsec/common` dependency to `v2.3.0`
+- Update `crowdsec/remediation-engine` dependency to `v3.4.0`
+
+### Removed
+
+- *Breaking change*: Remove `DEFAULT_LAPI_URL` constant as it already exists in `crowdsec/lapi-client` package
+
+
+---
+
 ## [2.2.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v2.2.0) - 2024-06-20
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v2.1.0...v2.2.0)
 
