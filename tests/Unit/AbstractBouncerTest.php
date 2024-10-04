@@ -15,17 +15,17 @@ namespace CrowdSecBouncer\Tests\Unit;
  * @license   MIT License
  */
 
+use CrowdSec\CapiClient\Storage\FileStorage;
+use CrowdSec\CapiClient\Watcher as WatcherClient;
 use CrowdSec\Common\Logger\FileLog;
 use CrowdSec\LapiClient\Bouncer as BouncerClient;
-use CrowdSec\CapiClient\Watcher as WatcherClient;
-use CrowdSec\CapiClient\Storage\FileStorage;
+use CrowdSec\LapiClient\Constants as LapiConstants;
 use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
 use CrowdSec\RemediationEngine\CapiRemediation;
 use CrowdSec\RemediationEngine\LapiRemediation;
 use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\BouncerException;
 use CrowdSecBouncer\Constants;
-use CrowdSec\LapiClient\Constants as LapiConstants;
 use CrowdSecBouncer\Tests\PHPUnitUtil;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
@@ -189,7 +189,7 @@ final class AbstractBouncerTest extends TestCase
 
     public function testPrivateAndProtectedMethods()
     {
-        //shouldUseAppSec
+        // shouldUseAppSec
         // Test with TLS
         $configs = array_merge($this->configs, [
             'auth_type' => 'tls',

@@ -224,7 +224,7 @@ ddev exec USE_CURL=1 AGENT_TLS_PATH=/var/www/html/cfssl  BOUNCER_TLS_PATH=/var/w
 
 We set up some coding standards tools that you will find in the `tools/coding-standards` folder. In order to use these, you will need to work with a PHP version >= 7.4 and run first:
 
-```
+```bash
 ddev composer update --working-dir=./my-code/crowdsec-bouncer-lib/tools/coding-standards
 ```
 
@@ -304,8 +304,8 @@ You should find the main report file `dashboard.html` in `tools/coding-standards
 If you want to generate a text report in the same folder:
 
 ```bash
-ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key LAPI_URL=https://crowdsec:8080
-MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php  ./my-code/crowdsec-bouncer-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-code/crowdsec-bouncer-lib/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./my-code/crowdsec-bouncer-lib/tools/coding-standards/phpunit/code-coverage/report.txt 
+ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=your-bouncer-key APPSEC_URL=http://crowdsec:7422 LAPI_URL=https://crowdsec:8080 AGENT_TLS_PATH=/var/www/html/cfssl MEMCACHED_DSN=memcached://memcached:11211 
+REDIS_DSN=redis://redis:6379 /usr/bin/php  ./my-code/crowdsec-bouncer-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-code/crowdsec-bouncer-lib/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./my-code/crowdsec-bouncer-lib/tools/coding-standards/phpunit/code-coverage/report.txt 
 ```
 
 With AppSec integration tests:

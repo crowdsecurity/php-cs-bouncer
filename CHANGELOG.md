@@ -17,7 +17,7 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 
 ### Added
 
-- Add `use_app_sec` configuration
+- Add `use_appsec` configuration
 
 ### Changed
 
@@ -26,7 +26,7 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
     - `getRequestHeaders`
     - `getRequestRawBody`
     - `getRequestUserAgent`
-- `bounceCurrentIp` method asks for AppSec remediation if `use_app_sec` is true and IP remediation is `bypass` 
+- `bounceCurrentIp` method asks for AppSec remediation if `use_appsec` is true and IP remediation is `bypass` 
 - Update `crowdsec/common` dependency to `v2.3.0`
 - Update `crowdsec/remediation-engine` dependency to `v3.4.0`
 
