@@ -469,11 +469,16 @@ final class AbstractBouncerTest extends TestCase
         );
 
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
-        $this->assertEquals(
-            1,
-            $originCountItem['appsec'],
-            'The origin count for appsec should be 1'
-        );
+        if ($this->useTls) {
+                $this->assertArrayNotHasKey('appsec', $originCountItem, 'The origin count for appsec should not be present');
+        } else {
+            $this->assertEquals(
+                1,
+                $originCountItem['appsec'],
+                'The origin count for appsec should be 1'
+            );
+        }
+
         $this->assertEquals(
             1,
             $originCountItem['clean'],
@@ -494,11 +499,16 @@ final class AbstractBouncerTest extends TestCase
         );
 
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
-        $this->assertEquals(
-            1,
-            $originCountItem['clean_appsec'],
-            'The origin count for clean_appsec should be 1'
-        );
+        if ($this->useTls) {
+            $this->assertArrayNotHasKey('appsec', $originCountItem, 'The origin count for appsec should not be present');
+        } else {
+            $this->assertEquals(
+                1,
+                $originCountItem['clean_appsec'],
+                'The origin count for appsec should be 1'
+            );
+        }
+
         $this->assertEquals(
             1,
             $originCountItem['clean'],
