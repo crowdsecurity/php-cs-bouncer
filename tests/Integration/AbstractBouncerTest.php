@@ -1251,6 +1251,8 @@ final class AbstractBouncerTest extends TestCase
 
         // Add and remove decision
         $this->watcherClient->setSecondState();
+        // Wait to avoid false positive
+        sleep(2);
 
         // Pull updates
         $bouncer->refreshBlocklistCache();
