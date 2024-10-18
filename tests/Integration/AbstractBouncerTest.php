@@ -1256,6 +1256,8 @@ final class AbstractBouncerTest extends TestCase
 
         // Pull updates
         $bouncer->refreshBlocklistCache();
+        // Wait to avoid false positive
+        sleep(2);
 
         $this->assertEquals(
             'ban',
