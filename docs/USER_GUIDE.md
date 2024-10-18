@@ -205,7 +205,7 @@ Below is the list of available settings:
 
 ### Local API Connection
 
-- `auth_type`: Select from `api_key` and `tls`. Choose if you want to use an API-KEY or a TLS (pki) authentification.
+- `auth_type`: Select from `api_key` and `tls`. Choose if you want to use an API-KEY or a TLS (pki) authentication.
   TLS authentication is only available if you use CrowdSec agent with a version superior to 1.4.0.
 
 

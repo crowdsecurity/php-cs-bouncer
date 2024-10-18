@@ -11,6 +11,18 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 
 ---
 
+## [3.1.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v3.1.0) - 2024-10-18
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v3.0.0...v3.1.0)
+
+
+### Changed
+
+- Update `crowdsec/remediation-engine` dependency to `v3.5.0` (`appsec_max_body_size_kb` and 
+  `appsec_body_size_exceeded_action` settings)
+
+
+---
+
 ## [3.0.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v3.0.0) - 2024-10-04
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v2.2.0...v3.0.0)
 
