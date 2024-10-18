@@ -1252,22 +1252,15 @@ final class AbstractBouncerTest extends TestCase
             $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP),
             'Preload the bypass remediation to prepare the next tests'
         );
-
         // Add and remove decision
-        $this->logger->info('DEBUG', ['message' => 'Start SecondState test']);
         $this->watcherClient->setSecondState();
-
         // Pull updates
         $bouncer->refreshBlocklistCache();
-
-        $this->logger->info('DEBUG', ['message' => 'Will check 3.4.5.6']);
         $this->assertEquals(
             'ban',
             $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP),
             'The new decision should now be added, so the previously clean IP should now be bad'
         );
-
-        $this->logger->info('DEBUG', ['message' => 'Will check 1.2.3.4']);
         $this->assertEquals(
             'bypass',
             $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
