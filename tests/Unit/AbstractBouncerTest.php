@@ -78,7 +78,6 @@ use PHPUnit\Framework\TestCase;
  * @uses \CrowdSecBouncer\Helper::getRawInput
  * @uses \CrowdSecBouncer\Helper::readStream
  * @uses \CrowdSecBouncer\Helper::appendFileData
- *
  */
 final class AbstractBouncerTest extends TestCase
 {
@@ -712,35 +711,35 @@ EOF;
         file_put_contents($this->root->url() . '/tmp1', 'THIS_IS_THE_FILE_1_CONTENT');
         file_put_contents($this->root->url() . '/tmp2', 'THIS_IS_THE_FILE_2_CONTENT');
         file_put_contents($this->root->url() . '/tmp3', 'THIS_IS_THE_FILE_3_CONTENT');
-        $_FILES = array(
-            'file' => array(
-                'name' => array(
+        $_FILES = [
+            'file' => [
+                'name' => [
                     0 => 'image1.jpg',
                     1 => 'image2.jpg',
                     2 => 'image3.png',
-                ),
-                'type' => array(
+                ],
+                'type' => [
                     0 => 'image/jpeg',
                     1 => 'image/jpeg',
                     2 => 'image/png',
-                ),
-                'tmp_name' => array(
+                ],
+                'tmp_name' => [
                     0 => $this->root->url() . '/tmp1',
                     1 => $this->root->url() . '/tmp2',
                     2 => $this->root->url() . '/tmp3',
-                ),
-                'error' => array(
+                ],
+                'error' => [
                     0 => 0,
                     1 => 0,
                     2 => 0,
-                ),
-                'size' => array(
+                ],
+                'size' => [
                     0 => 12345,
                     1 => 54321,
                     2 => 67890,
-                ),
-            ),
-        );
+                ],
+            ],
+        ];
         $result = PHPUnitUtil::callMethod(
             $bouncer,
             'buildRequestRawBody',

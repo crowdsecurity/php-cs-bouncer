@@ -375,10 +375,11 @@ abstract class AbstractBouncer
     {
         $maxBodySize = $this->getRemediationEngine()->getConfig('appsec_max_body_size_kb') ??
                        Constants::APPSEC_DEFAULT_MAX_BODY_SIZE;
-        if(!is_resource($stream)) {
+        if (!is_resource($stream)) {
             $this->logger->error('Invalid stream resource', [
                 'type' => 'BUILD_RAW_BODY',
             ]);
+
             return '';
         }
 

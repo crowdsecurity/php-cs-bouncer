@@ -19,13 +19,14 @@ trait Helper
     /**
      * Build the raw body from superglobals.
      *
-     * @param int $maxBodySize The maximum body size in KB.
-     * @param resource $stream The stream to read
-     * @param array $serverData The $_SERVER superglobal.
-     * @param array $postData The $_POST superglobal.
-     * @param array $filesData The $_FILES superglobal.
+     * @param int      $maxBodySize the maximum body size in KB
+     * @param resource $stream      The stream to read
+     * @param array    $serverData  the $_SERVER superglobal
+     * @param array    $postData    the $_POST superglobal
+     * @param array    $filesData   the $_FILES superglobal
      *
-     * @return string The raw body.
+     * @return string the raw body
+     *
      * @throws BouncerException
      */
     public function buildRawBodyFromSuperglobals(
