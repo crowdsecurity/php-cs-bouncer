@@ -471,7 +471,7 @@ final class AbstractBouncerTest extends TestCase
 
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         if ($this->useTls) {
-                $this->assertArrayNotHasKey('appsec', $originCountItem, 'The origin count for appsec should not be present');
+            $this->assertArrayNotHasKey('appsec', $originCountItem, 'The origin count for appsec should not be present');
         } else {
             $this->assertEquals(
                 1,
@@ -1191,8 +1191,8 @@ final class AbstractBouncerTest extends TestCase
      */
     public function testCanVerifyIpInStreamMode(): void
     {
-
-        $this->logger = new ConsoleLog();
+        // Uncomment the below line to see debug log in console
+        // $this->logger = new ConsoleLog();
         // Init context
         $this->watcherClient->setInitialState();
         // Init bouncer
@@ -1236,7 +1236,7 @@ final class AbstractBouncerTest extends TestCase
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
         $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
-        $client = new BouncerClient($bouncerConfigs,null, $this->logger);
+        $client = new BouncerClient($bouncerConfigs, null, $this->logger);
         $cache = new PhpFiles($bouncerConfigs);
         $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
@@ -1284,7 +1284,7 @@ final class AbstractBouncerTest extends TestCase
             $bouncerConfigs['tls_verify_peer'] = true;
         }
 
-        $client = new BouncerClient($bouncerConfigs,  null, $this->logger);
+        $client = new BouncerClient($bouncerConfigs, null, $this->logger);
         $cache = new PhpFiles($bouncerConfigs);
         $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);

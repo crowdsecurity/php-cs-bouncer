@@ -286,9 +286,7 @@ ddev xdebug
 
 To generate a html report, you can run:
 ```bash
-ddev exec XDEBUG_MODE=coverage APPSEC_URL=http://crowdsec:7422 BOUNCER_KEY=your-bouncer-key  
-AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 
-REDIS_DSN=redis://redis:6379 MEMCACHED_DSN=memcached://memcached:11211  /usr/bin/php  ./my-code/crowdsec-bouncer-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-code/crowdsec-bouncer-lib/tools/coding-standards/phpunit/phpunit.xml
+ddev exec XDEBUG_MODE=coverage APPSEC_URL=http://crowdsec:7422 BOUNCER_KEY=your-bouncer-key  AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 REDIS_DSN=redis://redis:6379 MEMCACHED_DSN=memcached://memcached:11211  /usr/bin/php  ./my-code/crowdsec-bouncer-lib/tools/coding-standards/vendor/bin/phpunit  --configuration ./my-code/crowdsec-bouncer-lib/tools/coding-standards/phpunit/phpunit.xml
 
 ```
 
