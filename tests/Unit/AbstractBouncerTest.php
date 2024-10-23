@@ -601,7 +601,6 @@ final class AbstractBouncerTest extends TestCase
             1     // Return 1 on all subsequent calls
         );
 
-
         // test 1: bad resource
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
 
@@ -644,7 +643,7 @@ final class AbstractBouncerTest extends TestCase
         $inputStream = fopen($streamType, 'r+');
         fwrite($inputStream, '{"key": "value"}');
         rewind($inputStream);
-        $_SERVER['CONTENT_TYPE'] = 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW';
+        $_SERVER['CONTENT_TYPE'] = 'multipart/form-data; boundary="----WebKitFormBoundary7MA4YWxkTrZu0gW"';
         $_POST = ['key' => 'value'];
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -683,7 +682,7 @@ EOF;
         fwrite($inputStream, '{"key": "value"}');
         rewind($inputStream);
 
-        $_SERVER['CONTENT_TYPE'] = 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW';
+        $_SERVER['CONTENT_TYPE'] = 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW; charset=UTF-8';
         $_POST = [];
 
         file_put_contents($this->root->url() . '/tmp1', 'THIS_IS_THE_FILE_1_CONTENT');

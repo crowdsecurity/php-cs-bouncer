@@ -244,7 +244,7 @@ final class AbstractBouncerTest extends TestCase
 
         // Step 1 : access a page should display a captcha wall
         $bouncer->bounceCurrentIp();
-        usleep(200*1000); // wait for cache to be written
+        usleep(200 * 1000); // wait for cache to be written
 
         $item = $cache->getItem($cacheKey);
         $this->assertEquals(

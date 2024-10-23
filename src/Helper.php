@@ -34,7 +34,7 @@ trait Helper
         $stream,
         array $serverData = [], // $_SERVER
         array $postData = [], // $_POST
-        array $filesData = [] // $_FILES
+        array $filesData = [], // $_FILES
     ): string {
         $contentType = $serverData['CONTENT_TYPE'] ?? '';
         // The threshold is the maximum body size converted in bytes + 1
@@ -53,7 +53,7 @@ trait Helper
         string $fileKey,
         string $boundary,
         int $threshold,
-        int &$currentSize
+        int &$currentSize,
     ): string {
         $fileName = is_array($fileArray['name']) ? $fileArray['name'][$index] : $fileArray['name'];
         $fileTmpName = is_array($fileArray['tmp_name']) ? $fileArray['tmp_name'][$index] : $fileArray['tmp_name'];
@@ -85,11 +85,24 @@ trait Helper
     }
 
     /**
+     * Extract the boundary from the Content-Type.
+     *
+     *  Regex breakdown:
+     *  /boundary="?([^;"]+)"?/i
+     *
+     *  - boundary=   : Matches the literal string 'boundary=' which indicates the start of the boundary parameter.
+     *  - "?          : Matches an optional double quote that may surround the boundary value.
+     *  - ([^;"]+)    : Captures one or more characters that are not a semicolon (;) or a double quote (") into a group.
+     *                  This ensures the boundary is extracted accurately, stopping at a semicolon if present,
+     *                  and avoiding the inclusion of quotes in the captured value.
+     *  - "?          : Matches an optional closing double quote (if the boundary is quoted).
+     *  - i           : Case-insensitive flag to handle 'boundary=' in any case (e.g., 'Boundary=' or 'BOUNDARY=').
+     *
      * @throws BouncerException
      */
     private function extractBoundary(string $contentType): string
     {
-        if (preg_match('/boundary=(.*)$/', $contentType, $matches)) {
+        if (preg_match('/boundary="?([^;"]+)"?/i', $contentType, $matches)) {
             return trim($matches[1]);
         }
         throw new BouncerException("Failed to extract boundary from Content-Type: ($contentType)");
@@ -106,7 +119,7 @@ trait Helper
         string $contentType,
         int $threshold,
         array $postData,
-        array $filesData
+        array $filesData,
     ): string {
         try {
             $boundary = $this->extractBoundary($contentType);
@@ -160,8 +173,9 @@ trait Helper
 
     /**
      * Read the stream up to the specified threshold.
-     * @param resource $stream The stream to read
-     * @param int $threshold The maximum number of bytes to read
+     *
+     * @param resource $stream    The stream to read
+     * @param int      $threshold The maximum number of bytes to read
      *
      * @throws BouncerException
      */

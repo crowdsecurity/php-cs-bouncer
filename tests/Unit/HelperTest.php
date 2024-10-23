@@ -85,7 +85,7 @@ class HelperTest extends TestCase
     {
         file_put_contents($this->root->url() . '/tmp-test.txt', 'THIS IS A TEST FILE');
 
-        $serverData = ['CONTENT_TYPE' => 'multipart/form-data; boundary=----WebKitFormBoundary'];
+        $serverData = ['CONTENT_TYPE' => 'multipart/form-data; boundary=----WebKitFormBoundary; charset=UTF-8'];
         $postData = ['key' => 'value'];
         $filesData = ['file' => ['name' => 'test.txt', 'tmp_name' => $this->root->url() . '/tmp-test.txt', 'type' => 'text/plain']];
         $maxBodySize = 1;
@@ -135,7 +135,7 @@ class HelperTest extends TestCase
 
     public function testGetMultipartRawBodyWithLargeFileDataShouldThrowException()
     {
-        $contentType = 'multipart/form-data; boundary=----WebKitFormBoundary';
+        $contentType = 'multipart/form-data; BOUNDARY=----WebKitFormBoundary';
         $postData = [];
         $filesData = ['file' => ['name' => 'test.txt', 'tmp_name' => $this->root->url() . '/phpYzdqkD', 'type' => 'text/plain']];
         // We don't create the file so it will throw an exception
@@ -153,7 +153,7 @@ class HelperTest extends TestCase
 
     public function testGetMultipartRawBodyWithLargeFileDataTruncatesBody()
     {
-        $contentType = 'multipart/form-data; boundary=----WebKitFormBoundary';
+        $contentType = 'multipart/form-data; bOuNdary="----WebKitFormBoundary"';
         $postData = [];
         $filesData = ['file' => ['name' => 'test.txt', 'tmp_name' => $this->root->url() . '/phpYzdqkD', 'type' => 'text/plain']];
         file_put_contents($this->root->url() . '/phpYzdqkD', 'THIS_IS_THE_CONTENT' . str_repeat('a', 2048));
@@ -213,8 +213,8 @@ class HelperTest extends TestCase
     /**
      * @group up-to-php74
      * Before PHP 7.4, fread can fail without returning false, leading to an infinite loop.
-     * @see https://bugs.php.net/bug.php?id=79965
      *
+     * @see https://bugs.php.net/bug.php?id=79965
      */
     public function testReadStreamWithFreadFailureShouldThrowException()
     {
@@ -245,7 +245,6 @@ class HelperTest extends TestCase
 
     /**
      * @group infinite-loop
-     *
      */
     public function testReadStreamShouldNotInfiniteLoop()
     {
@@ -258,7 +257,7 @@ class HelperTest extends TestCase
         $mockStream = fopen('failing://test', 'r+');
 
         // Set the threshold (can be any number)
-        $threshold = 8192*3;
+        $threshold = 8192 * 3;
 
         $error = '';
         try {
