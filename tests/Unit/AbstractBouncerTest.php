@@ -596,13 +596,12 @@ final class AbstractBouncerTest extends TestCase
             ->onlyMethods(['getConfig'])
             ->getMock();
 
-        $mockRemediation->method('getConfig')->will(
-            $this->returnValueMap(
-                [
-                    ['appsec_max_body_size_kb', 1024],
-                ]
-            )
+        $mockRemediation->method('getConfig')->willReturnOnConsecutiveCalls(
+            null, // Return null on the first call
+            1     // Return 1 on all subsequent calls
         );
+
+
         // test 1: bad resource
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
 
@@ -613,7 +612,14 @@ final class AbstractBouncerTest extends TestCase
         );
         $this->assertEquals('', $result, 'Should return an empty string for unvalid resource');
 
-        // Test 2: resource is a ok
+        // Test 2: resource is a ok (and use default value for appsec_max_body_size_kb)
+        $mockRemediation->method('getConfig')->will(
+            $this->returnValueMap(
+                [
+                    ['appsec_max_body_size_kb', 1],
+                ]
+            )
+        );
         $streamType = 'php://memory';
         $inputStream = fopen($streamType, 'r+');
         fwrite($inputStream, '{"key": "value"}');
@@ -626,7 +632,15 @@ final class AbstractBouncerTest extends TestCase
         );
 
         $this->assertEquals('{"key": "value"}', $result, 'Should return the content of the stream');
-        // Test 3: multipart/form-data
+        // Test 3: multipart/form-data (and use 1 for appsec_max_body_size_kb)
+        $mockRemediation->method('getConfig')->will(
+            $this->returnValueMap(
+                [
+                    ['appsec_max_body_size_kb', null],
+                ]
+            )
+        );
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
         $inputStream = fopen($streamType, 'r+');
         fwrite($inputStream, '{"key": "value"}');
         rewind($inputStream);

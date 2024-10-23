@@ -243,6 +243,10 @@ class HelperTest extends TestCase
         stream_wrapper_unregister('failing');
     }
 
+    /**
+     * @group infinite-loop
+     *
+     */
     public function testReadStreamShouldNotInfiniteLoop()
     {
         // Register custom stream wrapper that will read forever
@@ -254,7 +258,7 @@ class HelperTest extends TestCase
         $mockStream = fopen('failing://test', 'r+');
 
         // Set the threshold (can be any number)
-        $threshold = 100;
+        $threshold = 8192*3;
 
         $error = '';
         try {
@@ -264,7 +268,7 @@ class HelperTest extends TestCase
         }
 
         // Assert that the correct exception message was thrown
-        $this->assertStringStartsWith('Failed to read stream: Too many loops while reading stream', $error);
+        $this->assertStringStartsWith('Failed to read stream: Too many loops (3) while reading stream', $error);
 
         // Clean up the custom stream wrapper
         stream_wrapper_unregister('failing');

@@ -160,6 +160,8 @@ trait Helper
 
     /**
      * Read the stream up to the specified threshold.
+     * @param resource $stream The stream to read
+     * @param int $threshold The maximum number of bytes to read
      *
      * @throws BouncerException
      */
@@ -179,7 +181,7 @@ trait Helper
             while (!feof($stream) && $bytesRead < $threshold) {
                 ++$loopCount;
                 if ($loopCount >= $maxLoops) {
-                    throw new BouncerException('Too many loops while reading stream');
+                    throw new BouncerException("Too many loops ($loopCount) while reading stream");
                 }
                 $remainingSize = $threshold - $bytesRead;
                 $readLength = min($chunkSize, $remainingSize);

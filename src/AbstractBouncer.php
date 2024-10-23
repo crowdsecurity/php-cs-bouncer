@@ -373,8 +373,6 @@ abstract class AbstractBouncer
      */
     protected function buildRequestRawBody($stream): string
     {
-        $maxBodySize = $this->getRemediationEngine()->getConfig('appsec_max_body_size_kb') ??
-                       Constants::APPSEC_DEFAULT_MAX_BODY_SIZE;
         if (!is_resource($stream)) {
             $this->logger->error('Invalid stream resource', [
                 'type' => 'BUILD_RAW_BODY',
@@ -382,6 +380,8 @@ abstract class AbstractBouncer
 
             return '';
         }
+        $maxBodySize = $this->getRemediationEngine()->getConfig('appsec_max_body_size_kb') ??
+                       Constants::APPSEC_DEFAULT_MAX_BODY_SIZE;
 
         try {
             return $this->buildRawBodyFromSuperglobals($maxBodySize, $stream, $_SERVER, $_POST, $_FILES);
