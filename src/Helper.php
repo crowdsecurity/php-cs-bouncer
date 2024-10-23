@@ -171,13 +171,24 @@ trait Helper
         $buffer = '';
         $chunkSize = 8192;
         $bytesRead = 0;
+        // We make sure there won't be infinite loop
+        $maxLoops = (int) ceil($threshold / $chunkSize);
+        $loopCount = -1;
 
         try {
             while (!feof($stream) && $bytesRead < $threshold) {
+                ++$loopCount;
+                if ($loopCount >= $maxLoops) {
+                    throw new BouncerException('Too many loops while reading stream');
+                }
                 $remainingSize = $threshold - $bytesRead;
                 $readLength = min($chunkSize, $remainingSize);
 
                 $data = fread($stream, $readLength);
+                if (false === $data) {
+                    throw new BouncerException('Failed to read chunk from stream');
+                }
+
                 $buffer .= $data;
                 $bytesRead += strlen($data);
 

@@ -6,6 +6,10 @@ class FailingStreamWrapper
 {
     public $context;
 
+    public static $readResult = false;
+
+    public static $eofResult = false;
+
     public function stream_open($path, $mode, $options, &$opened_path)
     {
         return true;
@@ -13,13 +17,13 @@ class FailingStreamWrapper
 
     public function stream_read($count)
     {
-        // Simulate a failure during fread
-        return false; // This will cause fread to fail and return false
+        // Returns false to simulate a failure during fread
+        return self::$readResult;
     }
 
     public function stream_eof()
     {
-        return false; // Keep the stream open for further reads
+        return self::$eofResult; // Returns false to keep the stream open for further reads
     }
 
     public function stream_close()
