@@ -48,7 +48,7 @@ abstract class AbstractBouncer
     public function __construct(
         array $configs,
         AbstractRemediation $remediationEngine,
-        ?LoggerInterface $logger = null,
+        ?LoggerInterface $logger = null
     ) {
         // @codeCoverageIgnoreStart
         if (!$logger) {
@@ -382,7 +382,7 @@ abstract class AbstractBouncer
     protected function getCaptchaHtml(
         bool $error,
         string $captchaImageSrc,
-        string $captchaResolutionFormUrl,
+        string $captchaResolutionFormUrl
     ): string {
         $template = new Template('captcha.html.twig');
 
