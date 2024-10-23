@@ -109,5 +109,5 @@ jobs:
         if: github.event.inputs.coverage_report == 'true'
         run: |
           ddev xdebug
-          ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=${{ env.BOUNCER_KEY }} AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/tools/coding-standards/vendor/bin/phpunit --configuration ./${{env.EXTENSION_PATH}}/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./${{env.EXTENSION_PATH}}/coding-standards/phpunit/code-coverage/report.txt
+          ddev exec XDEBUG_MODE=coverage BOUNCER_KEY=${{ env.BOUNCER_KEY }} APPSEC_URL=http://crowdsec:7422 AGENT_TLS_PATH=/var/www/html/cfssl LAPI_URL=https://crowdsec:8080 MEMCACHED_DSN=memcached://memcached:11211 REDIS_DSN=redis://redis:6379 /usr/bin/php ./${{env.EXTENSION_PATH}}/tools/coding-standards/vendor/bin/phpunit --configuration ./${{env.EXTENSION_PATH}}/tools/coding-standards/phpunit/phpunit.xml --coverage-text=./${{env.EXTENSION_PATH}}/coding-standards/phpunit/code-coverage/report.txt
           cat ${{env.EXTENSION_PATH}}/coding-standards/phpunit/code-coverage/report.txt   

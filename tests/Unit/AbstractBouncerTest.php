@@ -53,6 +53,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \CrowdSecBouncer\AbstractBouncer::getTrustForwardedIpBoundsList
  * @covers \CrowdSecBouncer\AbstractBouncer::handleForwardedFor
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldUseAppSec
+ * @covers \CrowdSecBouncer\AbstractBouncer::buildRequestRawBody
  *
  * @uses   \CrowdSecBouncer\AbstractBouncer::handleRemediation
  *
@@ -69,6 +70,14 @@ use PHPUnit\Framework\TestCase;
  * @covers \CrowdSecBouncer\AbstractBouncer::pruneCache
  * @covers \CrowdSecBouncer\AbstractBouncer::refreshBlocklistCache
  * @covers \CrowdSecBouncer\AbstractBouncer::testCacheConnection
+ *
+ * @uses \CrowdSecBouncer\Helper::buildFormData
+ * @uses \CrowdSecBouncer\Helper::buildRawBodyFromSuperglobals
+ * @uses \CrowdSecBouncer\Helper::extractBoundary
+ * @uses \CrowdSecBouncer\Helper::getMultipartRawBody
+ * @uses \CrowdSecBouncer\Helper::getRawInput
+ * @uses \CrowdSecBouncer\Helper::readStream
+ * @uses \CrowdSecBouncer\Helper::appendFileData
  */
 final class AbstractBouncerTest extends TestCase
 {
@@ -574,6 +583,204 @@ final class AbstractBouncerTest extends TestCase
             ['not-an-ip']
         );
         $this->assertEquals(false, $result, 'Should return false if ip is invalid');
+    }
+
+    /**
+     * @group test
+     */
+    public function testBuildRequestRawbody()
+    {
+        $configs = $this->configs;
+        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getConfig'])
+            ->getMock();
+
+        $mockRemediation->method('getConfig')->willReturnOnConsecutiveCalls(
+            null, // Return null on the first call
+            1     // Return 1 on all subsequent calls
+        );
+
+        // test 1: bad resource
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'buildRequestRawBody',
+            [1024, 'bad-resource']
+        );
+        $this->assertEquals('', $result, 'Should return an empty string for unvalid resource');
+
+        // Test 2: resource is a ok (and use default value for appsec_max_body_size_kb)
+        $mockRemediation->method('getConfig')->will(
+            $this->returnValueMap(
+                [
+                    ['appsec_max_body_size_kb', 1],
+                ]
+            )
+        );
+        $streamType = 'php://memory';
+        $inputStream = fopen($streamType, 'r+');
+        fwrite($inputStream, '{"key": "value"}');
+        rewind($inputStream);
+
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'buildRequestRawBody',
+            [$inputStream]
+        );
+
+        $this->assertEquals('{"key": "value"}', $result, 'Should return the content of the stream');
+        // Test 3: multipart/form-data (and use 1 for appsec_max_body_size_kb)
+        $mockRemediation->method('getConfig')->will(
+            $this->returnValueMap(
+                [
+                    ['appsec_max_body_size_kb', null],
+                ]
+            )
+        );
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+        $inputStream = fopen($streamType, 'r+');
+        fwrite($inputStream, '{"key": "value"}');
+        rewind($inputStream);
+        $_SERVER['CONTENT_TYPE'] = 'multipart/form-data; boundary="----WebKitFormBoundary7MA4YWxkTrZu0gW"';
+        $_POST = ['key' => 'value'];
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'buildRequestRawBody',
+            [$inputStream]
+        );
+
+        $expected = <<<EOF
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="key"
+
+value
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+EOF;
+        $expected = str_replace("\n", "\r\n", $expected);
+
+        $this->assertEquals($expected, $result, 'Should return the posted data');
+
+        // Test 4: multipart with no boundary
+        $inputStream = fopen($streamType, 'r+');
+        fwrite($inputStream, '{"key": "value"}');
+        rewind($inputStream);
+        $_SERVER['CONTENT_TYPE'] = 'multipart/form-data';
+
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'buildRequestRawBody',
+            [$inputStream]
+        );
+
+        $this->assertEquals('', $result, 'Should return empty as there is no usable boundary');
+
+        // Test 5: multipart with one file
+        $inputStream = fopen($streamType, 'r+');
+        fwrite($inputStream, '{"key": "value"}');
+        rewind($inputStream);
+
+        $_SERVER['CONTENT_TYPE'] = 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW; charset=UTF-8';
+        $_POST = [];
+
+        file_put_contents($this->root->url() . '/tmp1', 'THIS_IS_THE_FILE_1_CONTENT');
+
+        $_FILES = [
+            'file' => [
+                'name' => 'test.txt',
+                'type' => 'text/plain',
+                'tmp_name' => $this->root->url() . '/tmp1',
+                'error' => 0,
+                'size' => 1024,
+            ],
+        ];
+
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'buildRequestRawBody',
+            [$inputStream]
+        );
+
+        $expected = <<<EOF
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="test.txt"
+Content-Type: text/plain
+
+THIS_IS_THE_FILE_1_CONTENT
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+EOF;
+
+        $expected = str_replace("\n", "\r\n", $expected);
+        $this->assertEquals($expected, $result, 'Should return the data with the file');
+        // Test 6: multipart with multiple files
+        $inputStream = fopen($streamType, 'r+');
+        fwrite($inputStream, '{"key": "value"}');
+        rewind($inputStream);
+        $_SERVER['CONTENT_TYPE'] = 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW';
+        $_POST = [];
+        file_put_contents($this->root->url() . '/tmp1', 'THIS_IS_THE_FILE_1_CONTENT');
+        file_put_contents($this->root->url() . '/tmp2', 'THIS_IS_THE_FILE_2_CONTENT');
+        file_put_contents($this->root->url() . '/tmp3', 'THIS_IS_THE_FILE_3_CONTENT');
+        $_FILES = [
+            'file' => [
+                'name' => [
+                    0 => 'image1.jpg',
+                    1 => 'image2.jpg',
+                    2 => 'image3.png',
+                ],
+                'type' => [
+                    0 => 'image/jpeg',
+                    1 => 'image/jpeg',
+                    2 => 'image/png',
+                ],
+                'tmp_name' => [
+                    0 => $this->root->url() . '/tmp1',
+                    1 => $this->root->url() . '/tmp2',
+                    2 => $this->root->url() . '/tmp3',
+                ],
+                'error' => [
+                    0 => 0,
+                    1 => 0,
+                    2 => 0,
+                ],
+                'size' => [
+                    0 => 12345,
+                    1 => 54321,
+                    2 => 67890,
+                ],
+            ],
+        ];
+        $result = PHPUnitUtil::callMethod(
+            $bouncer,
+            'buildRequestRawBody',
+            [$inputStream]
+        );
+
+        $expected = <<<EOF
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="image1.jpg"
+Content-Type: image/jpeg
+
+THIS_IS_THE_FILE_1_CONTENT
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="image2.jpg"
+Content-Type: image/jpeg
+
+THIS_IS_THE_FILE_2_CONTENT
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="image3.png"
+Content-Type: image/png
+
+THIS_IS_THE_FILE_3_CONTENT
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+EOF;
+        $expected = str_replace("\n", "\r\n", $expected);
+
+        $this->assertEquals($expected, $result, 'Should return the data with the files');
     }
 
     public function testGetRemediationForIpException()
