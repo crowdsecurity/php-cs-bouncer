@@ -82,9 +82,14 @@ jobs:
         run: |
           ddev composer update --working-dir ./${{env.EXTENSION_PATH}}
 
+      - name: Set excluded groups
+        id: set-excluded-groups
+        if: contains(fromJson('["7.2","7.3"]'),matrix.php-version)
+        run: echo "exclude_group=$(echo --exclude-group up-to-php74 )" >> $GITHUB_OUTPUT
+
       - name: Run "Unit Tests"
         run: |
-          ddev exec /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox --colors --exclude-group ignore ./${{env.EXTENSION_PATH}}/tests/Unit    
+          ddev exec /usr/bin/php ./${{env.EXTENSION_PATH}}/vendor/bin/phpunit --testdox  ${{ steps.set-excluded-groups.outputs.exclude_group }} ./${{env.EXTENSION_PATH}}/tests/Unit    
 
       - name: Prepare PHP Integration tests
         run: |

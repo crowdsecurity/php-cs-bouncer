@@ -210,6 +210,12 @@ class HelperTest extends TestCase
         $this->assertStringContainsString(str_repeat('a', 953), $result);
     }
 
+    /**
+     * @group up-to-php74
+     * Before PHP 7.4, fread can fail without returning false, leading to an infinite loop.
+     * @see https://bugs.php.net/bug.php?id=79965
+     *
+     */
     public function testReadStreamWithFreadFailureShouldThrowException()
     {
         // Register custom stream wrapper that fails on fread
