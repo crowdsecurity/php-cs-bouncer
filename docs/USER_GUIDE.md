@@ -134,6 +134,38 @@ class MyCustomBouncer extends AbstractBouncer
     {
         // Your implementation
     }
+    
+    /**
+     * Get current request headers
+     */
+    public function getRequestHeaders(): array
+    {
+        // Your implementation
+    }
+    
+    /**
+     * Get the raw body of the current request
+     */     
+    public function getRequestRawBody(): string
+    {
+        // Your implementation
+    }
+    
+    /**
+     * Get the host of the current request
+     */
+    public function getRequestHost() : string
+    {
+        // Your implementation
+    }
+    
+    /**
+     * Get the user agent of the current request
+     */
+    public function getRequestUserAgent() : string
+    {
+        // Your implementation
+    }
 
 }
 ```

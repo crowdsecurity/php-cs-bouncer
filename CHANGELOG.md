@@ -11,6 +11,16 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 
 ---
 
+## [3.2.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v3.2.0) - 2024-10-23
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v3.1.0...v3.2.0)
+
+
+### Added
+
+- Add protected `buildRequestRawBody` helper method to `AbstractBouncer` class
+
+---
+
 ## [3.1.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v3.1.0) - 2024-10-18
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v3.0.0...v3.1.0)
 

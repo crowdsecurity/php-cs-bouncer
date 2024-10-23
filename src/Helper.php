@@ -29,7 +29,7 @@ trait Helper
      *
      * @throws BouncerException
      */
-    public function buildRawBodyFromSuperglobals(
+    private function buildRawBodyFromSuperglobals(
         int $maxBodySize,
         $stream,
         array $serverData = [], // $_SERVER

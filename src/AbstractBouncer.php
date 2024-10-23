@@ -329,39 +329,6 @@ abstract class AbstractBouncer
     }
 
     /**
-     * Returns a default "CrowdSec 403" HTML template.
-     * The input $config should match the TemplateConfiguration input format.
-     *
-     * @return string The HTML compiled template
-     */
-    protected function getBanHtml(): string
-    {
-        $template = new Template('ban.html.twig');
-
-        return $template->render($this->configs);
-    }
-
-    /**
-     * Returns a default "CrowdSec Captcha (401)" HTML template.
-     */
-    protected function getCaptchaHtml(
-        bool $error,
-        string $captchaImageSrc,
-        string $captchaResolutionFormUrl
-    ): string {
-        $template = new Template('captcha.html.twig');
-
-        return $template->render(array_merge(
-            $this->configs,
-            [
-                'error' => $error,
-                'captcha_img' => $captchaImageSrc,
-                'captcha_resolution_url' => $captchaResolutionFormUrl,
-            ]
-        ));
-    }
-
-    /**
      * Method based on superglobals to retrieve the raw body of the request.
      * If the body is too big (greater than the "appsec_max_body_size_kb" configuration),
      * it will be truncated to the maximum size + 1 kB.
@@ -394,6 +361,39 @@ abstract class AbstractBouncer
 
             return '';
         }
+    }
+
+    /**
+     * Returns a default "CrowdSec 403" HTML template.
+     * The input $config should match the TemplateConfiguration input format.
+     *
+     * @return string The HTML compiled template
+     */
+    protected function getBanHtml(): string
+    {
+        $template = new Template('ban.html.twig');
+
+        return $template->render($this->configs);
+    }
+
+    /**
+     * Returns a default "CrowdSec Captcha (401)" HTML template.
+     */
+    protected function getCaptchaHtml(
+        bool $error,
+        string $captchaImageSrc,
+        string $captchaResolutionFormUrl
+    ): string {
+        $template = new Template('captcha.html.twig');
+
+        return $template->render(array_merge(
+            $this->configs,
+            [
+                'error' => $error,
+                'captcha_img' => $captchaImageSrc,
+                'captcha_resolution_url' => $captchaResolutionFormUrl,
+            ]
+        ));
     }
 
     /**
