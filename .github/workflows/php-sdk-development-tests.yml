@@ -49,7 +49,6 @@ permissions:
 env:
   # Allow ddev get to use a GitHub token to prevent rate limiting by tests
   DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  BOUNCER_LIP_REPO: crowdsecurity/php-cs-bouncer
   PHP_COMMON_JSON: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.php_common_json || inputs.php_common_json }}
   LAPI_CLIENT_JSON: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.lapi_client_json || inputs.lapi_client_json }}
   REMEDIATION_ENGINE_JSON: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.remediation_engine_json || inputs.remediation_engine_json }}
@@ -66,6 +65,7 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, 'chore(') }}
     env:
       EXTENSION_PATH: "my-code/crowdsec-bouncer-lib"
+      BOUNCER_LIB_REPO: crowdsecurity/php-cs-bouncer
       DDEV_PROJECT: "crowdsec-bouncer-lib"
       JP_TEST_IP: "210.249.74.42"
       IPV6_TEST_IP: "2001:0db8:0000:85a3:0000:0000:ac1f:8001"
