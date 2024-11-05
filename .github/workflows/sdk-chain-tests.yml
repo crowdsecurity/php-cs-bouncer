@@ -10,30 +10,7 @@ on:
     branches:
       - main
     paths-ignore:
-      - '**.md'
-  pull_request:
-  workflow_dispatch:
-    inputs:
-      php_common_branch:
-        type: string
-        description: The PHP common branch to use
-        required: true
-        default: "main"
-      lapi_client_branch:
-        type: string
-        description: The LAPI client branch to use
-        required: true
-        default: "main"
-      remediation_engine_branch:
-        type: string
-        description: The Remediation Engine branch to use
-        required: true
-        default: "main"
-      bouncer_lib_branch:
-        type: string
-        description: The PHP bouncer library branch to use
-        required: true
-        default: "main"
+      - "**.md"
 
 permissions:
   contents: read
@@ -41,66 +18,14 @@ permissions:
 env:
   # Allow ddev get to use a GitHub token to prevent rate limiting by tests
   DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  PHP_COMMON_BRANCH: ${{ github.event.inputs.php_common_branch }}
-  LAPI_CLIENT_BRANCH: ${{ github.event.inputs.lapi_client_branch }}
-  REMEDIATION_ENGINE_BRANCH: ${{ github.event.inputs.remediation_engine_branch }}
-  BOUNCER_LIB_BRANCH: ${{ github.event.inputs.bouncer_lib_branch }}
 
 jobs:
-  prepare-data:
-    name: Prepare data
-    outputs:
-      php_common_branch: ${{ steps.prepare-php-common.outputs.branch }}
-      lapi_client_branch: ${{ steps.prepare-lapi-client.outputs.branch }}
-      remediation_engine_branch: ${{ steps.prepare-remediation-engine.outputs.branch }}
-      bouncer_lib_branch: ${{ steps.prepare-bouncer-lib.outputs.branch }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Prepare PHP common data
-        id: prepare-php-common
-        run: |
-          if [ "${{ github.event_name }}" == "push" ] || [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "branch=main" >> $GITHUB_OUTPUT
-          else
-            echo "branch=${{ env.PHP_COMMON_BRANCH }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Prepare LAPI client data
-        id: prepare-lapi-client
-        run: |
-          if [ "${{ github.event_name }}" == "push" ] || [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo 'branch=main' >> $GITHUB_OUTPUT
-          else
-            echo "branch=${{ env.LAPI_CLIENT_BRANCH }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Prepare Remediation Engine data
-        id: prepare-remediation-engine
-        run: |
-          if [ "${{ github.event_name }}" == "push" ] || [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo 'branch=main' >> $GITHUB_OUTPUT
-          else
-            echo "branch=${{ env.REMEDIATION_ENGINE_BRANCH }}" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Prepare Bouncer lib data
-        id: prepare-bouncer-lib
-        run: |
-          if [ "${{ github.event_name }}" == "push" ] || [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo 'branch=${{ github.ref_name }}' >> $GITHUB_OUTPUT
-          else
-            echo "branch=${{ env.BOUNCER_LIB_BRANCH }}" >> $GITHUB_OUTPUT
-          fi
-
   test-standalone-bouncer:
-    needs: prepare-data
     name: Run Standalone Bouncer tests
     if: ${{ !contains(github.event.head_commit.message, 'chore(') }}
-    uses: crowdsecurity/cs-standalone-php-bouncer/.github/workflows/php-sdk-development-tests.yml@main
+    uses: crowdsecurity/cs-standalone-php-bouncer/.github/workflows/php-sdk-development-tests.yml@736a2971d93dc6a7e9dc3a73051986b8f7e0b41a
     with:
-      php_common_branch: ${{ needs.prepare-data.outputs.php_common_branch }}
-      lapi_client_branch: ${{ needs.prepare-data.outputs.lapi_client_branch }}
-      remediation_engine_branch: ${{ needs.prepare-data.outputs.remediation_engine_branch }}
-      bouncer_lib_branch: ${{ needs.prepare-data.outputs.bouncer_lib_branch }}
-
-
+      php_common_json: '["main"]'
+      lapi_client_json: '["main"]'
+      remediation_engine_json: '["main"]'
+      bouncer_lib_json: '["${{ github.ref_name }}"]'
