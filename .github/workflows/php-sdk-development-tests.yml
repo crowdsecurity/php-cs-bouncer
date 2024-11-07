@@ -34,24 +34,20 @@ on:
         default: true
       php_common_json:
         type: string
-        description: The PHP common json to use
+        description: The PHP common json ('["branch"]')
         required: true
-        default: '["main"]'
       lapi_client_json:
         type: string
-        description: The LAPI client json to use
+        description: The LAPI client json ('["branch"]')
         required: true
-        default: '["main"]'
       capi_client_json:
         type: string
-        description: The CAPI client json to use
+        description: The CAPI client json ('["branch"]')
         required: true
-        default: '["main"]'
       remediation_engine_json:
         type: string
-        description: The Remediation Engine json to use
+        description: The Remediation Engine json ('["branch"]')
         required: true
-        default: '["main"]'
 
 permissions:
   contents: read
@@ -226,18 +222,18 @@ jobs:
       - name: Modify dependencies to use development aliases
         run: |
           # Bouncer lib
-          composer require crowdsec/common:"dev-${{  steps.set-common-data.outputs.branch }} as 999.999.0" --no-update --working-dir ./${{env.EXTENSION_PATH}}
-          composer require crowdsec/lapi-client:"dev-${{ steps.set-lapi-client-data.outputs.branch }} as 999.999.0" --no-update --working-dir ./${{env.EXTENSION_PATH}}
-          composer require crowdsec/remediation-engine:"dev-${{ steps.set-remediation-engine-data.outputs.branch }} as 999.999.0" --no-update --working-dir ./${{env.EXTENSION_PATH}}
-          composer require crowdsec/capi-client:"dev-${{ steps.set-capi-client-data.outputs.branch }} as 999.999.0" --no-update --working-dir ./${{env.EXTENSION_PATH}}
+          ddev exec --raw composer require crowdsec/common:"dev-${{  steps.set-common-data.outputs.branch }}" --no-update --working-dir ./${{env.EXTENSION_PATH}}
+          ddev exec --raw composer require crowdsec/lapi-client:"dev-${{ steps.set-lapi-client-data.outputs.branch }}" --no-update --working-dir ./${{env.EXTENSION_PATH}}
+          ddev exec --raw composer require crowdsec/remediation-engine:"dev-${{ steps.set-remediation-engine-data.outputs.branch }}" --no-update --working-dir ./${{env.EXTENSION_PATH}}
+          ddev exec --raw composer require crowdsec/capi-client:"dev-${{ steps.set-capi-client-data.outputs.branch }}" --no-update --working-dir ./${{env.EXTENSION_PATH}}
           # Remediation engine
-          composer require crowdsec/common:"dev-${{  steps.set-common-data.outputs.branch }} as 999.999.0" --no-update --working-dir ./${{env.REMEDIATION_ENGINE_PATH}}
-          composer require crowdsec/lapi-client:"dev-${{ steps.set-lapi-client-data.outputs.branch }} as 999.999.0" --no-update --working-dir ./${{env.REMEDIATION_ENGINE_PATH}}
-          composer require crowdsec/capi-client:"dev-${{ steps.set-capi-client-data.outputs.branch }} as 999.999.0" --no-update --working-dir ./${{env.REMEDIATION_ENGINE_PATH}}
+          ddev exec --raw composer require crowdsec/common:"dev-${{  steps.set-common-data.outputs.branch }}" --no-update --working-dir ./${{env.REMEDIATION_ENGINE_PATH}}
+          ddev exec --raw composer require crowdsec/lapi-client:"dev-${{ steps.set-lapi-client-data.outputs.branch }}" --no-update --working-dir ./${{env.REMEDIATION_ENGINE_PATH}}
+          ddev exec --raw composer require crowdsec/capi-client:"dev-${{ steps.set-capi-client-data.outputs.branch }}" --no-update --working-dir ./${{env.REMEDIATION_ENGINE_PATH}}
           # CAPI client
-          composer require crowdsec/common:"dev-${{  steps.set-common-data.outputs.branch }} as 999.999.0" --no-update --working-dir ./${{env.CAPI_CLIENT_PATH}}
+          ddev exec --raw composer require crowdsec/common:"dev-${{  steps.set-common-data.outputs.branch }}" --no-update --working-dir ./${{env.CAPI_CLIENT_PATH}}
           # LAPI client
-          composer require crowdsec/common:"dev-${{  steps.set-common-data.outputs.branch }} as 999.999.0" --no-update --working-dir ./${{env.LAPI_CLIENT_PATH}}
+          ddev exec --raw composer require crowdsec/common:"dev-${{  steps.set-common-data.outputs.branch }}" --no-update --working-dir ./${{env.LAPI_CLIENT_PATH}}
 
       - name: Validate composer.json
         run: |
