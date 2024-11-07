@@ -2,8 +2,6 @@ name: SDK chain tests
 
 on:
   push:
-    branches:
-      - main
     paths-ignore:
       - "**.md"
 
@@ -18,10 +16,26 @@ jobs:
   test-standalone-bouncer:
     name: Run Standalone Bouncer tests
     if: ${{ !contains(github.event.head_commit.message, 'chore(') }}
-    uses: crowdsecurity/cs-standalone-php-bouncer/.github/workflows/php-sdk-development-tests.yml@21a85d5696ba607e2028330c4ddda4b5e361547a
+    uses: crowdsecurity/cs-standalone-php-bouncer/.github/workflows/php-sdk-development-tests.yml@main
     with:
       php_common_json: '["main"]'
       lapi_client_json: '["main"]'
       capi_client_json: '["main"]'
       remediation_engine_json: '["main"]'
       bouncer_lib_json: '["${{ github.ref_name }}"]'
+
+  test-magento-engine:
+    name: Run Magento 2 Engine module tests
+    if: ${{ !contains(github.event.head_commit.message, 'chore(') }}
+    uses: crowdsecurity/magento-cs-extension/.github/workflows/php-sdk-development-tests.yml@main
+    with:
+      php_common_json: '["main"]'
+      lapi_client_json: '["main"]'
+      capi_client_json: '["main"]'
+      remediation_engine_json: '["main"]'
+      bouncer_lib_json: '["${{ github.ref_name }}"]'
+    secrets:
+      MACHINE_ID: ${{ secrets.TEST_MACHINE_ID }}
+      MACHINE_PASSWORD: ${{ secrets.TEST_MACHINE_PWD }}
+      ENROLL_KEY: ${{ secrets.ENROLLMENT_KEY }}
+      M2_COMPOSER_AUTH: ${{ secrets.M2_AUTH }}
