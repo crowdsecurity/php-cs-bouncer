@@ -198,6 +198,16 @@ final class AbstractBouncerTest extends TestCase
 
     public function testPrivateAndProtectedMethods()
     {
+        if (PHP_VERSION_ID >= 80400) {
+            // Retrieve the current error reporting level
+            $originalErrorReporting = error_reporting();
+            // Suppress deprecated warnings temporarily
+            // We do this because of
+            // Deprecated: Gregwar\Captcha\CaptchaBuilder::__construct(): Implicitly marking parameter $builder as nullable
+            // is deprecated, the explicit nullable type must be used instead
+            error_reporting($originalErrorReporting & ~E_DEPRECATED);
+        }
+
         // shouldUseAppSec
         // Test with TLS
         $configs = array_merge($this->configs, [
@@ -583,6 +593,11 @@ final class AbstractBouncerTest extends TestCase
             ['not-an-ip']
         );
         $this->assertEquals(false, $result, 'Should return false if ip is invalid');
+
+        if (PHP_VERSION_ID >= 80400 && isset($originalErrorReporting)) {
+            // Restore the original error reporting level
+            error_reporting($originalErrorReporting);
+        }
     }
 
     /**
