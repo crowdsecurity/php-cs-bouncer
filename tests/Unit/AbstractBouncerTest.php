@@ -48,7 +48,6 @@ use PHPUnit\Framework\TestCase;
  * @covers \CrowdSecBouncer\Configuration::getConfigTreeBuilder
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldNotCheckResolution
  * @covers \CrowdSecBouncer\AbstractBouncer::bounceCurrentIp
- * @covers \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
  * @covers \CrowdSecBouncer\AbstractBouncer::getRemediationForIp
  * @covers \CrowdSecBouncer\AbstractBouncer::getTrustForwardedIpBoundsList
  * @covers \CrowdSecBouncer\AbstractBouncer::handleForwardedFor
@@ -422,65 +421,6 @@ final class AbstractBouncerTest extends TestCase
         );
         $this->assertEquals([['005.006.007.008', '005.006.007.008']], $result);
 
-        // capRemediationLevel
-        $configs = $this->configs;
-        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage'])
-            ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
-
-        $this->assertInstanceOf(LapiRemediation::class, $bouncer->getRemediationEngine());
-
-        $result = PHPUnitUtil::callMethod(
-            $bouncer,
-            'capRemediationLevel',
-            ['ban']
-        );
-        $this->assertEquals('ban', $result, 'Remediation should be capped as ban');
-
-        $this->configs['bouncing_level'] = Constants::BOUNCING_LEVEL_DISABLED;
-        $configs = $this->configs;
-        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage', 'getConfig'])
-            ->getMock();
-        $mockRemediation->method('getConfig')->will(
-            $this->returnValueMap(
-                [
-                    ['ordered_remediations', ['ban', 'captcha', 'bypass']],
-                ]
-            )
-        );
-
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
-        $result = PHPUnitUtil::callMethod(
-            $bouncer,
-            'capRemediationLevel',
-            ['ban']
-        );
-        $this->assertEquals('bypass', $result, 'Remediation should be capped as bypass');
-
-        $this->configs['bouncing_level'] = Constants::BOUNCING_LEVEL_FLEX;
-        $configs = $this->configs;
-        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['pruneCache', 'clearCache', 'refreshDecisions', 'getCacheStorage', 'getConfig'])
-            ->getMock();
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
-        $mockRemediation->method('getConfig')->will(
-            $this->returnValueMap(
-                [
-                    ['ordered_remediations', ['ban', 'captcha', 'bypass']],
-                ]
-            )
-        );
-        $result = PHPUnitUtil::callMethod(
-            $bouncer,
-            'capRemediationLevel',
-            ['ban']
-        );
-        $this->assertEquals('captcha', $result, 'Remediation should be capped as captcha');
 
         // checkCaptcha
         $result = PHPUnitUtil::callMethod(

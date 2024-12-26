@@ -117,9 +117,7 @@ abstract class AbstractBouncer
     public function getAppSecRemediationForIp(string $ip, LapiRemediation $remediationEngine): string
     {
         try {
-            return $this->capRemediationLevel(
-                $remediationEngine->getAppSecRemediation($this->getAppSecHeaders($ip), $this->getRequestRawBody())
-            );
+            return $remediationEngine->getAppSecRemediation($this->getAppSecHeaders($ip), $this->getRequestRawBody());
         } catch (\Exception $e) {
             throw new BouncerException($e->getMessage(), (int) $e->getCode(), $e);
         }
@@ -181,7 +179,7 @@ abstract class AbstractBouncer
     public function getRemediationForIp(string $ip): string
     {
         try {
-            return $this->capRemediationLevel($this->getRemediationEngine()->getIpRemediation($ip));
+            return $this->getRemediationEngine()->getIpRemediation($ip);
         } catch (\Exception $e) {
             throw new BouncerException($e->getMessage(), (int) $e->getCode(), $e);
         }
@@ -298,7 +296,8 @@ abstract class AbstractBouncer
 
             return false;
         }
-        $bouncingDisabled = (Constants::BOUNCING_LEVEL_DISABLED === $this->getConfig('bouncing_level'));
+        $bouncingDisabled = (Constants::BOUNCING_LEVEL_DISABLED ===
+                             $this->getRemediationEngine()->getConfig('bouncing_level'));
         if ($bouncingDisabled) {
             $this->logger->debug('Will not bounce as bouncing is disabled', [
                 'type' => 'SHOULD_NOT_BOUNCE',
@@ -506,52 +505,6 @@ abstract class AbstractBouncer
             'phrase' => $captchaBuilder->getPhrase(),
             'inlineImage' => $captchaBuilder->build()->inline(),
         ];
-    }
-
-    /**
-     * Cap the remediation to a fixed value given by the bouncing level configuration.
-     *
-     * @param string $remediation (ex: 'ban', 'captcha', 'bypass')
-     *
-     * @return string $remediation The resulting remediation to use (ex: 'ban', 'captcha', 'bypass')
-     */
-    private function capRemediationLevel(string $remediation): string
-    {
-        $orderedRemediations = $this->getRemediationEngine()->getConfig('ordered_remediations') ?? [];
-
-        $bouncingLevel = $this->getConfig('bouncing_level') ?? Constants::BOUNCING_LEVEL_NORMAL;
-        // Compute max remediation level
-        switch ($bouncingLevel) {
-            case Constants::BOUNCING_LEVEL_DISABLED:
-                $maxRemediationLevel = Constants::REMEDIATION_BYPASS;
-                break;
-            case Constants::BOUNCING_LEVEL_FLEX:
-                $maxRemediationLevel = Constants::REMEDIATION_CAPTCHA;
-                break;
-            case Constants::BOUNCING_LEVEL_NORMAL:
-            default:
-                $maxRemediationLevel = Constants::REMEDIATION_BAN;
-                break;
-        }
-
-        $currentIndex = (int) array_search($remediation, $orderedRemediations);
-        $maxIndex = (int) array_search(
-            $maxRemediationLevel,
-            $orderedRemediations
-        );
-        $finalRemediation = $remediation;
-        if ($currentIndex < $maxIndex) {
-            $finalRemediation = $orderedRemediations[$maxIndex];
-            $this->logger->debug('Original remediation has been capped', [
-                'origin' => $remediation,
-                'final' => $finalRemediation,
-            ]);
-        }
-        $this->logger->info('Final remediation', [
-            'remediation' => $finalRemediation,
-        ]);
-
-        return $finalRemediation;
     }
 
     /**

@@ -41,7 +41,7 @@
     ],
     "require": {
         "php": ">=7.2.5",
-        "crowdsec/remediation-engine": "^3.5.0",
+        "crowdsec/remediation-engine": "^4.0.0",
         "crowdsec/common": "^2.3.2",
         "symfony/config": "^4.4.27 || ^5.2 || ^6.0",
         "twig/twig": "^3.4.2",

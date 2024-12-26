@@ -33,7 +33,6 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldUseAppSec
  *
  * @uses   \CrowdSecBouncer\AbstractBouncer::__construct
- * @uses   \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
  * @uses   \CrowdSecBouncer\AbstractBouncer::configure
  * @uses   \CrowdSecBouncer\AbstractBouncer::getConfig
  * @uses   \CrowdSecBouncer\AbstractBouncer::getConfigs
