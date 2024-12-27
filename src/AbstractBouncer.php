@@ -192,26 +192,6 @@ abstract class AbstractBouncer
      * @throws CacheException
      * @throws InvalidArgumentException
      */
-    /**
-     * @param LapiRemediation $remediationEngine
-     * @param string $bouncerName
-     * @param string $bouncerVersion
-     * @param string $bouncerType
-     * @return array
-     * @throws BouncerException
-     */
-    public function pushUsageMetrics(
-        LapiRemediation $remediationEngine,
-        string $bouncerName,
-        string $bouncerVersion,
-        string $bouncerType = LapiConstants::METRICS_TYPE): array
-    {
-        try {
-            return $remediationEngine->pushUsageMetrics($bouncerName, $bouncerVersion, $bouncerType);
-        } catch (\Throwable $e) {
-            throw new BouncerException($e->getMessage(), (int) $e->getCode(), $e);
-        }
-    }
 
     /**
      * Get the current IP, even if it's the IP of a proxy.
@@ -256,6 +236,22 @@ abstract class AbstractBouncer
             return $this->getRemediationEngine()->pruneCache();
         } catch (\Throwable $e) {
             throw new BouncerException('Error while pruning cache: ' . $e->getMessage(), (int) $e->getCode(), $e);
+        }
+    }
+
+    /**
+     * @throws BouncerException
+     */
+    public function pushUsageMetrics(
+        LapiRemediation $remediationEngine,
+        string $bouncerName,
+        string $bouncerVersion,
+        string $bouncerType = LapiConstants::METRICS_TYPE): array
+    {
+        try {
+            return $remediationEngine->pushUsageMetrics($bouncerName, $bouncerVersion, $bouncerType);
+        } catch (\Throwable $e) {
+            throw new BouncerException($e->getMessage(), (int) $e->getCode(), $e);
         }
     }
 
@@ -308,28 +304,22 @@ abstract class AbstractBouncer
 
     /**
      * If the current IP should be bounced or not, matching custom business rules.
+     * Must be called before trying to get remediation for the current IP, so that origins count is not already updated.
+     *
+     * @throws CacheException
+     * @throws InvalidArgumentException
      */
     public function shouldBounceCurrentIp(): bool
     {
         $excludedURIs = $this->getConfig('excluded_uris') ?? [];
         $uri = $this->getRequestUri();
         if ($uri && \in_array($uri, $excludedURIs)) {
-            $this->logger->debug('Will not bounce as URI is excluded', [
-                'type' => 'SHOULD_NOT_BOUNCE',
-                'message' => 'This URI is excluded from bouncing: ' . $uri,
-            ]);
 
-            return false;
+            return $this->handleBounceExclusion('This URI is excluded from bouncing: ' . $uri);
         }
-        $bouncingDisabled = (Constants::BOUNCING_LEVEL_DISABLED ===
-                             $this->getRemediationEngine()->getConfig('bouncing_level'));
-        if ($bouncingDisabled) {
-            $this->logger->debug('Will not bounce as bouncing is disabled', [
-                'type' => 'SHOULD_NOT_BOUNCE',
-                'message' => Constants::BOUNCING_LEVEL_DISABLED,
-            ]);
+        if (Constants::BOUNCING_LEVEL_DISABLED === $this->getRemediationEngine()->getConfig('bouncing_level')) {
 
-            return false;
+            return $this->handleBounceExclusion('Bouncing is disabled by bouncing_level configuration');
         }
 
         return true;
@@ -642,6 +632,22 @@ abstract class AbstractBouncer
     {
         $body = $this->getBanHtml();
         $this->sendResponse($body, 403);
+    }
+
+    /**
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     */
+    private function handleBounceExclusion(string $message): bool
+    {
+        $this->logger->debug('Will not bounce as exclusion criteria met', [
+            'type' => 'SHOULD_NOT_BOUNCE',
+            'message' => $message,
+        ]);
+        // Increment clean origin count
+        $this->getRemediationEngine()->updateRemediationOriginCount(AbstractCache::CLEAN, Constants::REMEDIATION_BYPASS);
+
+        return false;
     }
 
     /**
