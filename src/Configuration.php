@@ -66,7 +66,6 @@ class Configuration extends AbstractConfiguration
      * @param NodeDefinition|ArrayNodeDefinition $rootNode
      *
      * @return void
-     *
      */
     private function addBouncerNodes($rootNode)
     {

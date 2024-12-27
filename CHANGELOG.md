@@ -11,6 +11,27 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 
 ---
 
+## [4.0.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v4.0.0) - 202?-??-??
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v3.2.0...HEAD)
+
+### Added
+
+- Add `pushUsageMetrics` method to `AbstractBouncer` class
+
+### Changed
+
+- **Breaking change**: `$remediationEngine` params of `AbstractBouncer` constructor is now a `LapiRemediationEngine` instance
+- **Breaking change**: `AbstractBouncer::getAppSecRemediationForIp` don't need `$remediationEngine` param anymore
+- Update cached origins count item when we detect that the bouncer should not bounce the current IP
+- Update `crowdsec/remediation-engine` dependency to `v4.0.0`
+
+### Removed
+
+- **Breaking change**: Remove `bouncing_level` constants and configuration as it is now in `crowdsec/remediation-engine` package
+
+
+---
+
 ## [3.2.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v3.2.0) - 2024-10-23
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v3.1.0...v3.2.0)
 

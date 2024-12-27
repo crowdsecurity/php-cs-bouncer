@@ -38,5 +38,10 @@
                 <referencedMethod name="Symfony\Component\Config\Definition\Builder\VariableNodeDefinition::scalarNode"/>
             </errorLevel>
         </PossiblyUndefinedMethod>
+        <UndefinedMethod>
+            <errorLevel type="suppress">
+                <referencedMethod name="Symfony\Component\Config\Definition\Builder\NodeDefinition::children"/>
+            </errorLevel>
+        </UndefinedMethod>
     </issueHandlers>
 </psalm>

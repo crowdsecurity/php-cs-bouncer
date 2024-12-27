@@ -30,7 +30,7 @@
 
 ## Description
 
-This library allows you to create CrowdSec bouncers for PHP applications or frameworks like e-commerce, blog or other 
+This library allows you to create CrowdSec LAPI bouncers for PHP applications or frameworks like e-commerce, blog or other 
 exposed applications.
 
 ## Prerequisites

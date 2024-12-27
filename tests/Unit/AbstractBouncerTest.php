@@ -15,13 +15,10 @@ namespace CrowdSecBouncer\Tests\Unit;
  * @license   MIT License
  */
 
-use CrowdSec\CapiClient\Storage\FileStorage;
-use CrowdSec\CapiClient\Watcher as WatcherClient;
 use CrowdSec\Common\Logger\FileLog;
 use CrowdSec\LapiClient\Bouncer as BouncerClient;
 use CrowdSec\LapiClient\Constants as LapiConstants;
 use CrowdSec\RemediationEngine\CacheStorage\PhpFiles;
-use CrowdSec\RemediationEngine\CapiRemediation;
 use CrowdSec\RemediationEngine\LapiRemediation;
 use CrowdSecBouncer\AbstractBouncer;
 use CrowdSecBouncer\BouncerException;
@@ -77,6 +74,9 @@ use PHPUnit\Framework\TestCase;
  * @uses \CrowdSecBouncer\Helper::getRawInput
  * @uses \CrowdSecBouncer\Helper::readStream
  * @uses \CrowdSecBouncer\Helper::appendFileData
+ * @uses \CrowdSecBouncer\AbstractBouncer::handleBounceExclusion
+ * @covers \CrowdSecBouncer\AbstractBouncer::pushUsageMetrics
+ *
  */
 final class AbstractBouncerTest extends TestCase
 {
@@ -183,6 +183,10 @@ final class AbstractBouncerTest extends TestCase
         ],
     ];
 
+    public const BOUNCER_NAME = 'bouncer-lib-unit-test';
+    public const BOUNCER_VERSION = 'v0.0.0';
+    public const BOUNCER_TYPE = 'crowdsec-test-php-bouncer';
+
     protected function setUp(): void
     {
         unset($_SERVER['REMOTE_ADDR']);
@@ -197,14 +201,14 @@ final class AbstractBouncerTest extends TestCase
 
     public function testPrivateAndProtectedMethods()
     {
-        if (PHP_VERSION_ID >= 80400) {
+        if (\PHP_VERSION_ID >= 80400) {
             // Retrieve the current error reporting level
             $originalErrorReporting = error_reporting();
             // Suppress deprecated warnings temporarily
             // We do this because of
             // Deprecated: Gregwar\Captcha\CaptchaBuilder::__construct(): Implicitly marking parameter $builder as nullable
             // is deprecated, the explicit nullable type must be used instead
-            error_reporting($originalErrorReporting & ~E_DEPRECATED);
+            error_reporting($originalErrorReporting & ~\E_DEPRECATED);
         }
 
         // shouldUseAppSec
@@ -227,25 +231,6 @@ final class AbstractBouncerTest extends TestCase
             ['bypass']
         );
         $this->assertEquals(false, $result, 'AppSec should not be used with TLS');
-        // Test with CAPI
-        $configs = array_merge($this->configs, [
-            'use_appsec' => true,
-            'env' => 'dev',
-            'scenarios' => ['test/test'],
-        ]);
-
-        $capiStorage = new FileStorage();
-        $client = new WatcherClient($configs, $capiStorage);
-        $cache = new PhpFiles($configs);
-        $capiRemediation = new CapiRemediation($configs, $client, $cache);
-        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $capiRemediation]);
-
-        $result = PHPUnitUtil::callMethod(
-            $bouncer,
-            'shouldUseAppSec',
-            ['bypass']
-        );
-        $this->assertEquals(false, $result, 'AppSec should not be used if not Lapi client');
         // Test OK if bypass
         $configs = array_merge($this->configs, [
             'use_appsec' => true,
@@ -421,7 +406,6 @@ final class AbstractBouncerTest extends TestCase
         );
         $this->assertEquals([['005.006.007.008', '005.006.007.008']], $result);
 
-
         // checkCaptcha
         $result = PHPUnitUtil::callMethod(
             $bouncer,
@@ -534,7 +518,7 @@ final class AbstractBouncerTest extends TestCase
         );
         $this->assertEquals(false, $result, 'Should return false if ip is invalid');
 
-        if (PHP_VERSION_ID >= 80400 && isset($originalErrorReporting)) {
+        if (\PHP_VERSION_ID >= 80400 && isset($originalErrorReporting)) {
             // Restore the original error reporting level
             error_reporting($originalErrorReporting);
         }
@@ -764,23 +748,55 @@ EOF;
         $this->assertEquals('Error in unit test', $errorMessage);
     }
 
+    public function testPushUsageMetricsException()
+    {
+        $configs = $this->configs;
+        $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['pushUsageMetrics'])
+            ->getMock();
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
+
+        $this->assertInstanceOf(LapiRemediation::class, $bouncer->getRemediationEngine());
+
+        $mockRemediation->method('pushUsageMetrics')->willThrowException(new \Exception('Error in unit test', 123));
+
+        $errorMessage = '';
+        $errorCode = 0;
+        try {
+            $bouncer->pushUsageMetrics(self::BOUNCER_NAME, self::BOUNCER_VERSION, self::BOUNCER_TYPE);
+        } catch (BouncerException $e) {
+            $errorMessage = $e->getMessage();
+            $errorCode = $e->getCode();
+        }
+
+        $this->assertEquals(123, $errorCode);
+        $this->assertEquals('Error in unit test', $errorMessage);
+    }
+
     public function testShouldBounceCurrentIp()
     {
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getIpRemediation'])
+            ->onlyMethods(['getIpRemediation', 'getConfig', 'updateRemediationOriginCount'])
             ->getMock();
+        $mockRemediation->method('getConfig')->willReturnOnConsecutiveCalls(
+            'normal_bouncing' // Return normal_bouncing on the first call
+        );
+
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
 
         $result = $bouncer->shouldBounceCurrentIp();
         $this->assertEquals(true, $result);
 
-        $configs = array_merge($this->configs, ['bouncing_level' => 'bouncing_disabled']);
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getIpRemediation'])
+            ->onlyMethods(['getIpRemediation', 'getConfig', 'updateRemediationOriginCount'])
             ->getMock();
+        $mockRemediation->method('getConfig')->willReturnOnConsecutiveCalls(
+            'bouncing_disabled'
+        );
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation]);
 
         $result = $bouncer->shouldBounceCurrentIp();
@@ -789,8 +805,12 @@ EOF;
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getIpRemediation'])
+            ->onlyMethods(['getIpRemediation', 'getConfig', 'updateRemediationOriginCount'])
             ->getMock();
+        $mockRemediation->method('getConfig')->willReturnOnConsecutiveCalls(
+            'normal_bouncing',
+            'normal_bouncing'
+        );
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $mockRemediation], '', true,
             true, true, ['getRequestUri']);
 
