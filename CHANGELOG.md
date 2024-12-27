@@ -14,6 +14,8 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 ## [4.0.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v4.0.0) - 202?-??-??
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v3.2.0...HEAD)
 
+**This release is not yet published**
+
 ### Added
 
 - Add `pushUsageMetrics` method to `AbstractBouncer` class
