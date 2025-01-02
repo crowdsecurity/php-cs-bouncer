@@ -22,8 +22,11 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 
 ### Changed
 
+- **Breaking change**: `AbstractBouncer::getRemediationForIp` method returns now an array with `remediation` and 
+  `origin` keys.
 - **Breaking change**: `$remediationEngine` params of `AbstractBouncer` constructor is now a `LapiRemediationEngine` instance
 - **Breaking change**: `AbstractBouncer::getAppSecRemediationForIp` don't need `$remediationEngine` param anymore
+- **Breaking change**: `AbstractBouncer::handleRemediation` requires a new `origin` param
 - Update cached origins count item when we detect that the bouncer should not bounce the current IP
 - Update `crowdsec/remediation-engine` dependency to `v4.0.0`
 

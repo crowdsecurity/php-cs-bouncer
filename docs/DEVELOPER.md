@@ -238,7 +238,7 @@ ddev exec COMPOSER=composer-dev.json composer update --working-dir ./my-code/cro
 ```
 
 Then, you can use the following commands:
-```
+
 
 ##### PHPCS Fixer
 

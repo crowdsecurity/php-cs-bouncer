@@ -626,13 +626,13 @@ final class AbstractBouncerTest extends TestCase
         $bouncer->method('getRequestRawBody')->willReturnOnConsecutiveCalls('class.module.classLoader.resources.', 'admin=test', '', '');
 
         // Test 1: POST request with malicious body
-        $this->assertEquals('ban', $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine()), 'Should get a ban remediation');
+        $this->assertEquals('ban', $bouncer->getAppSecRemediationForIp($ip)['remediation'], 'Should get a ban remediation');
         // Test 2: POST request with normal body
-        $this->assertEquals('bypass', $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine()), 'Should get a ban remediation');
+        $this->assertEquals('bypass', $bouncer->getAppSecRemediationForIp($ip)['remediation'], 'Should get a ban remediation');
         // Test 3: GET request with malicious behavior
-        $this->assertEquals('ban', $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine()), 'Should get a ban remediation');
+        $this->assertEquals('ban', $bouncer->getAppSecRemediationForIp($ip)['remediation'], 'Should get a ban remediation');
         // Test 4: GET request with clean behavior
-        $this->assertEquals('bypass', $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine()), 'Should get a ban remediation');
+        $this->assertEquals('bypass', $bouncer->getAppSecRemediationForIp($ip)['remediation'], 'Should get a ban remediation');
 
         // Test 5: 401 because of bad API-KEY
         $bouncerConfigs = array_merge($this->configs, ['api_key' => 'bad-key']);
@@ -1248,27 +1248,27 @@ final class AbstractBouncerTest extends TestCase
 
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
+            $bouncer->getRemediationForIp(TestHelpers::BAD_IP)['remediation'],
             'Get decisions for a bad IP (for the first time, it should be a cache miss)'
         );
 
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
+            $bouncer->getRemediationForIp(TestHelpers::BAD_IP)['remediation'],
             'Call the same thing for the second time (now it should be a cache hit)'
         );
 
         $cleanRemediation1stCall = $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP);
         $this->assertEquals(
             'bypass',
-            $cleanRemediation1stCall,
+            $cleanRemediation1stCall['remediation'],
             'Get decisions for a clean IP for the first time (it should be a cache miss)'
         );
         $this->checkCounts($cache, [2, 0, 1]);
 
         // Call the same thing for the second time (now it should be a cache hit)
         $cleanRemediation2ndCall = $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP);
-        $this->assertEquals('bypass', $cleanRemediation2ndCall);
+        $this->assertEquals('bypass', $cleanRemediation2ndCall['remediation']);
         $this->checkCounts($cache, [2, 0, 2]);
 
         // Clear cache
@@ -1283,7 +1283,7 @@ final class AbstractBouncerTest extends TestCase
         // Call one more time (should miss as the cache has been cleared)
 
         $remediation3rdCall = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
-        $this->assertEquals('ban', $remediation3rdCall);
+        $this->assertEquals('ban', $remediation3rdCall['remediation']);
         $this->checkCounts($cache, [1, 0, 0]);
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
@@ -1293,7 +1293,7 @@ final class AbstractBouncerTest extends TestCase
         $lapiRemediation = new LapiRemediation($remediationConfigs, $client, $cache);
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
-        $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
+        $this->assertEquals('captcha', $cappedRemediation['remediation'], 'The remediation for the banned IP should now be "captcha"');
         $this->checkCounts($cache, [1, 1, 0]);
         // Reset the max remediation level to its origin state
         $remediationConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
@@ -1314,7 +1314,7 @@ final class AbstractBouncerTest extends TestCase
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals(
             'ban',
-            $cappedRemediation,
+            $cappedRemediation['remediation'],
             'The remediation for the banned IPv4 range should be ban'
         );
         $this->checkCounts($cache, [2, 1, 0]);
@@ -1331,7 +1331,7 @@ final class AbstractBouncerTest extends TestCase
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
         $this->assertEquals(
             'ban',
-            $cappedRemediation,
+            $cappedRemediation['remediation'],
             'The remediation for a banned IPv6 range should be ban in live mode'
         );
         $this->checkCounts($cache, [3, 1, 0]);
@@ -1346,7 +1346,7 @@ final class AbstractBouncerTest extends TestCase
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
         $this->assertEquals(
             'ban',
-            $cappedRemediation,
+            $cappedRemediation['remediation'],
             'The remediation for a banned IPv6 should be ban'
         );
         $this->checkCounts($cache, [4, 1, 0]);
@@ -1408,7 +1408,7 @@ final class AbstractBouncerTest extends TestCase
 
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
+            $bouncer->getRemediationForIp(TestHelpers::BAD_IP)['remediation'],
             'Get decisions for a bad IP for the first time (as the cache has been warmed up should be a cache hit)'
         );
 
@@ -1419,7 +1419,7 @@ final class AbstractBouncerTest extends TestCase
         $lapiRemediation = new LapiRemediation($remediationConfigs, $client, $cache, $this->logger);
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
-        $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
+        $this->assertEquals('captcha', $cappedRemediation['remediation'], 'The remediation for the banned IP should now be "captcha"');
         $remediationConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
         $client = new BouncerClient($bouncerConfigs, null, $this->logger);
         $cache = new PhpFiles($bouncerConfigs);
@@ -1427,14 +1427,14 @@ final class AbstractBouncerTest extends TestCase
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
         $this->assertEquals(
             'bypass',
-            $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP),
+            $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP)['remediation'],
             'Get decisions for a clean IP for the first time (as the cache has been warmed up should be a cache hit)'
         );
 
         // Preload the remediation to prepare the next tests.
         $this->assertEquals(
             'bypass',
-            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP),
+            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP)['remediation'],
             'Preload the bypass remediation to prepare the next tests'
         );
         // Add and remove decision
@@ -1443,12 +1443,12 @@ final class AbstractBouncerTest extends TestCase
         $bouncer->refreshBlocklistCache();
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP),
+            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP)['remediation'],
             'The new decision should now be added, so the previously clean IP should now be bad'
         );
         $this->assertEquals(
             'bypass',
-            $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
+            $bouncer->getRemediationForIp(TestHelpers::BAD_IP)['remediation'],
             'The old decisions should now be removed, so the previously bad IP should now be clean'
         );
 
@@ -1476,7 +1476,7 @@ final class AbstractBouncerTest extends TestCase
 
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP)
+            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP)['remediation']
         );
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" + "IPV6 range banned" state']);
@@ -1501,13 +1501,13 @@ final class AbstractBouncerTest extends TestCase
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals(
             'ban',
-            $cappedRemediation,
+            $cappedRemediation['remediation'],
             'The remediation for the banned IP with a large range should be "ban" even in stream mode'
         );
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
         $this->assertEquals(
             'bypass',
-            $cappedRemediation,
+            $cappedRemediation['remediation'],
             'The remediation for the banned IPV6 with a too large range should now be "bypass" as we are in stream mode'
         );
 

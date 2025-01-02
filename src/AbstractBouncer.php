@@ -86,8 +86,8 @@ abstract class AbstractBouncer
         $this->logger->info('Bouncing current IP', [
             'ip' => $ip,
         ]);
-        $remediation = $this->getRemediation($ip);
-        $this->handleRemediation($remediation, $ip);
+        $remediationData = $this->getRemediation($ip);
+        $this->handleRemediation($remediationData['remediation'], $ip, $remediationData['origin']);
     }
 
     /**
@@ -112,7 +112,7 @@ abstract class AbstractBouncer
      * @throws BouncerException
      * @throws CacheException
      */
-    public function getAppSecRemediationForIp(string $ip): string
+    public function getAppSecRemediationForIp(string $ip): array
     {
         try {
             return $this->remediationEngine->getAppSecRemediation(
@@ -173,12 +173,16 @@ abstract class AbstractBouncer
     /**
      * Get the remediation for the specified IP.
      *
-     * @return string the remediation to apply (ex: 'ban', 'captcha', 'bypass')
+     * @return array
+     *               [
+     *               'remediation': the remediation to apply (ex: 'ban', 'captcha', 'bypass')
+     *               'origin': the origin of the remediation (ex: 'cscli', 'CAPI')
+     *               ]
      *
      * @throws BouncerException
      * @throws CacheException
      */
-    public function getRemediationForIp(string $ip): string
+    public function getRemediationForIp(string $ip): array
     {
         try {
             return $this->getRemediationEngine()->getIpRemediation($ip);
@@ -444,11 +448,11 @@ abstract class AbstractBouncer
      * @throws InvalidArgumentException
      * @throws BouncerException
      */
-    protected function handleRemediation(string $remediation, string $ip): void
+    protected function handleRemediation(string $remediation, string $ip, string $origin): void
     {
         switch ($remediation) {
             case Constants::REMEDIATION_CAPTCHA:
-                $this->handleCaptchaRemediation($ip);
+                $this->handleCaptchaRemediation($ip, $origin);
                 break;
             case Constants::REMEDIATION_BAN:
                 $this->logger->debug('Will display a ban wall', [
@@ -603,22 +607,24 @@ abstract class AbstractBouncer
      * @throws BouncerException
      * @throws CacheException
      */
-    private function getRemediation(string $ip): string
+    private function getRemediation(string $ip): array
     {
-        $remediation = $this->getRemediationForIp($ip);
+        $remediationData = $this->getRemediationForIp($ip);
+        $remediation = $remediationData['remediation'];
+        $origin = $remediationData['origin'];
         if ($this->shouldUseAppSec($remediation)) {
             // Avoid duplicated processed metrics by decrementing the clean/bypass origin count:
             // clean/bypass origin is already counted, and we must only count the final origin/remediation.
             $this->getRemediationEngine()->updateRemediationOriginCount(
-                AbstractCache::CLEAN,
-                Constants::REMEDIATION_BYPASS,
+                $origin,
+                $remediation,
                 -1
             );
 
-            $remediation = $this->getAppSecRemediationForIp($ip);
+            $remediationData = $this->getAppSecRemediationForIp($ip);
         }
 
-        return $remediation;
+        return $remediationData;
     }
 
     /**
@@ -664,7 +670,7 @@ abstract class AbstractBouncer
      * @throws CacheException
      * @throws InvalidArgumentException
      */
-    private function handleCaptchaRemediation(string $ip): void
+    private function handleCaptchaRemediation(string $ip, string $origin): void
     {
         // Check captcha resolution form
         $this->handleCaptchaResolutionForm($ip);
@@ -690,6 +696,18 @@ abstract class AbstractBouncer
             ]);
             $this->displayCaptchaWall($ip);
         }
+        // Decrement captcha origin count
+        $this->getRemediationEngine()->updateRemediationOriginCount(
+            $origin,
+            Constants::REMEDIATION_CAPTCHA,
+            -1
+        );
+        // Increment clean origin count
+        $this->getRemediationEngine()->updateRemediationOriginCount(
+            AbstractCache::CLEAN,
+            Constants::REMEDIATION_BYPASS
+        );
+
         $this->logger->info('Captcha wall is not required (already solved)', [
             'ip' => $ip,
         ]);
