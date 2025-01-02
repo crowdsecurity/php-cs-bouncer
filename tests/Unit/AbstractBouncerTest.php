@@ -75,8 +75,8 @@ use PHPUnit\Framework\TestCase;
  * @uses \CrowdSecBouncer\Helper::readStream
  * @uses \CrowdSecBouncer\Helper::appendFileData
  * @uses \CrowdSecBouncer\AbstractBouncer::handleBounceExclusion
- * @covers \CrowdSecBouncer\AbstractBouncer::pushUsageMetrics
  *
+ * @covers \CrowdSecBouncer\AbstractBouncer::pushUsageMetrics
  */
 final class AbstractBouncerTest extends TestCase
 {

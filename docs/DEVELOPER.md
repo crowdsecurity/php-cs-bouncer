@@ -229,6 +229,17 @@ We set up some coding standards tools that you will find in the `tools/coding-st
 ddev composer update --working-dir=./my-code/crowdsec-bouncer-lib/tools/coding-standards
 ```
 
+For advanced usage, you can create a `composer-dev.json` file in the 
+`my-code/crowdsec-bouncer-lib/tools/coding-standards` folder and 
+run:
+
+```bash
+ddev exec COMPOSER=composer-dev.json composer update --working-dir ./my-code/crowdsec-bouncer-lib/tools/coding-standards
+```
+
+Then, you can use the following commands:
+```
+
 ##### PHPCS Fixer
 
 We are using the [PHP Coding Standards Fixer](https://cs.symfony.com/). With ddev, you can do the following:

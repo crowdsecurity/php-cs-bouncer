@@ -81,8 +81,6 @@ use SebastianBergmann\RecursionContext\InvalidArgumentException;
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldBounceCurrentIp
  * @covers \CrowdSecBouncer\AbstractBouncer::handleBounceExclusion
  * @covers \CrowdSecBouncer\AbstractBouncer::pushUsageMetrics
- *
- *
  */
 final class AbstractBouncerTest extends TestCase
 {
@@ -488,12 +486,19 @@ final class AbstractBouncerTest extends TestCase
                 'The origin count for appsec should be 1'
             );
         }
-
-        $this->assertEquals(
-            1,
-            $originCountItem['clean']['bypass'],
-            'The origin count for clean should be 1'
-        );
+        if ($this->useTls) {
+            $this->assertEquals(
+                1,
+                $originCountItem['clean']['bypass'],
+                'The origin count for clean should be 1'
+            );
+        } else {
+            $this->assertEquals(
+                0,
+                $originCountItem['clean']['bypass'],
+                'The origin count for clean should have been decremented from 1 to 0 to avoid double counting'
+            );
+        }
 
         // Test 3: clean IP and clean request
         $bouncer->clearCache();
@@ -519,11 +524,19 @@ final class AbstractBouncerTest extends TestCase
             );
         }
 
-        $this->assertEquals(
-            1,
-            $originCountItem['clean']['bypass'],
-            'The origin count for clean should be 1'
-        );
+        if ($this->useTls) {
+            $this->assertEquals(
+                1,
+                $originCountItem['clean']['bypass'],
+                'The origin count for clean should be 1'
+            );
+        } else {
+            $this->assertEquals(
+                0,
+                $originCountItem['clean']['bypass'],
+                'The origin count for clean should have been decremented from 1 to 0 to avoid double counting'
+            );
+        }
     }
 
     public function testBanFlow()
@@ -1339,7 +1352,7 @@ final class AbstractBouncerTest extends TestCase
         $this->checkCounts($cache, [4, 1, 0]);
 
         // Test Push metrics
-        $result = $bouncer->pushUsageMetrics( self::BOUNCER_NAME, self::BOUNCER_VERSION, self::BOUNCER_TYPE);
+        $result = $bouncer->pushUsageMetrics(self::BOUNCER_NAME, self::BOUNCER_VERSION, self::BOUNCER_TYPE);
 
         $items = $result['remediation_components'][0]['metrics'][0]['items'];
         $droppedCount = 0;

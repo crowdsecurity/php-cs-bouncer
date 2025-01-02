@@ -607,6 +607,14 @@ abstract class AbstractBouncer
     {
         $remediation = $this->getRemediationForIp($ip);
         if ($this->shouldUseAppSec($remediation)) {
+            // Avoid duplicated processed metrics by decrementing the clean/bypass origin count:
+            // clean/bypass origin is already counted, and we must only count the final origin/remediation.
+            $this->getRemediationEngine()->updateRemediationOriginCount(
+                AbstractCache::CLEAN,
+                Constants::REMEDIATION_BYPASS,
+                -1
+            );
+
             $remediation = $this->getAppSecRemediationForIp($ip);
         }
 
@@ -899,6 +907,11 @@ abstract class AbstractBouncer
         return false;
     }
 
+    /**
+     * Check if AppSec should be used for the current IP.
+     *
+     * If remediation is not bypass, it must always return false.
+     */
     private function shouldUseAppSec(string $remediation): bool
     {
         $useAppSec = $this->getConfig('use_appsec');
