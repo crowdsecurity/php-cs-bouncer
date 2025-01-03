@@ -472,8 +472,9 @@ abstract class AbstractBouncer
             case Constants::REMEDIATION_BYPASS:
             default:
                 // Increment clean origin count
+                $finalOrigin = $origin === AbstractCache::CLEAN_APPSEC ? AbstractCache::CLEAN_APPSEC : AbstractCache::CLEAN;
                 $this->getRemediationEngine()->updateMetricsOriginsCount(
-                    $origin,
+                    $finalOrigin,
                     Constants::REMEDIATION_BYPASS
                 );
                 break;
@@ -708,8 +709,9 @@ abstract class AbstractBouncer
             $this->displayCaptchaWall($ip);
         }
         // Increment clean origin count
+        $finalOrigin = $origin === AbstractCache::CLEAN_APPSEC ? AbstractCache::CLEAN_APPSEC : AbstractCache::CLEAN;
         $this->getRemediationEngine()->updateMetricsOriginsCount(
-            $origin,
+            $finalOrigin,
             Constants::REMEDIATION_BYPASS
         );
         $this->logger->info('Captcha wall is not required (already solved)', [
