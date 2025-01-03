@@ -87,7 +87,11 @@ abstract class AbstractBouncer
             'ip' => $ip,
         ]);
         $remediationData = $this->getRemediation($ip);
-        $this->handleRemediation($remediationData['remediation'], $ip, $remediationData['origin']);
+        $this->handleRemediation(
+            $remediationData[Constants::REMEDIATION_KEY],
+            $ip,
+            $remediationData[Constants::ORIGIN_KEY]
+        );
     }
 
     /**
@@ -442,7 +446,7 @@ abstract class AbstractBouncer
     }
 
     /**
-     * Handle remediation for some IP.
+     * Handle remediation for a given IP and origin.
      *
      * @throws CacheException
      * @throws InvalidArgumentException
@@ -458,10 +462,21 @@ abstract class AbstractBouncer
                 $this->logger->debug('Will display a ban wall', [
                     'ip' => $ip,
                 ]);
+                // Increment ban origin count
+                $this->getRemediationEngine()->updateMetricsOriginsCount(
+                    $origin,
+                    $remediation
+                );
                 $this->handleBanRemediation();
                 break;
             case Constants::REMEDIATION_BYPASS:
             default:
+                // Increment clean origin count
+                $this->getRemediationEngine()->updateMetricsOriginsCount(
+                    $origin,
+                    Constants::REMEDIATION_BYPASS
+                );
+                break;
         }
     }
 
@@ -610,17 +625,8 @@ abstract class AbstractBouncer
     private function getRemediation(string $ip): array
     {
         $remediationData = $this->getRemediationForIp($ip);
-        $remediation = $remediationData['remediation'];
-        $origin = $remediationData['origin'];
+        $remediation = $remediationData[Constants::REMEDIATION_KEY];
         if ($this->shouldUseAppSec($remediation)) {
-            // Avoid duplicated processed metrics by decrementing the clean/bypass origin count:
-            // clean/bypass origin is already counted, and we must only count the final origin/remediation.
-            $this->getRemediationEngine()->updateRemediationOriginCount(
-                $origin,
-                $remediation,
-                -1
-            );
-
             $remediationData = $this->getAppSecRemediationForIp($ip);
         }
 
@@ -657,7 +663,7 @@ abstract class AbstractBouncer
             'message' => $message,
         ]);
         // Increment clean origin count
-        $this->getRemediationEngine()->updateRemediationOriginCount(
+        $this->getRemediationEngine()->updateMetricsOriginsCount(
             AbstractCache::CLEAN,
             Constants::REMEDIATION_BYPASS
         );
@@ -694,20 +700,18 @@ abstract class AbstractBouncer
             $this->logger->debug('Will display a captcha wall', [
                 'ip' => $ip,
             ]);
+            // Increment captcha origin count
+            $this->getRemediationEngine()->updateMetricsOriginsCount(
+                $origin,
+                Constants::REMEDIATION_CAPTCHA
+            );
             $this->displayCaptchaWall($ip);
         }
-        // Decrement captcha origin count
-        $this->getRemediationEngine()->updateRemediationOriginCount(
-            $origin,
-            Constants::REMEDIATION_CAPTCHA,
-            -1
-        );
         // Increment clean origin count
-        $this->getRemediationEngine()->updateRemediationOriginCount(
-            AbstractCache::CLEAN,
+        $this->getRemediationEngine()->updateMetricsOriginsCount(
+            $origin,
             Constants::REMEDIATION_BYPASS
         );
-
         $this->logger->info('Captcha wall is not required (already solved)', [
             'ip' => $ip,
         ]);

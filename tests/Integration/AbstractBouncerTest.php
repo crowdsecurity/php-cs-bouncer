@@ -479,14 +479,6 @@ final class AbstractBouncerTest extends TestCase
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         if ($this->useTls) {
             $this->assertArrayNotHasKey('appsec', $originCountItem, 'The origin count for appsec should not be present');
-        } else {
-            $this->assertEquals(
-                1,
-                $originCountItem['appsec']['ban'],
-                'The origin count for appsec should be 1'
-            );
-        }
-        if ($this->useTls) {
             $this->assertEquals(
                 1,
                 $originCountItem['clean']['bypass'],
@@ -494,9 +486,9 @@ final class AbstractBouncerTest extends TestCase
             );
         } else {
             $this->assertEquals(
-                0,
-                $originCountItem['clean']['bypass'],
-                'The origin count for clean should have been decremented from 1 to 0 to avoid double counting'
+                1,
+                $originCountItem['appsec']['ban'],
+                'The origin count for appsec should be 1'
             );
         }
 
@@ -516,15 +508,6 @@ final class AbstractBouncerTest extends TestCase
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         if ($this->useTls) {
             $this->assertArrayNotHasKey('appsec', $originCountItem, 'The origin count for appsec should not be present');
-        } else {
-            $this->assertEquals(
-                1,
-                $originCountItem['clean_appsec']['bypass'],
-                'The origin count for appsec should be 1'
-            );
-        }
-
-        if ($this->useTls) {
             $this->assertEquals(
                 1,
                 $originCountItem['clean']['bypass'],
@@ -532,9 +515,9 @@ final class AbstractBouncerTest extends TestCase
             );
         } else {
             $this->assertEquals(
-                0,
-                $originCountItem['clean']['bypass'],
-                'The origin count for clean should have been decremented from 1 to 0 to avoid double counting'
+                1,
+                $originCountItem['clean_appsec']['bypass'],
+                'The origin count for appsec should be 1'
             );
         }
     }
@@ -589,6 +572,21 @@ final class AbstractBouncerTest extends TestCase
             $item->isHit(),
             'The remediation should be cached'
         );
+
+        // Test Push metrics
+        $result = $bouncer->pushUsageMetrics(self::BOUNCER_NAME, self::BOUNCER_VERSION, self::BOUNCER_TYPE);
+
+        $items = $result['remediation_components'][0]['metrics'][0]['items'];
+        $droppedCount = 0;
+        foreach ($items as $item) {
+            if ('processed' === $item['name']) {
+                $this->assertEquals(1, $item['value'], 'The processed value should be 1');
+            }
+            if ('dropped' === $item['name']) {
+                $droppedCount += $item['value'];
+            }
+        }
+        $this->assertEquals(1, $droppedCount, 'The dropped count should be 1. Result was: ' . json_encode($result));
     }
 
     /**
@@ -1264,12 +1262,10 @@ final class AbstractBouncerTest extends TestCase
             $cleanRemediation1stCall['remediation'],
             'Get decisions for a clean IP for the first time (it should be a cache miss)'
         );
-        $this->checkCounts($cache, [2, 0, 1]);
 
         // Call the same thing for the second time (now it should be a cache hit)
         $cleanRemediation2ndCall = $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP);
         $this->assertEquals('bypass', $cleanRemediation2ndCall['remediation']);
-        $this->checkCounts($cache, [2, 0, 2]);
 
         // Clear cache
         $this->assertTrue($bouncer->clearCache(), 'The cache should be clearable');
@@ -1284,7 +1280,6 @@ final class AbstractBouncerTest extends TestCase
 
         $remediation3rdCall = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('ban', $remediation3rdCall['remediation']);
-        $this->checkCounts($cache, [1, 0, 0]);
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
         $remediationConfigs = array_merge($bouncerConfigs, ['bouncing_level' => Constants::BOUNCING_LEVEL_FLEX]);
@@ -1294,7 +1289,6 @@ final class AbstractBouncerTest extends TestCase
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals('captcha', $cappedRemediation['remediation'], 'The remediation for the banned IP should now be "captcha"');
-        $this->checkCounts($cache, [1, 1, 0]);
         // Reset the max remediation level to its origin state
         $remediationConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
         $client = new BouncerClient($bouncerConfigs);
@@ -1317,7 +1311,6 @@ final class AbstractBouncerTest extends TestCase
             $cappedRemediation['remediation'],
             'The remediation for the banned IPv4 range should be ban'
         );
-        $this->checkCounts($cache, [2, 1, 0]);
 
         $this->logger->info('', ['message' => 'set "IPV6 range banned" state']);
         $this->watcherClient->deleteAllDecisions();
@@ -1334,7 +1327,6 @@ final class AbstractBouncerTest extends TestCase
             $cappedRemediation['remediation'],
             'The remediation for a banned IPv6 range should be ban in live mode'
         );
-        $this->checkCounts($cache, [3, 1, 0]);
         $this->watcherClient->deleteAllDecisions();
         $this->watcherClient->addDecision(
             new \DateTime(),
@@ -1349,25 +1341,6 @@ final class AbstractBouncerTest extends TestCase
             $cappedRemediation['remediation'],
             'The remediation for a banned IPv6 should be ban'
         );
-        $this->checkCounts($cache, [4, 1, 0]);
-
-        // Test Push metrics
-        $result = $bouncer->pushUsageMetrics(self::BOUNCER_NAME, self::BOUNCER_VERSION, self::BOUNCER_TYPE);
-
-        $items = $result['remediation_components'][0]['metrics'][0]['items'];
-        $droppedCount = 0;
-        foreach ($items as $item) {
-            if ('processed' === $item['name']) {
-                $this->assertEquals(5, $item['value'], 'The processed value should be 5');
-            }
-            if ('dropped' === $item['name']) {
-                $droppedCount += $item['value'];
-            }
-        }
-        $this->assertEquals(5, $droppedCount, 'The dropped count should be 5. Result was: ' . json_encode($result));
-
-        // Count should be reset
-        $this->checkCounts($cache, [0, 0, 0]);
     }
 
     /**

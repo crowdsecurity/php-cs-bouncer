@@ -779,7 +779,7 @@ EOF;
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getIpRemediation', 'getConfig', 'updateRemediationOriginCount'])
+            ->onlyMethods(['getIpRemediation', 'getConfig', 'updateMetricsOriginsCount'])
             ->getMock();
         $mockRemediation->method('getConfig')->willReturnOnConsecutiveCalls(
             'normal_bouncing' // Return normal_bouncing on the first call
@@ -792,7 +792,7 @@ EOF;
 
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getIpRemediation', 'getConfig', 'updateRemediationOriginCount'])
+            ->onlyMethods(['getIpRemediation', 'getConfig', 'updateMetricsOriginsCount'])
             ->getMock();
         $mockRemediation->method('getConfig')->willReturnOnConsecutiveCalls(
             'bouncing_disabled'
@@ -805,7 +805,7 @@ EOF;
         $configs = $this->configs;
         $mockRemediation = $this->getMockBuilder(LapiRemediation::class)
             ->disableOriginalConstructor()
-            ->onlyMethods(['getIpRemediation', 'getConfig', 'updateRemediationOriginCount'])
+            ->onlyMethods(['getIpRemediation', 'getConfig', 'updateMetricsOriginsCount'])
             ->getMock();
         $mockRemediation->method('getConfig')->willReturnOnConsecutiveCalls(
             'normal_bouncing',
