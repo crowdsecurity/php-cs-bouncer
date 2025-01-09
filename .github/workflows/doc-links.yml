@@ -3,11 +3,14 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
 
-name: Documentation links
+name: Documentation links check
 jobs:
   markdown-test:
     name: Markdown files test
