@@ -19,6 +19,7 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 ### Added
 
 - Add `pushUsageMetrics` method to `AbstractBouncer` class
+- Save origins count item in cache after a remediation has been applied
 
 ### Changed
 
@@ -27,7 +28,6 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 - **Breaking change**: `$remediationEngine` params of `AbstractBouncer` constructor is now a `LapiRemediationEngine` instance
 - **Breaking change**: `AbstractBouncer::getAppSecRemediationForIp` don't need `$remediationEngine` param anymore
 - **Breaking change**: `AbstractBouncer::handleRemediation` requires a new `origin` param
-- Update cached origins count item when we detect that the bouncer should not bounce the current IP
 - Update `crowdsec/remediation-engine` dependency to `v4.0.0`
 
 ### Removed
