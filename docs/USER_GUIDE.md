@@ -30,7 +30,7 @@
 
 ## Description
 
-This library allows you to create CrowdSec bouncers for PHP applications or frameworks like e-commerce, blog or other 
+This library allows you to create CrowdSec LAPI bouncers for PHP applications or frameworks like e-commerce, blog or other 
 exposed applications.
 
 ## Prerequisites
@@ -45,11 +45,11 @@ Please note that first and foremost a CrowdSec agent must be installed on a serv
   - Handle `ip`, `range` and `country` scoped decisions
   - `Live mode` or `Stream mode`
   - AppSec support
+  - Usage metrics support
 - Support IpV4 and Ipv6 (Ipv6 range decisions are yet only supported in `Live mode`) 
 - Large PHP matrix compatibility: from 7.2 to 8.4
 - Built-in support for the most known cache systems Redis, Memcached and PhpFiles
   - Clear, prune and refresh the bouncer cache
-- Cap remediation level (ex: for sensitives websites: ban will be capped to captcha)
 
 
 ## Usage

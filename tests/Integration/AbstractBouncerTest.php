@@ -22,6 +22,7 @@ use CrowdSecBouncer\Tests\PHPUnitUtil;
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use SebastianBergmann\RecursionContext\InvalidArgumentException;
 
 /**
  * @covers \CrowdSecBouncer\AbstractBouncer::clearCache
@@ -33,7 +34,6 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldUseAppSec
  *
  * @uses   \CrowdSecBouncer\AbstractBouncer::__construct
- * @uses   \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
  * @uses   \CrowdSecBouncer\AbstractBouncer::configure
  * @uses   \CrowdSecBouncer\AbstractBouncer::getConfig
  * @uses   \CrowdSecBouncer\AbstractBouncer::getConfigs
@@ -79,6 +79,8 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\AbstractBouncer::getRemediationForIp
  * @covers \CrowdSecBouncer\AbstractBouncer::run
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldBounceCurrentIp
+ * @covers \CrowdSecBouncer\AbstractBouncer::handleBounceExclusion
+ * @covers \CrowdSecBouncer\AbstractBouncer::pushUsageMetrics
  */
 final class AbstractBouncerTest extends TestCase
 {
@@ -109,6 +111,10 @@ final class AbstractBouncerTest extends TestCase
      * @var array
      */
     private $configs;
+
+    public const BOUNCER_NAME = 'bouncer-lib-integration-test';
+    public const BOUNCER_VERSION = 'v0.0.0';
+    public const BOUNCER_TYPE = 'crowdsec-test-php-bouncer';
 
     protected function setUp(): void
     {
@@ -173,7 +179,7 @@ final class AbstractBouncerTest extends TestCase
 
         $this->assertEquals([['005.006.007.008', '005.006.007.008']], $bouncer->getConfig('trust_ip_forward_array'), 'Forwarded array config');
 
-        $this->assertEquals(Constants::BOUNCING_LEVEL_NORMAL, $bouncer->getConfig('bouncing_level'), 'Bouncing level config');
+        $this->assertEquals(Constants::BOUNCING_LEVEL_NORMAL, $remediation->getConfig('bouncing_level'), 'Bouncing level config');
 
         $this->assertEquals(null, $bouncer->getConfig('unexpected_config'), 'Should clean config');
 
@@ -190,7 +196,7 @@ final class AbstractBouncerTest extends TestCase
      * @throws BouncerException
      * @throws \CrowdSec\RemediationEngine\CacheStorage\CacheStorageException
      * @throws \PHPUnit\Framework\ExpectationFailedException
-     * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function testCaptchaFlow()
     {
@@ -377,7 +383,7 @@ final class AbstractBouncerTest extends TestCase
      * @throws BouncerException
      * @throws \CrowdSec\RemediationEngine\CacheStorage\CacheStorageException
      * @throws \PHPUnit\Framework\ExpectationFailedException
-     * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function testAppSecFlow()
     {
@@ -473,19 +479,18 @@ final class AbstractBouncerTest extends TestCase
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         if ($this->useTls) {
             $this->assertArrayNotHasKey('appsec', $originCountItem, 'The origin count for appsec should not be present');
+            $this->assertEquals(
+                1,
+                $originCountItem['clean']['bypass'],
+                'The origin count for clean should be 1'
+            );
         } else {
             $this->assertEquals(
                 1,
-                $originCountItem['appsec'],
+                $originCountItem['appsec']['ban'],
                 'The origin count for appsec should be 1'
             );
         }
-
-        $this->assertEquals(
-            1,
-            $originCountItem['clean'],
-            'The origin count for clean should be 1'
-        );
 
         // Test 3: clean IP and clean request
         $bouncer->clearCache();
@@ -503,19 +508,18 @@ final class AbstractBouncerTest extends TestCase
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         if ($this->useTls) {
             $this->assertArrayNotHasKey('appsec', $originCountItem, 'The origin count for appsec should not be present');
+            $this->assertEquals(
+                1,
+                $originCountItem['clean']['bypass'],
+                'The origin count for clean should be 1'
+            );
         } else {
             $this->assertEquals(
                 1,
-                $originCountItem['clean_appsec'],
+                $originCountItem['clean_appsec']['bypass'],
                 'The origin count for appsec should be 1'
             );
         }
-
-        $this->assertEquals(
-            1,
-            $originCountItem['clean'],
-            'The origin count for clean should be 1'
-        );
     }
 
     public function testBanFlow()
@@ -568,6 +572,21 @@ final class AbstractBouncerTest extends TestCase
             $item->isHit(),
             'The remediation should be cached'
         );
+
+        // Test Push metrics
+        $result = $bouncer->pushUsageMetrics(self::BOUNCER_NAME, self::BOUNCER_VERSION, self::BOUNCER_TYPE);
+
+        $items = $result['remediation_components'][0]['metrics'][0]['items'];
+        $droppedCount = 0;
+        foreach ($items as $item) {
+            if ('processed' === $item['name']) {
+                $this->assertEquals(1, $item['value'], 'The processed value should be 1');
+            }
+            if ('dropped' === $item['name']) {
+                $droppedCount += $item['value'];
+            }
+        }
+        $this->assertEquals(1, $droppedCount, 'The dropped count should be 1. Result was: ' . json_encode($result));
     }
 
     /**
@@ -605,13 +624,13 @@ final class AbstractBouncerTest extends TestCase
         $bouncer->method('getRequestRawBody')->willReturnOnConsecutiveCalls('class.module.classLoader.resources.', 'admin=test', '', '');
 
         // Test 1: POST request with malicious body
-        $this->assertEquals('ban', $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine()), 'Should get a ban remediation');
+        $this->assertEquals('ban', $bouncer->getAppSecRemediationForIp($ip)['remediation'], 'Should get a ban remediation');
         // Test 2: POST request with normal body
-        $this->assertEquals('bypass', $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine()), 'Should get a ban remediation');
+        $this->assertEquals('bypass', $bouncer->getAppSecRemediationForIp($ip)['remediation'], 'Should get a ban remediation');
         // Test 3: GET request with malicious behavior
-        $this->assertEquals('ban', $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine()), 'Should get a ban remediation');
+        $this->assertEquals('ban', $bouncer->getAppSecRemediationForIp($ip)['remediation'], 'Should get a ban remediation');
         // Test 4: GET request with clean behavior
-        $this->assertEquals('bypass', $bouncer->getAppSecRemediationForIp($ip, $bouncer->getRemediationEngine()), 'Should get a ban remediation');
+        $this->assertEquals('bypass', $bouncer->getAppSecRemediationForIp($ip)['remediation'], 'Should get a ban remediation');
 
         // Test 5: 401 because of bad API-KEY
         $bouncerConfigs = array_merge($this->configs, ['api_key' => 'bad-key']);
@@ -662,6 +681,12 @@ final class AbstractBouncerTest extends TestCase
         // Test 2: not bouncing exclude URI
         $client = new BouncerClient($this->configs, null, $this->logger);
         $cache = new PhpFiles($this->configs, $this->logger);
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            null,
+            $originCountItem,
+            'The origin count for clean should be empty'
+        );
         $lapiRemediation = new LapiRemediation($this->configs, $client, $cache, $this->logger);
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$this->configs, $lapiRemediation, $this->logger],
@@ -678,12 +703,18 @@ final class AbstractBouncerTest extends TestCase
 
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls(self::EXCLUDED_URI);
         $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.2');
-        $this->assertEquals(false, $bouncer->run(), 'Should not bounce excluded uri');
+        $this->assertEquals(false, $bouncer->run(), 'Should not run as URI is excluded from bouncing');
         PHPUnitUtil::assertRegExp(
             $this,
-            '/.*100.*Will not bounce as URI is excluded/',
+            '/.*100.*This URI is excluded from bouncing/',
             file_get_contents($this->root->url() . '/' . $this->debugFile),
             'Debug log content should be correct'
+        );
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            ['clean' => ['bypass' => 1]],
+            $originCountItem,
+            'The origin count for clean should be 1'
         );
 
         // Test 3: bouncing URI
@@ -706,12 +737,19 @@ final class AbstractBouncerTest extends TestCase
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
         $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.3');
         $this->assertEquals(true, $bouncer->run(), 'Should bounce uri');
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            ['clean' => ['bypass' => 2]],
+            $originCountItem,
+            'The origin count for clean should be 2'
+        );
 
         // Test 4:  not bouncing URI if disabled
-        $bouncerConfigs = array_merge($this->configs, ['bouncing_level' => Constants::BOUNCING_LEVEL_DISABLED]);
+        $bouncerConfigs = $this->configs;
+        $remediationConfigs = array_merge($this->configs, ['bouncing_level' => Constants::BOUNCING_LEVEL_DISABLED]);
         $client = new BouncerClient($bouncerConfigs, null, $this->logger);
         $cache = new PhpFiles($bouncerConfigs, $this->logger);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
+        $lapiRemediation = new LapiRemediation($remediationConfigs, $client, $cache, $this->logger);
         // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation, $this->logger],
             '', true,
@@ -728,10 +766,16 @@ final class AbstractBouncerTest extends TestCase
         $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
         $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.4');
         $this->assertEquals(false, $bouncer->run(), 'Should not bounce if disabled');
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            ['clean' => ['bypass' => 3]],
+            $originCountItem,
+            'The origin count for clean should be 3'
+        );
 
         PHPUnitUtil::assertRegExp(
             $this,
-            '/.*100.*Will not bounce as bouncing is disabled/',
+            '/.*100.*Bouncing is disabled by bouncing_level configuration/',
             file_get_contents($this->root->url() . '/' . $this->debugFile),
             'Debug log content should be correct'
         );
@@ -784,6 +828,12 @@ final class AbstractBouncerTest extends TestCase
             file_get_contents($this->root->url() . '/' . $this->prodFile),
             'Prod log content should be correct'
         );
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            ['clean' => ['bypass' => 3]],
+            $originCountItem,
+            'The origin count for clean should be still 3'
+        );
 
         // Test 6: NOT throw error if config says so
         $bouncerConfigs = array_merge(
@@ -819,6 +869,12 @@ final class AbstractBouncerTest extends TestCase
         } catch (BouncerException $e) {
             $error = $e->getMessage();
         }
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            ['clean' => ['bypass' => 3]],
+            $originCountItem,
+            'The origin count for clean should be still 3'
+        );
 
         $this->assertEquals('', $error, 'Should not throw error');
         PHPUnitUtil::assertRegExp(
@@ -861,6 +917,12 @@ final class AbstractBouncerTest extends TestCase
             file_get_contents($this->root->url() . '/' . $this->debugFile),
             'Debug log content should be correct'
         );
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            ['clean' => ['bypass' => 4]],
+            $originCountItem,
+            'The origin count for clean should be 4'
+        );
 
         // Test 8 : forced X-Forwarded-for usage
         $bouncerConfigs = array_merge(
@@ -895,6 +957,12 @@ final class AbstractBouncerTest extends TestCase
             file_get_contents($this->root->url() . '/' . $this->debugFile),
             'Debug log content should be correct'
         );
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            ['clean' => ['bypass' => 5]],
+            $originCountItem,
+            'The origin count for clean should be 5'
+        );
 
         // Test 9 non-authorized
         $bouncerConfigs = $this->configs;
@@ -925,6 +993,12 @@ final class AbstractBouncerTest extends TestCase
             file_get_contents($this->root->url() . '/' . $this->prodFile),
             'Prod log content should be correct'
         );
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            ['clean' => ['bypass' => 6]],
+            $originCountItem,
+            'The origin count for clean should be 6'
+        );
 
         // Test 10 authorized
         $bouncerConfigs = $this->configs;
@@ -953,6 +1027,29 @@ final class AbstractBouncerTest extends TestCase
             '/.*100.*Detected IP is allowed for X-Forwarded-for usage.*"original_ip":"5.6.7.8","x_forwarded_for_ip":"127.0.0.10"/',
             file_get_contents($this->root->url() . '/' . $this->debugFile),
             'Debug log content should be correct'
+        );
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            ['clean' => ['bypass' => 7]],
+            $originCountItem,
+            'The origin count for clean should be 7'
+        );
+        // Test 11: push metrics
+        $result = $bouncer->pushUsageMetrics(self::BOUNCER_NAME, self::BOUNCER_VERSION, self::BOUNCER_TYPE);
+        $this->assertEquals(
+            [
+                'name' => 'processed',
+                'value' => 7,
+                'unit' => 'request',
+            ],
+            $result['remediation_components'][0]['metrics'][0]['items'][0],
+            'Should have pushed metrics'
+        );
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            ['clean' => ['bypass' => 0]],
+            $originCountItem,
+            'The origin count for clean should be reset'
         );
     }
 
@@ -1063,6 +1160,54 @@ final class AbstractBouncerTest extends TestCase
     }
 
     /**
+     * For some reason, the origin count can be cscli or crowdsec, so we can not test origin count directly.
+     *
+     * @param array $expected
+     *                        $expected[0] = ban count
+     *                        $expected[1] = captcha count
+     *                        $expected[2] = bypass count
+     *
+     * @throws InvalidArgumentException
+     */
+    private function checkCounts($cache, array $expected): void
+    {
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+
+        $banCount = 0;
+        $captchaCount = 0;
+        $bypassCount = 0;
+        foreach ($originCountItem as $origin => $counts) {
+            foreach ($counts as $remediation => $value) {
+                if ('ban' === $remediation) {
+                    $banCount += $value;
+                }
+                if ('captcha' === $remediation) {
+                    $captchaCount += $value;
+                }
+                if ('bypass' === $remediation) {
+                    $bypassCount += $value;
+                }
+            }
+        }
+
+        $this->assertEquals(
+            $expected[0],
+            $banCount,
+            'The ban count should be ok'
+        );
+        $this->assertEquals(
+            $expected[1],
+            $captchaCount,
+            'The captcha count should be ok'
+        );
+        $this->assertEquals(
+            $expected[2],
+            $bypassCount,
+            'The bypass count should be ok'
+        );
+    }
+
+    /**
      * @group integration
      */
     public function testCanVerifyIpInLiveMode(): void
@@ -1092,51 +1237,63 @@ final class AbstractBouncerTest extends TestCase
         // Test cache adapter
         $cacheAdapter = $bouncer->getRemediationEngine()->getCacheStorage();
         $cacheAdapter->clear();
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            null,
+            $originCountItem,
+            'The origin count for clean should be empty'
+        );
 
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
+            $bouncer->getRemediationForIp(TestHelpers::BAD_IP)['remediation'],
             'Get decisions for a bad IP (for the first time, it should be a cache miss)'
         );
 
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
+            $bouncer->getRemediationForIp(TestHelpers::BAD_IP)['remediation'],
             'Call the same thing for the second time (now it should be a cache hit)'
         );
 
         $cleanRemediation1stCall = $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP);
         $this->assertEquals(
             'bypass',
-            $cleanRemediation1stCall,
+            $cleanRemediation1stCall['remediation'],
             'Get decisions for a clean IP for the first time (it should be a cache miss)'
         );
 
         // Call the same thing for the second time (now it should be a cache hit)
         $cleanRemediation2ndCall = $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP);
-        $this->assertEquals('bypass', $cleanRemediation2ndCall);
+        $this->assertEquals('bypass', $cleanRemediation2ndCall['remediation']);
 
         // Clear cache
         $this->assertTrue($bouncer->clearCache(), 'The cache should be clearable');
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            null,
+            $originCountItem,
+            'The origin count should be ok'
+        );
 
         // Call one more time (should miss as the cache has been cleared)
 
         $remediation3rdCall = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
-        $this->assertEquals('ban', $remediation3rdCall);
+        $this->assertEquals('ban', $remediation3rdCall['remediation']);
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
-        $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_FLEX;
+        $remediationConfigs = array_merge($bouncerConfigs, ['bouncing_level' => Constants::BOUNCING_LEVEL_FLEX]);
         $client = new BouncerClient($bouncerConfigs);
         $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
+        $lapiRemediation = new LapiRemediation($remediationConfigs, $client, $cache);
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
-        $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
+        $this->assertEquals('captcha', $cappedRemediation['remediation'], 'The remediation for the banned IP should now be "captcha"');
         // Reset the max remediation level to its origin state
-        $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
+        $remediationConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
         $client = new BouncerClient($bouncerConfigs);
         $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache);
+        $lapiRemediation = new LapiRemediation($remediationConfigs, $client, $cache);
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" state']);
@@ -1151,7 +1308,7 @@ final class AbstractBouncerTest extends TestCase
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals(
             'ban',
-            $cappedRemediation,
+            $cappedRemediation['remediation'],
             'The remediation for the banned IPv4 range should be ban'
         );
 
@@ -1167,7 +1324,7 @@ final class AbstractBouncerTest extends TestCase
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
         $this->assertEquals(
             'ban',
-            $cappedRemediation,
+            $cappedRemediation['remediation'],
             'The remediation for a banned IPv6 range should be ban in live mode'
         );
         $this->watcherClient->deleteAllDecisions();
@@ -1181,7 +1338,7 @@ final class AbstractBouncerTest extends TestCase
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
         $this->assertEquals(
             'ban',
-            $cappedRemediation,
+            $cappedRemediation['remediation'],
             'The remediation for a banned IPv6 should be ban'
         );
     }
@@ -1224,33 +1381,33 @@ final class AbstractBouncerTest extends TestCase
 
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
+            $bouncer->getRemediationForIp(TestHelpers::BAD_IP)['remediation'],
             'Get decisions for a bad IP for the first time (as the cache has been warmed up should be a cache hit)'
         );
 
         // Reconfigure the bouncer to set maximum remediation level to "captcha"
-        $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_FLEX;
+        $remediationConfigs = array_merge($bouncerConfigs, ['bouncing_level' => Constants::BOUNCING_LEVEL_FLEX]);
         $client = new BouncerClient($bouncerConfigs, null, $this->logger);
         $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
+        $lapiRemediation = new LapiRemediation($remediationConfigs, $client, $cache, $this->logger);
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
-        $this->assertEquals('captcha', $cappedRemediation, 'The remediation for the banned IP should now be "captcha"');
-        $bouncerConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
+        $this->assertEquals('captcha', $cappedRemediation['remediation'], 'The remediation for the banned IP should now be "captcha"');
+        $remediationConfigs['bouncing_level'] = Constants::BOUNCING_LEVEL_NORMAL;
         $client = new BouncerClient($bouncerConfigs, null, $this->logger);
         $cache = new PhpFiles($bouncerConfigs);
-        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
+        $lapiRemediation = new LapiRemediation($remediationConfigs, $client, $cache, $this->logger);
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation]);
         $this->assertEquals(
             'bypass',
-            $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP),
+            $bouncer->getRemediationForIp(TestHelpers::CLEAN_IP)['remediation'],
             'Get decisions for a clean IP for the first time (as the cache has been warmed up should be a cache hit)'
         );
 
         // Preload the remediation to prepare the next tests.
         $this->assertEquals(
             'bypass',
-            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP),
+            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP)['remediation'],
             'Preload the bypass remediation to prepare the next tests'
         );
         // Add and remove decision
@@ -1259,12 +1416,12 @@ final class AbstractBouncerTest extends TestCase
         $bouncer->refreshBlocklistCache();
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP),
+            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP)['remediation'],
             'The new decision should now be added, so the previously clean IP should now be bad'
         );
         $this->assertEquals(
             'bypass',
-            $bouncer->getRemediationForIp(TestHelpers::BAD_IP),
+            $bouncer->getRemediationForIp(TestHelpers::BAD_IP)['remediation'],
             'The old decisions should now be removed, so the previously bad IP should now be clean'
         );
 
@@ -1292,7 +1449,7 @@ final class AbstractBouncerTest extends TestCase
 
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP)
+            $bouncer->getRemediationForIp(TestHelpers::NEWLY_BAD_IP)['remediation']
         );
 
         $this->logger->info('', ['message' => 'set "Large IPV4 range banned" + "IPV6 range banned" state']);
@@ -1317,13 +1474,13 @@ final class AbstractBouncerTest extends TestCase
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IP);
         $this->assertEquals(
             'ban',
-            $cappedRemediation,
+            $cappedRemediation['remediation'],
             'The remediation for the banned IP with a large range should be "ban" even in stream mode'
         );
         $cappedRemediation = $bouncer->getRemediationForIp(TestHelpers::BAD_IPV6);
         $this->assertEquals(
             'bypass',
-            $cappedRemediation,
+            $cappedRemediation['remediation'],
             'The remediation for the banned IPV6 with a too large range should now be "bypass" as we are in stream mode'
         );
 

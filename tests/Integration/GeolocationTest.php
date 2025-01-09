@@ -16,7 +16,6 @@ use Psr\Log\LoggerInterface;
  * @covers \CrowdSecBouncer\AbstractBouncer::getRemediationForIp
  *
  * @uses \CrowdSecBouncer\AbstractBouncer::__construct
- * @uses \CrowdSecBouncer\AbstractBouncer::capRemediationLevel
  * @uses \CrowdSecBouncer\AbstractBouncer::configure
  * @uses \CrowdSecBouncer\AbstractBouncer::getConfig
  * @uses \CrowdSecBouncer\AbstractBouncer::getConfigs
@@ -137,13 +136,13 @@ final class GeolocationTest extends TestCase
 
         $this->assertEquals(
             'captcha',
-            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
+            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN)['remediation'],
             'Get decisions for a clean IP but bad country (captcha)'
         );
 
         $this->assertEquals(
             'bypass',
-            $bouncer->getRemediationForIp(TestHelpers::IP_FRANCE),
+            $bouncer->getRemediationForIp(TestHelpers::IP_FRANCE)['remediation'],
             'Get decisions for a clean IP and clean country'
         );
 
@@ -159,7 +158,7 @@ final class GeolocationTest extends TestCase
 
         $this->assertEquals(
             'bypass',
-            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
+            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN)['remediation'],
             'Get decisions for a clean IP and bad country but with geolocation disabled'
         );
 
@@ -175,13 +174,13 @@ final class GeolocationTest extends TestCase
 
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
+            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN)['remediation'],
             'Get decisions for a bad IP (ban) and bad country (captcha)'
         );
 
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::IP_FRANCE),
+            $bouncer->getRemediationForIp(TestHelpers::IP_FRANCE)['remediation'],
             'Get decisions for a bad IP (ban) and clean country'
         );
     }
@@ -225,7 +224,7 @@ final class GeolocationTest extends TestCase
 
         $this->assertEquals(
             'captcha',
-            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
+            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN)['remediation'],
             'Should captcha a clean IP coming from a bad country (captcha)'
         );
 
@@ -234,7 +233,7 @@ final class GeolocationTest extends TestCase
 
         $this->assertEquals(
             'captcha',
-            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
+            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN)['remediation'],
             'Should still captcha a bad IP (ban) coming from a bad country (captcha) as cache has not been refreshed'
         );
 
@@ -243,7 +242,7 @@ final class GeolocationTest extends TestCase
 
         $this->assertEquals(
             'ban',
-            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN),
+            $bouncer->getRemediationForIp(TestHelpers::IP_JAPAN)['remediation'],
             'The new decision should now be added, so the previously captcha IP should now be ban'
         );
     }

@@ -146,6 +146,13 @@ Run:
 ddev composer update --working-dir ./my-code/crowdsec-bouncer-lib
 ```
 
+For advanced usage, you can create a `composer-dev.json` file in the `my-code/crowdsec-bouncer-lib` folder and run:
+
+```bash
+ddev exec COMPOSER=composer-dev.json composer update --working-dir ./my-code/crowdsec-bouncer-lib
+```
+
+
 #### Find IP of your docker services
 
 In most cases, you will test to bounce your current IP. As we are running on a docker stack, this is the local host IP.
@@ -221,6 +228,17 @@ We set up some coding standards tools that you will find in the `tools/coding-st
 ```bash
 ddev composer update --working-dir=./my-code/crowdsec-bouncer-lib/tools/coding-standards
 ```
+
+For advanced usage, you can create a `composer-dev.json` file in the 
+`my-code/crowdsec-bouncer-lib/tools/coding-standards` folder and 
+run:
+
+```bash
+ddev exec COMPOSER=composer-dev.json composer update --working-dir ./my-code/crowdsec-bouncer-lib/tools/coding-standards
+```
+
+Then, you can use the following commands:
+
 
 ##### PHPCS Fixer
 
