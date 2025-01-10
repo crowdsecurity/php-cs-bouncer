@@ -11,6 +11,18 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 
 ---
 
+
+## [4.1.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v4.1.0) - 2025-01-10
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v4.0.0...v4.1.0)
+
+
+### Changed
+
+- Do not save origins count when the bouncer does not bounce the IP, due to business logic. This avoids sending a 
+  "processed" usage metrics to the LAPI when the IP is not bounced.
+
+---
+
 ## [4.0.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v4.0.0) - 2025-01-09
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v3.2.0...v4.0.0)
 

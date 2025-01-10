@@ -712,9 +712,9 @@ final class AbstractBouncerTest extends TestCase
         );
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         $this->assertEquals(
-            ['clean' => ['bypass' => 1]],
+            null,
             $originCountItem,
-            'The origin count for clean should be 1'
+            'The origin count for clean should be null'
         );
 
         // Test 3: bouncing URI
@@ -739,9 +739,9 @@ final class AbstractBouncerTest extends TestCase
         $this->assertEquals(true, $bouncer->run(), 'Should bounce uri');
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         $this->assertEquals(
-            ['clean' => ['bypass' => 2]],
+            ['clean' => ['bypass' => 1]],
             $originCountItem,
-            'The origin count for clean should be 2'
+            'The origin count for clean should be 1'
         );
 
         // Test 4:  not bouncing URI if disabled
@@ -768,9 +768,9 @@ final class AbstractBouncerTest extends TestCase
         $this->assertEquals(false, $bouncer->run(), 'Should not bounce if disabled');
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         $this->assertEquals(
-            ['clean' => ['bypass' => 3]],
+            ['clean' => ['bypass' => 1]],
             $originCountItem,
-            'The origin count for clean should be 3'
+            'The origin count for clean should still be 1 as we did not bounce at all due to config'
         );
 
         PHPUnitUtil::assertRegExp(
@@ -830,9 +830,9 @@ final class AbstractBouncerTest extends TestCase
         );
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         $this->assertEquals(
-            ['clean' => ['bypass' => 3]],
+            ['clean' => ['bypass' => 1]],
             $originCountItem,
-            'The origin count for clean should be still 3'
+            'The origin count for clean should be still 1'
         );
 
         // Test 6: NOT throw error if config says so
@@ -871,9 +871,9 @@ final class AbstractBouncerTest extends TestCase
         }
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         $this->assertEquals(
-            ['clean' => ['bypass' => 3]],
+            ['clean' => ['bypass' => 1]],
             $originCountItem,
-            'The origin count for clean should be still 3'
+            'The origin count for clean should be still 1'
         );
 
         $this->assertEquals('', $error, 'Should not throw error');
@@ -919,9 +919,9 @@ final class AbstractBouncerTest extends TestCase
         );
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         $this->assertEquals(
-            ['clean' => ['bypass' => 4]],
+            ['clean' => ['bypass' => 2]],
             $originCountItem,
-            'The origin count for clean should be 4'
+            'The origin count for clean should be 2'
         );
 
         // Test 8 : forced X-Forwarded-for usage
@@ -959,9 +959,9 @@ final class AbstractBouncerTest extends TestCase
         );
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         $this->assertEquals(
-            ['clean' => ['bypass' => 5]],
+            ['clean' => ['bypass' => 3]],
             $originCountItem,
-            'The origin count for clean should be 5'
+            'The origin count for clean should be 3'
         );
 
         // Test 9 non-authorized
@@ -995,9 +995,9 @@ final class AbstractBouncerTest extends TestCase
         );
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         $this->assertEquals(
-            ['clean' => ['bypass' => 6]],
+            ['clean' => ['bypass' => 4]],
             $originCountItem,
-            'The origin count for clean should be 6'
+            'The origin count for clean should be 4'
         );
 
         // Test 10 authorized
@@ -1030,20 +1030,20 @@ final class AbstractBouncerTest extends TestCase
         );
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         $this->assertEquals(
-            ['clean' => ['bypass' => 7]],
+            ['clean' => ['bypass' => 5]],
             $originCountItem,
-            'The origin count for clean should be 7'
+            'The origin count for clean should be 5'
         );
         // Test 11: push metrics
         $result = $bouncer->pushUsageMetrics(self::BOUNCER_NAME, self::BOUNCER_VERSION, self::BOUNCER_TYPE);
         $this->assertEquals(
             [
                 'name' => 'processed',
-                'value' => 7,
+                'value' => 5,
                 'unit' => 'request',
             ],
             $result['remediation_components'][0]['metrics'][0]['items'][0],
-            'Should have pushed metrics'
+            'Should have pushed 5 processed metrics'
         );
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
         $this->assertEquals(

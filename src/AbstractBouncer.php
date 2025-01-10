@@ -665,11 +665,6 @@ abstract class AbstractBouncer
             'type' => 'SHOULD_NOT_BOUNCE',
             'message' => $message,
         ]);
-        // Increment clean origin count
-        $this->getRemediationEngine()->updateMetricsOriginsCount(
-            AbstractCache::CLEAN,
-            Constants::REMEDIATION_BYPASS
-        );
 
         return false;
     }
