@@ -19,7 +19,7 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 ### Changed
 
 - Do not save origins count when the bouncer does not bounce the IP, due to business logic. This avoids sending a 
-  "processed" usage metrics to the LAPI when the IP is not bounced.
+  "processed" usage metrics to the LAPI when the IP is not bounced at all.
 
 ---
 
