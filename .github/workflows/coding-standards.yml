@@ -86,8 +86,7 @@ jobs:
         run: ddev phpmd ./${{env.EXTENSION_PATH}}/tools/coding-standards phpmd/rulesets.xml ../../src
 
       - name: Run PSALM
-        # Disable Psalm waiting for a solution to https://github.com/vimeo/psalm/issues/10531
-        if: false
+        if: contains(fromJson('["7.4","8.0","8.1","8.2","8.3"]'),matrix.php-version)
         run: ddev psalm ./${{env.EXTENSION_PATH}}/tools/coding-standards ./${{env.EXTENSION_PATH}}/tools/coding-standards/psalm
 
       - name: Prepare for Code Coverage
