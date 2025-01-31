@@ -41,18 +41,25 @@
     ],
     "require": {
         "php": ">=7.2.5",
-        "crowdsec/remediation-engine": "^4.0.0",
-        "crowdsec/common": "^2.3.2",
-        "symfony/config": "^4.4.27 || ^5.2 || ^6.0",
+        "crowdsec/remediation-engine": "^4.2.0",
+        "crowdsec/lapi-client": "^3.6.0",
+        "crowdsec/common": "^3.0.0",
+        "symfony/config": "^4.4.27 || ^5.2 || ^6.0 || ^7.2",
+        "monolog/monolog": "^1.17 || ^2.1 || ^3.8",
+        "psr/log": "^1.0 || ^2.0 || ^3.0",
         "twig/twig": "^3.4.2",
         "gregwar/captcha": "^1.2.1",
         "mlocati/ip-lib": "^1.18",
         "ext-json": "*",
         "ext-gd": "*"
     },
+    "suggest": {
+        "ext-curl": "*"
+    },
     "require-dev": {
         "phpunit/phpunit": "^8.5.30 || ^9.3",
         "mikey179/vfsstream": "^1.6.11",
-        "nikic/php-parser": "^4.18"
+        "nikic/php-parser": "^4.18",
+        "ext-curl": "*"
     }
 }
