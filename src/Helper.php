@@ -34,7 +34,7 @@ trait Helper
         $stream,
         array $serverData = [], // $_SERVER
         array $postData = [], // $_POST
-        array $filesData = [] // $_FILES
+        array $filesData = [], // $_FILES
     ): string {
         $contentType = $serverData['CONTENT_TYPE'] ?? '';
         // The threshold is the maximum body size converted in bytes + 1
@@ -53,7 +53,7 @@ trait Helper
         string $fileKey,
         string $boundary,
         int $threshold,
-        int &$currentSize
+        int &$currentSize,
     ): string {
         $fileName = is_array($fileArray['name']) ? $fileArray['name'][$index] : $fileArray['name'];
         $fileTmpName = is_array($fileArray['tmp_name']) ? $fileArray['tmp_name'][$index] : $fileArray['tmp_name'];
@@ -119,7 +119,7 @@ trait Helper
         string $contentType,
         int $threshold,
         array $postData,
-        array $filesData
+        array $filesData,
     ): string {
         try {
             $boundary = $this->extractBoundary($contentType);

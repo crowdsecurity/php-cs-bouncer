@@ -18,6 +18,8 @@ use CrowdSec\RemediationEngine\Constants as RemConstants;
  */
 class Constants extends RemConstants
 {
+    /** @var string The URL prefix for Blocklist as a service LAPI */
+    public const BLAAS_URL = 'https://admin.api.crowdsec.net';
     /** @var int The duration we keep a captcha flow in cache */
     public const CACHE_EXPIRATION_FOR_CAPTCHA = 86400;
     /** @var string The "MEMCACHED" cache system */
