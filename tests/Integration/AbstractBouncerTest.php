@@ -1127,7 +1127,6 @@ final class AbstractBouncerTest extends TestCase
             'The origin count for clean should be 2'
         );
 
-
         // Test: reset metrics
         $result = $bouncer->resetUsageMetrics();
         $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();

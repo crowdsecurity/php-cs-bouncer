@@ -48,7 +48,7 @@ abstract class AbstractBouncer
     public function __construct(
         array $configs,
         LapiRemediation $remediationEngine,
-        ?LoggerInterface $logger = null,
+        ?LoggerInterface $logger = null
     ) {
         // @codeCoverageIgnoreStart
         if (!$logger) {
@@ -258,7 +258,7 @@ abstract class AbstractBouncer
     public function pushUsageMetrics(
         string $bouncerName,
         string $bouncerVersion,
-        string $bouncerType = LapiConstants::METRICS_TYPE,
+        string $bouncerType = LapiConstants::METRICS_TYPE
     ): array {
         try {
             return $this->remediationEngine->pushUsageMetrics($bouncerName, $bouncerVersion, $bouncerType);
@@ -424,7 +424,7 @@ abstract class AbstractBouncer
     protected function getCaptchaHtml(
         bool $error,
         string $captchaImageSrc,
-        string $captchaResolutionFormUrl,
+        string $captchaResolutionFormUrl
     ): string {
         $template = new Template('captcha.html.twig');
 
