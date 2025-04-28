@@ -299,7 +299,7 @@ Below is the list of available settings:
 
 
 - `captcha_cache_duration`: Set the duration we keep in cache the captcha flow variables for an IP. In seconds.
-  Defaults to 86400.. In seconds. Defaults to 20.
+  Defaults to 86400.
 
 
 ### Geolocation
