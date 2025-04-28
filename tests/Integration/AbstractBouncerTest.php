@@ -81,6 +81,7 @@ use SebastianBergmann\RecursionContext\InvalidArgumentException;
  * @covers \CrowdSecBouncer\AbstractBouncer::shouldBounceCurrentIp
  * @covers \CrowdSecBouncer\AbstractBouncer::handleBounceExclusion
  * @covers \CrowdSecBouncer\AbstractBouncer::pushUsageMetrics
+ * @covers \CrowdSecBouncer\AbstractBouncer::resetUsageMetrics
  */
 final class AbstractBouncerTest extends TestCase
 {
@@ -1050,6 +1051,90 @@ final class AbstractBouncerTest extends TestCase
             ['clean' => ['bypass' => 0]],
             $originCountItem,
             'The origin count for clean should be reset'
+        );
+    }
+
+    public function testResetMetrics()
+    {
+        $client = new BouncerClient($this->configs, null, $this->logger);
+        $cache = new PhpFiles($this->configs, $this->logger);
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            null,
+            $originCountItem,
+            'The origin count for clean should be empty'
+        );
+
+        // bouncing URI
+        $client = new BouncerClient($this->configs, null, $this->logger);
+        $cache = new PhpFiles($this->configs, $this->logger);
+        $lapiRemediation = new LapiRemediation($this->configs, $client, $cache, $this->logger);
+        // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$this->configs, $lapiRemediation, $this->logger],
+            '', true,
+            true, true, [
+                'sendResponse',
+                'redirectResponse',
+                'getHttpMethod',
+                'getPostedVariable',
+                'getHttpRequestHeader',
+                'getRemoteIp',
+                'getRequestUri',
+            ]);
+
+        $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
+        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.3');
+        $this->assertEquals(true, $bouncer->run(), 'Should bounce uri');
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            ['clean' => ['bypass' => 1]],
+            $originCountItem,
+            'The origin count for clean should be 1'
+        );
+
+        // Test  no-forward
+        $bouncerConfigs = array_merge(
+            $this->configs,
+            [
+                'forced_test_forwarded_ip' => Constants::X_FORWARDED_DISABLED,
+            ]
+        );
+        $client = new BouncerClient($bouncerConfigs, null, $this->logger);
+        $cache = new PhpFiles($bouncerConfigs, $this->logger);
+        $lapiRemediation = new LapiRemediation($bouncerConfigs, $client, $cache, $this->logger);
+        // Mock sendResponse and redirectResponse to avoid PHP UNIT header already sent or exit error
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$bouncerConfigs, $lapiRemediation, $this->logger],
+            '', true,
+            true, true, [
+                'sendResponse',
+                'redirectResponse',
+                'getHttpMethod',
+                'getPostedVariable',
+                'getHttpRequestHeader',
+                'getRemoteIp',
+                'getRequestUri',
+            ]);
+
+        $bouncer->method('getRequestUri')->willReturnOnConsecutiveCalls('/home');
+        $bouncer->method('getRemoteIp')->willReturnOnConsecutiveCalls('127.0.0.7');
+
+        $bouncer->run();
+
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            ['clean' => ['bypass' => 2]],
+            $originCountItem,
+            'The origin count for clean should be 2'
+        );
+
+
+        // Test: reset metrics
+        $result = $bouncer->resetUsageMetrics();
+        $originCountItem = $cache->getItem(AbstractCache::ORIGINS_COUNT)->get();
+        $this->assertEquals(
+            [],
+            $originCountItem,
+            'The origin count item should be reset'
         );
     }
 

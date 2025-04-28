@@ -77,6 +77,7 @@ use PHPUnit\Framework\TestCase;
  * @uses \CrowdSecBouncer\AbstractBouncer::handleBounceExclusion
  *
  * @covers \CrowdSecBouncer\AbstractBouncer::pushUsageMetrics
+ * @covers \CrowdSecBouncer\AbstractBouncer::hasBlaasUri
  */
 final class AbstractBouncerTest extends TestCase
 {
@@ -772,6 +773,30 @@ EOF;
 
         $this->assertEquals(123, $errorCode);
         $this->assertEquals('Error in unit test', $errorMessage);
+    }
+
+    public function testHasBlockAsAServiceUri()
+    {
+        $configs = $this->configs;
+        $client = new BouncerClient($configs);
+        $cache = new PhpFiles($configs);
+        $lapiRemediation = new LapiRemediation($configs, $client, $cache);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $lapiRemediation]);
+
+        $result = $bouncer->hasBlaasUri();
+        $this->assertEquals(false, $result);
+
+        $configs = array_merge($this->configs, [
+            'api_url' => 'https://admin.api.crowdsec.net',
+        ]);
+
+        $client = new BouncerClient($configs);
+        $cache = new PhpFiles($configs);
+        $lapiRemediation = new LapiRemediation($configs, $client, $cache);
+        $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $lapiRemediation]);
+
+        $result = $bouncer->hasBlaasUri();
+        $this->assertEquals(true, $result);
     }
 
     public function testShouldBounceCurrentIp()
