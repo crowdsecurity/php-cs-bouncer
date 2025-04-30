@@ -77,7 +77,7 @@ use PHPUnit\Framework\TestCase;
  * @uses \CrowdSecBouncer\AbstractBouncer::handleBounceExclusion
  *
  * @covers \CrowdSecBouncer\AbstractBouncer::pushUsageMetrics
- * @covers \CrowdSecBouncer\AbstractBouncer::hasBlaasUri
+ * @covers \CrowdSecBouncer\AbstractBouncer::hasBaasUri
  */
 final class AbstractBouncerTest extends TestCase
 {
@@ -783,7 +783,7 @@ EOF;
         $lapiRemediation = new LapiRemediation($configs, $client, $cache);
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $lapiRemediation]);
 
-        $result = $bouncer->hasBlaasUri();
+        $result = $bouncer->hasBaasUri();
         $this->assertEquals(false, $result);
 
         $configs = array_merge($this->configs, [
@@ -795,7 +795,7 @@ EOF;
         $lapiRemediation = new LapiRemediation($configs, $client, $cache);
         $bouncer = $this->getMockForAbstractClass(AbstractBouncer::class, [$configs, $lapiRemediation]);
 
-        $result = $bouncer->hasBlaasUri();
+        $result = $bouncer->hasBaasUri();
         $this->assertEquals(true, $result);
     }
 

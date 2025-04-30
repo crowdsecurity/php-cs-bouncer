@@ -11,15 +11,14 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 
 ---
 
-## [4.3.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v4.3.0) - 2025-05-??
-[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v4.2.0...HEAD)
+## [4.3.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v4.3.0) - 2025-04-30
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v4.2.0...v4.3.0)
 
-__This release is not published yet__
 
 ### Added
 
-- Add `hasBlaasUri` to detect if the bouncer is connected to a Block As A Service Lapi
-- Add `resetUsageMetrics` to reset the usage metrics cache item
+- Add `hasBaasUri` method to detect if the bouncer is connected to a Block As A Service Lapi
+- Add `resetUsageMetrics` method to reset the usage metrics cache item
 
 ---
 

@@ -228,11 +228,11 @@ abstract class AbstractBouncer
     /**
      * Check if the bouncer is connected to a "Blocklist as a service" Lapi.
      */
-    public function hasBlaasUri(): bool
+    public function hasBaasUri(): bool
     {
         $url = $this->getRemediationEngine()->getClient()->getConfig('api_url');
 
-        return 0 === strpos($url, Constants::BLAAS_URL);
+        return 0 === strpos($url, Constants::BAAS_URL);
     }
 
     /**
