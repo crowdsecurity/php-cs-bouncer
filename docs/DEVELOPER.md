@@ -95,10 +95,10 @@ ddev config --project-type=php --php-version=8.2 --project-name=crowdsec-bouncer
 - Add some DDEV add-ons:
 
 ```bash
-ddev get ddev/ddev-redis
-ddev get ddev/ddev-memcached
-ddev get julienloizelet/ddev-tools
-ddev get julienloizelet/ddev-crowdsec-php
+ddev add-on get ddev/ddev-redis
+ddev add-on get ddev/ddev-memcached
+ddev add-on get julienloizelet/ddev-tools
+ddev add-on get julienloizelet/ddev-crowdsec-php
 ```
 
 - Clone this repo sources in a `my-code/crowdsec-bouncer-lib` folder:
@@ -501,13 +501,6 @@ Example:
 
     feat(admin): Add css for admin actions
 
-
-You can use the `commit-msg` git hook that you will find in the `.githooks` folder: 
-
-```
-cp .githooks/commit-msg .git/hooks/commit-msg
-chmod +x .git/hooks/commit-msg
-```
 
 ### Allowed message `type` values
 
