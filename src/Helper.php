@@ -140,7 +140,7 @@ trait Helper
 
             foreach ($filesData as $fileKey => $fileArray) {
                 $fileNames = is_array($fileArray['name']) ? $fileArray['name'] : [$fileArray['name']];
-                foreach ($fileNames as $index => $fileName) {
+                foreach ($fileNames as $index => $_fileName) {
                     $remainingSize = $threshold - $currentSize;
                     $fileData =
                         $this->appendFileData($fileArray, $index, $fileKey, $boundary, $remainingSize, $currentSize);

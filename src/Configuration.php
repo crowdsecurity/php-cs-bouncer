@@ -46,6 +46,7 @@ class Configuration extends AbstractConfiguration
     /**
      * @throws \InvalidArgumentException
      */
+    #[\Override]
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('config');

@@ -33,6 +33,7 @@ use Symfony\Component\Config\Definition\Processor;
  *
  * @copyright Copyright (c) 2021+ CrowdSec
  * @license   MIT License
+ * @psalm-api
  */
 abstract class AbstractBouncer
 {

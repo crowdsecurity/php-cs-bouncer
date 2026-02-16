@@ -6,7 +6,6 @@ namespace CrowdSecBouncer\Tests\Integration;
 
 use CrowdSec\Common\Client\RequestHandler\Curl;
 use CrowdSec\Common\Client\RequestHandler\FileGetContents;
-use CrowdSec\Common\Logger\ConsoleLog;
 use CrowdSec\Common\Logger\FileLog;
 use CrowdSec\LapiClient\Bouncer as BouncerClient;
 use CrowdSec\RemediationEngine\CacheStorage\AbstractCache;

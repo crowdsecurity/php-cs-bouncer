@@ -22,7 +22,10 @@ class PHPUnitUtil
     {
         $class = new \ReflectionClass($obj);
         $method = $class->getMethod($name);
-        $method->setAccessible(true);
+        // setAccessible() is only needed for PHP < 8.1 and deprecated in PHP 8.5
+        if (PHP_VERSION_ID < 80100) {
+            $method->setAccessible(true);
+        }
 
         return $method->invokeArgs($obj, $args);
     }
