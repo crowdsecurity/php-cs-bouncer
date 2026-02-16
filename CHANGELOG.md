@@ -11,7 +11,7 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 
 ---
 
-## [4.3.1](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v4.3.1) - 2025-04-31
+## [4.3.1](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v4.3.1) - 2026-02-16
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v4.3.0...v4.3.1)
 
 
