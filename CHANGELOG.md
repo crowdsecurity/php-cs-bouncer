@@ -11,6 +11,16 @@ As far as possible, we try to adhere to [Symfony guidelines](https://symfony.com
 
 ---
 
+## [4.3.1](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v4.3.1) - 2025-04-31
+[_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v4.3.0...v4.3.1)
+
+
+### Fixed
+
+- Fix deprecation warnings in PHP 8.5
+
+---
+
 ## [4.3.0](https://github.com/crowdsecurity/php-cs-bouncer/releases/tag/v4.3.0) - 2025-04-30
 [_Compare with previous release_](https://github.com/crowdsecurity/php-cs-bouncer/compare/v4.2.0...v4.3.0)
 
